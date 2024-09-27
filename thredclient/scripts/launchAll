@@ -1,0 +1,5 @@
+#!/bin/sh
+~/Android/Sdk/emulator/emulator -avd Pixel_3_XL_API_29 -accel on & 2>&1
+~/Android/Sdk/emulator/emulator -avd Pixel_XL_API_25 -accel on & 2>&1
+~/Android/Sdk/emulator/emulator -avd Pixel_3a_API_30 -accel on & 2>&1
+~/Android/Sdk/emulator/emulator -avd Tab_A_8_API_29 -accel on & 2>&1

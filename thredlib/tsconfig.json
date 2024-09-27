@@ -12,7 +12,7 @@
 		"strict": true,
 		"experimentalDecorators": true,
 		"lib": ["DOM", "esnext"],
-		"isolatedModules": true
+		"isolatedModules": true,
 	},
 	"include": ["./src/**/*"]
 }

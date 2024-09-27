@@ -1,0 +1,74 @@
+[
+    {
+      "id": "evt16144553706635",
+      "thredId": "routing_optimization16144553657511",
+      "type": "org.wt.tell",
+      "time": 1614455370663,
+      "source": {
+        "id": "SYSTEM",
+        "name": "Workthreds Bot"
+      },
+      "data": {
+        "title": "Operation Recommendations",
+        "description": "We've made some recommendations based on the history of operation you are about to perform.",
+        "content": {
+          "advice": {
+            "eventType": "customer.operator",
+            "title": "Operation Recommendations",
+            "template": {
+              "name": "operator_recommendations",
+              "interactions": [
+                {
+                  "interaction": {
+                    "content": [
+                      {
+                        "text": {
+                          "value": "This heatlot contains 1.8% zinc, 4.5% iron, 0.059% lead"
+                        }
+                      },
+                      {
+                        "text": {
+                          "value": "The most successful run for this heat lot had the following settings: \npressure: 1145, temp: 570"
+                        }
+                      },
+                      {
+                        "input": {
+                          "name": "operator_response",
+                          "type": "nominal",
+                          "display": "Was this operation successful?"
+                        }
+                      },
+                      {
+                        "group": {
+                          "items": [
+                            {
+                              "value": {
+                                "forInput": "operator_response",
+                                "display": "Yes, the operation was successful",
+                                "set": [
+                                  true
+                                ]
+                              }
+                            },
+                            {
+                              "value": {
+                                "forInput": "operator_response",
+                                "display": "No, the operation failed",
+                                "set": [
+                                  false
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+  }
+]

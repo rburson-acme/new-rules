@@ -1,0 +1,1 @@
+npx expo-splash-screen -b "white" -i assets/wt_splash.png
