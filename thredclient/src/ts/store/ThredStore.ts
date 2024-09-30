@@ -7,7 +7,7 @@ import {EventStore} from './EventStore';
 import {RootStore} from './rootStore';
 
 export class ThredStore {
-  eventsStore: EventsStore;
+  eventsStore?: EventsStore = undefined;
 
   constructor(readonly thred: Thred, readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -18,6 +18,6 @@ export class ThredStore {
   }
 
   addEvent = (event: Event) => {
-    this.eventsStore.addEvent(event);
+    this.eventsStore?.addEvent(event);
   };
 }

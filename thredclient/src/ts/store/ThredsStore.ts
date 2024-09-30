@@ -28,7 +28,7 @@ export class ThredsStore {
 
     addThred(thred: Thred) {
         this.thredStores[thred.id] = new ThredStore(thred, this.rootStore);
-        // @TODO - this can should be removed once we have a thred panel
+        // @TODO - this can should be removed once we have a thred panel on the side for user selection
         // this will need to change later - this automatically selects a new thred
         this.selectThred(thred.id);
     }
@@ -61,7 +61,7 @@ export class ThredsStore {
 
     // @todo build seperate authentication using threds/events
     connect(userId: string) {
-        this.engine.connect('http://10.0.2.2:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
+        this.engine.connect('http://192.168.68.80:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
         //this.engine.connect('http://proximl.com:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
             .catch((e) => { Logger.error(e)} )
             .then(() => {

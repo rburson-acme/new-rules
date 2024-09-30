@@ -8,7 +8,7 @@ import { RootStore } from "./rootStore";
 
 export class EventStore {
 
-    event: Event;
+    event?: Event = undefined;
     isPublishing: boolean = false;
     openTemplateStore?: TemplateStore = undefined;
     private disposers: StringMap<() => void> = {};
