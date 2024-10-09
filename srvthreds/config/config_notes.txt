@@ -1,0 +1,9 @@
+
+
+Configuration Notes
+
+This config directory is intended to hold all configuration for all services, and is maintained in source control.
+The contents of this directory's docker directory should be copied directly to the .docker/config directly when changes are made.
+
+Currently using cerbot to produce (and automatically renew) a free ssl cert for proximl.com
+Nginx gets configured to use the cert

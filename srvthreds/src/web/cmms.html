@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <head>
+      <link rel="stylesheet" href="spinner.css">
+      <link rel="stylesheet" href="control.css">
+    </head>
+  </head>
+  <body>
+    <div class="container">
+      <form action="">
+        <div class="input_container">
+          <h4>Work Orders (CMMS)</h4>
+          <img id='image_primary' class="img_icon" src="images/cmms.png"/>
+          <div>
+            <div style="position: relative; display: inline-block">
+              <button id='send_button'>Send Work Order Created Event</button>
+              <div id="spinner" class="spinner"></div>
+            </div>
+          </div>
+          <div style="position: relative">
+            <button id='send_button2'>Send Work Order Updated Event</button>
+          </div>
+          <button id="showhide" class="link">Show/Hide JSON</button>
+
+          <div id="popup" class="popup">
+            <div class="popup-container">
+              <img id="event_image" src="">
+              <h2 id="event_from">Message Source</h2>
+              <p id="event_thread_id">ThredId</p>
+              <p id="event_data_title">Message Title</p>
+              <p id="event_data_description">Message Description</p>
+              <button id="close">Close</button> 
+            </div>
+        </div>
+        <!-- <button id="open">Open</button> -->
+
+          <div id='json_container' style="height: 50%; display: none;">
+            <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
+              {
+                "id": "130",
+                "type": "wonkaInc.cmms.failureWorkOrder.created",
+                "time": 1584887617722,
+                "data": {
+                    "title": "Work order created",
+                    "description": "CMMS has created work order 3939",
+                    "contentType": "application/json",
+                    "content": {
+                        "type": "workOrderCreate",
+                        "values":
+                        {
+                            "id": "3939",
+                            "name": "Widget Jam",
+                            "code": "EC_1034",
+                            "location": "Gobstopper Assembly 339"
+                        }
+        
+                    }
+                },
+                "source": {
+                    "id": "wonkaInc.cmms.agent",
+                    "name": "Workthreds Wonka Inc. CMMS Agent"
+                }
+            }
+            </textarea>
+            <textarea id="data2" placeholder="Paste JSON Here" autocomplete="off">
+              {
+                "id": "155",
+                "type": "wonkaInc.cmms.failureWorkOrder.updated",
+                "time": 1584887617722,
+                "data": {
+                    "title": "Work order updated",
+                    "description": "CMMS has updated work order 3939",
+                    "contentType": "application/json",
+                    "content": {
+                        "type": "workOrderUpdate",
+                        "values":
+                        {
+                            "id": "3939",
+                            "name": "Widget Jam",
+                            "code": "EC_1034",
+                            "location": "Gobstopper Assembly 339",
+                            "assignedTo": "cBucket"
+                        }
+        
+                    }
+                },
+                "source": {
+                    "id": "wonkaInc.cmms.agent",
+                    "name": "Workthreds Wonka Inc. CMMS Agent"
+                }
+            }
+            </textarea>
+          </div>
+        </div>
+      </form>
+      <ul id="messages"></ul>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>const id = 'wonkaInc.cmms.agent';</script>
+    <script src="control.js"></script>
+  </body>
+</html>

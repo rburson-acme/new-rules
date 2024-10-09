@@ -1,0 +1,63 @@
+{
+  "name": "srvthreds",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "dist-server/index.js",
+  "scripts": {
+    "build": "npm-run-all clean transpile copy copy-configfiles",
+    "start": "node ./dist-server/index.js",
+    "start-debug": "node --inspect=0.0.0.0:9229 ./dist-server/index.js",
+    "start-dev": "tsx ./src/ts/index.ts",
+    "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/index.ts",
+    "watch:dev": "nodemon",
+    "transpile": "tsc --project tsconfig.prod.json",
+    "copy": "copyfiles -u 1 ./src/web/* ./src/web/**/* ./dist-server",
+    "copy-configfiles": "copyfiles -u 2 ./src/ts/**/config/** ./dist-server",
+    "clean": "rimraf dist-server",
+    "test": "npx vitest --run --bail=1 --no-file-parallelism"
+  },
+  "nodemonConfig": {
+    "exec": "npm run dev",
+    "watch": [
+      "src/*"
+    ],
+    "ext": "ts, js, html, css",
+    "ignore": [
+      "**/test/**",
+      "**/__tests__/**",
+      "*.test.js",
+      "*.spec.js",
+      "*.test.ts",
+      "*.spec.ts"
+    ]
+  },
+  "dependencies": {
+    "amqplib": "^0.8.0",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jsonata": "^2.0.5",
+    "mongodb": "^6.8.0",
+    "rascal": "^20.1.0",
+    "redlock": "^5.0.0-beta.2",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/rascal": "^10.0.9",
+    "@types/yargs": "^17.0.33",
+    "copyfiles": "^2.4.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
+  },
+  "private": true,
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^6.0.4"
+  }
+}

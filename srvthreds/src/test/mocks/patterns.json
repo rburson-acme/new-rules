@@ -1,0 +1,90 @@
+{
+  "workthred": {
+    "version": "0.0.0",
+    "reactions": [
+      {
+        "reaction": {
+          "name": "init",
+          "condition": {
+              "name": "filter",
+              "expr": "type = 'wonkaInc.downtime'",
+              "transform": {
+                "expr": ""
+              },
+              "publish": {},
+              "transition": {}
+          }
+        }
+      },
+      {
+        "reaction": {
+          "reactions": [
+            {
+              "reaction": {
+                "condition": {
+                  "name": "or",
+                  "operands": [
+                    {
+                      "condition": {
+                        "name": "filter",
+                        "expr": "type = 'wonkaInc.downtime'",
+                        "transform": {
+                          "expr": ""
+                        },
+                        "publish": {},
+                        "transition": {}
+                      }
+                    },
+                    {
+                      "condition": {
+                        "name": "filter",
+                        "expr": "type = 'wonkaInc.maintenance'",
+                        "transform": {
+                          "expr": ""
+                        },
+                        "publish": {}
+                      }
+                    }
+                  ],
+                  "transition": {}
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reaction": {
+          "reactions": [
+            {
+              "reaction": {
+                "condition": {
+                  "name": "and",
+                  "operands": [
+                    {
+                      "condition": {
+                        "name": "filter",
+                        "expr": "type = 'wonkaInc.downtime'"
+                      }
+                    },
+                    {
+                      "condition": {
+                        "name": "filter",
+                        "expr": "type = 'wonkaInc.maintenance'"
+                      }
+                    }
+                  ],
+                  "transform": {
+                    "expr": ""
+                  },
+                  "publish": {},
+                  "transition": {}
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

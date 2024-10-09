@@ -1,0 +1,27 @@
+
+# Scaling and redundancy
+
+    - Set up sentinel or clustering for Redis
+    - Setup clustering for RabbitMQ
+    - Consider switchin Q to https://docs.bullmq.io/
+    - Setup "connection state recovery" and an "Adapter" SocketIO
+    - Setup https://github.com/uNetworking/uWebSockets.js for SocketIO
+    - Set up scaling for Session service, Engine, and Agents
+    - Change server to fastify
+    - Setup clustering for DB
+    - Convert to ESM
+
+# Todo Next!
+
+    - Look at possibly pluging in code in Transformer for very complex tasks
+    - Continue with routing demo
+    - Finsish 'persistence_agent.test.ts' with PersistenceAgent.ts, using format this defined in 'store_obj.pattern.json'
+    - create a 'unified' test to test 'store_obj.pattern.json' and other storage operations
+    - enhance eventManager class to collate events more easily to 'wait for' particular response (this will be useful on server and client)
+
+
+# Reminders
+
+    - Jsonata can be upgraded for improved performance but has had and API changes to be asyncronous which will require
+    - Some consideration before adding
+

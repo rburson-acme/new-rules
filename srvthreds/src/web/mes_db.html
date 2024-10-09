@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Operations Database</title>
+    <head>
+      <link rel="stylesheet" href="spinner.css">
+      <link rel="stylesheet" href="control.css">
+    </head>
+  </head>
+  <body>
+    <div class="container">
+      <form action="">
+        <div class="input_container">
+          <h4>MES Past Operations Lookup</h4>
+          <img id='image_primary' class="img_icon" src="images/cmms.png">
+          <div>
+            <div style="position: relative; display: inline-block">
+              <button id='send_button'>Send Operations Lookup Response</button>
+              <div id="spinner" class="spinner"></div>
+            </div>
+          </div>
+          <button id="showhide" class="link">Show/Hide JSON</button>
+ 
+          <div id="popup" class="popup">
+            <div class="popup-container">
+              <img id="event_image" src="">
+              <h2 id="event_from">Message Source</h2>
+              <p id="event_thread_id">ThredId</p>
+              <p id="event_data_title">Message Title</p>
+              <p id="event_data_description">Message Description</p>
+              <button id="close">Close</button> 
+            </div>
+        </div>
+        <!-- <button id="open">Open</button> -->
+
+          <div id='json_container' style="height: 50%; display: none;">
+            <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
+              {
+                "id": "org.wt.persistence.100",
+                "type": "org.wt.persistence.op",
+                "data": {
+                  "content": {
+                      "values": {
+                          "find_past_ops": [
+                              { "date": "02/27/2020", "ovr_pressure": 1145, "ovr_temp": 570, "qty_good": 12, "qty_scrap": 2 },
+                              { "date": "03/29/2020", "ovr_pressure": 1160, "ovr_temp": 560, "qty_good": 8, "qty_scrap": 4 }
+                          ]
+                      } 
+                  }
+                },
+                "source": {
+                    "id": "mes.database",
+                    "name": "MES System (Persistence)"
+                }
+            }
+            </textarea>
+          </div>
+        </div>
+      </form>
+      <ul id="messages"></ul>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>const id = 'mes.database';</script>
+    <script src="control.js"></script>
+  </body>
+</html>

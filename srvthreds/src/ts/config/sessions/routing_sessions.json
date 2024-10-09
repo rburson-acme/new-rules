@@ -1,0 +1,16 @@
+{
+    "nodeId": "session1",
+    "groups": [
+        {
+            "name": "technicians",
+            "participants": [
+                {
+                    "participantId": "pat"
+                },
+                {
+                    "participantId": "rob"
+                }
+            ]
+        }
+    ]
+}

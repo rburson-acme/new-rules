@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../node_modules/rascal/lib/config/schema.json",
+  "vhosts": {
+    "/": {
+      "connection": {
+        "url": "amqp://guest:guest@localhost"
+      },
+      "exchanges": {
+        "wt-event": {
+          "assert": true,
+          "type": "topic"
+        },
+        "wt-message": {
+          "assert": true,
+          "type": "topic"
+        }
+      },
+      "queues": {
+        "event-queue": {
+          "assert": true
+        },
+        "session1-message-queue": {
+          "assert": true
+        },
+        "persistence-message-queue": {
+          "assert": true
+        }
+      },
+      "bindings": [
+        "wt-event[#] -> event-queue",
+        "wt-message[session.session1] -> session1-message-queue",
+        "wt-message[persistence] -> persistence-message-queue"
+      ],
+      "publications": {
+        "pub_event": {
+          "exchange": "wt-event",
+          "routingKey": ""
+        },
+        "pub_message": {
+          "exchange": "wt-message",
+          "routingKey": ""
+        }
+      },
+      "subscriptions": {
+        "sub_event": {
+          "queue": "event-queue",
+          "prefetch": 1
+        },
+        "sub_session1_message": {
+          "queue": "session1-message-queue",
+          "prefetch": 1
+        },
+        "sub_persistence_message": {
+          "queue": "persistence-message-queue",
+          "prefetch": 1
+        }
+      }
+    }
+  }
+}

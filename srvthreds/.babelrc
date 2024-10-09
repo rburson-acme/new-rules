@@ -1,0 +1,27 @@
+{
+	// note: remove 2 items below when compiling for production
+	"sourceMaps":"inline",
+	"retainLines": true,
+	"presets": [
+		[
+			"@babel/preset-env",
+			{
+				"targets": {
+					"node": true
+				}
+			}
+		],
+		"@babel/preset-typescript"
+	],
+	"plugins": [
+		[
+			"@babel/plugin-proposal-decorators",
+			{
+				"legacy": true
+			}
+		],
+		"@babel/plugin-transform-runtime",
+		"@babel/plugin-proposal-class-properties",
+		"@babel/proposal-object-rest-spread"
+	]
+}

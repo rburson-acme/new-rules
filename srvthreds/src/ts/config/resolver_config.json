@@ -1,0 +1,15 @@
+{
+    "agents": [
+        {
+            "name": "Session Server",
+            "nodeType": "session",
+            "nodeId": "session1",
+            "address": "org.wt.session"
+        },
+        {
+            "name": "Persistence Server",
+            "nodeType": "persistence",
+            "address": "org.wt.persistence"
+        }
+    ]
+}

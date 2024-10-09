@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+     - ./.docker/redis-data:/var/lib/redis
+     # uncomment for config
+     # - ./.docker/config/redis.conf:/usr/local/etc/redis/redis.conf
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    volumes:
+        #- ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+        - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+        # uncomment for config
+        # - ./.docker/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    #environment:
+        #RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+        #RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+        #RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+        - 5672:5672
+        - 15672:15672
+
+  mongo:
+    image: mongo
+    restart: always
+      #environment:
+      #MONGO_INITDB_ROOT_USERNAME: root
+      #MONGO_INITDB_ROOT_PASSWORD: rootpass
+    ports:
+      - 27017:27017
+    volumes:
+      - ~/.docker/mongodb/data/db:/data/db
+
+  nginx-session:
+    # running in host mode because we're not running the node server in a container for demo purposes...
+    network_mode: host
+    container_name: nginx-session
+    hostname: nginx-session
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./.docker/config/nginx-session:/etc/nginx
+      - ./.docker/config/ssl:/etc/ssl

@@ -1,0 +1,197 @@
+import { PatternModel } from '../../ts/thredlib';
+import { EngineConnectionManager } from '../testUtils';
+
+// Logger.setLevel(LoggerLevel.DEBUG);
+
+//@todo
+// all technicians notified of workorder.  when one accepts, others are notified
+
+describe.skip('connMan.engine', function () {
+    beforeAll(async () => {
+        connMan = await EngineConnectionManager.newEngineInstance(patterns);
+    });
+    it('inbound inception event', function (done) {
+        connMan.engine.dispatchers = [message => {
+            expect(message.to).toContain('$technicians');
+            expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
+            expect(message.event.data?.content.advice.template.name).toBe('technician_accept_work');
+            thredId = message.event.thredId;
+            done();
+        }];
+        connMan.eventQ.queue(events.intitialEvent);
+    });
+    /*
+    it('inbound technician not accept', function (done) {
+        connMan.engine.dispatchers = [message => {
+            expect(message.to).toContain('wonkaInc.rms.agent');
+            expect(message.event.data?.content.values.tasks[0].name).toBe('technicianUnavailable');
+            expect(message.event.data?.content.values.tasks[0].values.id).toBe('fLoompa');
+            expect(message.event.data?.content.values.tasks[0].values.unavailableAt).toBeDefined();
+            expect(message.event.data?.content.values.tasks[1].name).toBe('availableTechnicians');
+            expect(message.event.data?.content.values.tasks[1].values.code).toBe('EC_1034');
+            done();
+        }];
+        connMan.eventQ.queue({ ...events.notAcceptWork, thredId });
+    });
+    it('inbound technician accept', function (done) {
+        connMan.engine.dispatchers = [message => {
+            expect(message.to).toContain('wonkaInc.rms.agent');
+            expect(message.event.data?.content.values.tasks[0].name).toBe('technicianUnavailable');
+            expect(message.event.data?.content.values.tasks[0].values.id).toBe('cBucket');
+            expect(message.event.data?.content.values.tasks[0].values.unavailableAt).toBeDefined();
+            connMan.engine.dispatchers = [message => {
+                expect(message.to).toContain('wonkaInc.cmms.agent');
+                expect(Object.keys((connMan.engine.threds as any).threds).length).toBe(1);
+                expect((connMan.engine.threds as any).threds[thredId as string]).toBeUndefined();
+                done();
+            }];
+        }];
+        connMan.eventQ.queue({ ...events.acceptWork, thredId });
+    });*/
+     // cleanup in case of failure
+     afterAll(async () => {
+        await connMan.stopAllThreds();
+        await connMan.disconnectAll();
+    });
+});
+
+const patterns: PatternModel[] = [
+    {
+        "name": "Downtime Group_Notify Test",
+        "id": "downtime_group_notify_test",
+        "instanceInterval": 0,
+        "multiInstance": 0,
+        "reactions": [
+            {
+                "name": "notifyAvailableTechnicians",
+                "condition": {
+                    "name": "filter",
+                    "xpr": "$event.type = 'wonkaInc.downtime'",
+                    "transform": {
+                        "eventDataTemplate": {
+                            "title": "Assistance Needed",
+                            "description": "$xpr( $event.source.name & ' has failed with a ' & $event.data.content.description)",
+                            "content": {
+                                "advice": {
+                                    "eventType": "wonkaInc.technician",
+                                    "template": {
+                                        "name": "technician_accept_work",
+                                        "view": {
+                                            "opts": {
+                                                "submit": "onclick"
+                                            },
+                                            "children": [
+                                                {
+                                                    "text": "Are you available to accept the work order?"
+                                                },
+                                                {
+                                                    "input": {
+                                                        "type": "button",
+                                                        "label": "Yes",
+                                                        "value": true
+                                                    }
+                                                },
+                                                {
+                                                    "input": {
+                                                        "type": "button",
+                                                        "label": "No",
+                                                        "value": false
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                    },
+                    "publish": { "to": ["$technicians"] },
+                },
+            },
+            {
+                "condition": {
+                    "name": "filter",
+                    "xpr": "$event.type='wonkaInc.technician' and $content.technician_accept_work.value",
+                    "transform": {
+                        "eventDataTemplate": {
+                            "content": {
+                                "advice": {
+                                    "eventType": "wonkaInc.rms.availableTechniciansUpdated",
+                                    "tasks": [{
+                                        "name": "technicianUnavailable",
+                                        "op": "update",
+                                        "target": "employee",
+                                        "values": {
+                                            "id": "$xpr( $event.source.id )",
+                                            "available": false,
+                                            "unavailableAt": "$xpr( $millis() )",
+                                            "unavailableTimeout": 15,
+                                        },
+                                    }]
+                                }
+                            }
+                        },
+                    },
+                    "transition": { "name": "updateWorkOrder", "input": "forward" },
+                    "publish": { to: ["wonkaInc.rms.agent"] },
+                }
+            },
+        ]
+    }
+];
+
+let connMan: EngineConnectionManager;
+
+let thredId: string | undefined;
+
+const events = {
+    intitialEvent: {
+        "id": "100",
+        "type": "wonkaInc.downtime",
+        "time": 1584887617722,
+        "data": {
+            "description": "Widget Jam",
+            "content": {
+                "errorCode": "EC_1034"
+            }
+        },
+        "source": {
+            "id": "assembly-10",
+            "name": "Gobstopper Assembly 339"
+        }
+    },
+    notAcceptWork: {
+        "id": "140",
+        "type": "wonkaInc.technician",
+        "time": 1584887617722,
+        "data": {
+            "contentType": "application/json",
+            "content": {
+                "technician_accept_work": {
+                    "value": false
+                }
+            }
+        },
+        "source": {
+            "id": "fLoompa",
+            "name": "Fernando Loompa"
+        }
+    },
+    acceptWork: {
+        "id": "150",
+        "type": "wonkaInc.technician",
+        "time": 1584887617722,
+        "data": {
+            "contentType": "application/json",
+            "content": {
+                "technician_accept_work": {
+                    "value": true
+                }
+            }
+        },
+        "source": {
+            "id": "cBucket",
+            "name": "Charilie Bucket"
+        }
+    },
+}

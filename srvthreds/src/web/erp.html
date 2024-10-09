@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <head>
+      <link rel="stylesheet" href="spinner.css">
+      <link rel="stylesheet" href="control.css">
+    </head>
+  </head>
+  <body>
+    <div class="container">
+      <form action="">
+        <div class="input_container">
+          <h4>ERP System (Downtime Incidents)</h4>
+          <img id='image_primary' class="img_icon" src="images/database.png"/>
+          <div>
+            <div style="position: relative; display: inline-block">
+              <button id='send_button'>Send ERP Entry Created</button>
+              <div id="spinner" class="spinner"></div>
+            </div>
+          </div>
+          <button id="showhide" class="link">Show/Hide JSON</button>
+
+          <div id="popup" class="popup">
+            <div class="popup-container">
+              <img id="event_image" src="">
+              <h2 id="event_from">Message Source</h2>
+              <p id="event_thread_id">ThredId</p>
+              <p id="event_data_title">Message Title</p>
+              <p id="event_data_description">Message Description</p>
+              <button id="close">Close</button> 
+            </div>
+        </div>
+        <!-- <button id="open">Open</button> -->
+
+          <div id='json_container' style="height: 50%; display: none;">
+            <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
+              {
+                "id": "132",
+                "type": "wonkaInc.erp.entry.created",
+                "time": 1584887617722,
+                "data": {
+                    "title": "ERP Entry has been created",
+                    "description": "ERP Entry Agent has created an entry: Gobstopper Assembly",
+                    "contentType": "application/json",
+                    "content": {
+                      "type": "entryCreate",
+                        "values": {
+                            "id": "3939",
+                            "name": "Widget Jam",
+                            "code": "EC_1034",
+                            "location": "Gobstopper Assembly 339"
+                         }
+                    }
+                },
+                "source": {
+                    "id": "wonkaInc.erp.agent",
+                    "name": "Workthreds Wonka Inc. ERP Agent"
+                }
+            }
+            </textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>const id = 'wonkaInc.erp.agent';</script>
+    <script src="control.js"></script>
+  </body>
+</html>

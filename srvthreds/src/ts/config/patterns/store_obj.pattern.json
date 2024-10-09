@@ -1,0 +1,42 @@
+{
+    "name": "Store Object",
+    "id": "store_object",
+    "instanceInterval": 0,
+    "multiInstance": 0,
+    "reactions": [
+        {
+            "condition": {
+                "name": "filter",
+                "xpr": "$event.type = 'org.wt.control' and $content.type = 'storeObject'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Store Object",
+                        "content": {
+                            "values": {
+                                "tasks": [
+                                    [{
+                                        "op": "replace",
+                                        "params": {
+                                            "query": {
+                                                "type": "$xpr( $content.values.objectType )",
+                                                "matcher": {
+                                                    "id": "$xpr( $content.values.object.id )"
+                                                },
+                                                "values": "$xpr ( $content.values.object )"
+                                            }
+                                        }
+                                    }]
+                                ]
+                            }
+                        }
+                    }
+                },
+                "publish": {
+                    "to": [
+                        "org.wt.persistence"
+                    ]
+                }
+            }
+        }
+    ]
+}
