@@ -1,9 +1,8 @@
 ## Get started
 
-### Set up the Android emulator for 'development build' [here](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build)
+### Set up the Android emulator for local 'development build' [here](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=simulated&mode=development-build&buildEnv=local)
 
-### Install dependencies and run with:  
- 
+### Install dependencies and run with:
 
 ```javascript
 /* Go to the '../thredlib' directory and run npm link */
