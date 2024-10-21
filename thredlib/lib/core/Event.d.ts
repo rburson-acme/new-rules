@@ -1,4 +1,16 @@
 import { TemplateModel } from "../model/TemplateModel.js";
+export interface Event {
+    readonly id: string;
+    readonly thredId?: string;
+    readonly type: string;
+    time?: number;
+    readonly source: {
+        readonly id: string;
+        readonly name?: string;
+        readonly uri?: string;
+    };
+    readonly data?: EventData;
+}
 export interface EventData {
     readonly title?: string;
     readonly description?: string;
@@ -16,16 +28,4 @@ export interface DataContent {
     };
     type?: string;
     values?: {};
-}
-export interface Event {
-    readonly id: string;
-    readonly thredId?: string;
-    readonly type: string;
-    time?: number;
-    readonly source: {
-        readonly id: string;
-        readonly name?: string;
-        readonly uri?: string;
-    };
-    readonly data?: EventData;
 }

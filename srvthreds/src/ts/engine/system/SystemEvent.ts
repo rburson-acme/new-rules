@@ -274,7 +274,7 @@ const getSystemStatusEvent = (
     id,
     type: eventTypes.control.type,
     thredId,
-    sourceId: eventTypes.system.source.id,
+    source: { id: eventTypes.system.source.id },
     content: {
       type: systemEventTypes.responseTypes.opStatus,
       values: {

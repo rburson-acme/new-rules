@@ -1,10 +1,8 @@
 import { observable, action, autorun, makeObservable } from "mobx";
 import { TemplateStore } from "./TemplateStore";
-import { StringMap, Event } from "thredlib";
-//@TODO remove this and replace with thredlib Events
-import { Events } from "../engine/Events";
-import { ThredsStore } from "./ThredsStore";
+import { StringMap, Events, Event, eventTypes } from "thredlib";
 import { RootStore } from "./rootStore";
+import { Id } from "../core/Id";
 
 export class EventStore {
 
@@ -58,8 +56,18 @@ export class EventStore {
                 this.setIsPublishing(true);
                 const advice = this.event?.data?.content?.advice;
                 const content = this.openTemplateStore.getEventContent();
-                //@TODO remove this and replace with thredlib Events
-                const event = Events.newEventFromAdvice(authStore, advice, content, this.event?.thredId);
+                const sourceId = authStore.userId || '$unauth';
+                const sourceName = authStore.name || '$anon';
+                const resolvedTitle = advice.title ? `${sourceId} responded to '${advice.title}` : undefined;
+                const event = Events.newEvent({
+                    id: Id.nextEventId(sourceId),
+                    type: advice.eventType,
+                    title: resolvedTitle,
+                    content,
+                    thredId: this.event?.thredId,
+                    source: { id: sourceId, name: sourceName }
+                });
+
                 thredsStore.publish(event);
                 setTimeout(()=>this.setIsPublishing(false), 1000);
             }

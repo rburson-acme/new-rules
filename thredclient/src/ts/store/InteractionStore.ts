@@ -1,13 +1,13 @@
 
 import { observable, action, computed, makeObservable } from 'mobx';
-import { StringMap } from 'thredlib';
+import { StringMap, InteractionModel } from 'thredlib';
 
 export class InteractionStore {
 
     values: StringMap<any> = {};
     interaction: any;
 
-    constructor(interaction: any) {
+    constructor(interaction: InteractionModel) {
         makeObservable(this, {
             values: observable,
             setValue: action,

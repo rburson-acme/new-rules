@@ -3,7 +3,6 @@ import { Event } from '../core/Event.js';
 import { Logger } from '../lib/Logger.js';
 import { defaultBindings } from './defaultBindings.js';
 import { ExpressionContext } from './ExpressionContext.js';
-import { ResourceLockedError } from 'redlock';
 
 export type ExpressionParams = { event: Event; context: ExpressionContext };
 

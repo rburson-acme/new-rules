@@ -1,7 +1,6 @@
 import { observable, action, computed, autorun, makeObservable } from 'mobx';
-import { Engine } from '../engine/Engine';
-import { StringMap, Event, Logger } from 'thredlib';
-import { Thred } from '../engine/Thred';
+import { StringMap, Logger, EventManager, Event } from 'thredlib';
+import { Thred } from '../core/Thred';
 import { RootStore } from './rootStore';
 import { ThredStore } from './ThredStore';
 
@@ -10,7 +9,7 @@ export class ThredsStore {
     thredStores: StringMap<ThredStore> = {};
     currentThredId?: string = undefined;
 
-    private engine: Engine;
+    private eventManager: EventManager;
 
     constructor(readonly rootStore: RootStore) {
         makeObservable(this, {
@@ -22,8 +21,8 @@ export class ThredsStore {
             currentThredStore: computed,
         });
 
-        this.engine = new Engine();
-        this.engine.consumers.add(this.consume);
+        this.eventManager = new EventManager();
+        this.eventManager.consumers.add(this.consume);
     }
 
     addThred(thred: Thred) {
@@ -56,12 +55,12 @@ export class ThredsStore {
     }
 
     publish(event: Event) {
-        this.engine?.dispatch(event);
+        this.eventManager?.dispatch(event);
     }
 
     // @todo build seperate authentication using threds/events
     connect(userId: string) {
-        this.engine.connect('http://192.168.68.80:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
+        this.eventManager.connect('http://192.168.68.69:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
         //this.engine.connect('http://proximl.com:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
             .catch((e) => { Logger.error(e)} )
             .then(() => {

@@ -3,23 +3,33 @@ import { Server } from 'socket.io';
 import express, { Express } from 'express';
 import http from 'http';
 import { Event, Logger, StringMap } from '../../thredlib/index.js';
-import { SessionService } from './SessionService.js';
 import { Auth } from '../../auth/Auth.js';
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Socket } from 'socket.io';
 
 export interface SocketServiceParams {
-    sessionService: SessionService;
+    serviceListener: ServiceListener;
     publisher: (event: Event, participantId: string) => Promise<void>;
     nodeId: string;
     httpServer?: http.Server;
     port?: number,
     auth?: Auth
 }
+
+export interface ServiceListener {
+    newSession({sessionId, nodeId}: { sessionId: string, nodeId: string }, participantId: string, channelId: string) : Promise<void>;
+    sessionEnded(sessionId: string): Promise<void>;
+}
+
+/**
+ * This service handles websocket connections, sending and recieveing events to clients.
+ * It also handles mapping sessions to external channels (i.e. sockets)
+ */
+
 export class SocketService {
 
     private httpServer: http.Server;
-    private sessionService: SessionService;
+    private serviceListener: ServiceListener;
     private publisher: (event: Event, participantId: string) => Promise<void>;
     private nodeId: string;
     private channels: StringMap<(event: Event, channelId: string) => void> = {};
@@ -27,7 +37,7 @@ export class SocketService {
     private auth: Auth;
 
     constructor(params: SocketServiceParams) {
-        this.sessionService = params.sessionService;
+        this.serviceListener = params.serviceListener;
         this.auth = params.auth || new BasicAuth();
         this.publisher = params.publisher;
         this.nodeId = params.nodeId;
@@ -68,10 +78,10 @@ export class SocketService {
         Logger.debug(`server: a user connected on channel ${channelId} as ${participantId} session ${sessionId}`);
         this.channels[channelId] = this.sendSocket;
         // for websockets, session must include a node id (so that we can route message back here)
-        this.sessionService.addSession({ id: sessionId, nodeId: this.nodeId }, participantId, channelId).then(() => {
+        this.serviceListener.newSession({ sessionId, nodeId: this.nodeId }, participantId, channelId).then(() => {
             socket.on('disconnect', () => {
                 delete this.channels[channelId];
-                this.sessionService.removeSession(sessionId).then(() => {
+                this.serviceListener.sessionEnded(sessionId).then(() => {
                     Logger.debug(`server: user ${participantId} disconnected`);
                 }).catch((e) => {
                     Logger.debug(`server: user ${participantId}::${sessionId} failed to remove Session`);

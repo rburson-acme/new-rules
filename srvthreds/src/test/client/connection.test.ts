@@ -4,7 +4,7 @@ import { events, withPromiseHandlers } from '../testUtils.js';
 Logger.setLevel(LoggerLevel.INFO);
 
 // @NOTE
-// this runs against a running server running 'simple_test.pattern.json'
+// this runs against a running server running 'simple_test.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
 describe.skip('client connection test', function () {

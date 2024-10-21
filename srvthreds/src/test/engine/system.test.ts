@@ -56,7 +56,7 @@ describe('system', function () {
       ];
     });
     connMan.eventQ.queue(
-      SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event1Reaction', 'testUser'),
+      SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event1Reaction', { id: 'testUser'}),
     );
     return pr;
   });
@@ -84,7 +84,7 @@ describe('system', function () {
     });
     await connMan.engine
       .consider(
-        SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event2Reaction', 'testUser'),
+        SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event2Reaction', { id: 'testUser'}),
       )
       .then(() => {
         const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction
@@ -110,7 +110,7 @@ describe('system', function () {
           Id.nextEventId,
           thredId as string,
           { name: 'event3Reaction', input: 'default' },
-          'testUser',
+          { id: 'testUser'},
         ),
       )
       .then(() => {
@@ -153,7 +153,7 @@ describe('system', function () {
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
     await connMan.engine
-      .consider(SystemEvents.getSystemTerminateThredEvent(Id.nextEventId, thredId as string, 'testUser'))
+      .consider(SystemEvents.getSystemTerminateThredEvent(Id.nextEventId, thredId as string, { id: 'testUser'}))
       .then(() => {
         expect(connMan.engine.numThreds).toBe(0);
       });
@@ -199,7 +199,7 @@ describe('system', function () {
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.terminateAllThreds);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
-    await connMan.engine.consider(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, 'testUser')).then(() => {
+    await connMan.engine.consider(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, { id: 'testUser'})).then(() => {
       expect(connMan.engine.numThreds).toBe(0);
     });
     return pr;

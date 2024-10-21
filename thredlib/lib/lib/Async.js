@@ -50,9 +50,7 @@ export class Series {
  */
 export class Parallel {
     static async forEach(array, callback) {
-        await Promise.all(array.map(async (item, index) => {
-            await callback(item, index, array);
-        }));
+        await Promise.all(array.map(async (item, index) => callback(item, index, array)));
     }
     static map(array, callback) {
         return Promise.all(array.map(callback));
@@ -69,8 +67,8 @@ export class Parallel {
                     resolve(true);
                 }
                 return result;
-            })).then(completed => {
-                !completed.some(item => item) && resolve(false);
+            })).then((completed) => {
+                !completed.some((item) => item) && resolve(false);
             });
         });
     }

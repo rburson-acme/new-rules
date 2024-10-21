@@ -13,9 +13,10 @@ export class Expression {
             throw new Error(msg);
         }
     }
-    apply(params, bindings = {}) {
+    async apply(params, bindings = {}) {
         try {
-            return this.expression.evaluate(params, this.bindingSetup(bindings, params));
+            // await and catch any errors before returning
+            return await this.expression.evaluate(params, this.bindingSetup(bindings, params));
         }
         catch (e) {
             const msg = `apply failed while evaluating expr: '${this.expression}' :: ${e.message}`;

@@ -7,7 +7,7 @@ export type ExpressionParams = {
 export declare class Expression {
     private readonly expression;
     constructor(expr: string);
-    apply(params: ExpressionParams, bindings?: Record<string, string>): any;
+    apply(params: ExpressionParams, bindings?: Record<string, string>): Promise<any>;
     bindingSetup(bindings: Record<string, string>, params: ExpressionParams): {
         event: Event;
         data: import("../core/Event.js").EventData | undefined;

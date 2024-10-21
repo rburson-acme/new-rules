@@ -7,6 +7,13 @@ import { Session } from '../sessions/Session.js';
 import { Config, RunConfig } from './Config.js';
 import { AddressResolver } from '../sessions/AddressResolver.js';
 
+/**
+ * The Server is the main entry point for the engine.
+   It starts the engine and binds the tell() method to the engine's dispatchers.
+   The tell method sends outgoing Messages to the MessageQ from the Engine, addressed to Agents and Participants.
+   Other internal services must subscribe to these messages and handle them.
+   i.e. The 'Agent' framework pull messages from the messageQ and determines how to handle them.
+ */
 export class Server {
   // @TODO seperate service
   private engine: Engine;
@@ -28,7 +35,8 @@ export class Server {
 
   // outbound
   // @TODO need better failure handling for all the possible async failures
-  // Also most messages end events can probably be published in Parallel
+  // Parallel methods are failfast, but we probably shoudn't bail out if there's any single failuar
+  // Consider adding that feature to Parallel
   async tell(message: Message): Promise<void> {
     // don't propagate failures here as this is called in the event loop
     try {

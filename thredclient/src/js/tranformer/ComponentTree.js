@@ -1,6 +1,25 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+/*
+    ComponentTree builds a tree of React components based on a json structure.
+    'type' corresponds to the component type to be created, while attributes are the props to be passed to the component.
+    If an attribute is included in the type's typeConfig, then it is recursively transformed into a React component
+
+    This is the supported format
+    {
+        type: {
+            attr1: {
+                type: { ... }
+            },
+            attr2: [{
+                type: {}, ...
+            }]
+            attr3: "some prop value"
+        }
+    }
+*/
+
 export const ComponentTree = ({ root, typeConfig, componentTypes, props }) => {
     const transformer = new Transformer(typeConfig, componentTypes);
     return Array.isArray(root) ? transformer.createArray(root, props) : transformer.createType(root, props);
@@ -11,7 +30,6 @@ ComponentTree.propTypes = {
 }
 
 /*
-    Hint: this is the supported structure
     {
         type: {
             attr1: {

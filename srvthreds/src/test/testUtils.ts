@@ -184,7 +184,7 @@ export class EngineConnectionManager {
 
   async stopAllThreds() {
     const pr = getDispatcherPromise(this.engine);
-    await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, 'testUser'));
+    await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, { id: 'testUser' }));
     await pr.catch(Logger.error);
   }
 }
@@ -260,7 +260,7 @@ export class ServerConnectionManager {
   async stopAllThreds(participantId: string) {
     let pr = getDispatcherPromise((this.agent as any).handler);
     await this.agent
-      .publishEvent(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, participantId), participantId)
+      .publishEvent(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, { id: participantId }), participantId)
       .catch();
     await pr.catch();
   }

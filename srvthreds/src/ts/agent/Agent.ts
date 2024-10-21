@@ -11,10 +11,18 @@ export interface MessageHandler {
 
 export interface MessageHandlerParams {
   config: AgentConfig;
-  publisher: (event: Event, participantId: string) => Promise<void>;
+  eventPublisher: (event: Event, participantId: string) => Promise<void>;
   additionalArgs?: StringMap<any>;
 }
 
+/**
+  This framework class pulls Messages from the outbound MessageQ for a particular 'topic', which is
+  defined in the agent configuration. The agent configuration also defines the agent's concrete implementation
+  and starts an instance of the implementation. The agent implementation is expected to have a processMessage
+  and shutdown method. The processMessage method is called for each message pulled from the messageQ and passed
+  to the instantiated agent implementation to handle it.
+  The 'publisher' provided to the agent implementation is used to send inbound Events to the Engine.
+*/
 export class Agent {
   private handler?: MessageHandler;
 
@@ -29,7 +37,7 @@ export class Agent {
     try {
       // agentImpl can be a string (dynamic import) or an object (direct instantiation)
       let Handler;
-      if(typeof this.agentConfig.agentImpl === 'string') {
+      if (typeof this.agentConfig.agentImpl === 'string') {
         const module = await import(this.agentConfig.agentImpl);
         Handler = module.default;
       } else {
@@ -37,7 +45,7 @@ export class Agent {
       }
       this.handler = new Handler({
         config: this.agentConfig,
-        publisher: this.publishEvent,
+        eventPublisher: this.publishEvent,
         additionalArgs: this.additionalArgs,
       });
       this.run();

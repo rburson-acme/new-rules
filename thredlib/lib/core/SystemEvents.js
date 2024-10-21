@@ -10,12 +10,11 @@ export class SystemEvents {
     *
     */
     // request to timeout current thred reaction
-    static getSystemTimeoutThredEvent(id, thredId, reactionName, sourceId, sourceName) {
+    static getSystemTimeoutThredEvent(id, thredId, reactionName, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -27,12 +26,11 @@ export class SystemEvents {
         });
     }
     // request to explicitly transition a thred to a new state
-    static getSystemTransitionThredEvent(id, thredId, transition, sourceId, sourceName) {
+    static getSystemTransitionThredEvent(id, thredId, transition, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -44,12 +42,11 @@ export class SystemEvents {
         });
     }
     // request to terminate a thred
-    static getSystemTerminateThredEvent(id, thredId, sourceId, sourceName) {
+    static getSystemTerminateThredEvent(id, thredId, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -68,12 +65,11 @@ export class SystemEvents {
     *        |___/
     */
     // request to reset the number of pattern instances to 0 for a particular pattern
-    static getResetPatternEvent(id, patternId, sourceId, sourceName) {
+    static getResetPatternEvent(id, patternId, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -84,12 +80,11 @@ export class SystemEvents {
         });
     }
     // request to shutdown
-    static getShutdownEvent(id, delay, sourceId, sourceName) {
+    static getShutdownEvent(id, delay, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -100,12 +95,11 @@ export class SystemEvents {
         });
     }
     // request to terminate all threds
-    static getTerminateAllThredsEvent(id, sourceId, sourceName) {
+    static getTerminateAllThredsEvent(id, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -122,12 +116,11 @@ export class SystemEvents {
     *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
     *                                 |_|
     */
-    getStoreObjectEvent(id, sourceId, objectType, obj, sourceName) {
+    getStoreObjectEvent(id, source, objectType, obj) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.storeObject,
                 values: {

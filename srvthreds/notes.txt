@@ -9,19 +9,19 @@
     - Set up scaling for Session service, Engine, and Agents
     - Change server to fastify
     - Setup clustering for DB
-    - Convert to ESM
 
 # Todo Next!
 
+    - Tighten up ack/nack code to ensure redelivery all the way up the chain, from engine to client
+    - better generalize 'persistence' interface definition for use with all agents
+    - Define interfaces for all client data structures (Event)
+    - switch condition 'name' to 'type'
+    - ConditionID is not persist/rehydrate safe because it is not deterministic - need to use the structure the Reaction to assign an id when the pattern is parsed, so that it's always the same
+    - Persist Events Seperately and associate with Thred
+    - Build 'time travelling w/ persisting all state changend in Thred.consider as a 'frame'
+    - Implement timeout of reaction when retrieving a Thred
+    - Create Pattern management and hot reload
     - Look at possibly pluging in code in Transformer for very complex tasks
-    - Continue with routing demo
     - Finsish 'persistence_agent.test.ts' with PersistenceAgent.ts, using format this defined in 'store_obj.pattern.json'
     - create a 'unified' test to test 'store_obj.pattern.json' and other storage operations
     - enhance eventManager class to collate events more easily to 'wait for' particular response (this will be useful on server and client)
-
-
-# Reminders
-
-    - Jsonata can be upgraded for improved performance but has had and API changes to be asyncronous which will require
-    - Some consideration before adding
-

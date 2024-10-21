@@ -5,8 +5,6 @@ import { PatternsStore } from './PatternsStore.js';
 import { Lock, Storage, Types, indexId } from '../../storage/Storage.js';
 import { Logger, Parallel, Series } from '../../thredlib/index.js';
 
-const { forEach } = Parallel;
-
 
 // Thred locking is handled here, and should be contained to this class
 
@@ -74,7 +72,7 @@ export class ThredsStore {
 
   async terminateAllThreds(): Promise<void> {
     const thredIds = await this.getAllThredIds();
-    return forEach(thredIds, async (thredId: string) => {
+    return Parallel.forEach(thredIds, async (thredId: string) => {
       const results = await this.storage.aquire(
         [{ type: Types.Thred, id: thredId }],
         [

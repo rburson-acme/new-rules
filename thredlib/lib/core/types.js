@@ -10,6 +10,7 @@ export const eventTypes = {
         type: 'org.wt.control',
     },
 };
+// these are application level types (i.e. content.type)
 export const systemEventTypes = {
     responseTypes: {
         opStatus: "opStatus",

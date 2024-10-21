@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Button } from '../../lib/Button';
 
 // @TODO
-// This will need to be a factory for different value types
+// This will need to be a factory for different value types - right now we only have simple buttons
 export const Value = ({forInput, display, icon, set, interactionStore}) => {
 
     const { isComplete } = interactionStore;
@@ -19,6 +19,8 @@ export const Value = ({forInput, display, icon, set, interactionStore}) => {
         }
         return null;
     }
+
+    // if this value was choosen, show the button as clicked
     const value = interactionStore.getValue(forInput);
     if(set.includes(value)) {
         return <Button content={display} iconName={icon} iconRight

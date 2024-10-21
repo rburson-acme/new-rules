@@ -1,10 +1,8 @@
-import {observable, action, computed, autorun, makeObservable} from 'mobx';
-import {EventsStore} from './EventsStore';
-import {Engine} from '../engine/Engine';
-import {StringMap, Event, Logger} from 'thredlib';
-import {Thred} from '../engine/Thred';
-import {EventStore} from './EventStore';
-import {RootStore} from './rootStore';
+import { observable, makeObservable } from 'mobx';
+import { EventsStore } from './EventsStore';
+import { Event } from 'thredlib';
+import { Thred } from '../core/Thred';
+import { RootStore } from './rootStore';
 
 export class ThredStore {
   eventsStore?: EventsStore = undefined;

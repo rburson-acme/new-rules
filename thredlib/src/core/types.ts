@@ -11,6 +11,7 @@ export const eventTypes = {
     },
 }
 
+// these are application level types (i.e. content.type)
 export const systemEventTypes = {
     responseTypes: {
        opStatus: "opStatus", 

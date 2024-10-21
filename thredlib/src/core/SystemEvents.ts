@@ -2,6 +2,7 @@ import { Events } from "./Events.js";
 import { systemEventTypes, eventTypes, ThredId } from "./types.js";
 import { TransitionModel } from "../model/TransitionModel.js";
 import { PatternModel } from "../model/PatternModel.js";
+import { Event } from "./Event.js";
 
 export class SystemEvents {
 
@@ -15,12 +16,11 @@ export class SystemEvents {
     */
 
     // request to timeout current thred reaction
-    static getSystemTimeoutThredEvent(id: string, thredId: string, reactionName: string, sourceId: string, sourceName?: string) {
+    static getSystemTimeoutThredEvent(id: string, thredId: string, reactionName: string, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -33,12 +33,11 @@ export class SystemEvents {
     }
 
     // request to explicitly transition a thred to a new state
-    static getSystemTransitionThredEvent(id: string, thredId: string, transition: TransitionModel, sourceId: string, sourceName?: string) {
+    static getSystemTransitionThredEvent(id: string, thredId: string, transition: TransitionModel, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -51,12 +50,11 @@ export class SystemEvents {
     }
 
     // request to terminate a thred
-    static getSystemTerminateThredEvent(id: string, thredId: string, sourceId: string, sourceName?: string) {
+    static getSystemTerminateThredEvent(id: string, thredId: string, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             thredId,
             content: {
                 type: systemEventTypes.operationTypes.thredControl,
@@ -77,12 +75,11 @@ export class SystemEvents {
     */
 
     // request to reset the number of pattern instances to 0 for a particular pattern
-    static getResetPatternEvent(id: string, patternId: string, sourceId: string, sourceName?: string) {
+    static getResetPatternEvent(id: string, patternId: string, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -94,12 +91,11 @@ export class SystemEvents {
     }
 
     // request to shutdown
-    static getShutdownEvent(id: string, delay: number, sourceId: string, sourceName?: string) {
+    static getShutdownEvent(id: string, delay: number, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -111,12 +107,11 @@ export class SystemEvents {
     }
 
     // request to terminate all threds
-    static getTerminateAllThredsEvent(id: string, sourceId: string, sourceName?: string) {
+    static getTerminateAllThredsEvent(id: string, source: Event['source']) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.sysControl,
                 values: {
@@ -135,12 +130,11 @@ export class SystemEvents {
     *                                 |_|        
     */
 
-    getStoreObjectEvent(id: string, sourceId: string, objectType: string, obj: {}, sourceName?: string) {
+    getStoreObjectEvent(id: string, source: Event['source'], objectType: string, obj: {}) {
         return Events.newEvent({
             id,
             type: eventTypes.control.type,
-            sourceId,
-            sourceName,
+            source,
             content: {
                 type: systemEventTypes.operationTypes.storeObject,
                 values: {
