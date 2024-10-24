@@ -60,7 +60,7 @@ const patterns: PatternModel[] = [
         "name": "Downtime Group_Notify Test",
         "id": "downtime_group_notify_test",
         "instanceInterval": 0,
-        "multiInstance": 0,
+        "maxInstances": 0,
         "reactions": [
             {
                 "name": "notifyAvailableTechnicians",

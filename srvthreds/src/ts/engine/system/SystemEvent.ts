@@ -58,7 +58,7 @@ export class SystemThredEvent {
   static thredDoesNotExist(threds: Threds, event: Event) {
     const to = [event.source.id];
     const thredId = event.thredId || '<none>';
-    const opName = (Events.getDataContent(event)?.values as SystemEventValues)
+    const opName = (Events.getData(event)?.values as SystemEventValues)
       ?.op;
     if (!opName) {
       Logger.error(
@@ -81,7 +81,7 @@ export class SystemThredEvent {
     const { thredStore, threds, event } = args;
     const { id: thredId } = thredStore;
     const to = [event.source.id];
-    const opName = (Events.getDataContent(event)?.values as SystemEventValues)
+    const opName = (Events.getData(event)?.values as SystemEventValues)
       ?.op;
     if (!opName) {
       Logger.error(
@@ -115,7 +115,7 @@ export class SystemThredEvent {
   private static async timeoutReaction(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
     const reactionName = (
-      Events.getDataContent(event)?.values as SystemEventValues
+      Events.getData(event)?.values as SystemEventValues
     )?.reactionName;
     if (thredStore.reactionStore.reactionName === reactionName) {
       await thredCompanion.timeoutReaction(thredStore, threds);
@@ -128,7 +128,7 @@ export class SystemThredEvent {
   private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
     const transitionModel = (
-      Events.getDataContent(event)?.values as SystemEventValues
+      Events.getData(event)?.values as SystemEventValues
     )?.transition;
     if (transitionModel) {
       const transition = new Transition(transitionModel);
@@ -167,7 +167,7 @@ export class SystemEvent {
 
   static async handleSystemEvent(args: SystemEventArgs): Promise<void> {
     const { threds, event } = args;
-    const opName = (Events.getDataContent(event)?.values as SystemEventValues)
+    const opName = (Events.getData(event)?.values as SystemEventValues)
       ?.op;
     if (!opName) {
       Logger.error(
@@ -206,7 +206,7 @@ export class SystemEvent {
 
   private static async resetPattern(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const patternId = (Events.getDataContent(event)?.values as SystemEventValues)?.patternId;
+    const patternId = (Events.getData(event)?.values as SystemEventValues)?.patternId;
 
     if (!patternId){
          Logger.error(`No patternId supplied for resetPattern operation on System`);
@@ -217,13 +217,13 @@ export class SystemEvent {
 
   private static terminateAllThreds(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const scope = (Events.getDataContent(event)?.values as SystemEventValues)?.scope;
+    const scope = (Events.getData(event)?.values as SystemEventValues)?.scope;
     return threds.terminateAllThreds();
   }
 
   private static shutdown(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const delayMillis = (Events.getDataContent(event)?.values as SystemEventValues)?.delay;
+    const delayMillis = (Events.getData(event)?.values as SystemEventValues)?.delay;
     return threds.shutdown(delayMillis);
   }
 }

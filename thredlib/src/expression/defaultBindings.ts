@@ -1,3 +1,4 @@
+import { Events } from '../core/Events.js';
 import { ExpressionParams } from './Expression.js';
 
 export const defaultBindings = (params: ExpressionParams) => {
@@ -11,14 +12,16 @@ export const defaultBindings = (params: ExpressionParams) => {
     };
 
     const getEvent = () => event;
-    const getData = () => getEvent()?.data;
-    const getContent = () => getData()?.content;
-    const getValues = () => { getContent()?.values };
-    const valueNamed = (name: string) => getValues()?.[name];
+    const getData = () => Events.getData(event);
+    const getAdvice = () => Events.getAdvice(event);
+    const getContent = () => Events.getContent(event);
+    const getValues = () => Events.getValues(event);
+    const valueNamed = (name: string) => Events.valueNamed(event, name);
 
     return {
         event: getEvent(),
         data: getData(),
+        advice: getAdvice(),
         content: getContent(),
         values: getValues(),
         valueNamed,

@@ -4,6 +4,6 @@ export interface PatternModel {
     name: string;
     description?: string;
     instanceInterval: number;
-    multiInstance: number;
+    maxInstances: number;
     reactions: ReactionModel[];
 }

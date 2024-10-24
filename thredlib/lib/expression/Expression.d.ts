@@ -11,9 +11,14 @@ export declare class Expression {
     bindingSetup(bindings: Record<string, string>, params: ExpressionParams): {
         event: Event;
         data: import("../core/Event.js").EventData | undefined;
+        advice: {
+            eventType: string;
+            title?: string;
+            template?: import("../index.js").TemplateModel;
+        } | undefined;
         content: import("../core/Event.js").EventContent | undefined;
-        values: void;
-        valueNamed: (name: string) => undefined;
+        values: Record<string, any> | Record<string, any>[] | undefined;
+        valueNamed: (name: string) => any;
         local: (name: string) => any;
         setLocal: (name: string, value: any) => void;
     };

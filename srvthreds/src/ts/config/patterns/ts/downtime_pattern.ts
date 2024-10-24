@@ -4,7 +4,7 @@ export const patternModel: PatternModel = {
   name: 'Downtime',
   id: 'downtime',
   instanceInterval: 0,
-  multiInstance: 0,
+  maxInstances: 0,
   reactions: [
     {
       name: 'notify_erp_of_downtime',

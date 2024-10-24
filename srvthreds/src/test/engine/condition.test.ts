@@ -122,7 +122,7 @@ const patternModels: PatternModel[] = [
   {
     name: 'Conditions Test',
     instanceInterval: 0,
-    multiInstance: 0,
+    maxInstances: 0,
     reactions: [
       {
         condition: {

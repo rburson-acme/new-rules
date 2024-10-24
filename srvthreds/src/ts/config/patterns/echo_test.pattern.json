@@ -1,0 +1,23 @@
+{
+    "name": "Echo Test",
+    "id": "echo_test",
+    "instanceInterval": 0,
+    "maxInstances": 0,
+    "reactions": [
+        {
+            "condition": {
+                "name": "filter",
+                "xpr": "$event.type = 'org.wt.echo'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "eventType": "$xpr( $advice.eventType )",
+                        "title": "$xpr( $advice.title )"
+                    }
+                },
+                "publish": {
+                    "to": ["participant0"]
+                }
+            }
+        }
+    ]
+}

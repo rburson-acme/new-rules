@@ -128,7 +128,7 @@ const patternModels: PatternModel[] = [
   {
     name: 'Transition Test',
     instanceInterval: 0,
-    multiInstance: 0,
+    maxInstances: 0,
     reactions: [
       {
         condition: {

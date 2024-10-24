@@ -111,7 +111,7 @@ const patternModels: PatternModel[] = [
   {
     name: 'Timout Test',
     instanceInterval: 0,
-    multiInstance: 0,
+    maxInstances: 0,
     reactions: [
       {
         condition: {

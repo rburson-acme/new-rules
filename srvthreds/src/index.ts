@@ -20,13 +20,13 @@ import { Config as StaticEngineConfig } from './ts/engine/Config.js';
 import { Config as StaticAgentConfig } from './ts/agent/Config.js';
     
 import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
+import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 //import sessionsModel from './ts/config/sessions/downtime.sessions.json' with { type: 'json' };
 //import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
-import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
-import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
-//import patternModel from './ts/config/patterns/routing_optimization.pattern.json' with { type: 'json' };
+//import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
+import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 import engineConfig from './ts/config/engine.json' with { type: 'json' };
 StaticEngineConfig.engineConfig = engineConfig;
@@ -70,35 +70,18 @@ app.get('/', function (req: Request, res: Response) {
     res.sendFile(__dirname + '/web/index.html');
 });
 
+// test event interface
+app.get('/event', function (req: Request, res: Response) {
+    res.sendFile(__dirname + '/web/event.html');
+});
+
 // assembly demo
 app.get('/assembly', function (req: Request, res: Response) {
     res.sendFile(__dirname + '/web/assembly.html');
 });
-app.get('/brooms', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/brooms.html');
-});
 app.get('/rms', function (req: Request, res: Response) {
     res.sendFile(__dirname + '/web/rms.html');
 });
-app.get('/cmms', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/cmms.html');
-});
-app.get('/erp', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/erp.html');
-});
-
-
-// mes demo
-app.get('/mes', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/mes.html');
-});
-app.get('/erp_heatlot', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/erp_heatlot.html');
-});
-app.get('/mes_db', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/mes_db.html');
-});
-
 
 //@TEMP sms
 // this should go in the sms agent - left here for reference
@@ -162,8 +145,8 @@ async function startServices() {
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({ qBroker, subName: 'sub_session1_message' });
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
+    
     // create and run a Session Agent
-
     const agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, { httpServer, sessionsModel });
     agent.start();
 

@@ -4,7 +4,7 @@ export const patternModel: PatternModel = {
   name: 'Downtime Light',
   id: 'downtime_light',
   instanceInterval: 0,
-  multiInstance: 0,
+  maxInstances: 0,
   reactions: [
     {
       condition: {

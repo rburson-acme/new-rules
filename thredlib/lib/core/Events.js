@@ -1,4 +1,3 @@
-;
 export class Events {
     static newEvent(params) {
         const { id, type, contentType, source, thredId, content, title, description } = params;
@@ -13,18 +12,55 @@ export class Events {
                 title: resolvedTitle,
                 description: resolvedDescription,
                 contentType,
-                content
+                content,
             },
             source: {
                 id: sourceId,
                 name: sourceName,
-                uri: sourceUri
+                uri: sourceUri,
             },
-            thredId
+            thredId,
         };
         return event;
     }
-    static getDataContent(event) {
-        return event?.data?.content;
+    static getData(event) {
+        return event?.data;
+    }
+    static getAdvice(event) {
+        return this.getData(event)?.advice;
+    }
+    static getContent(event) {
+        return this.getData(event)?.content;
+    }
+    static getValues(event) {
+        return this.getContent(event)?.values;
+    }
+    static valueNamed(event, name) {
+        const values = this.getValues(event);
+        if (Array.isArray(values)) {
+            return values.find((value) => value[name]);
+        }
+        return values?.[name];
+    }
+}
+export class EventHelper {
+    event;
+    constructor(event) {
+        this.event = event;
+    }
+    getData() {
+        return Events.getData(this.event);
+    }
+    getAdvice() {
+        return Events.getAdvice(this.event);
+    }
+    getContent() {
+        return Events.getContent(this.event);
+    }
+    getValues() {
+        return Events.getValues(this.event);
+    }
+    valueNamed(name) {
+        return Events.valueNamed(this.event, name);
     }
 }

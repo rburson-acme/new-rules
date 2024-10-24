@@ -218,7 +218,7 @@ const patternModels: PatternModel[] = [
   {
     name: 'System Test',
     instanceInterval: 0,
-    multiInstance: 0,
+    maxInstances: 0,
     reactions: [
       {
         name: 'event0Reaction',

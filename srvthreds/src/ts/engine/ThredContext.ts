@@ -1,14 +1,12 @@
-import { StringMap } from '../thredlib/index.js';
-import { Event } from '../thredlib/index.js';
 import { ExpressionContext } from '../thredlib/index.js';
 import { EventStore } from './store/EventStore.js';
 
 export class ThredContext implements ExpressionContext {
 
     readonly thredId: string | undefined;
-    private readonly scope: StringMap<any>;
+    private readonly scope: Record<string, any>;
 
-    constructor(params?: { thredId: string, scope?: StringMap<any> }){
+    constructor(params?: { thredId: string, scope?: Record<string, any> }){
        this.thredId = params?.thredId ?? undefined; 
        this.scope = params?.scope || {};
     }

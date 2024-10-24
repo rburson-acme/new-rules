@@ -1,108 +1,188 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing:border-box }
-      html { width: 100%; height: 100% }
-      body { font: 13px Helvetica, Arial; height: 100%; }
-      .container { width: 100%; height: 100%; padding: 20px; }
-      form { background: #000; padding: 3px; width: 100%; height: 100%; text-align: center;}
-      form div { width: 70%; margin: auto; padding: 10px; }
-      .input_container { height: 70% }
-      form textarea { border: 0; padding: 10px; width: 100%; height: 100% }
-      form button { background: rgb(130, 224, 255); border: none; padding: 10px; }
-      form input { width: 100px; border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <form action="">
-        <div class="input_container">
-          <textarea id="data" placeholder="Paste JSON Here" autocomplete="off"></textarea>
-        </div>
-        <div>
-          <button id="send">Send</button>
-          <button id="queue">Queue</button>
-          <button id="send_next">Send Next Queued</button>
-        </div>
-        <div>
-          <input id='as' placeholder="admin" type="text" value='wonkaInc.erp.agent'/>
-          <button id="switch_user">Switch User</button>
-          <input id='to' placeholder="override to" type="text"/>
-        </div>
-      </form>
-      <ul id="messages"></ul>
-    </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script>
+
+<head>
+  <title>NewRules Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html {
+      width: 100%;
+      height: 100%
+    }
+
+    body {
+      font: 13px Helvetica, Arial;
+      height: 100%;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+    }
+
+    form {
+      background: #000;
+      padding: 3px;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+    }
+
+    form div {
+      width: 70%;
+      margin: auto;
+      padding: 10px;
+    }
+
+    .input_container {
+      height: 70%
+    }
+
+    form textarea {
+      border: 0;
+      padding: 10px;
+      width: 100%;
+      height: 100%
+    }
+
+    form button {
+      background: rgb(130, 224, 255);
+      border: none;
+      padding: 10px;
+    }
+
+    form input {
+      width: 100px;
+      border: none;
+      padding: 10px;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #messages li {
+      padding: 5px 10px;
+    }
+
+    #messages li:nth-child(odd) {
+      background: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <form action="">
+      <div class="input_container">
+        <textarea id="data" placeholder="Paste JSON Here" autocomplete="off" spellcheck="false">
+        {
+            "title": "Echo Event", 
+            "type": "org.wt.echo",
+            "advice": {
+              "eventType": "org.wt.echo.back",
+              "title": "Echo Back Event"
+            },
+            "content": {
+              "values": {
+                "echoTo": ["participant0, participant1"],
+                "echoContent": {
+                  "values": {
+                    "exampleValue1": "value1"
+                  }
+                }
+              }
+            }
+        }
+        </textarea>
+      </div>
+      <div>
+        <button id="send">Send</button>
+        <button id="queue">Queue</button>
+        <button id="send_next">Send Next Queued</button>
+      </div>
+      <div>
+        <input id='as' placeholder="admin" type="text" value='participant0' />
+        <button id="switch_user">Switch User</button>
+      </div>
+    </form>
+    <ul id="messages"></ul>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
     $(function () {
 
-        var queue = [];
-        var socket;
+      var queue = [];
+      var socket;
 
-        function connect() {
-          socket = io('https://localhost', { transports: ['websocket'], jsonp: false, query: { id: $('#as').val() } });
+      function connect() {
+        socket = io('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token: $('#as').val() } });
+      }
+      function send(event) {
+        event.id = event.id || 'echo_' + Date.now();
+        event.source = event?.source?.id ? { id: event.source.id }: { id:$('#as').val() };
+        socket.send(event);
+      }
+      $('#send').click(function (e) {
+        e.preventDefault(); // prevents page reloading
+        try {
+          const json = JSON.parse($('#data').val());
+          send(json);
+          // $('#data').val('');
+        } catch (e) {
+          alert(e);
         }
-        function send(message) {
-          const to = $('#to').val();
-          if(to) message.to = to;
-          socket.send(message);
+        return false;
+      });
+      $('#queue').click(function (e) {
+        e.preventDefault(); // prevents page reloading
+        try {
+          const json = JSON.parse($('#data').val());
+          if (Array.isArray(json)) {
+            queue = queue.concat(json);
+          } else {
+            queue.push(json);
+          }
+          $('#data').val('');
+        } catch (e) {
+          alert(e);
         }
-        $('#send').click(function(e){
-            e.preventDefault(); // prevents page reloading
-            try {
-              const json = JSON.parse($('#data').val());
-              send(json);
-              $('#data').val('');
-            } catch (e) {
-              alert(e);
-            }
-            return false;
-        });
-        $('#queue').click(function(e){
-            e.preventDefault(); // prevents page reloading
-            try {
-              const json = JSON.parse($('#data').val());
-              if(Array.isArray(json)) {
-                queue = queue.concat(json);
-              } else {
-                queue.push(json);
-              }
-              $('#data').val('');
-            } catch (e) {
-              alert(e);
-            }
-            return false;
-        });
-        $('#send_next').click(function(e){
-            e.preventDefault(); // prevents page reloading
-            try {
-              const json = queue.pop();
-              if(!json) {
-                $('#messages').append($('<li>').text('No Events in Queue'));
-              } else {
-                send(json);
-                $('#messages').append($('<li>').text('Sent Event' + json.id));
-              }
-            } catch (e) {
-              alert(e);
-            }
-            return false;
-        });
-        $('#switch_user').click(function(e) {
-          e.preventDefault();
-          connect();
-        });
+        return false;
+      });
+      $('#send_next').click(function (e) {
+        e.preventDefault(); // prevents page reloading
+        try {
+          const json = queue.pop();
+          if (!json) {
+            $('#messages').append($('<li>').text('No Events in Queue'));
+          } else {
+            send(json);
+            $('#messages').append($('<li>').text('Sent Event' + json.id));
+          }
+        } catch (e) {
+          alert(e);
+        }
+        return false;
+      });
+      $('#switch_user').click(function (e) {
+        e.preventDefault();
         connect();
-        socket.on('message', function(msg){
-            $('#messages').append($('<pre>').text(JSON.stringify(msg, undefined, 2))).append($('</pre>'));
-        });
+      });
+      connect();
+      socket.on('message', function (msg) {
+        $('#messages').append($('<pre>').text(JSON.stringify(msg, undefined, 2))).append($('</pre>'));
+      });
     });
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>

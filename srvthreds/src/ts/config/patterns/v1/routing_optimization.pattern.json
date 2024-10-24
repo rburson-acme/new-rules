@@ -2,7 +2,7 @@
   "name": "Routing Optimization",
   "id": "routing_optimization",
   "instanceInterval": 0,
-  "multiInstance": 0,
+  "maxInstances": 0,
   "reactions": [
     {
       "name": "Get past MES programs",

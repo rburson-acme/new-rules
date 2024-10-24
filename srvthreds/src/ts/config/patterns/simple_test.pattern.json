@@ -2,7 +2,7 @@
     "name": "Simple Test",
     "id": "simple_test",
     "instanceInterval": 0,
-    "multiInstance": 0,
+    "maxInstances": 0,
     "reactions": [
         {
             "condition": {

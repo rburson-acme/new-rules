@@ -14,7 +14,7 @@ export class Pattern {
     // @todo needs impl - time required between creation of new threads 0 for none required
     readonly instanceInterval: number;
     // @todo needs impl - number of simultaneous thred instances allowed (0 default no limit)
-    readonly multiInstance: number;
+    readonly maxInstances: number;
     private readonly reactionModelByName: StringMap<ReactionModel>;
 
     /*
@@ -25,7 +25,7 @@ export class Pattern {
         this.name = patternModel.name;
         this.id = patternModel.id || Pattern.idFromName(this.name);
         this.instanceInterval = patternModel.instanceInterval;
-        this.multiInstance = patternModel.multiInstance;
+        this.maxInstances = patternModel.maxInstances;
         this.reactionModelByName = patternModel.reactions.reduce(
             (accum: StringMap<ReactionModel>, reaction, index) => {
                 const name = reaction.name ?? String(index);

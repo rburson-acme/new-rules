@@ -107,7 +107,7 @@ const patternModels: PatternModel[] = [
   {
     name: 'Stateless Test',
     instanceInterval: 0,
-    multiInstance: 0,
+    maxInstances: 0,
     reactions: [
       {
         condition: {
