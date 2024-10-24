@@ -27,28 +27,71 @@ export interface EventData {
     readonly title?: string;
     // human readable description of the event
     readonly description?: string;
-    // mimetype/mediatype
-    readonly contentType?: string;
-    // the actual content of the data envelope
-    readonly content?: DataContent | any,
     // an optional representation of the event for display
     readonly display?: {
         uri: string,
     }
-
-}
-export interface DataContent {
     // defines what is expected in return
     advice?: {
         // the type of event that is expected
         eventType: string,
         // the title of the event
-        title: string,
+        title?: string,
         // an interaction template that describes what data to collect
         template?: TemplateModel,
     },
-    // application level content type - not to be confused with 'contentType'
-    type?: string,
+    // the actual content of the data envelope
     // the data related to this type
-    values?: {}
+    readonly content?: EventContent;
+}
+
+export type EventContent = EventValues & EventTasks & Resources & InlineContent;
+
+// simple interface for transferring known, free-form json values
+interface EventValues {
+    values?: Record<string, any> | Record<string, any>[];
+}
+
+// interface for describing data operations
+// target could be a database, an api, or software system
+export interface EventTasks {
+    // tasks is an array containing tasks and/or arrays of tasks
+    // A task array represents a transaction
+    readonly tasks?: (EventTask | EventTask[])[];
+}
+
+// specifies the location of one or more resources
+export interface Resources {
+    readonly resources?: Resource[];
+}
+
+// allows for embedding content directly in the event
+export interface InlineContent {
+   items?: InlineItem[]; 
+}
+
+export interface EventTask {
+    readonly op: string;
+    readonly name?: string;
+    readonly params?: EventTaskParams;
+}
+
+export interface EventTaskParams {
+    // type of target entity
+    readonly type: string;
+    readonly values?: {} | any[];
+    readonly matcher?: {}; // filter for the query
+    readonly selector?: {};  // allows for specifying a subset of the return values
+}
+export interface Resource {
+    // mimetype/mediatype of the content field
+    readonly contentType: string;
+    readonly uri: string;
+}
+
+
+export interface InlineItem {
+    readonly contentType: string;
+    readonly encoding: string;
+    readonly content: string;
 }

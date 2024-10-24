@@ -11,9 +11,9 @@ export declare class Expression {
     bindingSetup(bindings: Record<string, string>, params: ExpressionParams): {
         event: Event;
         data: import("../core/Event.js").EventData | undefined;
-        content: any;
-        values: any;
-        valueNamed: (name: string) => any;
+        content: import("../core/Event.js").EventContent | undefined;
+        values: never;
+        valueNamed: (name: string) => never;
         local: (name: string) => any;
         setLocal: (name: string, value: any) => void;
     };

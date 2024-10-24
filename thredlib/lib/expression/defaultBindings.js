@@ -7,7 +7,7 @@ export const defaultBindings = (params) => {
     const getEvent = () => event;
     const getData = () => getEvent()?.data;
     const getContent = () => getData()?.content;
-    const getValues = () => getContent()?.values;
+    const getValues = () => { throw new Error('Not implemented yet'); };
     const valueNamed = (name) => getValues()?.[name];
     return {
         event: getEvent(),

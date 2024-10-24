@@ -31,6 +31,7 @@ export class TemplateStore {
         return this.interactionStores.length > 0 && this.interactionStores.every((interactionStore) => interactionStore.isComplete);
     }
 
+    // content for the new Event
     getEventContent() {
         const values = this.interactionStores.reduce((accum, interactionStore) => {
             return { ...accum, ...interactionStore.values };

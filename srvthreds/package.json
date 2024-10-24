@@ -11,6 +11,7 @@
     "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/index.ts",
     "watch:dev": "nodemon",
     "transpile": "tsc --project tsconfig.prod.json",
+    "check": "tsc",
     "copy": "copyfiles -u 1 ./src/web/* ./src/web/**/* ./dist-server",
     "copy-configfiles": "copyfiles -u 2 ./src/ts/**/config/** ./dist-server",
     "clean": "rimraf dist-server",

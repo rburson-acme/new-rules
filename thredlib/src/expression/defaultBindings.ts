@@ -13,7 +13,7 @@ export const defaultBindings = (params: ExpressionParams) => {
     const getEvent = () => event;
     const getData = () => getEvent()?.data;
     const getContent = () => getData()?.content;
-    const getValues = () => getContent()?.values;
+    const getValues = () => { getContent()?.values };
     const valueNamed = (name: string) => getValues()?.[name];
 
     return {

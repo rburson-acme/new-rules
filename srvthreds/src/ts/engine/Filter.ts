@@ -9,6 +9,7 @@ import { ConditionFactory } from './ConditionFactory.js';
 /*
     @IMPORTANT any mutations here must be made in the Store
     This is part of the 'stateless' tree that gets shared across processes
+    First Condition in a Pattern must NOT apply side-effects because of the test method!
 */
 export class Filter extends Condition {
 
@@ -27,6 +28,7 @@ export class Filter extends Condition {
         }
     }
 
+    // First Condition in a Pattern must NOT apply side-effects because of the test method!
     async test(event: Event, context: ThredContext): Promise<boolean> {
         return !!(await this.expression.apply({ event, context }));
     }

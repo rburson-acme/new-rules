@@ -12,12 +12,14 @@
                     "eventDataTemplate": {
                         "title": "Store Object",
                         "content": {
+                            "type": "task",
                             "values": {
                                 "tasks": [
-                                    [{
-                                        "op": "replace",
-                                        "params": {
-                                            "query": {
+                                    [
+                                        {
+                                            "name": "storeExample1",
+                                            "op": "replace",
+                                            "params": {
                                                 "type": "$xpr( $content.values.objectType )",
                                                 "matcher": {
                                                     "id": "$xpr( $content.values.object.id )"
@@ -25,7 +27,7 @@
                                                 "values": "$xpr ( $content.values.object )"
                                             }
                                         }
-                                    }]
+                                    ]
                                 ]
                             }
                         }

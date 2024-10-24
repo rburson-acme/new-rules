@@ -10,6 +10,7 @@
         "src/init.ts"
     ],
     "compilerOptions": {
+        "noEmit": true,
         "types": [
             "vitest/globals"
         ]

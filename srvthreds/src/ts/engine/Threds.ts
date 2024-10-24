@@ -41,7 +41,7 @@ export class Threds {
     return this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
 
       // @TODO @TEMP @DEMO // copy admin -----------
-      //this.dispatch({id: event.id, event, to: []});
+      this.dispatch({id: event.id, event, to: []});
       // -------------------------------------------
 
       if (!thredStore) {
@@ -76,7 +76,7 @@ export class Threds {
     await this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
 
       // @TODO @TEMP @DEMO (copy the admin user) ----
-      //this.dispatch({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
+      this.dispatch({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
       // ---------------------------------------------
 
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);

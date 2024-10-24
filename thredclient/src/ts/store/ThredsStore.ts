@@ -60,7 +60,7 @@ export class ThredsStore {
 
     // @todo build seperate authentication using threds/events
     connect(userId: string) {
-        this.eventManager.connect('http://192.168.68.69:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
+        this.eventManager.connect('http://10.0.2.2:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
         //this.engine.connect('http://proximl.com:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
             .catch((e) => { Logger.error(e)} )
             .then(() => {

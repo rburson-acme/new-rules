@@ -1,4 +1,4 @@
-import { PatternModel, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
+import { PatternModel, Logger, LoggerLevel, Event } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
 import patternModel from '../../ts/config/patterns/downtime_light.pattern.json';
 const patternModels: PatternModel[] = [patternModel as PatternModel];
@@ -18,8 +18,8 @@ describe('engine', function () {
       thredId = message.event.thredId;
       expect(connMan.engine.numThreds).toBe(1);
       expect(message.to).toContain('wonkaInc.rms.agent');
-      expect(message.event.data?.content.values.tasks[0].values.code).toBe('EC_1034');
-      expect(message.event.data?.content.values.tasks[0].values.location).toBe('Gobstopper Assembly 339');
+      expect(message.event.data?.content.tasks[0].params.matcher.code).toBe('EC_1034');
+      expect(message.event.data?.content.tasks[0].params.matcher.location).toBe('Gobstopper Assembly 339');
     });
     connMan.eventQ.queue(events.intitialEvent);
     return pr;
@@ -29,7 +29,7 @@ describe('engine', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('cBucket');
       expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
-      expect(message.event.data?.content.advice.template.name).toBe('technician_accept_work');
+      expect(message.event.data?.advice.template.name).toBe('technician_accept_work');
     });
     connMan.eventQ.queue({ ...events.availableResourcesResult, thredId });
     return pr;
@@ -38,9 +38,9 @@ describe('engine', function () {
   it('inbound technician accept', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('wonkaInc.rms.agent');
-      expect(message.event.data?.content.values.tasks[0].name).toBe('technicianUnavailable');
-      expect(message.event.data?.content.values.tasks[0].values.id).toBe('cBucket');
-      expect(message.event.data?.content.values.tasks[0].values.unavailableAt).toBeDefined();
+      expect(message.event.data?.content.tasks[0].name).toBe('technicianUnavailable');
+      expect(message.event.data?.content.tasks[0].params.values.id).toBe('cBucket');
+      expect(message.event.data?.content.tasks[0].params.values.unavailableAt).toBeDefined();
       connMan.engine.dispatchers = [
         (message) => {
           expect(message.to).toContain('cBucket');
@@ -63,7 +63,7 @@ let connMan: EngineConnectionManager;
 
 let thredId: string | undefined;
 
-const events = {
+const events: Record<string, Event> = {
   intitialEvent: {
     id: '100',
     type: 'wonkaInc.downtime',
@@ -71,7 +71,9 @@ const events = {
     data: {
       description: 'Widget Jam',
       content: {
-        errorCode: 'EC_1034',
+        values: {
+          errorCode: 'EC_1034',
+        },
       },
     },
     source: {
@@ -84,9 +86,7 @@ const events = {
     type: 'wonkaInc.rms.availableResources',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'availableTechnicians',
         values: {
           availableTechnicians: [{ id: 'cBucket', name: 'Charlie' }],
         },
@@ -102,9 +102,7 @@ const events = {
     type: 'wonkaInc.technician',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'technician_accept_work',
         values: {
           technician_response: true,
         },

@@ -11,8 +11,8 @@ import { ThredStore } from './store/ThredStore.js';
     This is part of the 'stateless' tree that gets shared across processes
 */
 export class Transform {
-  private readonly eventDataTemplate: EventData;
-  private readonly templateXpr: Expression | undefined;
+  private readonly eventDataTemplate?: EventData;
+  private readonly templateXpr?: Expression;
 
   constructor(transformModel: TransformModel) {
     this.eventDataTemplate = transformModel.eventDataTemplate;

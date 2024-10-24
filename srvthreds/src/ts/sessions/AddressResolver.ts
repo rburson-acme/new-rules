@@ -79,8 +79,8 @@ export class AddressResolver {
 
     let addresses = Array.isArray(address) ? address : address.include;
 
-    // @TODO @TEMP @DEMOadd admin for demo ---
-    //addresses.push('admin');
+    // @TODO @TEMP @DEMO add admin for demo ---
+    addresses.push('admin');
     // ---------------------------------------
 
     let participantIds: string[] = [];

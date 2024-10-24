@@ -2,9 +2,9 @@ import { ExpressionParams } from './Expression.js';
 export declare const defaultBindings: (params: ExpressionParams) => {
     event: import("../index.js").Event;
     data: import("../index.js").EventData | undefined;
-    content: any;
-    values: any;
-    valueNamed: (name: string) => any;
+    content: import("../index.js").EventContent | undefined;
+    values: never;
+    valueNamed: (name: string) => never;
     local: (name: string) => any;
     setLocal: (name: string, value: any) => void;
 };

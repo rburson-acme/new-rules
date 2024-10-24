@@ -29,8 +29,8 @@ export class EventStore {
     }
 
     private setupTemplate(event: Event) {
-        if (event?.data?.content?.advice?.eventType) {
-            const template = event.data.content.advice.template;
+        if (event?.data?.advice?.eventType) {
+            const template = event.data.advice.template;
             if(template) {
                 this.openTemplateStore = new TemplateStore(template);
                 this.watchTemplate();
@@ -54,14 +54,14 @@ export class EventStore {
         this.disposers.template = autorun(reaction => {
             if (this.openTemplateStore?.interactionsComplete) {
                 this.setIsPublishing(true);
-                const advice = this.event?.data?.content?.advice;
+                const advice = this.event?.data?.advice;
                 const content = this.openTemplateStore.getEventContent();
                 const sourceId = authStore.userId || '$unauth';
                 const sourceName = authStore.name || '$anon';
-                const resolvedTitle = advice.title ? `${sourceId} responded to '${advice.title}` : undefined;
+                const resolvedTitle = advice!.title ? `${sourceId} responded to '${advice!.title}` : undefined;
                 const event = Events.newEvent({
                     id: Id.nextEventId(sourceId),
-                    type: advice.eventType,
+                    type: advice!.eventType,
                     title: resolvedTitle,
                     content,
                     thredId: this.event?.thredId,

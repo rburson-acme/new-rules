@@ -14,18 +14,47 @@ export interface Event {
 export interface EventData {
     readonly title?: string;
     readonly description?: string;
-    readonly contentType?: string;
-    readonly content?: DataContent | any;
     readonly display?: {
         uri: string;
     };
-}
-export interface DataContent {
     advice?: {
         eventType: string;
-        title: string;
+        title?: string;
         template?: TemplateModel;
     };
-    type?: string;
-    values?: {};
+    readonly content?: EventContent;
 }
+export type EventContent = EventValues | EventTasks | Resources | InlineContent;
+interface EventValues {
+    values: Record<string, any> | Record<string, any>[];
+}
+export interface EventTasks {
+    readonly tasks: (EventTask | EventTask[])[];
+}
+export interface EventTask {
+    readonly op: string;
+    readonly name?: string;
+    readonly params?: EventTaskParams;
+}
+export interface EventTaskParams {
+    readonly type: string;
+    readonly values?: {} | any[];
+    readonly matcher?: {};
+    readonly selector?: {};
+}
+export interface Resources {
+    readonly resources: Resource[];
+}
+export interface Resource {
+    readonly contentType: string;
+    readonly uri: string;
+}
+export interface InlineContent {
+    items: InlineItem[];
+}
+export interface InlineItem {
+    readonly contentType: string;
+    readonly encoding: string;
+    readonly content: string;
+}
+export {};

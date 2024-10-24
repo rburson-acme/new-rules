@@ -1,0 +1,50 @@
+{
+    "name": "Test 2",
+    "id": "simple_test_2",
+    "instanceInterval": 0,
+    "multiInstance": 0,
+    "reactions": [
+        {
+            "condition": {
+                "name": "filter",
+                "xpr": "$event.type = 'inbound.event0'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "outbound.event4"
+                    }
+                },
+                "publish": {
+                    "to": ["participant1"]
+                }
+            }
+        },
+        {
+            "condition": {
+                "name": "filter",
+                "xpr": "$event.type = 'inbound.event4a'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "outbound.event4a"
+                    }
+                },
+                "publish": {
+                    "to": ["participant0"]
+                }
+            }
+        },
+        {
+            "condition": {
+                "name": "filter",
+                "xpr": "$event.type = 'inbound.event5'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "outbound.event5"
+                    }
+                },
+                "publish": {
+                    "to": ["participant1"]
+                }
+            }
+        }
+    ]
+}

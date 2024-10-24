@@ -7,9 +7,9 @@ export class Spec {
     /*
       Supported Operations
     */
-    static readonly CREATE_OP = 'create';
-    static readonly FINDONE_OP = 'findOne';
-    static readonly FIND_OP = 'find';
+    static readonly PUT_OP = 'put';
+    static readonly GETONE_OP = 'getOne';
+    static readonly GET_OP = 'get';
     static readonly UPDATE_OP = 'update';
     static readonly DELETE_OP = 'delete';
     static readonly COUNT_OP = 'count';

@@ -45,7 +45,7 @@ describe('system', function () {
           connMan.engine.dispatchers = [
             withReject((message) => {
               expect(message.to).toContain('testUser');
-              expect(message.event?.type).toBe(eventTypes.control.type);
+              expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
               expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
               expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.timeoutReaction);
               expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
@@ -77,7 +77,7 @@ describe('system', function () {
     // the admin operation should also get a successful response
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
-      expect(message.event?.type).toBe(eventTypes.control.type);
+      expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
       expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.timeoutReaction);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
@@ -99,7 +99,7 @@ describe('system', function () {
     // the admin operation should also get a successful response
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
-      expect(message.event?.type).toBe(eventTypes.control.type);
+      expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
       expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.transitionThred);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
@@ -147,7 +147,7 @@ describe('system', function () {
     // the admin operation should also get a successful response
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
-      expect(message.event?.type).toBe(eventTypes.control.type);
+      expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
       expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.terminateThred);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
@@ -194,7 +194,7 @@ describe('system', function () {
     // the admin operation should also get a successful response
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
-      expect(message.event?.type).toBe(eventTypes.control.type);
+      expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
       expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.terminateAllThreds);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);

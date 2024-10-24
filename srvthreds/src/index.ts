@@ -20,9 +20,9 @@ import { Config as StaticEngineConfig } from './ts/engine/Config.js';
 import { Config as StaticAgentConfig } from './ts/agent/Config.js';
     
 import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
-import sessionsModel from './ts/config/sessions/downtime.sessions.json' with { type: 'json' };
+//import sessionsModel from './ts/config/sessions/downtime.sessions.json' with { type: 'json' };
 //import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
-//import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
 import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/routing_optimization.pattern.json' with { type: 'json' };

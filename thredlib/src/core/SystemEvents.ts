@@ -19,11 +19,10 @@ export class SystemEvents {
     static getSystemTimeoutThredEvent(id: string, thredId: string, reactionName: string, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.thredControl.type,
             source,
             thredId,
             content: {
-                type: systemEventTypes.operationTypes.thredControl,
                 values: {
                     op: systemEventTypes.operations.timeoutReaction,
                     reactionName
@@ -36,11 +35,10 @@ export class SystemEvents {
     static getSystemTransitionThredEvent(id: string, thredId: string, transition: TransitionModel, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.thredControl.type,
             source,
             thredId,
             content: {
-                type: systemEventTypes.operationTypes.thredControl,
                 values: {
                     op: systemEventTypes.operations.transitionThred,
                     transition
@@ -53,11 +51,10 @@ export class SystemEvents {
     static getSystemTerminateThredEvent(id: string, thredId: string, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.thredControl.type,
             source,
             thredId,
             content: {
-                type: systemEventTypes.operationTypes.thredControl,
                 values: {
                     op: systemEventTypes.operations.terminateThred
                 }
@@ -78,10 +75,9 @@ export class SystemEvents {
     static getResetPatternEvent(id: string, patternId: string, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.sysControl.type,
             source,
             content: {
-                type: systemEventTypes.operationTypes.sysControl,
                 values: {
                     op: systemEventTypes.operations.resetPattern,
                     patternId
@@ -94,10 +90,9 @@ export class SystemEvents {
     static getShutdownEvent(id: string, delay: number, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.sysControl.type,
             source,
             content: {
-                type: systemEventTypes.operationTypes.sysControl,
                 values: {
                     op: systemEventTypes.operations.shutdown,
                     delay
@@ -110,10 +105,9 @@ export class SystemEvents {
     static getTerminateAllThredsEvent(id: string, source: Event['source']) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.sysControl.type,
             source,
             content: {
-                type: systemEventTypes.operationTypes.sysControl,
                 values: {
                     op: systemEventTypes.operations.terminateAllThreds,
                 }
@@ -133,10 +127,9 @@ export class SystemEvents {
     getStoreObjectEvent(id: string, source: Event['source'], objectType: string, obj: {}) {
         return Events.newEvent({
             id,
-            type: eventTypes.control.type,
+            type: eventTypes.control.dataControl.type,
             source,
             content: {
-                type: systemEventTypes.operationTypes.storeObject,
                 values: {
                     objectType,
                     obj

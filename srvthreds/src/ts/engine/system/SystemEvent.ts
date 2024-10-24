@@ -52,11 +52,7 @@ export class SystemThredEvent {
 
   //@TODO authenticate sender source (up channel) so this is secure
   static isSystemThredEvent(event: Event): boolean {
-    return (
-      event.type === eventTypes.control.type &&
-      Events.getDataContent(event).type ===
-        systemEventTypes.operationTypes.thredControl
-    );
+    return event.type === eventTypes.control.thredControl.type;
   }
 
   static thredDoesNotExist(threds: Threds, event: Event) {
@@ -165,9 +161,7 @@ export class SystemEvent {
   //@TODO authenticate sender source (up channel) so this is secure
   static isSystemEvent(event: Event): boolean {
     return (
-      event.type === eventTypes.control.type &&
-      Events.getDataContent(event).type ===
-        systemEventTypes.operationTypes.sysControl
+      event.type === eventTypes.control.sysControl.type
     );
   }
 
@@ -272,7 +266,7 @@ const getSystemStatusEvent = (
 ) => {
   return Events.newEvent({
     id,
-    type: eventTypes.control.type,
+    type: eventTypes.control.sysControl.type,
     thredId,
     source: { id: eventTypes.system.source.id },
     content: {

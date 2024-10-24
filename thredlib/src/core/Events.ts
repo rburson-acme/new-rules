@@ -1,4 +1,4 @@
-import { DataContent, Event } from "./Event.js";
+import { EventContent, Event } from "./Event.js";
 
 export interface EventParams {
     id: string, type: string, title?: string, description?: string, contentType?: string,
@@ -35,7 +35,7 @@ export class Events {
         return event;
     }
 
-    static getDataContent(event: Event): DataContent {
+    static getDataContent(event: Event): EventContent | undefined {
         return event?.data?.content;
     }
 }

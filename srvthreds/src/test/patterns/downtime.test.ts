@@ -1,4 +1,4 @@
-import { PatternModel, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
+import { PatternModel, Logger, LoggerLevel, Event } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise, withReject } from '../testUtils.js';
 import patternModel from '../../ts/config/patterns/downtime.pattern.json';
 const patternModels: PatternModel[] = [patternModel as PatternModel];
@@ -32,7 +32,7 @@ describe('engine', function () {
               expect(connMan.engine.numThreds).toBe(1);
               expect(message.to).toContain('bOompa');
               expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
-              expect(message.event.data?.content.advice.template.name).toBe('operator_create_workorder');
+              expect(message.event.data?.advice.template.name).toBe('operator_create_workorder');
               resolve();
             }, reject),
           ];
@@ -75,7 +75,7 @@ describe('engine', function () {
               expect(connMan.engine.numThreds).toBe(2);
               expect(message.to).toContain('bOompa');
               expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
-              expect(message.event.data?.content.advice.template.name).toBe('operator_create_workorder');
+              expect(message.event.data?.advice.template.name).toBe('operator_create_workorder');
               resolve();
             }, reject),
           ];
@@ -89,10 +89,10 @@ describe('engine', function () {
   it('inbound should create work order event', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('wonkaInc.cmms.agent');
-      expect(message.event.data?.content.values.tasks[0].values.name).toBe('Widget Jam');
-      expect(message.event.data?.content.values.tasks[0].values.submittedBy).toBe('bOompa');
-      expect(message.event.data?.content.values.tasks[0].values.code).toBe('EC_1034');
-      expect(message.event.data?.content.values.tasks[0].values.location).toBe('Gobstopper Assembly 339');
+      expect(message.event.data?.content.tasks[0].params.values.name).toBe('Widget Jam');
+      expect(message.event.data?.content.tasks[0].params.values.submittedBy).toBe('bOompa');
+      expect(message.event.data?.content.tasks[0].params.values.code).toBe('EC_1034');
+      expect(message.event.data?.content.tasks[0].params.values.location).toBe('Gobstopper Assembly 339');
     });
     connMan.eventQ.queue({ ...events.shouldCreateWorkOrder, thredId });
     return pr;
@@ -109,8 +109,8 @@ describe('engine', function () {
           connMan.engine.dispatchers = [
             withReject((message) => {
               expect(message.to).toContain('wonkaInc.rms.agent');
-              expect(message.event.data?.content.values.tasks[0].values.code).toBe('EC_1034');
-              expect(message.event.data?.content.values.tasks[0].values.location).toBe('Gobstopper Assembly 339');
+              expect(message.event.data?.content.tasks[0].params.values.code).toBe('EC_1034');
+              expect(message.event.data?.content.tasks[0].params.values.location).toBe('Gobstopper Assembly 339');
               resolve();
             }, reject),
           ];
@@ -125,7 +125,7 @@ describe('engine', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('fLoompa');
       expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
-      expect(message.event.data?.content.advice.template.name).toBe('technician_accept_work');
+      expect(message.event.data?.advice.template.name).toBe('technician_accept_work');
     });
     connMan.eventQ.queue({ ...events.availableTechnicians, thredId });
     return pr;
@@ -135,11 +135,11 @@ describe('engine', function () {
   it('inbound technician not accept', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('wonkaInc.rms.agent');
-      expect(message.event.data?.content.values.tasks[0].name).toBe('technicianUnavailable');
-      expect(message.event.data?.content.values.tasks[0].values.id).toBe('fLoompa');
-      expect(message.event.data?.content.values.tasks[0].values.unavailableAt).toBeDefined();
-      expect(message.event.data?.content.values.tasks[1].name).toBe('availableTechnicians');
-      expect(message.event.data?.content.values.tasks[1].values.code).toBe('EC_1034');
+      expect(message.event.data?.content.tasks[0].name).toBe('technicianUnavailable');
+      expect(message.event.data?.content.tasks[0].params.values.id).toBe('fLoompa');
+      expect(message.event.data?.content.tasks[0].params.values.unavailableAt).toBeDefined();
+      expect(message.event.data?.content.tasks[1].name).toBe('availableTechnicians');
+      expect(message.event.data?.content.tasks[1].params.values.code).toBe('EC_1034');
     });
     connMan.eventQ.queue({ ...events.notAcceptWork, thredId });
     return pr;
@@ -149,7 +149,7 @@ describe('engine', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('cBucket');
       expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
-      expect(message.event.data?.content.advice.template.name).toBe('technician_accept_work');
+      expect(message.event.data?.advice.template.name).toBe('technician_accept_work');
     });
     connMan.eventQ.queue({ ...events.availableTechnicians2, thredId });
     return pr;
@@ -160,13 +160,13 @@ describe('engine', function () {
       connMan.engine.dispatchers = [
         withReject((message) => {
           expect(message.to).toContain('wonkaInc.rms.agent');
-          expect(message.event.data?.content.values.tasks[0].name).toBe('technicianUnavailable');
-          expect(message.event.data?.content.values.tasks[0].values.id).toBe('cBucket');
-          expect(message.event.data?.content.values.tasks[0].values.unavailableAt).toBeDefined();
+          expect(message.event.data?.content.tasks[0].name).toBe('technicianUnavailable');
+          expect(message.event.data?.content.tasks[0].params.values.id).toBe('cBucket');
+          expect(message.event.data?.content.tasks[0].params.values.unavailableAt).toBeDefined();
           connMan.engine.dispatchers = [
             withReject((message) => {
               expect(message.to).toContain('wonkaInc.cmms.agent');
-              expect(message.event.data?.content.values.tasks[0].values.id).toBe('3939');
+              expect(message.event.data?.content.tasks[0].params.values.id).toBe('3939');
               resolve();
             }, reject),
           ];
@@ -197,7 +197,7 @@ let thredId: string | undefined;
 let thredId2: string | undefined;
 let connMan: EngineConnectionManager;
 
-const events = {
+const events: Record<string, Event> = {
   noMatch: {
     id: '001',
     type: 'unknown.event',
@@ -205,7 +205,9 @@ const events = {
     data: {
       description: 'Unknown Event',
       content: {
-        errorCode: 'Dang',
+        values: {
+        errorCode: 'Dang'
+        }
       },
     },
     source: {
@@ -220,7 +222,9 @@ const events = {
     data: {
       description: 'Widget Jam',
       content: {
+        values: {
         errorCode: 'EC_1034',
+        }
       },
     },
     source: {
@@ -233,9 +237,7 @@ const events = {
     type: 'wonkaInc.operator',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'operator_create_workorder',
         values: {
           operator_response: false,
         },
@@ -251,9 +253,7 @@ const events = {
     type: 'wonkaInc.operator',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'operator_create_workorder',
         values: {
           operator_response: true,
         },
@@ -269,9 +269,7 @@ const events = {
     type: 'wonkaInc.cmms.failureWorkOrder.created',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'workOrderCreate',
         values: {
           id: '3939',
           name: 'Widget Jam',
@@ -290,9 +288,7 @@ const events = {
     type: 'wonkaInc.rms.availableResources',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'availableTechnicians',
         values: {
           availableTechnicians: [
             { id: 'fLoompa', name: 'Fernando Loompa' },
@@ -311,9 +307,7 @@ const events = {
     type: 'wonkaInc.technician',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'technician_accept_work',
         values: {
           technician_response: false,
         },
@@ -329,9 +323,7 @@ const events = {
     type: 'wonkaInc.rms.availableResources',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'availableTechnicians',
         values: {
           availableTechnicians: [{ id: 'cBucket', name: 'Charlie' }],
         },
@@ -347,9 +339,7 @@ const events = {
     type: 'wonkaInc.technician',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'technician_accept_work',
         values: {
           technician_response: true,
         },
@@ -365,9 +355,7 @@ const events = {
     type: 'wonkaInc.cmms.failureWorkOrder.updated',
     time: 1584887617722,
     data: {
-      contentType: 'application/json',
       content: {
-        type: 'workOrderUpdate',
         values: {
           id: '3939',
           name: 'Widget Jam',
