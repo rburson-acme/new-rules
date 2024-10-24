@@ -4,11 +4,7 @@ export interface Event {
     readonly thredId?: string;
     readonly type: string;
     time?: number;
-    readonly source: {
-        readonly id: string;
-        readonly name?: string;
-        readonly uri?: string;
-    };
+    readonly source: EventSource;
     readonly data?: EventData;
 }
 export interface EventData {
@@ -25,6 +21,7 @@ export interface EventData {
     readonly content?: EventContent;
 }
 export type EventContent = EventValues & EventTasks & Resources & InlineContent;
+
 interface EventValues {
     values?: Record<string, any> | Record<string, any>[];
 }
@@ -58,3 +55,9 @@ export interface InlineItem {
     readonly content: string;
 }
 export {};
+
+export interface EventSource {
+    readonly id: string;
+    readonly name?: string;
+    readonly uri?: string;
+}

@@ -1,5 +1,5 @@
 import { Event, Logger } from 'thredlib';
-import rootStore from './src/ts/store/rootStore';
+import rootStore from './src/stores/rootStore';
 
 // test hooks
 
