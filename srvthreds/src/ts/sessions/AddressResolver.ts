@@ -80,7 +80,7 @@ export class AddressResolver {
     let addresses = Array.isArray(address) ? address : address.include;
 
     // @TODO @TEMP @DEMO add admin for demo ---
-    addresses.push('admin');
+    //addresses.push('admin');
     // ---------------------------------------
 
     let participantIds: string[] = [];

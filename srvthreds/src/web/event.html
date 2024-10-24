@@ -46,7 +46,7 @@
         var socket;
 
         function connect() {
-          socket = io('https://proximl.com', { transports: ['websocket'], jsonp: false, query: { id: $('#as').val() } });
+          socket = io('https://localhost', { transports: ['websocket'], jsonp: false, query: { id: $('#as').val() } });
         }
         function send(message) {
           const to = $('#to').val();
