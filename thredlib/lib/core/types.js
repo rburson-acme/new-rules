@@ -7,7 +7,15 @@ export const eventTypes = {
         }
     },
     control: {
-        type: 'org.wt.control',
+        sysControl: {
+            type: 'org.wt.control.sysControl',
+        },
+        thredControl: {
+            type: 'org.wt.control.thredControl',
+        },
+        dataControl: {
+            type: 'org.wt.control.dataControl',
+        },
     },
 };
 // these are application level types (i.e. content.type)
@@ -17,11 +25,6 @@ export const systemEventTypes = {
     },
     successfulStatus: "OK",
     unsuccessfulStatus: "ERROR",
-    operationTypes: {
-        sysControl: "sysControl",
-        thredControl: "thredControl",
-        storeObject: "storeObject",
-    },
     operations: {
         timeoutReaction: "timeoutReaction",
         transitionThred: "transitionThred",

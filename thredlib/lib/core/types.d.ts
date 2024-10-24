@@ -7,7 +7,15 @@ export declare const eventTypes: {
         };
     };
     control: {
-        type: string;
+        sysControl: {
+            type: string;
+        };
+        thredControl: {
+            type: string;
+        };
+        dataControl: {
+            type: string;
+        };
     };
 };
 export declare const systemEventTypes: {
@@ -16,11 +24,6 @@ export declare const systemEventTypes: {
     };
     successfulStatus: string;
     unsuccessfulStatus: string;
-    operationTypes: {
-        sysControl: string;
-        thredControl: string;
-        storeObject: string;
-    };
     operations: {
         timeoutReaction: string;
         transitionThred: string;

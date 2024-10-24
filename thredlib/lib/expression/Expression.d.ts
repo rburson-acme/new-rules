@@ -12,8 +12,8 @@ export declare class Expression {
         event: Event;
         data: import("../core/Event.js").EventData | undefined;
         content: import("../core/Event.js").EventContent | undefined;
-        values: never;
-        valueNamed: (name: string) => never;
+        values: void;
+        valueNamed: (name: string) => undefined;
         local: (name: string) => any;
         setLocal: (name: string, value: any) => void;
     };

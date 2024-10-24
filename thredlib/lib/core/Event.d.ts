@@ -24,12 +24,18 @@ export interface EventData {
     };
     readonly content?: EventContent;
 }
-export type EventContent = EventValues | EventTasks | Resources | InlineContent;
+export type EventContent = EventValues & EventTasks & Resources & InlineContent;
 interface EventValues {
-    values: Record<string, any> | Record<string, any>[];
+    values?: Record<string, any> | Record<string, any>[];
 }
 export interface EventTasks {
-    readonly tasks: (EventTask | EventTask[])[];
+    readonly tasks?: (EventTask | EventTask[])[];
+}
+export interface Resources {
+    readonly resources?: Resource[];
+}
+export interface InlineContent {
+    items?: InlineItem[];
 }
 export interface EventTask {
     readonly op: string;
@@ -42,15 +48,9 @@ export interface EventTaskParams {
     readonly matcher?: {};
     readonly selector?: {};
 }
-export interface Resources {
-    readonly resources: Resource[];
-}
 export interface Resource {
     readonly contentType: string;
     readonly uri: string;
-}
-export interface InlineContent {
-    items: InlineItem[];
 }
 export interface InlineItem {
     readonly contentType: string;
