@@ -10,25 +10,28 @@ import { ThredStore } from './store/ThredStore.js';
     This is part of the 'stateless' tree that gets shared across processes
 */
 export class Publish {
+  to: Address | string[] | string;
 
-    to: Address | string[];
+  constructor(publish: PublishModel) {
+    this.to = publish.to;
+  }
 
-    constructor(publish: PublishModel) {
-        this.to = publish.to;
+  async apply(event: Event, thredStore: ThredStore): Promise<Address> {
+    const { to } = this;
+    const context = thredStore.thredContext;
+    const expressionParams = { event, context };
+    try {
+      const transformedTo = await Transformer.transformObject(to, expressionParams);
+      // if an array, flattening allows for multiple array matches to be nested in the 'to' field
+      // if a string we'll need to return an array of one
+      // otherwise, assume it's an Address object
+      return Array.isArray(transformedTo)
+        ? [].concat(...transformedTo)
+        : typeof transformedTo === 'string'
+          ? [transformedTo]
+          : transformedTo;
+    } catch (e) {
+      throw Error(`publish.apply(): Failed to transform expr ${to}`);
     }
-
-    async apply(event:Event, thredStore: ThredStore): Promise<Address> {
-
-        const { to } = this;
-        const context = thredStore.thredContext;
-        const expressionParams = { event, context };
-        try {
-            const transformedTo = await Transformer.transformObject(to, expressionParams);
-            // flattening allows for multiple array matches to be nested in the 'to' field
-            return Array.isArray(transformedTo) ? [].concat(...transformedTo) : transformedTo;
-        } catch(e) {
-            throw Error(`publish.apply(): Failed to transform expr ${to}`);
-        }
-    }
-
+  }
 }

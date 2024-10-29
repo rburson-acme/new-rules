@@ -5,17 +5,24 @@
     "maxInstances": 0,
     "reactions": [
         {
+            "name": "echo",
             "condition": {
                 "name": "filter",
                 "xpr": "$event.type = 'org.wt.echo'",
+                "onTrue": {
+                    "xpr": "$setLocal('echoTimes', $local('echoTimes') ? $local('echoTimes') + 1 : 1)"
+                },
                 "transform": {
                     "eventDataTemplate": {
-                        "eventType": "$xpr( $advice.eventType )",
-                        "title": "$xpr( $advice.title )"
+                        "title": "$xpr( $valueNamed('echoTitle') & ' ' & $local('echoTimes') )",
+                        "content": "$xpr( $valueNamed('echoContent') )"
                     }
                 },
                 "publish": {
-                    "to": ["participant0"]
+                    "to": "$xpr( $valueNamed('echoTo') )"
+                },
+                "transition": {
+                   "name": "echo"
                 }
             }
         }

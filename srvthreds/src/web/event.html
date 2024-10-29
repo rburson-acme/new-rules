@@ -85,22 +85,21 @@
       <div class="input_container">
         <textarea id="data" placeholder="Paste JSON Here" autocomplete="off" spellcheck="false">
         {
-            "title": "Echo Event", 
             "type": "org.wt.echo",
-            "advice": {
-              "eventType": "org.wt.echo.back",
-              "title": "Echo Back Event"
-            },
-            "content": {
-              "values": {
-                "echoTo": ["participant0, participant1"],
-                "echoContent": {
-                  "values": {
-                    "exampleValue1": "value1"
+            "data": {
+              "title": "Echo Event", 
+              "content": {
+                "values": {
+                  "echoTitle": "Echo Back Event",
+                  "echoTo": ["participant0", "participant1"],
+                  "echoContent": {
+                    "values": {
+                      "exampleValue1": "value1"
+                    }
                   }
                 }
               }
-            }
+          }
         }
         </textarea>
       </div>
@@ -129,7 +128,7 @@
       }
       function send(event) {
         event.id = event.id || 'echo_' + Date.now();
-        event.source = event?.source?.id ? { id: event.source.id }: { id:$('#as').val() };
+        event.source = event?.source?.id ? { id: event.source.id } : { id: $('#as').val() };
         socket.send(event);
       }
       $('#send').click(function (e) {

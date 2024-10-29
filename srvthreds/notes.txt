@@ -1,4 +1,17 @@
 
+
+
+
+
+
+
+
+
+
+
+
+----- Old, moved to Jira ----------------------
+
 # Scaling and redundancy
 
     - Set up sentinel or clustering for Redis

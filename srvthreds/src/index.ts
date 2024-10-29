@@ -6,7 +6,7 @@ import http from 'http';
 import { Request, Response, Express } from 'express';
 //@temp sms
 
-import { Logger, PatternModel, Event, Message } from './ts/thredlib/index.js';
+import { Logger, PatternModel, Event, Message, LoggerLevel } from './ts/thredlib/index.js';
 import { Sessions } from './ts/sessions/Sessions.js';
 import { SessionStorage } from './ts/sessions/storage/SessionStorage.js';
 import { EventQ } from './ts/queue/EventQ.js';
@@ -38,6 +38,8 @@ import url from 'node:url';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+Logger.setLevel(LoggerLevel.DEBUG);
 
 /*
 

@@ -1,3 +1,4 @@
+import { Logger } from '../lib/Logger.js';
 import { EventContent, Event, EventData } from './Event.js';
 
 export interface EventParams {
@@ -59,6 +60,7 @@ export class Events {
     if (Array.isArray(values)) {
       return values.find((value) => value[name]);
     }
+    if(!values?.[name]) Logger.info(`Event value named ${name} not found`);
     return values?.[name];
   }
 }

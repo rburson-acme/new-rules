@@ -17,6 +17,11 @@ export const eventTypes = {
             type: 'org.wt.control.dataControl',
         },
     },
+    client: {
+        tell: {
+            type: 'org.wt.client.tell',
+        }
+    }
 }
 
 // these are application level types (i.e. content.type)
