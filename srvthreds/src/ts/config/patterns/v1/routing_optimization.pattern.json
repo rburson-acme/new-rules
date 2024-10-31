@@ -7,7 +7,7 @@
     {
       "name": "Get past MES programs",
       "condition": {
-        "name": "filter",
+        "type": "filter",
         "xpr": "$event.type = 'mes.newOperation'",
         "onTrue": {
           "xpr": "$setLocal('first_event', $event)"
@@ -56,7 +56,7 @@
     {
       "name": "Search heat lot in ERP",
       "condition": {
-        "name": "filter",
+        "type": "filter",
         "xpr": "$event.type = 'mes.newOperation'",
         "transform": {
           "eventDataTemplate": {
@@ -94,17 +94,17 @@
     {
       "name": "Send recommendation to operator",
       "condition": {
-        "name": "and",
+        "type": "and",
         "operands": [
           {
-            "name": "filter",
+            "type": "filter",
             "xpr": "$event.type='org.wt.persistence.op'",
             "onTrue": {
               "xpr": "$setLocal('mes_result', $valueNamed('find_past_ops'))"
             }
           },
           {
-            "name": "filter",
+            "type": "filter",
             "xpr": "$event.type='customer.erp.result'",
             "onTrue": {
               "xpr": "$setLocal('heatlot_result', $valueNamed('find_heatlot')[0])"
@@ -184,14 +184,14 @@
     },
     {
       "condition": {
-          "name": "or",
+          "type": "or",
           "operands": [
               {
-                  "name": "filter",
+                  "type": "filter",
                   "xpr": "$event.type='customer.operator' and $content.values.operator_response"
               },
               {
-                  "name": "filter",
+                  "type": "filter",
                   "xpr": "$event.type='customer.operator' and $not($content.values.operator_response)"
               }
           ],

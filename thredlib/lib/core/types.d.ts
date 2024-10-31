@@ -17,6 +17,11 @@ export declare const eventTypes: {
             type: string;
         };
     };
+    client: {
+        tell: {
+            type: string;
+        };
+    };
 };
 export declare const systemEventTypes: {
     responseTypes: {

@@ -1,15 +1,15 @@
 import { PatternModel } from "../../../thredlib";
 
 export const patternModel: PatternModel = {
-  name: 'Downtime Light',
-  id: 'downtime_light',
+  name: 'Injury Monitor',
+  id: 'injury_monitor',
   instanceInterval: 0,
   maxInstances: 0,
   reactions: [
     {
       condition: {
-        name: 'filter',
-        xpr: "$event.type = 'wonkaInc.downtime'",
+        type: 'filter',
+        xpr: "$event.type = ''",
         onTrue: { xpr: "$setLocal('first_event', $event)" },
         transform: {
           eventDataTemplate: {
@@ -40,7 +40,7 @@ export const patternModel: PatternModel = {
           },
         },
         publish: {
-          to: ['wonkaInc.rms.agent'],
+          to: ['$event.source.id'],
         },
       },
     },

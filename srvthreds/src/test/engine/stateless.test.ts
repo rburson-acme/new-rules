@@ -111,7 +111,7 @@ const patternModels: PatternModel[] = [
     reactions: [
       {
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event0'",
           transform: {
             eventDataTemplate: {
@@ -126,14 +126,14 @@ const patternModels: PatternModel[] = [
       {
         name: 'event1reaction',
         condition: {
-          name: 'and',
+          type: 'and',
           operands: [
             {
-              name: 'filter',
+              type: 'filter',
               xpr: "$event.type = 'inbound.event1'",
             },
             {
-              name: 'filter',
+              type: 'filter',
               xpr: "$event.type = 'inbound.event1a'",
             },
           ],
@@ -150,7 +150,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event2reaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event2'",
           onTrue: { xpr: "$setLocal('event2', $event)" },
           transform: {
@@ -170,7 +170,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event2areaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event2'",
           transform: {
             eventDataTemplate: {
@@ -188,10 +188,10 @@ const patternModels: PatternModel[] = [
       {
         name: 'event3reaction',
         condition: {
-          name: 'or',
+          type: 'or',
           operands: [
             {
-              name: 'filter',
+              type: 'filter',
               xpr: "$event.type = 'inbound.event3'",
               transform: {
                 eventDataTemplate: {
@@ -208,7 +208,7 @@ const patternModels: PatternModel[] = [
               },
             },
             {
-              name: 'filter',
+              type: 'filter',
               xpr: "$event.type = 'inbound.event4'",
               transform: {
                 eventDataTemplate: {

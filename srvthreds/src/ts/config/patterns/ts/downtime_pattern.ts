@@ -9,7 +9,7 @@ export const patternModel: PatternModel = {
     {
       name: 'notify_erp_of_downtime',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type = 'wonkaInc.downtime'",
         onTrue: { xpr: "$setLocal('first_event', $event)" },
         transform: {
@@ -52,7 +52,7 @@ export const patternModel: PatternModel = {
     {
       name: 'notify_operator',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type = 'wonkaInc.downtime'",
         transform: {
           eventDataTemplate: {
@@ -110,10 +110,10 @@ export const patternModel: PatternModel = {
     {
       name: 'handle_operator_response',
       condition: {
-        name: 'or',
+        type: 'or',
         operands: [
           {
-            name: 'filter',
+            type: 'filter',
             xpr: "$event.type='wonkaInc.operator' and $content.values.operator_response",
             onTrue: {
               xpr: "$setLocal('operator_id', $event.source.id)",
@@ -153,7 +153,7 @@ export const patternModel: PatternModel = {
             },
           },
           {
-            name: 'filter',
+            type: 'filter',
             xpr: "$event.type='wonkaInc.operator' and $not($content.values.operator_response)",
             transition: {
               name: '$terminate',
@@ -165,7 +165,7 @@ export const patternModel: PatternModel = {
     {
       name: 'notify_operator_workorder_created',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
         onTrue: {
           xpr: "$setLocal('current_work_order_id', $content.values.id)",
@@ -187,7 +187,7 @@ export const patternModel: PatternModel = {
     },
     {
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
         transform: {
           eventDataTemplate: {
@@ -225,7 +225,7 @@ export const patternModel: PatternModel = {
     {
       name: 'notifyAvailableTechnician',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type = 'wonkaInc.rms.availableResources'",
         transform: {
           eventDataTemplate: {
@@ -283,10 +283,10 @@ export const patternModel: PatternModel = {
     },
     {
       condition: {
-        name: 'or',
+        type: 'or',
         operands: [
           {
-            name: 'filter',
+            type: 'filter',
             xpr: "$event.type='wonkaInc.technician' and $content.values.technician_response",
             transform: {
               eventDataTemplate: {
@@ -321,7 +321,7 @@ export const patternModel: PatternModel = {
             },
           },
           {
-            name: 'filter',
+            type: 'filter',
             xpr: "$event.type='wonkaInc.technician' and $not($content.values.technician_response)",
             transform: {
               eventDataTemplate: {
@@ -377,7 +377,7 @@ export const patternModel: PatternModel = {
     {
       name: 'updateWorkOrder',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type='wonkaInc.technician' and $content.values.technician_response",
         transform: {
           eventDataTemplate: {
@@ -412,7 +412,7 @@ export const patternModel: PatternModel = {
     {
       name: 'notify_technician_workorder_updated',
       condition: {
-        name: 'filter',
+        type: 'filter',
         xpr: "$event.type='wonkaInc.cmms.failureWorkOrder.updated'",
         transform: {
           eventDataTemplate: {

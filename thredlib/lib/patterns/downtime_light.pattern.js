@@ -6,7 +6,7 @@ const pattern = {
     reactions: [
         {
             condition: {
-                name: 'filter',
+                type: 'filter',
                 xpr: "$event.type = 'wonkaInc.downtime'",
                 onTrue: { xpr: "$setLocal('first_event', $event)" },
                 transform: {
@@ -44,7 +44,7 @@ const pattern = {
         {
             name: 'notifyAvailableTechnician',
             condition: {
-                name: 'filter',
+                type: 'filter',
                 xpr: "$event.type = 'wonkaInc.rms.availableResources'",
                 transform: {
                     eventDataTemplate: {
@@ -101,10 +101,10 @@ const pattern = {
         },
         {
             condition: {
-                name: 'or',
+                type: 'or',
                 operands: [
                     {
-                        name: 'filter',
+                        type: 'filter',
                         xpr: "$event.type='wonkaInc.technician' and $content.values.technician_response",
                         transform: {
                             eventDataTemplate: {
@@ -138,7 +138,7 @@ const pattern = {
                         },
                     },
                     {
-                        name: 'filter',
+                        type: 'filter',
                         xpr: "$event.type='wonkaInc.technician' and $not($content.values.technician_response)",
                         transform: {
                             eventDataTemplate: {
@@ -193,7 +193,7 @@ const pattern = {
         {
             name: 'notify_technician_workorder_assigned',
             condition: {
-                name: 'filter',
+                type: 'filter',
                 xpr: "$event.type='wonkaInc.technician' and $content.values.technician_response",
                 transform: {
                     eventDataTemplate: {

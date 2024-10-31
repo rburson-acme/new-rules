@@ -6,7 +6,7 @@
         "reaction": {
           "name": "init",
           "condition": {
-              "name": "filter",
+              "type": "filter",
               "expr": "type = 'wonkaInc.downtime'",
               "transform": {
                 "expr": ""
@@ -22,11 +22,11 @@
             {
               "reaction": {
                 "condition": {
-                  "name": "or",
+                  "type": "or",
                   "operands": [
                     {
                       "condition": {
-                        "name": "filter",
+                        "type": "filter",
                         "expr": "type = 'wonkaInc.downtime'",
                         "transform": {
                           "expr": ""
@@ -37,7 +37,7 @@
                     },
                     {
                       "condition": {
-                        "name": "filter",
+                        "type": "filter",
                         "expr": "type = 'wonkaInc.maintenance'",
                         "transform": {
                           "expr": ""
@@ -59,17 +59,17 @@
             {
               "reaction": {
                 "condition": {
-                  "name": "and",
+                  "type": "and",
                   "operands": [
                     {
                       "condition": {
-                        "name": "filter",
+                        "type": "filter",
                         "expr": "type = 'wonkaInc.downtime'"
                       }
                     },
                     {
                       "condition": {
-                        "name": "filter",
+                        "type": "filter",
                         "expr": "type = 'wonkaInc.maintenance'"
                       }
                     }

@@ -65,7 +65,7 @@ const patterns: PatternModel[] = [
             {
                 "name": "notifyAvailableTechnicians",
                 "condition": {
-                    "name": "filter",
+                    "type": "filter",
                     "xpr": "$event.type = 'wonkaInc.downtime'",
                     "transform": {
                         "eventDataTemplate": {
@@ -110,7 +110,7 @@ const patterns: PatternModel[] = [
             },
             {
                 "condition": {
-                    "name": "filter",
+                    "type": "filter",
                     "xpr": "$event.type='wonkaInc.technician' and $content.technician_accept_work.value",
                     "transform": {
                         "eventDataTemplate": {

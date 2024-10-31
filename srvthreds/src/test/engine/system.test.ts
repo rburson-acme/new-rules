@@ -223,7 +223,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event0Reaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event0'",
           onTrue: { xpr: "$setLocal('event0', $event)" },
           transform: {
@@ -239,7 +239,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event1Reaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event1'",
           transform: {
             eventDataTemplate: {
@@ -262,7 +262,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event2Reaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event2'",
           transform: {
             eventDataTemplate: {
@@ -284,7 +284,7 @@ const patternModels: PatternModel[] = [
       {
         name: 'event3Reaction',
         condition: {
-          name: 'filter',
+          type: 'filter',
           xpr: "$event.type = 'inbound.event3'",
           transform: {
             eventDataTemplate: {

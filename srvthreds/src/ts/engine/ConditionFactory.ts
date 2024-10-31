@@ -16,8 +16,8 @@ export class ConditionFactory {
     private conditionId: number = 0;
 
     newCondition(conditionModel: ConditionModel): Condition {
-        const type = ConditionFactory.typeMap[conditionModel.name];
-        if (!type) throw Error(`Invalid Condition name: ${conditionModel.name}`);
+        const type = ConditionFactory.typeMap[conditionModel.type];
+        if (!type) throw Error(`Invalid Condition type: ${conditionModel.type}`);
         return new type(conditionModel, this);
     }
 

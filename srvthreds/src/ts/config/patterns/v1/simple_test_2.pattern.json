@@ -6,7 +6,7 @@
     "reactions": [
         {
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'inbound.event0'",
                 "transform": {
                     "eventDataTemplate": {
@@ -20,7 +20,7 @@
         },
         {
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'inbound.event4a'",
                 "transform": {
                     "eventDataTemplate": {
@@ -34,7 +34,7 @@
         },
         {
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'inbound.event5'",
                 "transform": {
                     "eventDataTemplate": {

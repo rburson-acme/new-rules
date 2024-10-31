@@ -6,7 +6,7 @@
     "reactions": [
         {
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'org.wt.control' and $content.type = 'storeObject'",
                 "transform": {
                     "eventDataTemplate": {

@@ -3,6 +3,6 @@ export type AddressModel = {
     exclude?: string[];
 };
 export interface PublishModel {
-    to: AddressModel | string[];
+    to: AddressModel | string[] | string;
     description?: string;
 }

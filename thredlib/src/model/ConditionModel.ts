@@ -6,7 +6,7 @@ import { ConsequentModel } from './ConsequentModel.js';
 
 export interface ConditionModel {
 
-    readonly name: string;
+    readonly type: string;
     readonly description?: string;
     readonly operands?: (ConditionModel | FilterModel)[];
     readonly onTrue?: ConsequentModel;

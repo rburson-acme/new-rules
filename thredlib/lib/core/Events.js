@@ -1,3 +1,4 @@
+import { Logger } from '../lib/Logger.js';
 export class Events {
     static newEvent(params) {
         const { id, type, contentType, source, thredId, content, title, description } = params;
@@ -40,6 +41,8 @@ export class Events {
         if (Array.isArray(values)) {
             return values.find((value) => value[name]);
         }
+        if (!values?.[name])
+            Logger.info(`Event value named ${name} not found`);
         return values?.[name];
     }
 }

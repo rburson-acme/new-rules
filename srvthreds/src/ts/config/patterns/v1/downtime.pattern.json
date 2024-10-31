@@ -7,7 +7,7 @@
         {
             "name": "notify_erp_of_downtime",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'wonkaInc.downtime'",
                 "onTrue": { "xpr": "$setLocal('first_event', $event)" },
                 "transform": {
@@ -52,7 +52,7 @@
         {
             "name": "notify_operator",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'wonkaInc.downtime'",
                 "transform": {
                     "eventDataTemplate": {
@@ -118,10 +118,10 @@
         {
             "name": "handle_operator_response",
             "condition": {
-                "name": "or",
+                "type": "or",
                 "operands": [
                     {
-                        "name": "filter",
+                        "type": "filter",
                         "xpr": "$event.type='wonkaInc.operator' and $content.values.operator_response",
                         "onTrue": {
                             "xpr": "$setLocal('operator_id', $event.source.id)"
@@ -162,7 +162,7 @@
                         }
                     },
                     {
-                        "name": "filter",
+                        "type": "filter",
                         "xpr": "$event.type='wonkaInc.operator' and $not($content.values.operator_response)",
                         "transition": {
                             "name": "$terminate"
@@ -174,7 +174,7 @@
         {
             "name": "notify_operator_workorder_created",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
                 "onTrue": {
                     "xpr": "$setLocal('current_work_order_id', $content.values.id)"
@@ -198,7 +198,7 @@
         },
         {
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
                 "transform": {
                     "eventDataTemplate": {
@@ -237,7 +237,7 @@
         {
             "name": "notifyAvailableTechnician",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type = 'wonkaInc.rms.availableResources'",
                 "transform": {
                     "eventDataTemplate": {
@@ -302,10 +302,10 @@
         },
         {
             "condition": {
-                "name": "or",
+                "type": "or",
                 "operands": [
                     {
-                        "name": "filter",
+                        "type": "filter",
                         "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
                         "transform": {
                             "eventDataTemplate": {
@@ -339,7 +339,7 @@
                         }
                     },
                     {
-                        "name": "filter",
+                        "type": "filter",
                         "xpr": "$event.type='wonkaInc.technician' and $not($content.values.technician_response)",
                         "transform": {
                             "eventDataTemplate": {
@@ -394,7 +394,7 @@
         {
             "name": "updateWorkOrder",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
                 "transform": {
                     "eventDataTemplate": {
@@ -431,7 +431,7 @@
         {
             "name": "notify_technician_workorder_updated",
             "condition": {
-                "name": "filter",
+                "type": "filter",
                 "xpr": "$event.type='wonkaInc.cmms.failureWorkOrder.updated'",
                 "transform": {
                     "eventDataTemplate": {
