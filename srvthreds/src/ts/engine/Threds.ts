@@ -18,6 +18,9 @@ export class Threds {
     private readonly engine: Engine,
   ) {}
 
+
+  // handleAttached and handleDetached are the two main entry point for Thred locking (per thredId)
+  // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   consider(event: Event): Promise<void> {
     return event.thredId !== null && event.thredId != undefined
       ? this.handleAttached(event.thredId, event)
@@ -36,6 +39,8 @@ export class Threds {
     return this.thredsStore.terminateAllThreds();
   }
 
+  // top-level lock here - 'withThredStore' will lock on a per-thredId basis
+  // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async handleAttached(thredId: string, event: Event): Promise<void> {
     const { thredsStore } = this;
     return this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
@@ -71,6 +76,8 @@ export class Threds {
     });
   }
 
+  // top-level lock here - 'withNewThredStore' will lock on a per-thredId basis
+  // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async startThred(pattern: Pattern, event: Event): Promise<void> {
     // Assign a thredId via a shallow copy of the event
     await this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {

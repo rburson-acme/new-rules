@@ -17,18 +17,18 @@ export class Reaction {
 
     readonly name: string;
     readonly condition: Condition;
-    readonly timeout?: {
+    readonly expiry?: {
         interval: number;
         transition?: Transition;
     }
     constructor(reactionModel: ReactionModel, name: string) {
         const { condition } = reactionModel;
         this.name = name;
-        this.condition = new ConditionFactory().newCondition(condition);
-        if(reactionModel.timeout) {
-            const { interval, transition: transitionModel } = reactionModel.timeout;
+        this.condition = new ConditionFactory().newCondition(condition, '0');
+        if(reactionModel.expiry) {
+            const { interval, transition: transitionModel } = reactionModel.expiry;
             const transition = transitionModel ? new Transition(transitionModel) : undefined;
-            this.timeout = reactionModel.timeout ? { interval,  transition } : undefined;
+            this.expiry = { interval,  transition };
         }
     }
 

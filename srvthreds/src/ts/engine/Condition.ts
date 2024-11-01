@@ -20,15 +20,15 @@ export type ConditionResult = {
 */
 export abstract class Condition {
 
-    readonly conditionId: number;
+    readonly conditionId: string;
     transform?: Transform;
     onTrue?: Consequent;
     publish?: Publish;
     transition?: Transition;
 
     //conditionId is only unique with a Reaction
-    constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory) {
-        this.conditionId = conditionFactory.nextId;
+    constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory, id: string) {
+        this.conditionId = id;
         const { transform, onTrue, publish, transition } = conditionModel;
         this.transform = transform && new Transform(transform);
         this.onTrue = onTrue && new Consequent(onTrue);

@@ -21,13 +21,13 @@ export class ThredStore {
     static newInstance(pattern: Pattern, eventStore: EventStore): ThredStore {
         const id = Id.getNextThredId(pattern.id);
         const thredContext = new ThredContext({ thredId: id });
-        const reactionStore = new ReactionStore(pattern.initialReactionName);
+        const reactionStore = new ReactionStore({ reactionName: pattern.initialReactionName });
         return new ThredStore(id, pattern, reactionStore, thredContext, Date.now());
     }
 
     transitionTo(reaction?: Reaction): void {
         this._currentReaction = reaction;
-        this.reactionStore = new ReactionStore(reaction?.name);
+        this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
     }
 
     get currentReaction(): Reaction | undefined {
@@ -40,6 +40,11 @@ export class ThredStore {
 
     get isFinished() {
         return !this.currentReaction;
+    }
+    
+    get reactionTimedOut(): boolean {
+        if (!this.currentReaction?.expiry?.interval) return false;
+        return this.reactionStore.isExpired(this.currentReaction.expiry.interval);
     }
 
     getState(): ThredStoreState {

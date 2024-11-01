@@ -13,9 +13,10 @@ export class AndCondition extends Condition {
   // private operandResults: (ConditionResult | undefined)[];
   private operands: Condition[];
 
-  constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory) {
-    super(conditionModel, conditionFactory);
-    this.operands = conditionModel?.operands?.map((operand) => conditionFactory.newCondition(operand)) || [];
+  constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory, id: string) {
+    super(conditionModel, conditionFactory, id);
+    const nextId = +id + 1;
+    this.operands = conditionModel?.operands?.map((operand) => conditionFactory.newCondition(operand, `${nextId}`)) || [];
   }
 
   /*

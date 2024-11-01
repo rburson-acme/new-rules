@@ -30,7 +30,7 @@ export declare const systemEventTypes: {
     successfulStatus: string;
     unsuccessfulStatus: string;
     operations: {
-        timeoutReaction: string;
+        expireReaction: string;
         transitionThred: string;
         terminateThred: string;
         resetPattern: string;

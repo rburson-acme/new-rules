@@ -9,7 +9,7 @@ export declare class SystemEvents {
     *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
     *
     */
-    static getSystemTimeoutThredEvent(id: string, thredId: string, reactionName: string, source: Event['source']): Event;
+    static getSystemExpireThredEvent(id: string, thredId: string, reactionName: string, source: Event['source']): Event;
     static getSystemTransitionThredEvent(id: string, thredId: string, transition: TransitionModel, source: Event['source']): Event;
     static getSystemTerminateThredEvent(id: string, thredId: string, source: Event['source']): Event;
     /***

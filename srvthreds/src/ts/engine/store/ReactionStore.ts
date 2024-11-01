@@ -1,31 +1,53 @@
 import { StringMap } from '../../thredlib/index.js';
 
 export class ReactionStore {
+  readonly reactionName?: string;
+  private conditionState: StringMap<any>;
+  private startTime: number;
 
+  constructor({
+    reactionName,
+    conditionState,
+    startTime,
+  }: {
     reactionName?: string;
-    conditionState: StringMap<any>;
+    conditionState?: StringMap<any>;
+    startTime?: number;
+  }) {
+    this.reactionName = reactionName;
+    this.conditionState = conditionState || {};
+    this.startTime = startTime || Date.now();
+  }
 
-    constructor(reactionName?: string, conditionState?: StringMap<any>) {
-        this.reactionName = reactionName;
-        this.conditionState = conditionState || {};
-    }
+  getStartTime() {
+    return this.startTime;
+  }
 
-    getConditionStateForId(conditionId: number) {
-        return this.conditionState[conditionId];
-    }
+  getConditionStateForId(conditionId: string) {
+    return this.conditionState[conditionId];
+  }
 
-    setConditionStateFor(conditionId: number, state: {}) {
-        this.conditionState[conditionId] = state;
-    }
+  setConditionStateFor(conditionId: string, state: {}) {
+    this.conditionState[conditionId] = state;
+  }
 
-    getState() {
-        return {
-            reactionName: this.reactionName,
-            conditionState: this.conditionState
-        }
-    }
+  isExpired(expiry: number) {
+    return (Date.now() - this.startTime) > expiry;
+  }
 
-    static fromState(state: any): ReactionStore {
-        return new ReactionStore(state.reactionName, state.conditionState);
-    }
+  getState() {
+    return {
+      reactionName: this.reactionName,
+      conditionState: this.conditionState,
+      startTime: this.startTime,
+    };
+  }
+
+  static fromState(state: any): ReactionStore {
+    return new ReactionStore({
+      reactionName: state.reactionName,
+      conditionState: state.conditionState,
+      startTime: state.startTime,
+    });
+  }
 }

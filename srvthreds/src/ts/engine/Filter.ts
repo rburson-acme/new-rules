@@ -14,8 +14,8 @@ import { ConditionFactory } from './ConditionFactory.js';
 export class Filter extends Condition {
 
     private readonly expression: Expression;
-    constructor(filterModel: FilterModel, conditionFactory: ConditionFactory) {
-        super(filterModel, conditionFactory);
+    constructor(filterModel: FilterModel, conditionFactory: ConditionFactory, id: string) {
+        super(filterModel, conditionFactory, id);
         // note: we could defer compilation here until first use
         // it'll be a pattern startup time vs. application time decision
         this.expression = new Expression(filterModel.xpr);

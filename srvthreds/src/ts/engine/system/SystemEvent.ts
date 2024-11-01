@@ -42,8 +42,8 @@ export interface SystemEventValues {
 */
 export class SystemThredEvent {
   private static operations: StringMap<(args: SystemThredEventArgs) => Promise<void>> = {
-    [systemEventTypes.operations.timeoutReaction]:
-      SystemThredEvent.timeoutReaction,
+    [systemEventTypes.operations.expireReaction]:
+      SystemThredEvent.expireReaction,
     [systemEventTypes.operations.transitionThred]:
       SystemThredEvent.transitionThred,
     [systemEventTypes.operations.terminateThred]:
@@ -110,15 +110,15 @@ export class SystemThredEvent {
   }
 
   /*
-        Timout the reaction if reactionName is the current reaction
+        Expire the reaction if reactionName is the current reaction
     */
-  private static async timeoutReaction(args: SystemThredEventArgs): Promise<void> {
+  private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
     const reactionName = (
       Events.getContent(event)?.values as SystemEventValues
     )?.reactionName;
     if (thredStore.reactionStore.reactionName === reactionName) {
-      await thredCompanion.timeoutReaction(thredStore, threds);
+      await thredCompanion.expireReaction(thredStore, threds);
     }
   }
 

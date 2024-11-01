@@ -1,10 +1,10 @@
+import { aw } from 'vitest/dist/chunks/reporters.WnPwkmgA.js';
 import { PatternModel, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
-import { events, EngineConnectionManager, withReject, withDispatcherPromise } from '../testUtils.js';
+import { events, EngineConnectionManager, withReject, withDispatcherPromise, delay } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
-// @TODO fix these tests after implementing remote timeout agent
-describe.skip('transitions', function () {
+describe('transitions', function () {
   beforeAll(async () => {
     connMan = await EngineConnectionManager.newEngineInstance(patternModels);
     await connMan.purgeAll();
@@ -33,6 +33,31 @@ describe.skip('transitions', function () {
     connMan.eventQ.queue({ ...events.event1, thredId });
     return pr;
   });
+  test('should expire and ignore expired condition', async function () {
+    await delay(2100);
+    connMan.eventQ.queue({ ...events.event1a, thredId });
+    return;
+  });
+  test('should still be expired and move back to specified transition', async function () {
+    const pr = withDispatcherPromise(connMan.engine.dispatchers,
+      (message) => {
+        expect(message.event.data?.title).toBe('outbound.event1');
+        expect(message.to).toContain('outbound.event1.recipient');
+      },
+    );
+    connMan.eventQ.queue({ ...events.event1, thredId });
+    return pr;
+  });
+  test('should have moved to next transition which is not yet expired', async function () {
+    const pr = withDispatcherPromise(connMan.engine.dispatchers,
+      (message) => {
+        expect(message.event.data?.title).toBe('outbound.event1a');
+        expect(message.to).toContain('outbound.event1a.recipient');
+      },
+    );
+    connMan.eventQ.queue({ ...events.event1a, thredId });
+    return pr;
+  });
   // should move to the next reation with '$next' AND run the same event on the next reaction immediately
   test('$next with forward input', function () {
     const pr = new Promise<void>((resolve, reject) => {
@@ -58,8 +83,9 @@ describe.skip('transitions', function () {
     await connMan.eventQ.queue({ ...events.noMatch, thredId });
     expect(connMan.engine.numThreds).toBe(1);
   });
-  //  should move to the named transition and timeout, move to previous reaction and replay input
-  test('timed transition', function () {
+  //  after wait, should be timed out, ignore the current condition and move to previous reaction and replay input
+  // current condition is ignored, but the event is necessary to force the expiration of the current reaction
+  test('timed transition', async function () {
     const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
     expect(currentReactionName).toBe('event3reaction');
     const pr = new Promise<void>((resolve, reject) => {
@@ -77,9 +103,12 @@ describe.skip('transitions', function () {
         }, reject),
       ];
     });
+    await delay(2100);
+    connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
-  //  should move to the named transition and receive event BEFORE timing out
+  // should have moved back to the reaction with the timeout
+  // should move to the named transition and receive event BEFORE timing out
   test('timed transition', function () {
     const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
     expect(currentReactionName).toBe('event3reaction');
@@ -92,8 +121,9 @@ describe.skip('transitions', function () {
     connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
-  //  should move to the named transition and timeout
-  test('finished', function () {
+  //  should move to the named transition and expire
+  test('finished', async function () {
+    await delay(1000);
     expect(connMan.engine.numThreds).toBe(0);
   });
   // cleanup in case of failure
@@ -109,7 +139,7 @@ let thredId: string | undefined;
 
 const patternModels: PatternModel[] = [
   {
-    name: 'Timout Test',
+    name: 'Expire Test',
     instanceInterval: 0,
     maxInstances: 0,
     reactions: [
@@ -128,6 +158,7 @@ const patternModels: PatternModel[] = [
         },
       },
       {
+        name: "event1reaction",
         condition: {
           type: 'filter',
           xpr: "$event.type = 'inbound.event1'",
@@ -138,6 +169,27 @@ const patternModels: PatternModel[] = [
           },
           publish: {
             to: ['outbound.event1.recipient'],
+          },
+        },
+      },
+      {
+        name: 'event1areaction',
+        condition: {
+          type: 'filter',
+          xpr: "$event.type = 'inbound.event1a'",
+          transform: {
+            eventDataTemplate: {
+              title: 'outbound.event1a',
+            },
+          },
+          publish: {
+            to: ['outbound.event1a.recipient'],
+          },
+        },
+        expiry: {
+          interval: 2000,
+          transition: {
+            name: 'event1reaction',
           },
         },
       },
@@ -193,8 +245,8 @@ const patternModels: PatternModel[] = [
             name: '$terminate',
           },
         },
-        timeout: {
-          interval: 3000,
+        expiry: {
+          interval: 2000,
           transition: {
             name: 'event2reaction',
             input: 'local',

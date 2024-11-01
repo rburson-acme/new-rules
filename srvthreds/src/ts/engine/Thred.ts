@@ -15,6 +15,11 @@ export class Thred {
   static async consider(event: Event, thredStore: ThredStore, threds: Threds): Promise<void> {
     const { thredContext } = thredStore;
     let inputEvent: Event | undefined = event;
+
+    // synchronize thred state - chance to run handlers to fix up state (expirations, etc)
+    // note, this can advance the state to a new reaction
+    await Thred.synchronizeThredState(thredStore, threds);
+
     // system event hook
     if (SystemThredEvent.isSystemThredEvent(event))
       return SystemThredEvent.handleSystemThredEvent({
@@ -60,10 +65,13 @@ export class Thred {
     return !thredStore.isFinished ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
   }
 
-  // time out the current reaction and move to the reaction as specified by the transition
-  private static async timeoutReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
-    const transtition = thredStore?.currentReaction?.timeout?.transition;
-    if (transtition) {
+  // time out the current reaction and move to the reaction 
+  // specified by the transition (or the default if transition is undefined)
+  // Note the Reaction must have an expiry property set
+  private static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
+    const expiry = thredStore?.currentReaction?.expiry;
+    if (expiry) {
+      const transtition = thredStore?.currentReaction?.expiry?.transition;
       await Thred.transition(thredStore, threds, transtition);
     }
   }
@@ -72,10 +80,15 @@ export class Thred {
     thredStore.finish();
   }
 
+  private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
+    // check for an expired reaction
+    if (thredStore.reactionTimedOut) await Thred.expireReaction(thredStore, threds);
+  }
+
   // give private Thred access to helpers
   private static createCompanion(): ThredCompanion {
     return {
-      timeoutReaction: Thred.timeoutReaction,
+      expireReaction: Thred.expireReaction,
       transition: Thred.transition,
       terminateThred: Thred.terminateThred,
     };
@@ -83,7 +96,7 @@ export class Thred {
 }
 
 export interface ThredCompanion {
-  timeoutReaction(thredStore: ThredStore, threds: Threds): Promise<void>;
+  expireReaction(thredStore: ThredStore, threds: Threds): Promise<void>;
   transition(thredStore: ThredStore, threds: Threds, transition: Transition): Promise<void>;
   terminateThred(thredStore: ThredStore): Promise<void>;
 }

@@ -7,7 +7,7 @@ export interface ReactionModel {
     readonly name?: string;
     readonly description?: string;
     readonly condition: ConditionModel | FilterModel;
-    readonly timeout?: {
+    readonly expiry?: {
         interval: number;
         transition?: TransitionModel;
     }

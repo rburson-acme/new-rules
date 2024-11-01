@@ -30,9 +30,9 @@ describe('system', function () {
     return pr;
   });
   // should move to the next reaction when no transition name is specified
-  // should timeout and move back to event0Reaction and 'replay' input
+  // should expire and move back to event0Reaction and 'replay' input
   // the admin operation should also get a successful response
-  test('timeout event1Reaction and replay event0Reaction', function () {
+  test('expire event1Reaction and replay event0Reaction', function () {
     const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
     expect(currentReactionName).toBe('event1Reaction');
     const pr = new Promise<void>((resolve, reject) => {
@@ -47,7 +47,7 @@ describe('system', function () {
               expect(message.to).toContain('testUser');
               expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
               expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
-              expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.timeoutReaction);
+              expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.expireReaction);
               expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
               resolve();
             }, reject),
@@ -56,7 +56,7 @@ describe('system', function () {
       ];
     });
     connMan.eventQ.queue(
-      SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event1Reaction', { id: 'testUser'}),
+      SystemEvents.getSystemExpireThredEvent(Id.nextEventId, thredId as string, 'event1Reaction', { id: 'testUser'}),
     );
     return pr;
   });
@@ -71,7 +71,7 @@ describe('system', function () {
     connMan.eventQ.queue({ ...testEvents.event1, thredId });
     return pr;
   });
-  test('timeout event2Reaction and move to event1Reaction (no event replay)', async function () {
+  test('expire event2Reaction and move to event1Reaction (no event replay)', async function () {
     const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
     expect(currentReactionName).toBe('event2Reaction');
     // the admin operation should also get a successful response
@@ -79,12 +79,12 @@ describe('system', function () {
       expect(message.to).toContain('testUser');
       expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
       expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
-      expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.timeoutReaction);
+      expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.expireReaction);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
     await connMan.engine
       .consider(
-        SystemEvents.getSystemTimeoutThredEvent(Id.nextEventId, thredId as string, 'event2Reaction', { id: 'testUser'}),
+        SystemEvents.getSystemExpireThredEvent(Id.nextEventId, thredId as string, 'event2Reaction', { id: 'testUser'}),
       )
       .then(() => {
         const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction
@@ -250,7 +250,7 @@ const patternModels: PatternModel[] = [
             to: ['outbound.event1.recipient'],
           },
         },
-        timeout: {
+        expiry: {
           interval: 3000,
           transition: {
             name: 'event0Reaction',
@@ -273,7 +273,7 @@ const patternModels: PatternModel[] = [
             to: ['outbound.event2.recipient'],
           },
         },
-        timeout: {
+        expiry: {
           interval: 3000,
           transition: {
             name: 'event1Reaction',

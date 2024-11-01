@@ -36,12 +36,14 @@ export class PatternsStore {
       [{ type: Types.Pattern, id: patternId }],
       [
         async () => {
+          let patternStore;
           try {
-            const patternStore = await this.retrievePatternStore(patternId);
+            patternStore = await this.retrievePatternStore(patternId);
             patternStore.incNumThreds();
             patternStore.lastThredStart = lastStartTime;
             await this.savePatternStore(patternId);
           } catch (e) {
+            patternStore?.decNumThreds();
             throw new Error(`Could not start thred for patternId ${patternId}`, { cause: e });
           }
         },
@@ -54,8 +56,9 @@ export class PatternsStore {
       [{ type: Types.Pattern, id: patternId }],
       [
         async () => {
+          let patternStore;
           try {
-            const patternStore = await this.retrievePatternStore(patternId);
+            patternStore = await this.retrievePatternStore(patternId);
             patternStore.decNumThreds();
             if (patternStore?.numThreds === 0) {
               await this._resetPatternStore(patternId);
@@ -63,6 +66,7 @@ export class PatternsStore {
               await this.savePatternStore(patternId);
             }
           } catch (e) {
+            patternStore?.incNumThreds(); 
             throw new Error(`Could not end thred for patternId ${patternId}`, { cause: e });
           }
         },

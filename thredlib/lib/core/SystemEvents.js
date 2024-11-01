@@ -9,8 +9,8 @@ export class SystemEvents {
     *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
     *
     */
-    // request to timeout current thred reaction
-    static getSystemTimeoutThredEvent(id, thredId, reactionName, source) {
+    // request to expire current thred reaction
+    static getSystemExpireThredEvent(id, thredId, reactionName, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.thredControl.type,
@@ -18,7 +18,7 @@ export class SystemEvents {
             thredId,
             content: {
                 values: {
-                    op: systemEventTypes.operations.timeoutReaction,
+                    op: systemEventTypes.operations.expireReaction,
                     reactionName
                 }
             }

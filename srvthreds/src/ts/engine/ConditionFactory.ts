@@ -15,13 +15,10 @@ export class ConditionFactory {
 
     private conditionId: number = 0;
 
-    newCondition(conditionModel: ConditionModel): Condition {
+    newCondition(conditionModel: ConditionModel, id: string): Condition {
         const type = ConditionFactory.typeMap[conditionModel.type];
         if (!type) throw Error(`Invalid Condition type: ${conditionModel.type}`);
-        return new type(conditionModel, this);
+        return new type(conditionModel, this, id);
     }
 
-    get nextId():number {
-        return this.conditionId++;
-    }
 }
