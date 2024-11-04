@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@react-navigation/native": "^6.0.2",
+    "@react-navigation/drawer": "^6.7.2",
+    "@react-navigation/native": "^6.1.18",
     "expo": "~51.0.28",
     "expo-constants": "~16.0.2",
     "expo-font": "~12.0.9",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@react-native/metro-config": "^0.75.3",
     "@types/jest": "^29.5.12",
     "@types/react": "~18.2.45",
     "@types/react-test-renderer": "^18.0.7",
@@ -50,8 +52,7 @@
     "jest-expo": "~51.0.3",
     "prettier": "^3.3.3",
     "react-test-renderer": "18.2.0",
-    "typescript": "~5.3.3",
-    "@react-native/metro-config": "^0.75.3"
+    "typescript": "~5.3.3"
   },
   "private": true
 }

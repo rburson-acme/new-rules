@@ -2,12 +2,12 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EventsLayout } from './components/EventsLayout';
 import { ThredHeader } from '@/src/screens/Admin/components/ThredHeader';
-import { RootStore } from '@/src/stores/rootStore';
+import { AdminStackParamList } from '../Layout';
+import { DrawerScreenProps } from '@react-navigation/drawer';
 
-type AdminScreenProps = {
-  rootStore: RootStore;
-};
-export const AdminScreen = ({ rootStore }: AdminScreenProps) => {
+type AdminLayoutProps = DrawerScreenProps<AdminStackParamList, 'Home'>;
+export const AdminLayout = ({ route, navigation }: AdminLayoutProps) => {
+  const rootStore = route.params.rootStore;
   return (
     <View style={styles.container}>
       <ThredHeader rootStore={rootStore} />
