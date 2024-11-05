@@ -219,3 +219,18 @@ export const patternModel: PatternModel = {
     },
   ],
 };
+
+/*
+{
+      condition: {
+        type: 'filter',
+        xpr: "$event.type = 'wonkaInc.downtime' and $data.title = 'Gobstopper Assembly Widget Jam'",
+        onTrue: { xpr: "$setLocal('count', $local('count') + 1)" },
+        transition: {
+          name: '$next',
+          input: 'forward',
+        }
+      },
+    },
+    */
+

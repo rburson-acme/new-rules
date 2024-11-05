@@ -25,7 +25,7 @@ export class RemoteQService<T> implements QService<T> {
 
   private constructor(
     private readonly qBroker: RemoteQBroker,
-    private readonly pubName?: string
+    private readonly pubName?: string,
   ) {}
 
   /* Connect the broker */
@@ -69,6 +69,19 @@ export class RemoteQService<T> implements QService<T> {
     this.q = [];
   }
 
+
+  /*
+    @TODO: In the future, handle backpressure from the broker
+    // add these handlers to QBroker
+    broker.on('busy', ({ vhost, mode, queue, size, available, borrowed, min, max }) => {
+      // pause publishing (block the queue)
+    });
+
+    broker.on('ready', ({ vhost, mode, queue, size, available, borrowed, min, max }) => {
+      // unpause publishing (unblock the queue)
+    });
+  */
+
   async queue(message: QMessage<T>): Promise<void> {
     if (!this.pubName) {
       throw Error(`No pub_name configued`);
@@ -76,11 +89,7 @@ export class RemoteQService<T> implements QService<T> {
     // figure out how to do multiple topics
     const routingKey = message.topics?.[0];
     const additionalOpts = routingKey ? { routingKey } : {};
-    const pub = await this.broker.publish(
-      this.pubName,
-      message,
-      additionalOpts
-    );
+    const pub = await this.broker.publish(this.pubName, message, additionalOpts);
 
     return new Promise((resolve, reject) => {
       pub
@@ -88,12 +97,7 @@ export class RemoteQService<T> implements QService<T> {
           resolve();
         })
         .on('error', (err, messageId) => {
-          Logger.error(
-            `${this.pubName}: Publisher error`,
-            err,
-            messageId,
-            routingKey
-          );
+          Logger.error(`${this.pubName}: Publisher error`, err, messageId, routingKey);
           reject(err);
         })
         .on('return', (message) => {
@@ -125,8 +129,8 @@ export class RemoteQService<T> implements QService<T> {
     // move to the back of the Q (after defer time)
     return (message.replyHandle as any)?.ackOrNack(
       err,
-      { strategy: 'republish', defer: 1000, attempts: 10 },
-      { strategy: 'nack' }
+      { strategy: 'republish', defer: 3000, attempts: 10 },
+      { strategy: 'nack' },
     );
   }
 
@@ -157,6 +161,14 @@ export class RemoteQService<T> implements QService<T> {
       })
       .on('error', (err) => {
         Logger.error(`${subName}: Subscriber error`, err);
+      })
+      .on('invalid_content', (err, message, ackOrNack) => {
+        Logger.error('RemoteQ: got invalid content', err);
+        ackOrNack(err, { strategy: 'nack' });
+      })
+      .on('redeliveries_exceeded', (err, message, ackOrNack) => {
+        console.error('RemoteQ: redeliveries exceeded', err);
+        ackOrNack(err, { strategy: 'nack' });
       });
   }
 

@@ -35,8 +35,6 @@ export class Server {
 
   // outbound
   // @TODO need better failure handling for all the possible async failures
-  // Parallel methods are failfast, but we probably shoudn't bail out if there's any single failuar
-  // Consider adding that feature to Parallel
   async tell(message: Message): Promise<void> {
     // don't propagate failures here as this is called in the event loop
     try {

@@ -6,38 +6,56 @@
         "url": "amqp://guest:guest@localhost"
       },
       "exchanges": {
-          "wt-event": {
-              "assert": true,
-              "type": "topic"
-          },
-          "wt-message": {
-              "assert": true,
-              "type": "topic"
-          }
+        "event-exchange": {
+          "assert": true,
+          "type": "topic"
+        },
+        "message-exchange": {
+          "assert": true,
+          "type": "topic"
+        },
+        "x-event-dead-letter": {
+          "assert": true,
+          "type": "topic"
+        },
+        "x-message-dead-letter": {
+          "assert": true,
+          "type": "topic"
+        }
       },
       "queues": {
         "event-queue": {
-            "assert": true
+          "assert": true,
+          "options": {
+            "deadLetter": "x-event-dead-letter"
+          }
         },
         "session1-message-queue": {
-            "assert": true
+          "assert": true,
+          "options": {
+            "deadLetter": "x-message-dead-letter"
+          }
         },
-        "persistence-message-queue": {
+        "x-dead-letter-event-queue": {
+          "assert": true
+        },
+        "x-dead-letter-message-queue": {
           "assert": true
         }
       },
       "bindings": [
-          "wt-event[#] -> event-queue",
-          "wt-message[session.session1] -> session1-message-queue",
-          "wt-message[persistence] -> persistence-message-queue"
+        "event-exchange[#] -> event-queue",
+        "message-exchange[session.session1] -> session1-message-queue",
+        "x-event-dead-letter[#] -> x-dead-letter-event-queue",
+        "x-message-dead-letter[#] -> x-dead-letter-message-queue"
       ],
       "publications": {
         "pub_event": {
-          "exchange": "wt-event",
+          "exchange": "event-exchange",
           "routingKey": ""
         },
         "pub_message": {
-          "exchange": "wt-message",
+          "exchange": "message-exchange",
           "routingKey": ""
         }
       },
@@ -48,10 +66,6 @@
         },
         "sub_session1_message": {
           "queue": "session1-message-queue",
-          "prefetch": 1
-        },
-        "sub_persistence_message": {
-          "queue": "persistence-message-queue",
           "prefetch": 1
         }
       }
