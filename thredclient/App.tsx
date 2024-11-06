@@ -1,13 +1,18 @@
+import 'react-native-gesture-handler';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Layout } from './src/screens/Login/LoginScreen';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { LoginScreen } from './src/screens/Login/LoginScreen';
 import './initApp';
+import { Layout } from './src/screens/Layout';
+import { NavigationContainer } from '@react-navigation/native';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Layout />
-    </View>
+    <NavigationContainer>
+      <SafeAreaView style={styles.container}>
+        <Layout />
+      </SafeAreaView>
+    </NavigationContainer>
   );
 
   //Test bypass
