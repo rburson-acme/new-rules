@@ -1,10 +1,10 @@
 import { Pattern } from "../Pattern.js";
 import { ThredContext } from "../ThredContext.js";
 import { Reaction } from "../Reaction.js";
-import { Id } from "../Id.js";
 import { EventStore } from "./EventStore.js";
 import { ReactionStore } from "./ReactionStore.js";
 import { PatternsStore } from "./PatternsStore.js";
+import { Id } from "../Id.js";
 
 export class ThredStore {
     

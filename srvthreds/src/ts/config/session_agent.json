@@ -1,7 +1,8 @@
 {
+    "name": "Session Agent",
     "nodeType": "session",
     "nodeId": "session1",
-    "agentImpl": "./session/SessionAgent.ts",
+    "agentImpl": "./session/SessionAgent.js",
     "subscriptionName": "sub_session1_message",
     "customConfig": {
         "port": 3000

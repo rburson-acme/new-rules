@@ -9,6 +9,7 @@ export interface Event {
         readonly name?: string;
         readonly uri?: string;
     };
+    readonly referer?: string;
     readonly data?: EventData;
 }
 export interface EventData {
@@ -24,8 +25,15 @@ export interface EventData {
     };
     readonly content?: EventContent;
 }
-export type EventContent = EventValues & EventTasks & Resources & InlineContent;
-interface EventValues {
+export type EventContent = EventValues & EventTasks & Resources & InlineContent & EventError;
+export interface EventError {
+    error?: {
+        code: number;
+        message: string;
+        cause?: any;
+    };
+}
+export interface EventValues {
     values?: Record<string, any> | Record<string, any>[];
 }
 export interface EventTasks {
@@ -44,9 +52,9 @@ export interface EventTask {
 }
 export interface EventTaskParams {
     readonly type: string;
-    readonly values?: {} | any[];
-    readonly matcher?: {};
-    readonly selector?: {};
+    readonly values?: Record<string, any> | any[];
+    readonly matcher?: Record<string, any>;
+    readonly selector?: Record<string, any>;
 }
 export interface Resource {
     readonly contentType: string;
@@ -57,4 +65,3 @@ export interface InlineItem {
     readonly encoding: string;
     readonly content: string;
 }
-export {};

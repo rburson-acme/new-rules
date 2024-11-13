@@ -2,7 +2,7 @@ import http from 'http';
 import { Message, Event, Logger, SessionsModel } from '../../thredlib/index.js';
 import { ResolverConfig } from '../../sessions/Config.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
-import { MessageHandler, MessageHandlerParams } from '../Agent.js';
+import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
 import { AgentConfig } from '../Config.js';
 import { SessionService } from './SessionService.js';
 import { ServiceListener, SocketService } from './SocketService.js';
@@ -28,25 +28,26 @@ export interface SessionAgentArgs {
 export class SessionAgent implements MessageHandler {
   private agentConfig: AgentConfig;
   // publish (inbound) events to the engine
-  private eventPublisher: (event: Event, participantId: string) => Promise<void>;
+  private eventPublisher: EventPublisher;
   // handles websocket connections, sending and recieveing events to clients
   private socketService: SocketService;
   // handles mapping sessions to external channels (i.e. sockets or rest calls, etc.)
   private sessionService: SessionService;
 
+  // dispatchers for sending events (from Messages) to outbound channels
   dispatchers: ((event: Event, channelId: string) => void)[] = [];
 
-  constructor(params: MessageHandlerParams) {
-    this.agentConfig = params.config;
-    this.eventPublisher = params.eventPublisher;
+  constructor({config, eventPublisher, additionalArgs}: MessageHandlerParams) {
+    this.agentConfig = config;
+    this.eventPublisher = eventPublisher;
 
     //use supplied session model or default
-    const sessionsModel = (params.additionalArgs as SessionAgentArgs)?.sessionsModel || defaultSessionsModel;
-    const resolverConfig = (params.additionalArgs as SessionAgentArgs)?.resolverConfig || defaultResolverConfig;
+    const sessionsModel = (additionalArgs as SessionAgentArgs)?.sessionsModel || defaultSessionsModel;
+    const resolverConfig = (additionalArgs as SessionAgentArgs)?.resolverConfig || defaultResolverConfig;
     this.sessionService = new SessionService(sessionsModel, resolverConfig);
 
     // allow for use of existing http server instance
-    const httpServer = (params.additionalArgs as SessionAgentArgs)?.httpServer || undefined;
+    const httpServer = (additionalArgs as SessionAgentArgs)?.httpServer || undefined;
 
     this.socketService = new SocketService({
       serviceListener: new SessionServiceListener(this.sessionService),
@@ -56,6 +57,10 @@ export class SessionAgent implements MessageHandler {
       httpServer,
     });
     this.dispatchers.push(this.socketService.send);
+  }
+
+  async initialize(): Promise<void> {
+    return;
   }
 
   async processMessage(message: Message): Promise<void> {

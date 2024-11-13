@@ -1,16 +1,18 @@
 
 /**
- * Defines the WT persitence language constants, etc.
+ * Defines the persistence language constants, etc.
  */
 export class Spec {
 
     /*
       Supported Operations
     */
-    static readonly PUT_OP = 'put';
-    static readonly GETONE_OP = 'getOne';
-    static readonly GET_OP = 'get';
+    // put is an upsert depending on whether the object has an id
+    static readonly CREATE_OP = 'create';
+    static readonly FIND_ONE_OP = 'findOne';
+    static readonly FIND_OP = 'find';
     static readonly UPDATE_OP = 'update';
+    static readonly UPSERT_OP = 'upsert';
     static readonly DELETE_OP = 'delete';
     static readonly COUNT_OP = 'count';
     static readonly RUN_OP = 'run';
@@ -49,7 +51,7 @@ export class Spec {
     static readonly IDS_ONLY = "ids_only";
 
 
-    /* All models have these */
+    /* All enities have these */
     static readonly ID = 'id';
     static readonly CREATED = 'created';
     static readonly MODIFIED = 'modified';

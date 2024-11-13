@@ -18,6 +18,8 @@ export interface Event {
         // an optional representation of the source
         readonly uri?: string;
     }
+    // optional referer for the event
+    readonly referer?: string;
     // the data envelope for the event
     readonly data?: EventData;
 }
@@ -45,10 +47,18 @@ export interface EventData {
     readonly content?: EventContent;
 }
 
-export type EventContent = EventValues & EventTasks & Resources & InlineContent;
+export type EventContent = EventValues & EventTasks & Resources & InlineContent & EventError;
+
+export interface EventError {
+    error?: { 
+        code: number,
+        message: string,
+        cause?: any;
+    }
+}
 
 // simple interface for transferring known, free-form json values
-interface EventValues {
+export interface EventValues {
     values?: Record<string, any> | Record<string, any>[];
 }
 
@@ -79,9 +89,9 @@ export interface EventTask {
 export interface EventTaskParams {
     // type of target entity
     readonly type: string;
-    readonly values?: {} | any[];
-    readonly matcher?: {}; // filter for the query
-    readonly selector?: {};  // allows for specifying a subset of the return values
+    readonly values?: Record<string, any> | any[];
+    readonly matcher?: Record<string, any>; // filter for the query
+    readonly selector?: Record<string, any>;  // allows for specifying a subset of the return values
 }
 export interface Resource {
     // mimetype/mediatype of the content field

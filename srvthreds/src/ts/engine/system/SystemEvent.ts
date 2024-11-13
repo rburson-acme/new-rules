@@ -9,12 +9,13 @@ import {
   ThredId,
   SystemEvents,
   TransitionModel,
+  SystemEventValues,
 } from '../../thredlib/index.js';
 import { ThredStore } from '../store/ThredStore.js';
 import { Threds } from '../Threds.js';
 import { ThredCompanion } from '../Thred.js';
 import { Transition } from '../Transition.js';
-import { Id } from '../Id.js';
+import { Id } from '../../thredlib/core/Id.js';
 
 export interface SystemEventArgs {
   readonly event: Event;
@@ -27,14 +28,6 @@ export interface SystemThredEventArgs {
   readonly thredStore: ThredStore;
   readonly thredCompanion: ThredCompanion;
 }
-export interface SystemEventValues {
-  readonly op?: string;
-  reactionName?: string;
-  transition?: TransitionModel;
-  patternId?: string;
-  scope?: string;
-  delay?: number;
-}
 
 /*
     Thred related operations
@@ -42,12 +35,9 @@ export interface SystemEventValues {
 */
 export class SystemThredEvent {
   private static operations: StringMap<(args: SystemThredEventArgs) => Promise<void>> = {
-    [systemEventTypes.operations.expireReaction]:
-      SystemThredEvent.expireReaction,
-    [systemEventTypes.operations.transitionThred]:
-      SystemThredEvent.transitionThred,
-    [systemEventTypes.operations.terminateThred]:
-      SystemThredEvent.terminateThred,
+    [systemEventTypes.operations.expireReaction]: SystemThredEvent.expireReaction,
+    [systemEventTypes.operations.transitionThred]: SystemThredEvent.transitionThred,
+    [systemEventTypes.operations.terminateThred]: SystemThredEvent.terminateThred,
   };
 
   //@TODO authenticate sender source (up channel) so this is secure
@@ -58,12 +48,9 @@ export class SystemThredEvent {
   static thredDoesNotExist(threds: Threds, event: Event) {
     const to = [event.source.id];
     const thredId = event.thredId || '<none>';
-    const opName = (Events.getContent(event)?.values as SystemEventValues)
-      ?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
     if (!opName) {
-      Logger.error(
-        `No operation name supplied for threadDoesNotExist() on Thred ${thredId}`
-      );
+      Logger.error(`No operation name supplied for threadDoesNotExist() on Thred ${thredId}`);
       return;
     }
     dispatch(
@@ -73,7 +60,7 @@ export class SystemThredEvent {
       thredId,
       opName,
       systemEventTypes.unsuccessfulStatus,
-      `Thred ${thredId} does not exist for ${opName} operation`
+      `Thred ${thredId} does not exist for ${opName} operation`,
     );
   }
 
@@ -81,12 +68,9 @@ export class SystemThredEvent {
     const { thredStore, threds, event } = args;
     const { id: thredId } = thredStore;
     const to = [event.source.id];
-    const opName = (Events.getContent(event)?.values as SystemEventValues)
-      ?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
     if (!opName) {
-      Logger.error(
-        `No operation name supplied for system thread event on Thred ${thredId}`
-      );
+      Logger.error(`No operation name supplied for system thread event on Thred ${thredId}`);
       return;
     }
     const operation = SystemThredEvent.operations[opName];
@@ -114,9 +98,7 @@ export class SystemThredEvent {
     */
   private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
-    const reactionName = (
-      Events.getContent(event)?.values as SystemEventValues
-    )?.reactionName;
+    const reactionName = (Events.getContent(event)?.values as SystemEventValues)?.reactionName;
     if (thredStore.reactionStore.reactionName === reactionName) {
       await thredCompanion.expireReaction(thredStore, threds);
     }
@@ -127,9 +109,7 @@ export class SystemThredEvent {
     */
   private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
-    const transitionModel = (
-      Events.getContent(event)?.values as SystemEventValues
-    )?.transition;
+    const transitionModel = (Events.getContent(event)?.values as SystemEventValues)?.transition;
     if (transitionModel) {
       const transition = new Transition(transitionModel);
       await thredCompanion.transition(thredStore, threds, transition);
@@ -149,30 +129,23 @@ export class SystemThredEvent {
     System level operations
 */
 export class SystemEvent {
-  private static operations: StringMap<
-    (args: SystemEventArgs) => Promise<void>
-  > = {
+  private static operations: StringMap<(args: SystemEventArgs) => Promise<void>> = {
     [systemEventTypes.operations.resetPattern]: SystemEvent.resetPattern,
-    [systemEventTypes.operations.terminateAllThreds]:
-      SystemEvent.terminateAllThreds,
+    [systemEventTypes.operations.savePattern]: SystemEvent.savePattern,
+    [systemEventTypes.operations.terminateAllThreds]: SystemEvent.terminateAllThreds,
     [systemEventTypes.operations.shutdown]: SystemEvent.shutdown,
   };
 
   //@TODO authenticate sender source (up channel) so this is secure
   static isSystemEvent(event: Event): boolean {
-    return (
-      event.type === eventTypes.control.sysControl.type
-    );
+    return event.type === eventTypes.control.sysControl.type;
   }
 
   static async handleSystemEvent(args: SystemEventArgs): Promise<void> {
     const { threds, event } = args;
-    const opName = (Events.getContent(event)?.values as SystemEventValues)
-      ?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
     if (!opName) {
-      Logger.error(
-        `No operation name supplied for handleSystemEvent() with event ${event.id}`
-      );
+      Logger.error(`No operation name supplied for handleSystemEvent() with event ${event.id}`);
       return;
     }
     const operation = SystemEvent.operations[opName];
@@ -193,26 +166,26 @@ export class SystemEvent {
         message = `Operation ${opName} failed for System operation`;
       }
     }
-    dispatch(
-      threds,
-      to,
-      Id.nextEventId,
-      ThredId.SYSTEM,
-      opName,
-      status,
-      message
-    );
+    dispatch(threds, to, Id.nextEventId, ThredId.SYSTEM, opName, status, message);
   }
 
   private static async resetPattern(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
     const patternId = (Events.getContent(event)?.values as SystemEventValues)?.patternId;
-
-    if (!patternId){
-         Logger.error(`No patternId supplied for resetPattern operation on System`);
-        return undefined;
+    if (!patternId) {
+      Logger.error(`No patternId supplied for resetPattern operation on System`);
+      return undefined;
     }
     return threds.thredsStore.resetPatternStore(patternId);
+  }
+
+  private static async savePattern(args: SystemEventArgs): Promise<void> {
+    const { event, threds } = args;
+    const patternModel = (Events.getContent(event)?.values as SystemEventValues)?.patternModel;
+    if (!patternModel?.id) {
+      Logger.error(`No pattern or pattern with id supplied for resetPattern operation on System`);
+      return undefined;
+    }
   }
 
   private static terminateAllThreds(args: SystemEventArgs): Promise<void> {
@@ -236,23 +209,13 @@ const dispatch = (
   operation: string,
   status: string,
   message: string,
-  code?: string
+  code?: string,
 ) => {
   try {
-    const event: Event = getSystemStatusEvent(
-      id,
-      thredId,
-      operation,
-      status,
-      message,
-      code
-    );
+    const event: Event = getSystemStatusEvent(id, thredId, operation, status, message, code);
     threds.dispatch({ id: event.id, event, to });
   } catch (e) {
-    Logger.error(
-      `Failed to dispatch system event for operation ${operation}`,
-      e
-    );
+    Logger.error(`Failed to dispatch system event for operation ${operation}`, e);
   }
 };
 
@@ -262,20 +225,21 @@ const getSystemStatusEvent = (
   operation: string,
   status: string,
   message?: string,
-  code?: string
+  code?: string,
 ) => {
   return Events.newEvent({
     id,
     type: eventTypes.control.sysControl.type,
     thredId,
     source: { id: eventTypes.system.source.id },
-    content: {
-      type: systemEventTypes.responseTypes.opStatus,
-      values: {
-        operation,
-        status,
-        message,
-        code,
+    data: {
+      content: {
+        values: {
+          operation,
+          status,
+          message,
+          code,
+        },
       },
     },
   });

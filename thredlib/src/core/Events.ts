@@ -1,42 +1,53 @@
+import { deepMerge } from '../lib/lib.js';
 import { Logger } from '../lib/Logger.js';
-import { EventContent, Event, EventData } from './Event.js';
+import { EventContent, Event, EventData, EventTask, Resource, InlineItem, EventError } from './Event.js';
+import { Id } from './Id.js';
 
-export interface EventParams {
-  id: string;
-  type: string;
-  title?: string;
-  description?: string;
-  contentType?: string;
-  source: Event['source'];
-  thredId?: string;
-  content?: any;
-}
+export type NewEventParams = Partial<Event> & Pick<Event, 'type' | 'source'>;
 
 export class Events {
-  static newEvent(params: EventParams): Event {
-    const { id, type, contentType, source, thredId, content, title, description } = params;
+  // type and source are required. id and time can be generated, if not present
+  static newEvent(params: NewEventParams): Event {
+    const { id, type, source } = params;
+    if (!type) throw new Error('Event type is required');
+    if (!source) throw new Error('Event source is required');
     const { id: sourceId, name: sourceName, uri: sourceUri } = source;
-    const resolvedTitle = title ?? `Event from ${sourceId} ${sourceName || ''}`;
-    const resolvedDescription = description ?? `Content delivered via ${sourceId} (${sourceName || ''})`;
-
-    const event = {
-      id,
+    const _id = id || Id.nextEventId;
+    const event: Event = {
+      ...params,
+      id: _id,
       time: Date.now(),
-      type,
-      data: {
-        title: resolvedTitle,
-        description: resolvedDescription,
-        contentType,
-        content,
-      },
-      source: {
-        id: sourceId,
-        name: sourceName,
-        uri: sourceUri,
-      },
-      thredId,
+      source: { id: sourceId, name: sourceName, uri: sourceUri },
     };
     return event;
+  }
+
+  static mergeEvent(params: Partial<Event>, event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, params) as Event;
+  }
+
+  static mergeData(data: EventData, event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data });
+  }
+
+  static mergeValues(values: Record<string, any> | Record<string, any>[], event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { values } } });
+  }
+
+  static mergeTasks(tasks: EventTask | EventTask[], event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { tasks: [tasks] } } });
+  }
+
+  static mergeResources(resources: Resource[], event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { resources } } });
+  }
+
+  static mergeInlineContent(items: InlineItem[], event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { items } } });
+  }
+
+  static mergeError(error: EventError, event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { error } } });
   }
 
   static getData(event: Event): EventData | undefined {
@@ -60,7 +71,7 @@ export class Events {
     if (Array.isArray(values)) {
       return values.find((value) => value[name]);
     }
-    if(!values?.[name]) Logger.info(`Event value named ${name} not found`);
+    if (!values?.[name]) Logger.info(`Event value named ${name} not found`);
     return values?.[name];
   }
 }

@@ -36,6 +36,7 @@ export const systemEventTypes = {
         transitionThred: "transitionThred",
         terminateThred: "terminateThred",
         resetPattern: "resetPattern",
+        savePattern: "savePattern",
         terminateAllThreds: "terminateAllThreds",
         shutdown: "shutdown"
     }

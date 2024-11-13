@@ -1,4 +1,5 @@
 {
+    "name": "Session Agent",
     "nodeType": "session",
     "nodeId": "session1",
     "agentImpl": "./session/SessionAgent.js",

@@ -1,4 +1,5 @@
 export interface AgentConfig {
+    name: string;
     nodeType: string;
     nodeId: string;
     agentImpl: string | object;

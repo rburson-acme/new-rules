@@ -11,7 +11,7 @@ export const Template = observer(({ eventStore }: TemplateProps) => {
   const { openTemplateStore: templateStore } = eventStore;
 
   if (!templateStore) return null;
-  const { name, style } = templateStore.template;
+  const { name } = templateStore.template;
   const { completedInteractionStores } = templateStore;
   const completedInteractions = completedInteractionStores.map((interactionStore, index) => {
     return <Interaction key={index} interactionStore={interactionStore} componentTypes={getComponentTypes()} />;

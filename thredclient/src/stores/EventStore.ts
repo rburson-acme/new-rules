@@ -63,8 +63,7 @@ export class EventStore {
         const event = Events.newEvent({
           id: Id.nextEventId(sourceId),
           type: advice!.eventType,
-          title: resolvedTitle,
-          content,
+          data: { title: resolvedTitle, content },
           thredId: this.event?.thredId,
           source: { id: sourceId, name: sourceName },
         });

@@ -82,6 +82,37 @@ describe('persistence', function () {
   test('delete replace value', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
   });
+  test('upsert (doc not there)', async function () {
+    await persistence.upsert({
+      type: testObjType,
+      matcher: { id: testObjId },
+      values: { testkey: 'upsert_testvalue' },
+    });
+  });
+  test('find upsert value', async function () {
+    const obj = await persistence.findOne({
+      type: testObjType,
+      matcher: { id: testObjId },
+    });
+    expect(obj.testkey).toBe('upsert_testvalue');
+  });
+  test('upsert (doc already there)', async function () {
+    await persistence.upsert({
+      type: testObjType,
+      matcher: { id: testObjId },
+      values: { testkey: 'upsert_again' },
+    });
+  });
+  test('find upsert value', async function () {
+    const obj = await persistence.findOne({
+      type: testObjType,
+      matcher: { id: testObjId },
+    });
+    expect(obj.testkey).toBe('upsert_again');
+  });
+  test('delete replace value', async function () {
+    await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
+  });
   test('save multiple', async function () {
     const docs = [];
     for (let i = 0; i < 100; i++) {
@@ -186,7 +217,7 @@ describe('persistence', function () {
   // cleanup in case of failure
   afterAll(async () => {
     try {
-      await (persistence as MongoPersistence).removeDatabase();
+      //await (persistence as MongoPersistence).removeDatabase();
     } catch (e) {
       Logger.error(`Cleanup Failed ${(e as Error).message}`);
     }

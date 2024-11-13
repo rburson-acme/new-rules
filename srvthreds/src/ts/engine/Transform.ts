@@ -3,7 +3,7 @@ import { Transformer } from '../thredlib/index.js';
 import { TransformModel } from '../thredlib/index.js';
 import { ThredContext } from './ThredContext.js';
 import { Event, EventData } from '../thredlib/index.js';
-import { Id } from './Id.js';
+import { Id } from '../thredlib/core/Id.js';
 import { ThredStore } from './store/ThredStore.js';
 
 /*

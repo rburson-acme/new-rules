@@ -1,37 +1,55 @@
-import { Logger, Message, Event, StringMap } from '../thredlib/index.js';
+import { Logger, Message, Event, StringMap, Events, EventError, errorCodes, errorKeys } from '../thredlib/index.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
 import { AgentConfig, Config } from './Config.js';
+import { Id } from '../thredlib/core/Id.js';
 
 export interface MessageHandler {
+  initialize(): Promise<void>;
   processMessage(message: Message): Promise<void>;
   shutdown(): Promise<void>;
 }
 
 export interface MessageHandlerParams {
   config: AgentConfig;
-  eventPublisher: (event: Event, participantId: string) => Promise<void>;
+  eventPublisher: EventPublisher;
   additionalArgs?: StringMap<any>;
+}
+
+export interface EventPublisher {
+  publishEvent: (event: Event, sourceId?: string) => Promise<void>;
+  createOutboundEvent: ({
+    prevEvent,
+    result,
+    error,
+  }: {
+    prevEvent: Event;
+    result?: any;
+    error?: EventError['error'];
+  }) => Event;
 }
 
 /**
   This framework class pulls Messages from the outbound MessageQ for a particular 'topic', which is
-  defined in the agent configuration. The agent configuration also defines the agent's concrete implementation
-  and starts an instance of the implementation. The agent implementation is expected to have a processMessage
-  and shutdown method. The processMessage method is called for each message pulled from the messageQ and passed
-  to the instantiated agent implementation to handle it.
+  defined in the agent configuration. The message is then provided to the MessageHandler's 'processMessage' method.
+  The agent configuration also defines the agent's concrete implementation
+  and starts an instance of the implementation. The processMessage method is called for each message pulled from the messageQ and passed
+  to the instantiated agent (messageHandler) implementation to handle it.
   The 'publisher' provided to the agent implementation is used to send inbound Events to the Engine.
 */
 export class Agent {
   private handler?: MessageHandler;
+  readonly eventPublisher: EventPublisher;
 
   constructor(
     private agentConfig: AgentConfig,
     private eventQ: EventQ,
     private messageQ: MessageQ,
     private additionalArgs?: {},
-  ) {}
+  ) {
+    this.eventPublisher = { publishEvent: this.publishEvent, createOutboundEvent: this.createOutboundEvent };
+  }
 
   async start() {
     try {
@@ -45,9 +63,11 @@ export class Agent {
       }
       this.handler = new Handler({
         config: this.agentConfig,
-        eventPublisher: this.publishEvent,
+        eventPublisher: this.eventPublisher,
         additionalArgs: this.additionalArgs,
       });
+      await this.handler?.initialize();
+      Logger.trace(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
       this.run();
     } catch (e) {
       Logger.error('Agent.start(): failed to start the agent', e);
@@ -55,14 +75,25 @@ export class Agent {
     }
   }
 
-  // outbound to agent / inbound to engine
-  publishEvent = async (event: Event, participantId: string): Promise<void> => {
-    Logger.trace('Agent.publishEvent(): ', event.id, ` published by ${participantId} @ ${Config.agentConfig.nodeId}`);
-    return this.eventQ.queue({ ...event, source: { id: participantId } });
+  // publish outbound Messages to participants
+  async processMessage(message: Message): Promise<void> {
+    Logger.trace(`Agent.processMessage()`, message);
+    return this.handler?.processMessage(message);
+  }
+
+  async shutdown(): Promise<void> {
+    return this.handler?.shutdown();
+  }
+
+  // publish inbound Events to engine
+  publishEvent = async (event: Event, sourceId?: string): Promise<void> => {
+    Logger.trace('Agent.publishEvent(): ', event.id, ` published by ${sourceId} @ ${Config.agentConfig.nodeId}`);
+    const _event = sourceId ? { ...event, source: { id: sourceId } } : event;
+    return this.eventQ.queue(_event);
   };
 
   /*
-        Begin pulling Messages from the Q
+        Begin pulling Messages from the Q to publish outbound to participants
     */
   private async run() {
     while (true) {
@@ -73,20 +104,42 @@ export class Agent {
         await this.messageQ.delete(qMessage);
       } catch (e) {
         Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
-        await this.messageQ.reject(qMessage, e as Error).catch(Logger.error);
-        // @TODO figure out on what types of Errors it makes sense to requeue
-        // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
+        try {
+          const outboundEvent = this.eventPublisher.createOutboundEvent({
+            error: { ...errorCodes[errorKeys.TASK_ERROR], cause: e },
+            prevEvent: qMessage.payload.event,
+          });
+          await this.eventPublisher.publishEvent(outboundEvent);
+          await this.messageQ.reject(qMessage, e as Error).catch(Logger.error);
+          // @TODO figure out on what types of Errors it makes sense to requeue
+          // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
+        } catch (e) {
+          Logger.error(`Agent: failed to publish error event for message ${qMessage.payload?.id}`, e);
+        }
       }
     }
   }
 
-  // inbound to agent
-  async processMessage(message: Message): Promise<void> {
-    Logger.trace(`Agent.processMessage()`, message);
-    return this.handler?.processMessage(message);
-  }
+  private createOutboundEvent = ({
+    prevEvent,
+    result,
+    error,
+  }: {
+    prevEvent: Event;
+    result?: any;
+    error?: EventError['error'];
+  }) => {
+    const content = error ? { error } : { values: { result } };
 
-  async shutdown(): Promise<void> {
-    return this.handler?.shutdown();
-  }
+    return Events.newEvent({
+      id: Id.getNextId(this.agentConfig.nodeId),
+      type: `org.wt.${this.agentConfig.nodeType}`,
+      data: {
+        title: `${this.agentConfig.nodeId} Result`,
+        content,
+      },
+      source: { id: this.agentConfig.nodeId, name: this.agentConfig.name },
+      thredId: prevEvent.thredId,
+    });
+  };
 }

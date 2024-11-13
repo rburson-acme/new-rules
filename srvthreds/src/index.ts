@@ -25,9 +25,9 @@ import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json'
 //import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
-//import patternModel from './ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
-import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
-const patternModels: PatternModel[] = [patternModel as PatternModel];
+import simpleTestPattern from './ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
+import echoTestPattern from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
+const patternModels: PatternModel[] = [echoTestPattern, simpleTestPattern] as PatternModel[];
 import engineConfig from './ts/config/engine.json' with { type: 'json' };
 StaticEngineConfig.engineConfig = engineConfig;
 import agentConfig from './ts/config/session_agent.json' with { type: 'json' };

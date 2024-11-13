@@ -15,9 +15,9 @@ export const Template = ({ stores }: TemplateProps) => {
   const { thredsStore, rootStore } = stores;
   const templateStore = thredsStore.currentThredStore?.eventsStore?.openEventStore?.openTemplateStore;
   if (templateStore) {
-    const { name, style } = templateStore.template;
+    const { name } = templateStore.template;
     return (
-      <View style={[styles.containerStyle, style]}>
+      <View style={[styles.containerStyle]}>
         <Interaction stores={{ ...stores, templateStore }} componentTypes={getComponentTypes()} />
       </View>
     );

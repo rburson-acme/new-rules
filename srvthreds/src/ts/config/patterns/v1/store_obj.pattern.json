@@ -7,7 +7,7 @@
         {
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.control' and $content.type = 'storeObject'",
+                "xpr": "$event.type = 'org.wt.control.dataControl'",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Store Object",
