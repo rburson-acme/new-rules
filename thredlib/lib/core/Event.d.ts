@@ -9,7 +9,7 @@ export interface Event {
         readonly name?: string;
         readonly uri?: string;
     };
-    readonly referer?: string;
+    readonly re?: string;
     readonly data?: EventData;
 }
 export interface EventData {

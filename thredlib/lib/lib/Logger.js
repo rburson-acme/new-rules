@@ -8,13 +8,13 @@ export var LoggerLevel;
 })(LoggerLevel || (LoggerLevel = {}));
 export class Logger {
     static debug = (...args) => { };
-    static error = (...args) => console.error(args);
+    static error = (...args) => console.error(...args);
     static info = (...args) => { };
     static warn = (...args) => { };
     static trace = (...args) => { };
     static setLevel(loggerLevel) {
         Logger.debug = (...args) => { };
-        Logger.error = (...args) => console.error(args);
+        Logger.error = (...args) => console.error(...args);
         Logger.info = (...args) => { };
         Logger.warn = (...args) => { };
         Logger.trace = (...args) => { };

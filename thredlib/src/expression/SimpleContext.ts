@@ -1,4 +1,4 @@
-import { ExpressionContext } from "./ExpressionContext";
+import { ExpressionContext } from "./ExpressionContext.js";
 
 export class SimpleContext implements ExpressionContext {
 
