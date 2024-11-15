@@ -21,7 +21,7 @@ export class ThredsStore {
     });
 
     this.eventManager = new EventManager();
-    this.eventManager.consumers.add(this.consume);
+    this.eventManager.subscribe(this.consume);
   }
 
   addThred(thred: Thred) {
@@ -54,7 +54,7 @@ export class ThredsStore {
   };
 
   publish(event: Event) {
-    this.eventManager?.dispatch(event);
+    this.eventManager?.publish(event);
   }
 
   // @todo build seperate authentication using threds/events
