@@ -7,7 +7,7 @@ import {
   eventTypes,
 } from '../../ts/thredlib/index.js';
 import { events as testEvents, EngineConnectionManager, withDispatcherPromise, withReject } from '../testUtils.js';
-import { Id } from '../../ts/engine/Id.js';
+import { Id } from '../../ts/thredlib/core/Id.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
@@ -46,7 +46,6 @@ describe('system', function () {
             withReject((message) => {
               expect(message.to).toContain('testUser');
               expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
-              expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
               expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.expireReaction);
               expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
               resolve();
@@ -78,7 +77,6 @@ describe('system', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
       expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
-      expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.expireReaction);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
@@ -100,7 +98,6 @@ describe('system', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
       expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
-      expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.transitionThred);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
@@ -148,7 +145,6 @@ describe('system', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
       expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
-      expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.terminateThred);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
@@ -195,7 +191,6 @@ describe('system', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(message.to).toContain('testUser');
       expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
-      expect(message.event.data?.content.type).toBe(systemEventTypes.responseTypes.opStatus);
       expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.terminateAllThreds);
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });

@@ -1,8 +1,8 @@
 import { Storage, Types, indexId } from '../../storage/Storage.js';
-import { Id } from '../Id.js';
 import { Logger, Parallel, Series, StringMap } from '../../thredlib/index.js';
 import { SessionParticipant } from '../SessionParticipant.js';
 import { Session } from '../Session.js';
+import { Id } from '../../thredlib/core/Id.js';
 const { forEach } = Parallel;
 
 // @TODO take distributed locking into account when implementing remote version
@@ -13,7 +13,7 @@ export class SessionStorage {
   constructor(private storage: Storage) {}
 
   nextSessionId(): Promise<string> {
-    return Promise.resolve(Id.nextSessionId);
+    return Promise.resolve(Id.getNextId('ses'));
   }
 
   async addSession(session: Session, participantId: string): Promise<void> {

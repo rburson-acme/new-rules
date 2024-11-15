@@ -34,6 +34,7 @@ export declare const systemEventTypes: {
         transitionThred: string;
         terminateThred: string;
         resetPattern: string;
+        savePattern: string;
         terminateAllThreds: string;
         shutdown: string;
     };

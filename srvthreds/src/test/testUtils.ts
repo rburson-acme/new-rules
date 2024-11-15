@@ -5,7 +5,7 @@ import { Engine } from '../ts/engine/Engine.js';
 import { StorageFactory } from '../ts/storage/StorageFactory.js';
 import { RemoteQBroker } from '../ts/queue/remote/RemoteQBroker.js';
 import config from './queue/rascal_test_config.json' with { type: 'json' };
-import { Id } from '../ts/engine/Id.js';
+import { Id } from '../ts/thredlib/core/Id.js';
 import { MessageQ } from '../ts/queue/MessageQ.js';
 import { Sessions } from '../ts/sessions/Sessions.js';
 import { Server } from '../ts/engine/Server.js';
@@ -107,6 +107,12 @@ export const delay = (time: number) => {
   return Timers.wait(time);
 };
 
+export const withPromise = (op: (...args: any[]) => void): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    withPromiseHandlers(op, resolve, reject);
+  });
+}
+
 export const withDispatcherPromise = (dispatchers: any[], op: (...args: any[]) => void): Promise<void> => {
   return new Promise((resolve, reject) => {
     dispatchers.push(withPromiseHandlers(op, resolve, reject));
@@ -114,11 +120,11 @@ export const withDispatcherPromise = (dispatchers: any[], op: (...args: any[]) =
 };
 
 export const withPromiseHandlers = (
-  op: (...args: any[]) => void,
+  op: (...args: any[]) => any,
   resolve: (value?: any) => void,
   reject: (reason: any) => void,
-): ((...args: any[]) => void) => {
-  return (...args: any[]) => {
+): ((...args: any[]) => any) => {
+  return async (...args: any[]) => {
     try {
       op(...args);
       resolve();
@@ -265,8 +271,60 @@ export class ServerConnectionManager {
     await pr.catch();
   }
 }
+
 export class AgentConnectionManager {
   static async newAgentInstance(agentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
+    const qBroker = new RemoteQBroker(config);
+
+    // this are not used for testing with this utility but currently required for the Agent
+    // set up the remote Qs for the Agent
+    const agentEventservice = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const agentEventQ: EventQ = new EventQ(agentEventservice);
+    const agentMessageService = await RemoteQService.newInstance<Message>({
+      qBroker,
+      subName: agentConfig.subscriptionName,
+    });
+    const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
+
+    // create the Agent and start it
+    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ);
+    agent.start();
+
+    return new AgentConnectionManager(
+      agentEventservice,
+      agentMessageService,
+      agentEventQ,
+      agentMessageQ,
+      agent,
+    );
+  }
+
+  constructor(
+    readonly agentEventService: RemoteQService<Event>,
+    readonly agentMessageService: RemoteQService<Message>,
+    readonly agentEventQ: EventQ,
+    readonly agentMessageQ: MessageQ,
+    readonly agent: Agent,
+  ) {}
+
+  async purgeAll() {
+    await this.agentEventService.deleteAll().catch(Logger.error);
+    await this.agentMessageService.deleteAll().catch(Logger.error);
+    await StorageFactory.purgeAll().catch(Logger.error);
+  }
+
+  async disconnectAll() {
+    // await this.engineEventService.deleteAll().catch(Logger.error);
+    // this will disconnect the underlying broker,
+    await this.agentEventService.disconnect().catch(Logger.error);
+    await this.agent.shutdown();
+  }
+}
+
+
+// Allows for testing Agents WITH both Queue connections
+export class AgentQueueConnectionManager {
+  static async newAgentInstance(agentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentQueueConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // setup the q's so we can mock (act as) the Engine
@@ -288,7 +346,7 @@ export class AgentConnectionManager {
     const agent = new Agent(agentConfig, agentEventQ, agentMessageQ);
     agent.start();
 
-    return new AgentConnectionManager(
+    return new AgentQueueConnectionManager(
       engineEventService,
       engineMessageService,
       agentEventservice,
@@ -328,3 +386,4 @@ export class AgentConnectionManager {
     await this.agent.shutdown();
   }
 }
+

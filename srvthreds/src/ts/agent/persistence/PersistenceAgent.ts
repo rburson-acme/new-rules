@@ -1,26 +1,49 @@
-import { Message, Event } from '../../thredlib/index.js';
-import { MessageHandler, MessageHandlerParams } from "../Agent.js";
+import { Persistence } from '../../persistence/Persistence.js';
+import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
+import { Message, Event, Events, errorKeys } from '../../thredlib/index.js';
+import { Adapter } from '../adapter/Adapter.js';
+import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
+import { AgentConfig } from '../Config.js';
+import { PersistenceAdapter } from './PersistenceAdapter.js';
+import { errorCodes } from '../../thredlib/index.js';
 
+export interface PersistenceAgentConfig {}
+export interface PersistenceAgentArgs {}
 
-export class PersistenceAgent implements MessageHandler{
+export class PersistenceAgent implements MessageHandler {
+  private agentConfig: AgentConfig;
+  // publish (inbound) events to the engine
+  private eventPublisher: EventPublisher;
+  private persistence: Persistence;
+  private adapter: Adapter;
 
-    private params: MessageHandlerParams;
+  constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
+    this.agentConfig = config;
+    this.eventPublisher = eventPublisher;
+    this.persistence = PersistenceFactory.getPersistence();
+    this.adapter = new PersistenceAdapter(this.persistence);
+  }
 
-    constructor(params: MessageHandlerParams) {
-        this.params = params;
+  async initialize(): Promise<void> {
+    await this.adapter.initialize();
+  }
+
+  async processMessage(message: Message): Promise<void> {
+    // @TODO implement transactions for Persistence
+    try {
+      const result = await this.adapter.execute(message.event.data?.content);
+      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: message.event, result });
+      await this.eventPublisher.publishEvent(outboundEvent);
+    } catch (e) {
+      const outboundEvent = this.eventPublisher.createOutboundEvent({
+        error: { ...errorCodes[errorKeys.TASK_ERROR], cause: e },
+        prevEvent: message.event,
+      });
+      await this.eventPublisher.publishEvent(outboundEvent);
     }
+  }
 
-    processMessage(message: Message): Promise<void> {
-
-        // Note arrays within the task array, donote a transaction
-        // results should be structured accordingly
-        // @TODO implement transactions for Mongo
-
-        return Promise.resolve();
-    }
-    
-    shutdown(): Promise<void> {
-        return Promise.resolve();
-    }
-
+  shutdown(): Promise<void> {
+    return Promise.resolve();
+  }
 }

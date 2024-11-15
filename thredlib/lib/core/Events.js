@@ -1,28 +1,44 @@
+import { deepMerge } from '../lib/lib.js';
 import { Logger } from '../lib/Logger.js';
+import { Id } from './Id.js';
 export class Events {
+    // type and source are required. id and time can be generated, if not present
     static newEvent(params) {
-        const { id, type, contentType, source, thredId, content, title, description } = params;
+        const { id, type, source } = params;
+        if (!type)
+            throw new Error('Event type is required');
+        if (!source)
+            throw new Error('Event source is required');
         const { id: sourceId, name: sourceName, uri: sourceUri } = source;
-        const resolvedTitle = title ?? `Event from ${sourceId} ${sourceName || ''}`;
-        const resolvedDescription = description ?? `Content delivered via ${sourceId} (${sourceName || ''})`;
+        const _id = id || Id.nextEventId;
         const event = {
-            id,
+            ...params,
+            id: _id,
             time: Date.now(),
-            type,
-            data: {
-                title: resolvedTitle,
-                description: resolvedDescription,
-                contentType,
-                content,
-            },
-            source: {
-                id: sourceId,
-                name: sourceName,
-                uri: sourceUri,
-            },
-            thredId,
+            source: { id: sourceId, name: sourceName, uri: sourceUri },
         };
         return event;
+    }
+    static mergeEvent(params, event) {
+        return deepMerge(event, params);
+    }
+    static mergeData(data, event) {
+        return deepMerge(event, { data });
+    }
+    static mergeValues(values, event) {
+        return deepMerge(event, { data: { content: { values } } });
+    }
+    static mergeTasks(tasks, event) {
+        return deepMerge(event, { data: { content: { tasks: [tasks] } } });
+    }
+    static mergeResources(resources, event) {
+        return deepMerge(event, { data: { content: { resources } } });
+    }
+    static mergeInlineContent(items, event) {
+        return deepMerge(event, { data: { content: { items } } });
+    }
+    static mergeError(error, event) {
+        return deepMerge(event, { data: { content: { error } } });
     }
     static getData(event) {
         return event?.data;

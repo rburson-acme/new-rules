@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { EventSource } from 'thredlib';
+import { Event } from 'thredlib';
 import { EventSourceAvatar } from './EventSourceAvatar';
 
 type EventSourceViewProps = {
-  source: EventSource;
+  source: Event['source'];
   display?: {
     uri: string;
   };

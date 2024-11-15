@@ -1,16 +1,14 @@
-import { EventContent, Event, EventData } from './Event.js';
-export interface EventParams {
-    id: string;
-    type: string;
-    title?: string;
-    description?: string;
-    contentType?: string;
-    source: Event['source'];
-    thredId?: string;
-    content?: any;
-}
+import { EventContent, Event, EventData, EventTask, Resource, InlineItem, EventError } from './Event.js';
+export type NewEventParams = Partial<Event> & Pick<Event, 'type' | 'source'>;
 export declare class Events {
-    static newEvent(params: EventParams): Event;
+    static newEvent(params: NewEventParams): Event;
+    static mergeEvent(params: Partial<Event>, event: Partial<Event>): Partial<Event>;
+    static mergeData(data: EventData, event: Partial<Event>): Partial<Event>;
+    static mergeValues(values: Record<string, any> | Record<string, any>[], event: Partial<Event>): Partial<Event>;
+    static mergeTasks(tasks: EventTask | EventTask[], event: Partial<Event>): Partial<Event>;
+    static mergeResources(resources: Resource[], event: Partial<Event>): Partial<Event>;
+    static mergeInlineContent(items: InlineItem[], event: Partial<Event>): Partial<Event>;
+    static mergeError(error: EventError, event: Partial<Event>): Partial<Event>;
     static getData(event: Event): EventData | undefined;
     static getAdvice(event: Event): EventData['advice'] | undefined;
     static getContent(event: Event): EventContent | undefined;

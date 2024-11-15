@@ -26,7 +26,7 @@ export const patternModel: PatternModel = {
                   op: 'get',
                   params: {
                     type: 'employee',
-                    selector: '{ id, name }',
+                    //selector: '{ id, name }',
                     matcher: {
                       available: true,
                       code: "$xpr( $local('first_event').data.content.values.errorCode )",

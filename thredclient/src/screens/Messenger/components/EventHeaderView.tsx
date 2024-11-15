@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { EventData, EventSource } from 'thredlib';
+import { EventData, Event } from 'thredlib';
 import { TextBubble } from '@/src/components/TextBubble';
 
 type EventHeaderViewProps = {
   data: EventData;
-  source: EventSource;
+  source: Event['source'];
   type: string;
 };
 export const EventHeaderView = ({ data, source, type }: EventHeaderViewProps) => {

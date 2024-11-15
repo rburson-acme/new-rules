@@ -1,20 +1,23 @@
+import { Persistent } from "../thredlib/persistence/Persistent";
 
 export interface Query {
     type: string;
-    matcher?: {};
-    include?: {};
-    values?: {} | any[];
+    matcher?: Record<string, any>;
+    selector?: Record<string, any>;
+    values?: Record<string, any> | any[];
 }
 
 export interface Persistence {
 
     create(query: Query, options?: any): Promise<void>;
 
-    findOne(query: Query, options?: any): Promise<any>;
+    findOne<T>(query: Query, options?: any): Promise<Persistent & T>;
     
-    find(query: Query, options?: any): Promise<any[]>;
+    find<T>(query: Query, options?: any): Promise<(Persistent & T)[]>;
 
     update(query: Query, options?: any): Promise<void>;
+
+    upsert(query: Query, options?: any): Promise<void>;
     
     replace(query: Query, options?: any): Promise<void>;
 
@@ -22,10 +25,12 @@ export interface Persistence {
 
     count(query: Query, options?: any): Promise<number>;
 
-    run(op: string, params: any): Promise<any>;
+    run(params: any): Promise<any>;
 
     connect(): Promise<void>;
 
     disconnect(): Promise<void>;
+
+    removeDatabase(): Promise<void>;
 
 }

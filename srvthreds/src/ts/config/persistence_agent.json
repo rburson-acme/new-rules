@@ -1,6 +1,7 @@
 {
+    "name": "Persistence Agent",
     "nodeType": "persistence",
     "nodeId": "persistence1",
-    "agentImpl": "./persistence/PersistenceAgent",
+    "agentImpl": "./persistence/PersistenceAgent.js",
     "subscriptionName": "sub_persistence_message"
 }

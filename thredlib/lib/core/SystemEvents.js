@@ -1,14 +1,14 @@
-import { Events } from "./Events.js";
-import { systemEventTypes, eventTypes } from "./types.js";
+import { Events } from './Events.js';
+import { systemEventTypes, eventTypes } from './types.js';
 export class SystemEvents {
     /***
-    *     _____ _                  _     ___            _             _
-    *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
-    *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
-    *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
-    *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
-    *
-    */
+     *     _____ _                  _     ___            _             _
+     *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
+     *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
+     *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
+     *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
+     *
+     */
     // request to expire current thred reaction
     static getSystemExpireThredEvent(id, thredId, reactionName, source) {
         return Events.newEvent({
@@ -16,12 +16,14 @@ export class SystemEvents {
             type: eventTypes.control.thredControl.type,
             source,
             thredId,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.expireReaction,
-                    reactionName
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.expireReaction,
+                        reactionName,
+                    },
+                },
+            },
         });
     }
     // request to explicitly transition a thred to a new state
@@ -31,12 +33,14 @@ export class SystemEvents {
             type: eventTypes.control.thredControl.type,
             source,
             thredId,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.transitionThred,
-                    transition
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.transitionThred,
+                        transition,
+                    },
+                },
+            },
         });
     }
     // request to terminate a thred
@@ -46,33 +50,53 @@ export class SystemEvents {
             type: eventTypes.control.thredControl.type,
             source,
             thredId,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.terminateThred
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.terminateThred,
+                    },
+                },
+            },
         });
     }
     /***
-    *     __               ___            _             _
-    *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
-    *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
-    *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
-    *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
-    *        |___/
-    */
+     *     __               ___            _             _
+     *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
+     *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
+     *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
+     *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
+     *        |___/
+     */
     // request to reset the number of pattern instances to 0 for a particular pattern
     static getResetPatternEvent(id, patternId, source) {
         return Events.newEvent({
             id,
             type: eventTypes.control.sysControl.type,
             source,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.resetPattern,
-                    patternId
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.resetPattern,
+                        patternId,
+                    },
+                },
+            },
+        });
+    }
+    // save a PatternModel to persistent storage
+    static getSavePatternEvent(id, patternModel, source) {
+        return Events.newEvent({
+            id,
+            type: eventTypes.control.sysControl.type,
+            source,
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.savePattern,
+                        patternModel,
+                    },
+                },
+            },
         });
     }
     // request to shutdown
@@ -81,12 +105,14 @@ export class SystemEvents {
             id,
             type: eventTypes.control.sysControl.type,
             source,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.shutdown,
-                    delay
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.shutdown,
+                        delay,
+                    },
+                },
+            },
         });
     }
     // request to terminate all threds
@@ -95,32 +121,36 @@ export class SystemEvents {
             id,
             type: eventTypes.control.sysControl.type,
             source,
-            content: {
-                values: {
-                    op: systemEventTypes.operations.terminateAllThreds,
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        op: systemEventTypes.operations.terminateAllThreds,
+                    },
+                },
+            },
         });
     }
     /***
-    *        ___      _            ___
-    *       /   \__ _| |_ __ _    /___\_ __  ___
-    *      / /\ / _` | __/ _` |  //  // '_ \/ __|
-    *     / /_// (_| | || (_| | / \_//| |_) \__ \
-    *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
-    *                                 |_|
-    */
+     *        ___      _            ___
+     *       /   \__ _| |_ __ _    /___\_ __  ___
+     *      / /\ / _` | __/ _` |  //  // '_ \/ __|
+     *     / /_// (_| | || (_| | / \_//| |_) \__ \
+     *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
+     *                                 |_|
+     */
     getStoreObjectEvent(id, source, objectType, obj) {
         return Events.newEvent({
             id,
             type: eventTypes.control.dataControl.type,
             source,
-            content: {
-                values: {
-                    objectType,
-                    obj
-                }
-            }
+            data: {
+                content: {
+                    values: {
+                        objectType,
+                        obj,
+                    },
+                },
+            },
         });
     }
 }

@@ -43,3 +43,29 @@ export const addUniqueById: (array: Identifiable[] | string[], item: Identifiabl
         return addUnique(array, item);
     }
 }
+
+export const curry = (fn: (...args: any[]) => any, ...args: any[]) => {
+    return (..._arg: any[]) => {
+        return fn(...args, ..._arg);
+    }
+}
+
+export const curryObj = <T>(fn: (args: T) => any, args: Partial<T>) => {
+    return (_args: Partial<T>) => {
+        return fn(deepMerge(_args as Record<string, any>, args) as T);
+    }
+}
+
+export const deepMerge = (obj1: Record<string, any>, obj2: Record<string, any>) => {
+  for (let key in obj2) {
+    if (obj2.hasOwnProperty(key)) {
+      if (obj2[key] instanceof Object && obj1[key] instanceof Object) {
+        obj1[key] = deepMerge(obj1[key], obj2[key]);
+      } else {
+        obj1[key] = obj2[key];
+      }
+    }
+  }
+  return obj1;
+}
+

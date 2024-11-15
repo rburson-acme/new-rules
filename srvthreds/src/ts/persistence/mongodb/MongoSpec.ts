@@ -72,6 +72,7 @@ export class MongoSpec {
     return MongoSpec.mapKeysRecursive({ values: value, map: MongoSpec.MATCHER_FIELD_MAP, blacklist: MongoSpec.MATCHER_FIELD_BLACKLIST });
   }
 
+  // @TODO - use mongo operator $currentDate for setting the modified date
   static mapUpdateValues(value: StringMap<any>) {
     const mappedValues = MongoSpec.mapUpdateKeysRecursive({ values: value, map: MongoSpec.UPDATE_FIELD_MAP, blacklist: MongoSpec.UPDATE_FIELD_BLACKLIST })
     const values = mappedValues[MongoSpec.SET_OP] || {};
@@ -81,6 +82,7 @@ export class MongoSpec {
     return mappedValues;
   }
 
+  // @TODO - use mongo operator $currentDate for setting these dates
   private static mapInputValue(value: StringMap<any>) {
     const mappedValues = MongoSpec.mapKeys({ values: value, map: MongoSpec.INBOUND_FIELD_MAP, blacklist: MongoSpec.INBOUND_FIELD_BLACKLIST });
     const now = new Date();

@@ -6,10 +6,11 @@ import { Event, Logger, StringMap } from '../../thredlib/index.js';
 import { Auth } from '../../auth/Auth.js';
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Socket } from 'socket.io';
+import { EventPublisher } from '../Agent.js';
 
 export interface SocketServiceParams {
     serviceListener: ServiceListener;
-    publisher: (event: Event, participantId: string) => Promise<void>;
+    publisher: EventPublisher
     nodeId: string;
     httpServer?: http.Server;
     port?: number,
@@ -30,7 +31,7 @@ export class SocketService {
 
     private httpServer: http.Server;
     private serviceListener: ServiceListener;
-    private publisher: (event: Event, participantId: string) => Promise<void>;
+    private publisher: EventPublisher;
     private nodeId: string;
     private channels: StringMap<(event: Event, channelId: string) => void> = {};
     private io: Server;
@@ -90,7 +91,7 @@ export class SocketService {
             // Handle inbound Events
             socket.on('message', (event: Event, fn) => {
                 // @TODO - verify event source IS participantId (no spoofing!)
-                this.publisher(event, participantId).catch(e => {
+                this.publisher.publishEvent(event, participantId).catch(e => {
                     Logger.debug(`server: publish ${event.id} failed for ${participantId}`, e);
                 });
             });
