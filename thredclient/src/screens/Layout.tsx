@@ -4,19 +4,36 @@ import rootStore from '../stores/rootStore';
 import { LoginScreen } from './Login/LoginScreen';
 import { MessengerLayout } from './Messenger/MessengerLayout';
 import { AdminLayout } from './Admin/AdminLayout';
-import { Button } from '../components/Button';
+import { Button } from '../components/Button';;
+import { createStackNavigator } from '@react-navigation/stack';
+import { ModuleLayout } from './Module/ModuleLayout';
+import { AdminDrawerParamList, MessengerDrawerParamList, ModuleStackParamList } from '../core/Navigation';
+import { ModuleListLayout } from './ModuleList/ModuleListLayout';
 
-export type AdminStackParamList = {
-  Home: { rootStore: typeof rootStore };
-};
-
-export type MessengerStackParamList = {
-  Home: { rootStore: typeof rootStore };
-};
 export const Layout = observer(({}) => {
-  const AuthDrawer = createDrawerNavigator<AdminStackParamList>();
-  const MessengerDrawer = createDrawerNavigator<MessengerStackParamList>();
+  const AuthDrawer = createDrawerNavigator<AdminDrawerParamList>();
+  const MessengerDrawer = createDrawerNavigator<MessengerDrawerParamList>();
   const { authStore } = rootStore;
+
+  const ModuleStack = createStackNavigator<ModuleStackParamList>();
+
+  function ModuleStackDef() {
+    return (
+      <ModuleStack.Navigator>
+        <ModuleStack.Screen
+          name="ModuleListLayout"
+          options={{ headerShown: false }}
+          component={ModuleListLayout}
+          initialParams={{ rootStore }}
+        />
+        <ModuleStack.Screen
+          name="Module"
+          options={({ route }) => ({ title: route.params.name })}
+          component={ModuleLayout}
+        />
+      </ModuleStack.Navigator>
+    );
+  }
 
   function logOut() {
     authStore.logOut();
@@ -33,6 +50,7 @@ export const Layout = observer(({}) => {
           component={AdminLayout}
           initialParams={{ rootStore }}
         />
+        <AuthDrawer.Screen name="Modules" component={ModuleStackDef} />
       </AuthDrawer.Navigator>
     );
   }
@@ -48,6 +66,7 @@ export const Layout = observer(({}) => {
           component={MessengerLayout}
           initialParams={{ rootStore }}
         />
+        <AuthDrawer.Screen name="Modules" component={ModuleStackDef} />
       </MessengerDrawer.Navigator>
     );
   } else return <LoginScreen />;

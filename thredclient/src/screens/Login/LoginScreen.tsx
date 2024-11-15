@@ -11,13 +11,11 @@ export const LoginScreen = observer(() => {
   const handleMessengerView = () => {
     if (!authStore.userId) return;
     authStore.setRole('user');
-    console.log({ userId: authStore.userId, role: authStore.role });
     thredsStore.connect(authStore.userId);
   };
   const handleAdminView = () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
-    console.log({ userId: authStore.userId, role: authStore.role });
     thredsStore.connect(authStore.userId);
   };
   return (
