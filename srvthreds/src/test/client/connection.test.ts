@@ -26,7 +26,7 @@ describe.skip('client connection test', function () {
   });
   test('Dispatch inception event and match outbound event', function () {
     const pr = new Promise<void>((resolve, reject) => {
-      eventManager0.consumers = new Set([
+      eventManager0.subscribers = new Set([
         withPromiseHandlers(
           (event) => {
             expect(event.data?.title).toBe('outbound.event0');
@@ -37,12 +37,12 @@ describe.skip('client connection test', function () {
         ),
       ]);
     });
-    eventManager0.dispatch(events.event0);
+    eventManager0.publish(events.event0);
     return pr;
   });
   test('Dispatch event1, receive event1 by participant1', function () {
     const pr = new Promise<void>((resolve, reject) => {
-      eventManager1.consumers = new Set([
+      eventManager1.subscribers = new Set([
         withPromiseHandlers(
           (event) => {
             expect(event.data?.title).toBe('outbound.event1');
@@ -52,19 +52,19 @@ describe.skip('client connection test', function () {
         ),
       ]);
     });
-    eventManager0.dispatch({ ...events.event1, thredId });
+    eventManager0.publish({ ...events.event1, thredId });
     return pr;
   });
   test('Dispatch event2, receive event2 by participant0', function () {
     const pr = new Promise<void>((resolve, reject) => {
-      eventManager0.consumers = new Set([
+      eventManager0.subscribers = new Set([
         withPromiseHandlers(
         (event) => {
           expect(event.data?.title).toBe('outbound.event2');
         }, resolve, reject),
       ]);
     });
-    eventManager1.dispatch({ ...events.event2, thredId });
+    eventManager1.publish({ ...events.event2, thredId });
   });
   // cleanup in case of failure
   afterAll(async () => {

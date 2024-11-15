@@ -18,8 +18,8 @@ export interface Event {
         // an optional representation of the source
         readonly uri?: string;
     }
-    // optional referer for the event
-    readonly referer?: string;
+    // optional reference to another event
+    readonly re?: string;
     // the data envelope for the event
     readonly data?: EventData;
 }

@@ -40,6 +40,7 @@ export const events: Record<string, Event> = {
   },
   event1: {
     id: '1',
+    re: '0',
     type: 'inbound.event1',
     source: {
       id: 'test.dataset',

@@ -6,10 +6,7 @@ import {
   systemEventTypes,
   Address,
   Logger,
-  ThredId,
-  SystemEvents,
-  TransitionModel,
-  SystemEventValues,
+  ThredId, SystemEventValues
 } from '../../thredlib/index.js';
 import { ThredStore } from '../store/ThredStore.js';
 import { Threds } from '../Threds.js';
@@ -53,15 +50,17 @@ export class SystemThredEvent {
       Logger.error(`No operation name supplied for threadDoesNotExist() on Thred ${thredId}`);
       return;
     }
-    dispatch(
+
+    dispatch({
       threds,
       to,
-      Id.nextEventId,
+      id: Id.nextEventId,
       thredId,
-      opName,
-      systemEventTypes.unsuccessfulStatus,
-      `Thred ${thredId} does not exist for ${opName} operation`,
-    );
+      re: event.id,
+      operation: opName,
+      status: systemEventTypes.unsuccessfulStatus,
+      message: `Thred ${thredId} does not exist for ${opName} operation`,
+    });
   }
 
   static async handleSystemThredEvent(args: SystemThredEventArgs): Promise<void> {
@@ -90,7 +89,16 @@ export class SystemThredEvent {
         message = `Operation ${opName} failed for Thred ${thredId}`;
       }
     }
-    dispatch(threds, to, Id.nextEventId, thredId, opName, status, message);
+    dispatch({
+      threds,
+      to,
+      id: Id.nextEventId,
+      thredId,
+      re: event.id,
+      operation: opName,
+      status,
+      message,
+    });
   }
 
   /*
@@ -166,7 +174,16 @@ export class SystemEvent {
         message = `Operation ${opName} failed for System operation`;
       }
     }
-    dispatch(threds, to, Id.nextEventId, ThredId.SYSTEM, opName, status, message);
+    dispatch({
+      threds,
+      to,
+      id: Id.nextEventId,
+      thredId: ThredId.SYSTEM,
+      re: event.id,
+      operation: opName,
+      status,
+      message,
+    });
   }
 
   private static async resetPattern(args: SystemEventArgs): Promise<void> {
@@ -201,18 +218,29 @@ export class SystemEvent {
   }
 }
 
-const dispatch = (
-  threds: Threds,
-  to: string[] | Address,
-  id: string,
-  thredId: string,
-  operation: string,
-  status: string,
-  message: string,
-  code?: string,
-) => {
+const dispatch = ({
+  threds,
+  to,
+  id,
+  thredId,
+  operation,
+  status,
+  message,
+  code,
+  re,
+}: {
+  threds: Threds;
+  to: string[] | Address;
+  id: string;
+  thredId: string;
+  operation: string;
+  status: string;
+  message: string;
+  code?: string;
+  re?: string;
+}) => {
   try {
-    const event: Event = getSystemStatusEvent(id, thredId, operation, status, message, code);
+    const event: Event = getSystemStatusEvent(id, thredId, operation, status, message, code, re);
     threds.dispatch({ id: event.id, event, to });
   } catch (e) {
     Logger.error(`Failed to dispatch system event for operation ${operation}`, e);
@@ -226,12 +254,14 @@ const getSystemStatusEvent = (
   status: string,
   message?: string,
   code?: string,
+  re?: string,
 ) => {
   return Events.newEvent({
     id,
     type: eventTypes.control.sysControl.type,
     thredId,
     source: { id: eventTypes.system.source.id },
+    re,
     data: {
       content: {
         values: {

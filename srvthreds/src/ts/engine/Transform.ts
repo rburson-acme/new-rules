@@ -13,6 +13,7 @@ import { ThredStore } from './store/ThredStore.js';
 export class Transform {
   private readonly eventDataTemplate?: EventData;
   private readonly templateXpr?: Expression;
+  private readonly reXpr?: Expression;
 
   constructor(transformModel: TransformModel) {
     this.eventDataTemplate = transformModel.eventDataTemplate;
@@ -21,6 +22,7 @@ export class Transform {
     if (transformModel.templateXpr) {
       this.templateXpr = new Expression(transformModel.templateXpr);
     }
+    if (transformModel.meta?.reXpr) this.reXpr = new Expression(transformModel.meta.reXpr);
   }
 
   async apply(event: Event, thredStore: ThredStore): Promise<Event> {
@@ -37,12 +39,15 @@ export class Transform {
       throw Error('No eventDataTemplate or template expression provided to transform directive');
     }
 
+    const re = this.reXpr && await this.reXpr.apply(expressionParams);
+
     const newEvent: Event = {
       id: Id.nextEventId,
       thredId: context.thredId,
       type: eventTypes.system.type,
       time: Date.now(),
       source: eventTypes.system.source,
+      ...(re && { re }),
       data,
     };
 

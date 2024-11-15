@@ -23,6 +23,7 @@ describe('system', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
       expect(connMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
+      expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
       thredId = message.event.thredId;
     });
@@ -35,6 +36,7 @@ describe('system', function () {
   test('expire event1Reaction and replay event0Reaction', function () {
     const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
     expect(currentReactionName).toBe('event1Reaction');
+    const nextEventId = Id.nextEventId;
     const pr = new Promise<void>((resolve, reject) => {
       // note can't really guarantee the order of the messages here - should really be more complicated OR
       connMan.engine.dispatchers = [
@@ -46,6 +48,7 @@ describe('system', function () {
             withReject((message) => {
               expect(message.to).toContain('testUser');
               expect(message.event?.type).toBe(eventTypes.control.sysControl.type);
+              expect(message.event?.re).toBe(nextEventId);
               expect(message.event.data?.content.values.operation).toBe(systemEventTypes.operations.expireReaction);
               expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
               resolve();
@@ -55,7 +58,7 @@ describe('system', function () {
       ];
     });
     connMan.eventQ.queue(
-      SystemEvents.getSystemExpireThredEvent(Id.nextEventId, thredId as string, 'event1Reaction', { id: 'testUser'}),
+      SystemEvents.getSystemExpireThredEvent(nextEventId, thredId as string, 'event1Reaction', { id: 'testUser'}),
     );
     return pr;
   });
@@ -222,6 +225,7 @@ const patternModels: PatternModel[] = [
           xpr: "$event.type = 'inbound.event0'",
           onTrue: { xpr: "$setLocal('event0', $event)" },
           transform: {
+            meta: { reXpr: '$event.id' },
             eventDataTemplate: {
               title: 'outbound.event0',
             },
