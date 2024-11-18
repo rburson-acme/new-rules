@@ -45,3 +45,7 @@ export const systemEventTypes = {
 export const ThredId  = {
     SYSTEM: 'SYSTEM'
 }
+
+export const systemAddress = {
+    persistence:'org.wt.persistence',
+}

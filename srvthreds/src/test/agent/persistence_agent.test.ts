@@ -7,7 +7,6 @@ import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
-import { S } from 'vitest/dist/chunks/config.CHuotKvS.js';
 
 StaticAgentConfig.agentConfig = agentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)

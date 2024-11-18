@@ -4,7 +4,6 @@ import { ReactionModel } from '../thredlib/index.js';
 import { ThredContext } from './ThredContext.js';
 import { Event } from '../thredlib/index.js';
 import { Reaction } from './Reaction.js';
-import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
 
 export class Pattern {

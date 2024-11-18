@@ -345,7 +345,7 @@ export class AgentQueueConnectionManager {
 
     // create the Agent and start it
     const agent = new Agent(agentConfig, agentEventQ, agentMessageQ);
-    agent.start();
+    await agent.start();
 
     return new AgentQueueConnectionManager(
       engineEventService,

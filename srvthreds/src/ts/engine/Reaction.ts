@@ -32,6 +32,7 @@ export class Reaction {
         }
     }
 
+    // @TODO - catch failures here and notify all participants
     async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
         const { condition } = this;
         const result = await condition.apply(event, thredStore);

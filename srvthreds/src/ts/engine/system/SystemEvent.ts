@@ -6,7 +6,10 @@ import {
   systemEventTypes,
   Address,
   Logger,
-  ThredId, SystemEventValues
+  ThredId,
+  SystemEventValues,
+  EventBuilder,
+  systemAddress,
 } from '../../thredlib/index.js';
 import { ThredStore } from '../store/ThredStore.js';
 import { Threds } from '../Threds.js';
@@ -51,7 +54,7 @@ export class SystemThredEvent {
       return;
     }
 
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -89,7 +92,7 @@ export class SystemThredEvent {
         message = `Operation ${opName} failed for Thred ${thredId}`;
       }
     }
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -174,7 +177,7 @@ export class SystemEvent {
         message = `Operation ${opName} failed for System operation`;
       }
     }
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -203,6 +206,12 @@ export class SystemEvent {
       Logger.error(`No pattern or pattern with id supplied for resetPattern operation on System`);
       return undefined;
     }
+    const storePatternEvent = EventBuilder.create(eventTypes.system)
+      .fork()
+      .mergeTasks({ op: 'create', params: { type: 'PatternModel', values: patternModel } })
+      .mergeData({ title: 'Store Pattern' })
+      .build();
+      threds.dispatch({ id: storePatternEvent.id, event: storePatternEvent, to: [systemAddress.persistence] });
   }
 
   private static terminateAllThreds(args: SystemEventArgs): Promise<void> {
@@ -218,7 +227,7 @@ export class SystemEvent {
   }
 }
 
-const dispatch = ({
+const dispatchStatusEvent = ({
   threds,
   to,
   id,
