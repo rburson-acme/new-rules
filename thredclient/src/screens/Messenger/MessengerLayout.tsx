@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { ThredHeader } from '@/src/screens/Admin/components/ThredHeader';
 import { EventsLayout } from './components/EventsLayout';
 import { DrawerScreenProps } from '@react-navigation/drawer';
-import { AdminStackParamList } from '../Layout';
+import { MessengerDrawerParamList } from '@/src/core/Navigation';
 
-type AdminLayoutProps = DrawerScreenProps<AdminStackParamList, 'Home'>;
+type AdminLayoutProps = DrawerScreenProps<MessengerDrawerParamList, 'Home'>;
 export const MessengerLayout = ({ navigation, route }: AdminLayoutProps) => {
   // @TODO - add 'ThredPanel' and determine selected thred here
   // For now use the first ThredStore
