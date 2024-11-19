@@ -6,7 +6,7 @@ export class ThredContext implements ExpressionContext {
     readonly thredId: string | undefined;
     private readonly scope: Record<string, any>;
 
-    constructor(params?: { thredId: string, scope?: Record<string, any> }){
+    constructor(params?: { thredId: string, scope?: Record<string, any>, permissions?: any }) {
        this.thredId = params?.thredId ?? undefined; 
        this.scope = params?.scope || {};
     }

@@ -9,6 +9,7 @@ export class SystemPatterns {
       maxInstances: 0,
       reactions: [
         {
+          permissions: { roles: ['admin'] },
           condition: {
             type: 'filter',
             xpr: `$event.type = ${eventTypes.control.thredControl.type} and $values.op = ${systemEventTypes.operations.terminateThred}`,

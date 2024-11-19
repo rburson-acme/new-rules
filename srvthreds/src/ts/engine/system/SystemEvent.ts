@@ -130,7 +130,7 @@ export class SystemThredEvent {
   /*
         Terminate the thred
     */
-  private static async terminateThred(args: SystemThredEventArgs): Promise<void> {
+  static async terminateThred(args: SystemThredEventArgs): Promise<void> {
     const { thredStore, thredCompanion } = args;
     await thredCompanion.terminateThred(thredStore);
   }

@@ -1,6 +1,6 @@
 import { Logger, LoggerLevel, PatternModel } from '../../ts/thredlib/index.js';
 import { Persistence } from '../../ts/persistence/Persistence.js';
-import { PatternManager } from '../../ts/mgmt/PatternManager.js';
+import { PatternManager } from '../../ts/admin/PatternManager.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 

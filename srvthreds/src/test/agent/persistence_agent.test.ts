@@ -1,8 +1,6 @@
-import { Logger, LoggerLevel, Event, SMap, Events, EventBuilder, deepMerge } from '../../ts/thredlib/index.js';
-import { AgentConfig, Config as StaticAgentConfig } from '../../ts/agent/Config.js';
-import { EventQ } from '../../ts/queue/EventQ.js';
-import { MessageQ } from '../../ts/queue/MessageQ.js';
-import { AgentQueueConnectionManager, events, withPromise, withPromiseHandlers } from '../testUtils.js';
+import { Logger, LoggerLevel, Event, SMap, EventBuilder } from '../../ts/thredlib/index.js';
+import { Config as StaticAgentConfig } from '../../ts/agent/Config.js';
+import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';

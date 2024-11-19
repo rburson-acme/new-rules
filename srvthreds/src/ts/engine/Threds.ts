@@ -39,6 +39,25 @@ export class Threds {
     return this.thredsStore.terminateAllThreds();
   }
 
+  terminateThred(thredId: string): Promise<void> {
+    return this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
+      if(!thredStore) throw new Error(`Thred ${thredId} does not, or no longer exists`);
+      await Thred.terminateThred(thredStore);
+    });
+  }
+
+
+
+
+
+  // if the event is from an admin and the then set the admin context on the thredStore (or reaction store)
+
+  // reaction should check admin context against current reaction permissions
+
+
+
+
+
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async handleAttached(thredId: string, event: Event): Promise<void> {
@@ -89,4 +108,5 @@ export class Threds {
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
     });
   }
+
 }
