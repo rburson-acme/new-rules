@@ -2,8 +2,9 @@ import { Button } from '@/src/components/Button';
 import { ALL_HEALTH_PERMISSIONS, HealthModuleStore } from '@/src/stores/HealthModuleStore';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
-import { ReadRecordsResult, RecordType } from 'react-native-health-connect';
+import { ActivityIndicator, View } from 'react-native';
+import { ReadRecordsResult } from 'react-native-health-connect';
+import { BodyTemperature } from './BodyTemperature';
 
 type HealthModuleProps = {
   healthModuleStore: HealthModuleStore;
@@ -15,6 +16,9 @@ export const HealthModule = observer(({ healthModuleStore }: HealthModuleProps) 
 
   const areTherePermissions = healthModuleStore.grantedPermissions.length > 0;
 
+  if (!healthModuleStore.hasInitialized) {
+    return <ActivityIndicator />;
+  }
   return (
     <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
       {areTherePermissions ? (
@@ -41,35 +45,3 @@ export const HealthModule = observer(({ healthModuleStore }: HealthModuleProps) 
     </View>
   );
 });
-
-type BodyTemperatureProps = {
-  bodyTemperatureData: ReadRecordsResult<'BodyTemperature'> | undefined;
-  permissionGranted: boolean;
-  healthModuleStore: HealthModuleStore;
-};
-const BodyTemperature = ({ bodyTemperatureData, permissionGranted, healthModuleStore }: BodyTemperatureProps) => {
-  if (permissionGranted) {
-    return (
-      <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center' }}>
-        <Text>Body Temperature: </Text>
-        <View style={{ alignItems: 'flex-end' }}>
-          {bodyTemperatureData?.records.map((data, index) => {
-            return <Text key={index}>{data.temperature.inFahrenheit}°F</Text>;
-          })}
-        </View>
-      </View>
-    );
-  } else {
-    return (
-      <View>
-        <Text>Body Temp Permission not granted. Press below to give permission.</Text>;
-        <Button
-          content={'Request Body Temp Permission'}
-          onPress={async () => {
-            await healthModuleStore.requestPermission([{ accessType: 'read', recordType: 'BodyTemperature' }]);
-          }}
-        />
-      </View>
-    );
-  }
-};

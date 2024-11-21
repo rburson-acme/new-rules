@@ -15,6 +15,7 @@ export const ALL_HEALTH_PERMISSIONS: Permission[] = [{ accessType: 'read', recor
 export class HealthModuleStore {
   isModuleActive: boolean = false;
   grantedPermissions: Permission[] = [];
+  hasInitialized: boolean = false;
   permissionData: Record<RecordType, ReadRecordsResult<RecordType>> | {} = {};
   constructor() {
     makeObservable(this, {
@@ -24,6 +25,7 @@ export class HealthModuleStore {
       initialize: action,
       requestPermission: action,
       getRecords: action,
+      hasInitialized: observable,
     });
   }
 
@@ -64,6 +66,7 @@ export class HealthModuleStore {
       });
     });
   }
+
   async initialize() {
     const isModuleActive = await initialize();
     runInAction(() => {
@@ -75,5 +78,8 @@ export class HealthModuleStore {
     });
 
     await this.fetchRecordsForGrantedPermissions(grantedPermissions);
+    runInAction(() => {
+      this.hasInitialized = true;
+    });
   }
 }
