@@ -4,7 +4,13 @@ import { Button } from '@/src/components/Button';
 import { InteractionStore } from '@/src/stores/InteractionStore';
 
 // @TODO
-// This will need to be a factory for different value types - right now we only have simple buttons
+/* This will need to be a factory for different types - right now we only have simple buttons
+ * This should be based on the number of items in the set
+ * If there are 0 items in the set, it should be an input field
+ * If there is only one item in the set, it should be a button
+ * If there are 2 or 3 items in the set, it should be a set of buttons
+ * If there are more than 3 items in the set, it should be a dropdown or selector
+*/
 
 type ValueProps = {
   forInput: string;
