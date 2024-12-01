@@ -25,6 +25,9 @@ export class PatternsStore {
     return Object.values(this.patternStores).map((patternStore) => patternStore.pattern);
   }
 
+  /*
+    @Deprecated
+  */
   get numThreds(): number {
     return Object.values(this.patternStores).reduce((total, patternStore) => total + patternStore.numThreds, 0);
   }

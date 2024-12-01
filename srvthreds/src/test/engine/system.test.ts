@@ -63,12 +63,16 @@ describe('system', function () {
     return pr;
   });
   test('move to event2Reaction', function () {
-    const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
-    expect(currentReactionName).toBe('event1Reaction');
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
-      expect(connMan.engine.numThreds).toBe(1);
-      expect(message.event.data?.title).toBe('outbound.event1');
-      expect(message.to).toContain('outbound.event1.recipient');
+    test('move to event2Reaction', function () {
+      const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
+      expect(currentReactionName).toBe('event1Reaction');
+      const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+        expect(connMan.engine.numThreds).toBe(1);
+        expect(message.event.data?.title).toBe('outbound.event1');
+        expect(message.to).toContain('outbound.event1.recipient');
+      });
+      connMan.eventQ.queue({ ...testEvents.event1, thredId });
+      return pr;
     });
     connMan.eventQ.queue({ ...testEvents.event1, thredId });
     return pr;

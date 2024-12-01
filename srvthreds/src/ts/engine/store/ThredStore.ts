@@ -34,6 +34,8 @@ export class ThredStore {
         return this._currentReaction;
     }
 
+    // This is the proper way to terminate a thred
+    // IMPORTANT: This method must be called from within a lock i.e. the ThredsStore.withThredStore()
     finish(): void {
         this.transitionTo(undefined);
     }
@@ -68,9 +70,13 @@ export class ThredStore {
         );
     }
 
+    toJS(): ThredStoreState {
+        return this.getState();
+    }
+
 }
 
-interface ThredStoreState {
+export interface ThredStoreState {
     id: string,
     thredContext: any,
     patternId: string,

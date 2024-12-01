@@ -1,4 +1,4 @@
-import { Logger, Message, Event, StringMap, Events, EventError, errorCodes, errorKeys } from '../thredlib/index.js';
+import { Logger, Message, Event, StringMap, Events, EventError, errorCodes, errorKeys, EventContent } from '../thredlib/index.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
@@ -75,7 +75,7 @@ export class Agent {
     }
   }
 
-  // publish outbound Messages to participants
+  // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
     Logger.trace(`Agent.processMessage()`, message);
     return this.handler?.processMessage(message);
@@ -85,11 +85,10 @@ export class Agent {
     return this.handler?.shutdown();
   }
 
-  // publish inbound Events to engine
+  // publish Events to engine
   publishEvent = async (event: Event, sourceId?: string): Promise<void> => {
     Logger.trace('Agent.publishEvent(): ', event.id, ` published by ${sourceId} @ ${Config.agentConfig.nodeId}`);
-    const _event = sourceId ? { ...event, source: { id: sourceId } } : event;
-    return this.eventQ.queue(_event);
+    return this.eventQ.queue(event);
   };
 
   /*
@@ -120,20 +119,21 @@ export class Agent {
     }
   }
 
-  private createOutboundEvent = ({
+  private createOutboundEvent = <T>({
     prevEvent,
     result,
     error,
   }: {
     prevEvent: Event;
-    result?: any;
+    result?: EventContent;
     error?: EventError['error'];
   }) => {
-    const content = error ? { error } : { values: { result } };
+    const content = error ? { error } : result;
 
     return Events.newEvent({
       id: Id.getNextId(this.agentConfig.nodeId),
       type: `org.wt.${this.agentConfig.nodeType}`,
+      re: prevEvent.id,
       data: {
         title: `${this.agentConfig.nodeId} Result`,
         content,

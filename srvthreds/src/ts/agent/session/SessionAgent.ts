@@ -8,6 +8,7 @@ import { SessionService } from './SessionService.js';
 import { ServiceListener, SocketService } from './SocketService.js';
 import defaultSessionsModel from '../../config/sessions/sessions_model.json' with { type: 'json' };
 import defaultResolverConfig from '../../config/resolver_config.json' with { type: 'json' };
+import { SessionServiceListener } from './SessionServiceListener.js';
 
 // Agent specific configuration
 export interface SessionAgentConfig {
@@ -63,6 +64,7 @@ export class SessionAgent implements MessageHandler {
     return;
   }
 
+  // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
     const channelIds = await this.sessionService.getChannels(message);
     channelIds.forEach((channelId) => {
@@ -83,20 +85,6 @@ export class SessionAgent implements MessageHandler {
   }
 }
 
-class SessionServiceListener implements ServiceListener {
-  constructor(private sessionService: SessionService) {}
 
-  async newSession(
-    { sessionId, nodeId }: { sessionId: string; nodeId: string },
-    participantId: string,
-    channelId: string,
-  ): Promise<void> {
-    this.sessionService.addSession({ id: sessionId, nodeId }, participantId, channelId);
-  }
-
-  async sessionEnded(sessionId: string): Promise<void> {
-    this.sessionService.removeSession(sessionId);
-  }
-}
 
 export default SessionAgent;

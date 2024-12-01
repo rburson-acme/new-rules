@@ -1,7 +1,7 @@
-import { EventContent } from "../../thredlib";
+import { Event } from "../../thredlib";
 
 export interface Adapter
 {
     initialize(): Promise<void>;
-    execute(content?: EventContent): Promise<any>;
+    execute(event: Event): Promise<any>;
 }

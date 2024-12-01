@@ -288,7 +288,7 @@ export class AgentConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ);
+    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ, additionalArgs);
     agent.start();
 
     return new AgentConnectionManager(
@@ -344,7 +344,7 @@ export class AgentQueueConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ);
+    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ, additionalArgs);
     await agent.start();
 
     return new AgentQueueConnectionManager(

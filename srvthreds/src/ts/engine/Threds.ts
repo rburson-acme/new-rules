@@ -2,11 +2,11 @@ import { Event, Message, Series, Logger } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
-import { Engine } from './Engine.js';
 import { Pattern } from './Pattern.js';
 import { SystemEvent, SystemThredEvent } from './system/SystemEvent.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
+import { Dispatcher } from './Dispatcher.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
@@ -15,7 +15,7 @@ import { ThredContext } from './ThredContext.js';
 export class Threds {
   constructor(
     readonly thredsStore: ThredsStore,
-    private readonly engine: Engine,
+    private readonly dispatcher: Dispatcher
   ) {}
 
 
@@ -28,53 +28,23 @@ export class Threds {
   }
 
   dispatch(message: Message) {
-    this.engine.dispatch(message); // outbound messages with 'addressees'
+    this.dispatcher.dispatch(message); // outbound messages with 'addressees'
   }
 
   shutdown(delay = 0): Promise<void> {
-    return this.engine.shutdown(delay);
+    return this.dispatcher.shutdown(delay);
   }
-
-  terminateAllThreds(): Promise<void> {
-    return this.thredsStore.terminateAllThreds();
-  }
-
-  terminateThred(thredId: string): Promise<void> {
-    return this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
-      if(!thredStore) throw new Error(`Thred ${thredId} does not, or no longer exists`);
-      await Thred.terminateThred(thredStore);
-    });
-  }
-
-
-
-
-
-  // if the event is from an admin and the then set the admin context on the thredStore (or reaction store)
-
-  // reaction should check admin context against current reaction permissions
-
-
-
-
 
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async handleAttached(thredId: string, event: Event): Promise<void> {
     const { thredsStore } = this;
-    return this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
+    return this.thredsStore.withThredStore(thredId, async (thredStore: ThredStore) => {
 
       // @TODO @TEMP @DEMO // copy admin -----------
       // this.dispatch({id: event.id, event, to: []});
       // -------------------------------------------
 
-      if (!thredStore) {
-        if (SystemThredEvent.isSystemThredEvent(event)) {
-          SystemThredEvent.thredDoesNotExist(this, event);
-        }
-        Logger.warn(`Thred ${thredId} does not, or no longer exists`);
-        return;
-      }
       return Thred.consider(event, thredStore, this);
     });
   }

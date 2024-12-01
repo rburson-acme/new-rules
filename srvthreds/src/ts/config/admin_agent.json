@@ -1,0 +1,10 @@
+{
+    "name": "Admin Agent",
+    "nodeType": "admin",
+    "nodeId": "admin1",
+    "agentImpl": "./admin/AdminAgent.js",
+    "subscriptionName": "sub_admin1_message",
+    "customConfig": {
+        "port": 3001
+    }
+}

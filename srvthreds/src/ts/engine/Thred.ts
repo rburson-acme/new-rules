@@ -39,7 +39,7 @@ export class Thred {
       //if there's not a match, end the loop
       if (!reactionResult) break transitionLoop;
       // attempt state change and retrieve next input
-      inputEvent = await Thred.nextReaction(thredStore, threds, reactionResult?.transition, inputEvent);
+      inputEvent = await Thred.nextReaction(thredStore, reactionResult?.transition, inputEvent);
       // send any message
       reactionResult?.message && threds.dispatch(reactionResult?.message);
     } while (inputEvent);
@@ -47,7 +47,7 @@ export class Thred {
 
   // state transition + apply next input
   static async transition(thredStore: ThredStore, threds: Threds, transition?: Transition): Promise<void> {
-    const inputEvent = await Thred.nextReaction(thredStore, threds, transition);
+    const inputEvent = await Thred.nextReaction(thredStore, transition);
     if (inputEvent) await Thred.consider(inputEvent, thredStore, threds);
   }
 
@@ -69,7 +69,6 @@ export class Thred {
   // state transition - shift state to new reaction, if any and return the next input, if any
   private static async nextReaction(
     thredStore: ThredStore,
-    threds: Threds,
     transition?: Transition,
     currentEvent?: Event,
   ): Promise<Event | undefined> {
