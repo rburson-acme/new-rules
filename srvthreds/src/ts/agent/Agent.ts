@@ -21,11 +21,11 @@ export interface EventPublisher {
   publishEvent: (event: Event, sourceId?: string) => Promise<void>;
   createOutboundEvent: ({
     prevEvent,
-    result,
+    content,
     error,
   }: {
     prevEvent: Event;
-    result?: any;
+    content?: any;
     error?: EventError['error'];
   }) => Event;
 }
@@ -121,14 +121,14 @@ export class Agent {
 
   private createOutboundEvent = <T>({
     prevEvent,
-    result,
+    content,
     error,
   }: {
     prevEvent: Event;
-    result?: EventContent;
+    content?: EventContent;
     error?: EventError['error'];
   }) => {
-    const content = error ? { error } : result;
+    const _content = error ? { error } : content;
 
     return Events.newEvent({
       id: Id.getNextId(this.agentConfig.nodeId),
@@ -136,7 +136,7 @@ export class Agent {
       re: prevEvent.id,
       data: {
         title: `${this.agentConfig.nodeId} Result`,
-        content,
+        content: _content,
       },
       source: { id: this.agentConfig.nodeId, name: this.agentConfig.name },
       thredId: prevEvent.thredId,

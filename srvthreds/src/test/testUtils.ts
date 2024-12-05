@@ -168,7 +168,7 @@ export class EngineConnectionManager {
     });
     const eventQ = new EventQ(eventService);
     const engine = new Engine(eventQ);
-    engine.start({ patternModels });
+    await engine.start({ patternModels });
     const instance = new EngineConnectionManager(eventService, eventQ, engine);
     return instance;
   }
@@ -215,7 +215,7 @@ export class ServerConnectionManager {
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
     // engine start engine
     const engineServer = new Server(engineEventQ, engineMessageQ, sessions);
-    engineServer.start({ patternModels });
+    await engineServer.start({ patternModels });
 
     // setup the q's for the sessionService
     const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });

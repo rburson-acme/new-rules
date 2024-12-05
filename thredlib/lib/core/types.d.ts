@@ -30,15 +30,17 @@ export declare const systemEventTypes: {
     successfulStatus: string;
     unsuccessfulStatus: string;
     operations: {
-        expireReaction: string;
         transitionThred: string;
         terminateThred: string;
         resetPattern: string;
-        savePattern: string;
+        getThreds: string;
         terminateAllThreds: string;
         shutdown: string;
     };
 };
 export declare const ThredId: {
     SYSTEM: string;
+};
+export declare const systemAddress: {
+    persistence: string;
 };

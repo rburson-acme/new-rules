@@ -31,15 +31,17 @@ export const systemEventTypes = {
     successfulStatus: "OK",
     unsuccessfulStatus: "ERROR",
     operations: {
-        expireReaction: "expireReaction",
         transitionThred: "transitionThred",
         terminateThred: "terminateThred",
         resetPattern: "resetPattern",
-        savePattern: "savePattern",
+        getThreds: "getThreds",
         terminateAllThreds: "terminateAllThreds",
         shutdown: "shutdown"
     }
 };
 export const ThredId = {
     SYSTEM: 'SYSTEM'
+};
+export const systemAddress = {
+    persistence: 'org.wt.persistence',
 };

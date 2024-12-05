@@ -28,11 +28,11 @@ export interface SystemThredEventArgs {
   readonly thredStore: ThredStore;
   readonly thredCompanion: ThredCompanion;
 }
-
 /*
     Thred related operations
     These operations perform thred state changes so are therefore are all synchronous
 */
+/*
 export class SystemThredEvent {
   private static operations: StringMap<(args: SystemThredEventArgs) => Promise<void>> = {
     [systemEventTypes.operations.expireReaction]: SystemThredEvent.expireReaction,
@@ -103,22 +103,22 @@ export class SystemThredEvent {
       message,
     });
   }
-
+    */
   /*
         Expire the reaction if reactionName is the current reaction
     */
-  private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
+  /*private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
     const reactionName = (Events.getContent(event)?.values as SystemEventInputValues)?.reactionName;
     if (thredStore.reactionStore.reactionName === reactionName) {
       await thredCompanion.expireReaction(thredStore, threds);
     }
-  }
+  }*/
 
   /*
         Move the thred to give state
     */
-  private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
+ /* private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
     const transitionModel = (Events.getContent(event)?.values as SystemEventInputValues)?.transition;
     if (transitionModel) {
@@ -126,19 +126,23 @@ export class SystemThredEvent {
       await thredCompanion.transition(thredStore, threds, transition);
     }
   }
+    */
 
   /*
         Terminate the thred
     */
+        /*
   static async terminateThred(args: SystemThredEventArgs): Promise<void> {
     const { thredStore, thredCompanion } = args;
     await thredCompanion.terminateThred(thredStore);
   }
 }
+  */
 
 /*
     System level operations
 */
+/*
 export class SystemEvent {
   private static operations: StringMap<(args: SystemEventArgs) => Promise<void>> = {
     [systemEventTypes.operations.resetPattern]: SystemEvent.resetPattern,
@@ -283,3 +287,4 @@ const getSystemStatusEvent = (
     },
   });
 };
+*/

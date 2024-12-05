@@ -1,9 +1,8 @@
-import { Event, Message, Series, Logger } from '../thredlib/index.js';
+import { Event, Message, Series } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
 import { Pattern } from './Pattern.js';
-import { SystemEvent, SystemThredEvent } from './system/SystemEvent.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { Dispatcher } from './Dispatcher.js';
@@ -19,6 +18,9 @@ export class Threds {
   ) {}
 
 
+  // a no-op for the base threds class
+  async initialize(): Promise<void> { }
+
   // handleAttached and handleDetached are the two main entry point for Thred locking (per thredId)
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   consider(event: Event): Promise<void> {
@@ -27,8 +29,8 @@ export class Threds {
       : this.handleDetached(event);
   }
 
-  dispatch(message: Message) {
-    this.dispatcher.dispatch(message); // outbound messages with 'addressees'
+  async dispatch(message: Message): Promise<void> {
+    return this.dispatcher.dispatch(message); // outbound messages with 'addressees'
   }
 
   shutdown(delay = 0): Promise<void> {
@@ -39,10 +41,10 @@ export class Threds {
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async handleAttached(thredId: string, event: Event): Promise<void> {
     const { thredsStore } = this;
-    return this.thredsStore.withThredStore(thredId, async (thredStore: ThredStore) => {
+    await this.thredsStore.withThredStore(thredId, async (thredStore: ThredStore) => {
 
       // @TODO @TEMP @DEMO // copy admin -----------
-      // this.dispatch({id: event.id, event, to: []});
+      // await this.dispatch({id: event.id, event, to: []});
       // -------------------------------------------
 
       return Thred.consider(event, thredStore, this);
@@ -55,7 +57,7 @@ export class Threds {
       patternsStore: { patterns },
     } = this.thredsStore;
     // system event hook
-    if (SystemEvent.isSystemEvent(event)) return SystemEvent.handleSystemEvent({ event, threds: this });
+    //if (SystemEvent.isSystemEvent(event)) return SystemEvent.handleSystemEvent({ event, threds: this });
 
     // if pattern is applicable, it will start the thread
     return await Series.forEach<Pattern>(patterns, async (pattern) => {
@@ -72,7 +74,7 @@ export class Threds {
     await this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
 
       // @TODO @TEMP @DEMO (copy the admin user) ----
-      //this.dispatch({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
+      //await this.dispatch({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
       // ---------------------------------------------
 
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);

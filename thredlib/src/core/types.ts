@@ -32,7 +32,6 @@ export const systemEventTypes = {
     successfulStatus: "OK",
     unsuccessfulStatus: "ERROR",
     operations: {
-        expireReaction: "expireReaction",
         transitionThred: "transitionThred",
         terminateThred: "terminateThred",
         resetPattern: "resetPattern",

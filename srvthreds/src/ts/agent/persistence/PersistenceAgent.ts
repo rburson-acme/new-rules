@@ -32,7 +32,7 @@ export class PersistenceAgent implements MessageHandler {
     // @TODO implement transactions for Persistence
     try {
       const result = await (this.adapter as PersistenceAdapter).execute(message.event);
-      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: message.event, result });
+      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: message.event, content: { values: { result } } });
       await this.eventPublisher.publishEvent(outboundEvent);
     } catch (e) {
       const outboundEvent = this.eventPublisher.createOutboundEvent({

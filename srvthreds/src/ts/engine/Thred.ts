@@ -2,7 +2,6 @@ import { Event } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
-import { SystemThredEvent } from './system/SystemEvent.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
 
@@ -21,6 +20,7 @@ export class Thred {
     await Thred.synchronizeThredState(thredStore, threds);
 
     // system event hook
+    /*
     if (SystemThredEvent.isSystemThredEvent(event))
       return SystemThredEvent.handleSystemThredEvent({
         event,
@@ -28,6 +28,7 @@ export class Thred {
         threds,
         thredCompanion: Thred.createCompanion(),
       });
+      */
 
     // loop wil continue as long as there is a currentReaction and an inputEvent
     transitionLoop: do {
@@ -40,7 +41,7 @@ export class Thred {
       if (!reactionResult) break transitionLoop;
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult?.transition, inputEvent);
-      // send any message
+      // send any message - NOTE: don't wait for dispatch
       reactionResult?.message && threds.dispatch(reactionResult?.message);
     } while (inputEvent);
   }

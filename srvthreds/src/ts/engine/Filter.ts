@@ -23,7 +23,6 @@ export class Filter extends Condition {
 
     async applyCondition(event:Event, thredStore: ThredStore): Promise<ConditionResult | undefined>  {
         const context = thredStore.thredContext;
-        const bindings = thredStore.currentReaction?.permissions?.hasAdminRole() 
         if(await this.expression.apply({ event, context })) {
             return this.asConditionResult();
         }

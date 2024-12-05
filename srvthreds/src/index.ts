@@ -140,7 +140,7 @@ async function startServices() {
     // @TODO separate service
     //  setup the engine server
     const engineServer = new Server(engineEventQ, engineMessageQ, sessions);
-    engineServer.start({ patternModels });
+    await engineServer.start({ patternModels });
 
     // set up the remote Qs for the session service agent
     const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
@@ -150,7 +150,7 @@ async function startServices() {
     
     // create and run a Session Agent
     const agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, { httpServer, sessionsModel });
-    agent.start();
+    await agent.start();
 
 
     /***

@@ -110,7 +110,7 @@ describe('system', function () {
     });
     await connMan.engine
       .consider(
-        SystemEvents.getSystemTransitionThredEvent(
+        SystemEvents.getTransitionThredEvent(
           Id.nextEventId,
           thredId as string,
           { name: 'event3Reaction', input: 'default' },
@@ -156,7 +156,7 @@ describe('system', function () {
       expect(message.event.data?.content.values.status).toBe(systemEventTypes.successfulStatus);
     });
     await connMan.engine
-      .consider(SystemEvents.getSystemTerminateThredEvent(Id.nextEventId, thredId as string, { id: 'testUser'}))
+      .consider(SystemEvents.getTerminateThredEvent(Id.nextEventId, thredId as string, { id: 'testUser'}))
       .then(() => {
         expect(connMan.engine.numThreds).toBe(0);
       });

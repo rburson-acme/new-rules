@@ -29,12 +29,13 @@ export class Server {
     this.engine.dispatchers.push(this.tell.bind(this));
   }
 
-  start(config: RunConfig) {
-    this.engine.start(config);
+  async start(config: RunConfig):Promise<void> {
+    return this.engine.start(config);
   }
 
   // outbound
   // @TODO need better failure handling for all the possible async failures
+  // @TODO - implement Engine notification upon failure, so that Engine can notify appropriate participants
   async tell(message: Message): Promise<void> {
     // don't propagate failures here as this is called in the event loop
     try {

@@ -7,7 +7,7 @@ import { ThredsStore } from '../engine/store/ThredsStore.js';
 import { Threds } from '../engine/Threds.js';
 import { PersistenceFactory } from '../persistence/PersistenceFactory.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { errorCodes, errorKeys, Event, eventTypes, EventValues, Logger, ThredId } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Event, eventTypes, EventValues, Logger, Message, ThredId } from '../thredlib/index.js';
 import { AdminService } from './AdminService.js';
 
 export class AdminThreds extends Threds {
@@ -20,23 +20,29 @@ export class AdminThreds extends Threds {
     this.persistenceAdapter = new PersistenceAdapter(PersistenceFactory.getPersistence());
   }
 
+    async initialize(): Promise<void> {
+      return this.persistenceAdapter.initialize();
+    }
+
   async consider(event: Event): Promise<void> {
     if (AdminService.isSystemEvent(event)) {
       const _event = { ...event, thredId: Id.getNextThredId(ThredId.SYSTEM) };
-      let result: EventValues['values'] | undefined;
+      let values: EventValues['values'] | undefined;
       try {
         if (_event.type === eventTypes.control.dataControl.type) {
-          result = await this.persistenceAdapter.execute(_event);
+          // persistence operation has a top level result key
+          values = { result: await this.persistenceAdapter.execute(_event) };
         } else if (_event.type === eventTypes.control.sysControl.type) {
-          result = await this.adminService.handleSystemEvent({ event: _event });
+          values = await this.adminService.handleSystemEvent({ event: _event });
         }
         const outboundEvent = Events.newEventFromEvent({
           prevEvent: _event,
           title: `System Event -> Thred: ${_event.thredId} -> Re: Event: ${_event.id}`,
-          result: { values: result },
+          result: { values },
         });
-        //const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
-        //await this.dispatchMessage(message);
+        const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
+        // don't wait for dispatch
+        this.dispatch(message);
       } catch (e) {
         const eventError =
           e instanceof EventThrowable ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause: e };
@@ -48,7 +54,7 @@ export class AdminThreds extends Threds {
         });
       }
     } else {
-      super.consider(event);
+      return super.consider(event);
     }
   }
 }

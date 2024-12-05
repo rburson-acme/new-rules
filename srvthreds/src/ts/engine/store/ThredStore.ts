@@ -49,12 +49,26 @@ export class ThredStore {
         return this.reactionStore.isExpired(this.currentReaction.expiry.interval);
     }
 
+    // used for storage
     getState(): ThredStoreState {
         return {
             id: this.id,
             thredContext: this.thredContext.getState(),
             patternId: this.pattern.id,
             reactionStore: this.reactionStore?.getState(),
+            startTime: this.startTime
+        }
+    }
+
+    // used for marshalling to UI
+    toJSON()  {
+        return {
+            id: this.id,
+            patternId: this.pattern.id,
+            currentReaction: {
+                reactionName: this.currentReaction?.name,
+                expiry: this.currentReaction?.expiry
+            },
             startTime: this.startTime
         }
     }
@@ -70,9 +84,6 @@ export class ThredStore {
         );
     }
 
-    toJS(): ThredStoreState {
-        return this.getState();
-    }
 
 }
 

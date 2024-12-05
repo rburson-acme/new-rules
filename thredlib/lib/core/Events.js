@@ -2,6 +2,7 @@ import { deepMerge } from '../lib/lib.js';
 import { Logger } from '../lib/Logger.js';
 import { Id } from './Id.js';
 export class Events {
+    // Event construction
     // type and source are required. id and time can be generated, if not present
     static newEvent(params) {
         const { id, type, source } = params;
@@ -40,6 +41,7 @@ export class Events {
     static mergeError(error, event) {
         return deepMerge(event, { data: { content: { error } } });
     }
+    // Event data accessors
     static getData(event) {
         return event?.data;
     }
@@ -51,6 +53,37 @@ export class Events {
     }
     static getValues(event) {
         return this.getContent(event)?.values;
+    }
+    static getTasks(event) {
+        return this.getContent(event)?.tasks;
+    }
+    static getResources(event) {
+        return this.getContent(event)?.resources;
+    }
+    static getInlineContent(event) {
+        return this.getContent(event)?.items;
+    }
+    static getError(event) {
+        return this.getContent(event)?.error;
+    }
+    static assertSingleValues(event) {
+        const values = this.getValues(event);
+        if (!values)
+            throw new Error(`Event has no values`);
+        if (Array.isArray(values)) {
+            if (values.length > 1)
+                throw new Error(`Event has more than one value`);
+            return values[0];
+        }
+        return values;
+    }
+    static assertArrayValues(event) {
+        const values = this.getValues(event);
+        if (!values)
+            throw new Error(`Event has no values`);
+        if (!Array.isArray(values))
+            throw new Error(`Event values is not an array`);
+        return values;
     }
     static valueNamed(event, name) {
         const values = this.getValues(event);

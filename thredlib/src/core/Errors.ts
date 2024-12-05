@@ -1,4 +1,4 @@
-import { EventError } from "./Event";
+import { EventError } from "./Event.js";
 
 export class EventThrowable extends Error {
 

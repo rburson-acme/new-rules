@@ -59,7 +59,7 @@ export class AdminAgent implements MessageHandler {
   // handles mapping sessions to external channels (i.e. sockets or rest calls, etc.)
   private sessionService: SessionService;
 
-  private adminAdapter: AdminAdapter;
+  private adminAdapter?: AdminAdapter;
   private persistenceAdapter: PersistenceAdapter;
 
   // dispatchers for sending events (from Messages) to outbound channels
@@ -78,10 +78,9 @@ export class AdminAgent implements MessageHandler {
     patternsStore.addPatterns(patterns);
 
     // set up adapters
-    this.adminAdapter = new AdminAdapter(
-      new Threds(new ThredsStore(new EventStore(), patternsStore, storage),
-      this.eventPublisher)
-    );
+    //this.adminAdapter = new AdminAdapter(
+     // new Threds(new ThredsStore(new EventStore(), patternsStore, storage), this.eventPublisher),
+    //);
     this.persistenceAdapter = new PersistenceAdapter(PersistenceFactory.getPersistence());
 
     //use supplied session model or default
@@ -110,21 +109,20 @@ export class AdminAgent implements MessageHandler {
   }
 
   async initialize(): Promise<void> {
-    return this.adminAdapter.initialize();
+    return this.adminAdapter?.initialize();
   }
 
   // Inbound events
   processInboundEvent = async (event: Event): Promise<void> => {
-    // prevent source spoofing
     const _event = { ...event, thredId: Id.getNextId(this.agentConfig.nodeId) };
     let result: EventValues['values'] | undefined;
     try {
       if (_event.type === eventTypes.control.dataControl.type) {
         result = await this.persistenceAdapter.execute(_event);
       } else if (_event.type === eventTypes.control.sysControl.type) {
-        result = await this.adminAdapter.execute(_event);
+        result = await this.adminAdapter?.execute(_event);
       }
-      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: _event, result: { values: result } });
+      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: _event, content: { values: result } });
       const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
       await this.dispatchMessage(message);
     } catch (e) {

@@ -90,7 +90,7 @@ export class Events {
     return this.getContent(event)?.error;
   }
 
-  static assertOneValue(event: Event): Record<string,any> {
+  static assertSingleValues(event: Event): Record<string,any> {
     const values = this.getValues(event);
     if(!values) throw new Error(`Event has no values`);
     if(Array.isArray(values)) {

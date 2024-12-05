@@ -3,21 +3,33 @@ import {
   eventTypes,
   Events,
   StringMap,
-  systemEventTypes,
-  Logger,
-  SystemEventInputValues,
+  systemEventTypes, SystemEventInputValues,
   errorKeys,
   errorCodes,
   EventValues,
   TerminateThreadArgs,
   SystemEventThredInputValues,
   GetThredsArgs,
-  TransitionThredArgs,
+  TransitionThredArgs, ResetPatternArgs,
+  TerminateAllThredsArgs,
+  ShutdownArgs
 } from '../thredlib/index.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { ThredsStore } from '../engine/store/ThredsStore.js';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
+import { Transition } from '../engine/Transition.js';
+
+
+
+/***
+ *       _       _           _           ___                      _   _                 
+ *      /_\   __| |_ __ ___ (_)_ __     /___\_ __   ___ _ __ __ _| |_(_) ___  _ __  ___ 
+ *     //_\\ / _` | '_ ` _ \| | '_ \   //  // '_ \ / _ \ '__/ _` | __| |/ _ \| '_ \/ __|
+ *    /  _  \ (_| | | | | | | | | | | / \_//| |_) |  __/ | | (_| | |_| | (_) | | | \__ \
+ *    \_/ \_/\__,_|_| |_| |_|_|_| |_| \___/ | .__/ \___|_|  \__,_|\__|_|\___/|_| |_|___/
+ *                                          |_|                                         
+ */
+
 
 export interface AdminServiceArgs {
   readonly event: Event;
@@ -64,16 +76,17 @@ export class AdminService {
       }
     }
   }
-  /*
-        Expire the reaction if reactionName is the current reaction
-    */
-  expireReaction = async (args: AdminServiceArgs): Promise<void> => {
-    /*const { event, thredStore, threds, thredCompanion } = args;
-    const reactionName = (Events.getContent(event)?.values as SystemEventValues)?.reactionName;
-    if (thredStore.reactionStore.reactionName === reactionName) {
-      await thredCompanion.expireReaction(thredStore, threds);
-    }*/
-  };
+
+
+
+/***
+ *     _____ _                  _     ___            _             _ 
+ *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
+ *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
+ *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
+ *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
+ *                                                                   
+ */
 
   /*
         Move the thred to the given state
@@ -84,20 +97,9 @@ export class AdminService {
       args: { thredId, op, transition },
     } = this.getThredArgs<TransitionThredArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
-      Thred.transition();
+      await Thred.transition(thredStore, this.threds, new Transition(transition));
     });
     return { status: systemEventTypes.successfulStatus, op, thredId };
-  };
-
-  getThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
-    const {
-      event,
-      args: { op, thredIds },
-    } = this.getArgs<GetThredsArgs>(args);
-    const thredStores = await (thredIds?.length
-      ? this.threds.thredsStore.getThredStores(thredIds!)
-      : this.threds.thredsStore.getAllThredStores());
-    return { status: systemEventTypes.successfulStatus, op, thredStores };
   };
 
   /*
@@ -113,6 +115,66 @@ export class AdminService {
     });
     return { status: systemEventTypes.successfulStatus, op, thredId };
   };
+
+
+
+/***
+ *     __               ___            _             _ 
+ *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
+ *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
+ *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
+ *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
+ *        |___/                                        
+ */
+
+  /*
+    Get all current threds or a specific set of threds
+  */
+  getThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op, thredIds },
+    } = this.getArgs<GetThredsArgs>(args);
+    const thredStores = await (thredIds?.length
+      ? this.threds.thredsStore.getThredStores(thredIds!)
+      : this.threds.thredsStore.getAllThredStores());
+    return { status: systemEventTypes.successfulStatus, op, threds: thredStores.map((thredStore) => thredStore.toJSON()) };
+  };
+
+
+  resetPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op, patternId },
+    } = this.getArgs<ResetPatternArgs>(args);
+    if(!patternId) {
+      throw EventThrowable.get(
+        `No patternId supplied for resetPattern operation on System`,
+        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      );
+    }
+    await this.threds.thredsStore.resetPatternStore(patternId);
+    return { status: systemEventTypes.successfulStatus, op, patternId };
+  };
+
+  terminateAllThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op },
+    } = this.getArgs<TerminateAllThredsArgs>(args);
+    await this.threds.thredsStore.terminateAllThreds();
+    return { status: systemEventTypes.successfulStatus, op };
+  };
+  
+  shutdown = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op, delay },
+    } = this.getArgs<ShutdownArgs>(args);
+    await this.threds.shutdown(delay);
+    return { status: systemEventTypes.successfulStatus, op };
+  };
+
 
   private getArgs<T extends SystemEventInputValues>(args: AdminServiceArgs): { event: Event; args: T } {
     const { event } = args;
@@ -131,36 +193,12 @@ export class AdminService {
     return { event, args: { thredId, ...rest } as T };
   }
 
-  resetPattern = async (args: AdminServiceArgs): Promise<void> => {
-    /*const { event, threds } = args;
-    const patternId = (Events.getContent(event)?.values as SystemEventValues)?.patternId;
-    if (!patternId) {
-      Logger.error(`No patternId supplied for resetPattern operation on System`);
-      return undefined;
-    }
-    return threds.thredsStore.resetPatternStore(patternId);
-    */
-  };
-
-  terminateAllThreds = async (args: AdminServiceArgs): Promise<void> => {
-    /*const { event, threds } = args;
-    const scope = (Events.getContent(event)?.values as SystemEventValues)?.scope;
-    return threds.terminateAllThreds();*/
-  };
-
-  shutdown = async (args: AdminServiceArgs): Promise<void> => {
-    /*const { event, threds } = args;
-    const delayMillis = (Events.getContent(event)?.values as SystemEventValues)?.delay;
-    return threds.shutdown(delayMillis);*/
-  };
-
   private operations: StringMap<(args: AdminServiceArgs) => Promise<EventValues['values']>> = {
-    //[systemEventTypes.operations.expireReaction]: this.expireReaction,
-    //[systemEventTypes.operations.transitionThred]: this.transitionThred,
+    [systemEventTypes.operations.transitionThred]: this.transitionThred,
     [systemEventTypes.operations.getThreds]: this.getThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,
-    //[systemEventTypes.operations.resetPattern]: this.resetPattern,
-    //[systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,
-    //[systemEventTypes.operations.shutdown]: this.shutdown,
+    [systemEventTypes.operations.resetPattern]: this.resetPattern,
+    [systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,
+    [systemEventTypes.operations.shutdown]: this.shutdown,
   };
 }

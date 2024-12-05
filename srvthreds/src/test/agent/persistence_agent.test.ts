@@ -25,6 +25,8 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           expect(event.data?.content?.values).toBeTruthy();
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          // should return id as result if successful
+          expect((event.data?.content?.values as SMap).result).contains('echo_test');
         },
         resolve,
         reject,
@@ -117,8 +119,6 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          // this is an example of a task structured as a transaction - noticed the nested array result
-          // see the event below for more details
           expect((event.data?.content?.values as SMap).result[0].name).toBe('Replacement Pattern');
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
         },

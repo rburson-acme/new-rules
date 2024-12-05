@@ -1,5 +1,5 @@
 import { Persistence } from '../../persistence/Persistence';
-import { EventContent, EventTask, EventTasks, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
+import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors';
 import { Adapter } from '../adapter/Adapter';
 
