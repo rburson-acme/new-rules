@@ -7,6 +7,6 @@ type IconProps = {
   style?: StyleProp<ViewStyle>;
 };
 export const Icon = ({ name, style }: IconProps) => {
-  //return <MaterialCommunityIcons name={name} style={style} />;
+  // return <MaterialCommunityIcons name={name} style={style} />;
   return <View></View>;
 };
