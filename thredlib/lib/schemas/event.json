@@ -1,0 +1,290 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+        "data": {
+            "properties": {
+                "advice": {
+                    "properties": {
+                        "eventType": {
+                            "type": "string"
+                        },
+                        "template": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "interactions": {
+                                    "items": {},
+                                    "type": "array"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "interactions",
+                                "name"
+                            ],
+                            "type": "object"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "eventType"
+                    ],
+                    "type": "object"
+                },
+                "content": {
+                    "allOf": [
+                        {
+                            "properties": {
+                                "values": {
+                                    "anyOf": [
+                                        {
+                                            "items": {
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "properties": {
+                                "tasks": {
+                                    "items": {
+                                        "anyOf": [
+                                            {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "op": {
+                                                        "type": "string"
+                                                    },
+                                                    "params": {
+                                                        "properties": {
+                                                            "matcher": {
+                                                                "type": "object"
+                                                            },
+                                                            "selector": {
+                                                                "type": "object"
+                                                            },
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "values": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "items": {},
+                                                                        "type": "array"
+                                                                    },
+                                                                    {
+                                                                        "type": "object"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "type"
+                                                        ],
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "op"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            {
+                                                "items": {
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "op": {
+                                                            "type": "string"
+                                                        },
+                                                        "params": {
+                                                            "properties": {
+                                                                "matcher": {
+                                                                    "type": "object"
+                                                                },
+                                                                "selector": {
+                                                                    "type": "object"
+                                                                },
+                                                                "type": {
+                                                                    "type": "string"
+                                                                },
+                                                                "values": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "items": {},
+                                                                            "type": "array"
+                                                                        },
+                                                                        {
+                                                                            "type": "object"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "op"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            }
+                                        ]
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "properties": {
+                                "resources": {
+                                    "items": {
+                                        "properties": {
+                                            "contentType": {
+                                                "type": "string"
+                                            },
+                                            "uri": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "contentType",
+                                            "uri"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "properties": {
+                                "items": {
+                                    "items": {
+                                        "properties": {
+                                            "content": {
+                                                "type": "string"
+                                            },
+                                            "contentType": {
+                                                "type": "string"
+                                            },
+                                            "encoding": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "content",
+                                            "contentType",
+                                            "encoding"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "properties": {
+                                "error": {
+                                    "properties": {
+                                        "cause": {},
+                                        "code": {
+                                            "type": "number"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "code",
+                                        "message"
+                                    ],
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "display": {
+                    "properties": {
+                        "uri": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "uri"
+                    ],
+                    "type": "object"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "id": {
+            "type": "string"
+        },
+        "re": {
+            "type": "string"
+        },
+        "source": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uri": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "type": "object"
+        },
+        "thredId": {
+            "type": "string"
+        },
+        "time": {
+            "type": "number"
+        },
+        "type": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "source",
+        "type"
+    ],
+    "type": "object"
+}
