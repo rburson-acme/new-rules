@@ -1,4 +1,4 @@
-import { Text } from './Text';
+import { Text } from '../../../components/template/Text';
 import { Input } from './Input';
 import { Value } from './Value';
 import { Image } from './Image';

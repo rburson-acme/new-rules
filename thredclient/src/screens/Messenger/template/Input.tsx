@@ -9,7 +9,7 @@ type InputProps = {
   style?: object;
 };
 export const Input = ({ name, type, display, style }: InputProps) => {
-  return typeof display === 'string' ? <TextBubble  text={display} bubbleStyle={styles.bubbleStyle} /> : display;
+  return typeof display === 'string' ? <TextBubble text={display} bubbleStyle={styles.bubbleStyle} /> : display;
 };
 
 const styles = StyleSheet.create({

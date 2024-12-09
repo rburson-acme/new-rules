@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Interaction } from './Interaction';
 import { getComponentTypes } from './componentTypes';
 import { ThredsStore } from '@/src/stores/ThredsStore';

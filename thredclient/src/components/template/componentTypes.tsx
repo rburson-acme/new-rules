@@ -1,9 +1,9 @@
-import { Text } from './Text';
 import { Input } from './Input';
-import { Value } from './Value';
 import { Image } from './Image';
 import { Interaction } from './Interaction';
 import { Group } from './Group';
+import { Value } from './Value';
+import { Text } from './Text';
 
 export function getComponentTypes() {
   return {

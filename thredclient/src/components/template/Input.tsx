@@ -1,5 +1,5 @@
+import { Text } from '@/src/components/template/Text';
 import React from 'react';
-import { Text } from './Text';
 import { StyleProp, StyleSheet, TextStyle } from 'react-native';
 
 type InputProps = {
@@ -14,6 +14,6 @@ export const Input = ({ name, type, display, style }: InputProps) => {
 
 const styles = StyleSheet.create({
   style: {
-    padding: 5,
+    padding: 4,
   },
 });

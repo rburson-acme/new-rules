@@ -1,22 +1,15 @@
-import { observer } from 'mobx-react-lite';
 import { ListRenderItemInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { ModuleStackParamList } from '@/src/core/Navigation';
 import { RootStore } from '@/src/stores/rootStore';
-import { Module } from '@/src/core/Modules';
+import { RouteListItemType } from '@/src/core/RouteList';
 
-type ModuleListItemProps = {
-  listItem: ListRenderItemInfo<Module>;
+type ModuleListItemProps<Names> = {
+  listItem: ListRenderItemInfo<RouteListItemType<Names>>;
   rootStore: RootStore;
 };
-export const ModuleListItem = observer(({ listItem, rootStore }: ModuleListItemProps) => {
-  const navigation = useNavigation<StackNavigationProp<ModuleStackParamList, 'ModuleListLayout', undefined>>();
+export function RouteListItem<Names extends string>({ listItem, rootStore }: ModuleListItemProps<Names>) {
   return (
-    <Pressable
-      style={styles.container}
-      onPress={() => navigation.navigate('Module', { name: listItem.item.name, rootStore })}>
+    <Pressable style={styles.container} onPress={listItem.item.navigateFn}>
       <MaterialIcons size={32} name={listItem.item.iconName} />
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>{listItem.item.name}</Text>
@@ -24,7 +17,7 @@ export const ModuleListItem = observer(({ listItem, rootStore }: ModuleListItemP
       </View>
     </Pressable>
   );
-});
+}
 
 const styles = StyleSheet.create({
   container: {

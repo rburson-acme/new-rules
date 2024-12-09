@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { View,  StyleProp, ViewStyle, StyleSheet } from 'react-native';
+import { View, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 
 type GroupProps = {
   style?: StyleProp<ViewStyle>;
@@ -13,5 +13,6 @@ const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'row',
     justifyContent: 'center',
+    gap: 8,
   },
 });

@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
-import { TypeConfig } from '../screens/Admin/template/typeConfig';
+import { TypeConfig } from './template/typeConfig';
+import { StyleProp, View, ViewStyle } from 'react-native';
 
 /*
     ComponentTree builds a tree of React components based on a json structure.
@@ -25,10 +26,15 @@ type ComponentTreeProps = {
   typeConfig: TypeConfig;
   componentTypes: Record<string, React.ComponentType<any>>;
   props: any;
+  style?: StyleProp<ViewStyle>;
 };
-export const ComponentTree = ({ root, typeConfig, componentTypes, props }: ComponentTreeProps) => {
+export const ComponentTree = ({ root, typeConfig, componentTypes, props, style }: ComponentTreeProps) => {
   const transformer = new Transformer(typeConfig, componentTypes);
-  return Array.isArray(root) ? transformer.createArray(root, props) : transformer.createType(root, undefined, props);
+  return Array.isArray(root) ? (
+    <View style={style}>{transformer.createArray(root, props)}</View>
+  ) : (
+    <View style={style}>{transformer.createType(root, undefined, props)};</View>
+  );
 };
 
 /*

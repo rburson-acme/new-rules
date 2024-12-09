@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 import { observer } from 'mobx-react-lite';
-import { typeConfig } from './typeConfig';
 import { ComponentTree } from '@/src/components/ComponentTree';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { RootStore } from '@/src/stores/rootStore';
 import { TemplateStore } from '@/src/stores/TemplateStore';
+import { typeConfig } from './typeConfig';
 
 type InteractionProps = {
   stores: {
