@@ -1,10 +1,10 @@
 import { Pattern } from '../Pattern.js';
-import { ThredStore } from './ThredStore.js';
+import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { EventStore } from './EventStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Lock, Storage, Types, indexId } from '../../storage/Storage.js';
-import { Logger, Parallel, Series } from '../../thredlib/index.js';
-
+import { errorCodes, errorKeys, Logger, Parallel, Series } from '../../thredlib/index.js';
+import { EventThrowable } from '../../thredlib/core/Errors.js';
 
 // Thred locking is handled here, and should be contained to this class
 
@@ -17,14 +17,11 @@ export class ThredsStore {
   ) {}
 
   /*
-      create and aquire a lock on the give thread and execute the operation, returning it's result
+      Create and aquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
+      This method adds the thredStore to thredStores map and removes it after the operation 
   */
-  async withNewThredStore(
-    pattern: Pattern,
-    op: (thredStore: ThredStore) => Promise<any>,
-    ttl?: number,
-  ): Promise<any> {
+  async withNewThredStore(pattern: Pattern, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
     const thredStore = ThredStore.newInstance(pattern, this.eventStore);
     const results = await this.storage.aquire(
       [{ type: Types.Thred, id: thredStore.id }],
@@ -34,6 +31,7 @@ export class ThredsStore {
           await this.addThredStore(thredStore);
           const result = await op(thredStore);
           await this.saveThredStore(thredStore);
+          delete this.thredStores[thredStore.id];
           return result;
         },
       ],
@@ -45,15 +43,22 @@ export class ThredsStore {
   /*
       aquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
+      This method adds the thredStore to thredStores map and removes it after the operation 
   */
-  async withThredStore(thredId: string, op: (thredStore?: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
+  async withThredStore(thredId: string, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
     const results = await this.storage.aquire(
       [{ type: Types.Thred, id: thredId }],
       [
         async () => {
           const thredStore = await this.getThreadStore(thredId);
+          if (!thredStore)
+            throw EventThrowable.get(
+              `Thred ${thredId} does not, or no longer exists`,
+              errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+            );
           const result = await op(thredStore);
           if (thredStore) await this.saveThredStore(thredStore);
+          delete this.thredStores[thredId];
           return result;
         },
       ],
@@ -66,10 +71,27 @@ export class ThredsStore {
     return this.patternsStore.resetPatternStore(patternId);
   }
 
+  /*
+    @Deprecated
+  */
   get numThreds(): number {
     return this.patternsStore.numThreds;
   }
+  
+  
+  // no need to lock - read only
+  async getAllThredStores(): Promise<ThredStore[]> {
+    return this.getThredStores(await this.getAllThredIds());
+  }
+ 
+  // no need to lock - read only
+  async getThredStores(thredIds: string[]): Promise<ThredStore[]> {
+    if(thredIds.length === 0) return [];
+    const states = await this.storage.retrieveAll(Types.Thred, thredIds);
+    return states.map((state) => this.fromThredState(state));
+  }
 
+  // aquire a lock on each thred and terminate the thred
   async terminateAllThreds(): Promise<void> {
     const thredIds = await this.getAllThredIds();
     return Parallel.forEach(thredIds, async (thredId: string) => {
@@ -96,13 +118,26 @@ export class ThredsStore {
     return this.storage.retrieveSet(Types.Thred, indexId);
   }
 
+  /* MUST BE RUN WITHIN A LOCK (one of the above locking methods) */
+
   // requires lock
   private async getThreadStore(thredId: string): Promise<ThredStore | undefined> {
     const state = await this.storage.retrieve(Types.Thred, thredId);
     if (!state) return undefined;
+    return this.fromThredState(state);
+  }
+
+  // requires lock
+  private fromThredState(state: ThredStoreState): ThredStore {
     const thredStore = ThredStore.fromState(state, this.eventStore, this.patternsStore);
-    this.thredStores[thredId] = thredStore;
+    this.thredStores[state.id] = thredStore;
     return thredStore;
+  }
+
+  // requires lock
+  private async addThredStore(thredStore: ThredStore): Promise<void> {
+    await this.patternsStore.thredStarted(thredStore.pattern.id, thredStore.startTime);
+    this.thredStores[thredStore.id] = thredStore;
   }
 
   // requires lock
@@ -114,7 +149,7 @@ export class ThredsStore {
     }
   }
 
-  // should only be called with thredId locked
+  // requires lock
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
     Logger.debug(`releaseAndTerminateThred::terminating Thred ${thredId}`);
     try {
@@ -126,6 +161,7 @@ export class ThredsStore {
     return this.terminateThred(thredId);
   }
 
+  // requires lock
   private terminateThred(thredId: string): Promise<void> {
     // @todo archive the context so that the thred could be replayed
     const thredStore = this.thredStores[thredId];
@@ -134,10 +170,5 @@ export class ThredsStore {
       Logger.warn(`terminateThred::Failed to update pattern ${thredStore.pattern.id}`);
       throw e;
     });
-  }
-
-  private async addThredStore(thredStore: ThredStore): Promise<void> {
-    await this.patternsStore.thredStarted(thredStore.pattern.id, thredStore.startTime);
-    this.thredStores[thredStore.id] = thredStore;
   }
 }

@@ -6,6 +6,9 @@ import { Id } from './Id.js';
 export type NewEventParams = Partial<Event> & Pick<Event, 'type' | 'source'>;
 
 export class Events {
+
+  // Event construction
+
   // type and source are required. id and time can be generated, if not present
   static newEvent(params: NewEventParams): Event {
     const { id, type, source } = params;
@@ -21,6 +24,8 @@ export class Events {
     };
     return event;
   }
+
+   
 
   static mergeEvent(params: Partial<Event>, event: Partial<Event>): Partial<Event> {
     return deepMerge(event, params) as Event;
@@ -50,6 +55,9 @@ export class Events {
     return deepMerge(event, { data: { content: { error } } });
   }
 
+
+  // Event data accessors
+
   static getData(event: Event): EventData | undefined {
     return event?.data;
   }
@@ -65,6 +73,40 @@ export class Events {
   static getValues(event: Event): EventContent['values'] | undefined {
     return this.getContent(event)?.values;
   }
+
+  static getTasks(event: Event): EventContent['tasks'] | undefined {
+    return this.getContent(event)?.tasks;
+  }
+
+  static getResources(event: Event): EventContent['resources'] | undefined {
+    return this.getContent(event)?.resources;
+  }
+
+  static getInlineContent(event: Event): EventContent['items'] | undefined {
+    return this.getContent(event)?.items;
+  }
+
+  static getError(event: Event): EventContent['error'] | undefined {
+    return this.getContent(event)?.error;
+  }
+
+  static assertSingleValues(event: Event): Record<string,any> {
+    const values = this.getValues(event);
+    if(!values) throw new Error(`Event has no values`);
+    if(Array.isArray(values)) {
+      if(values.length > 1) throw new Error(`Event has more than one value`);
+      return values[0];
+    }
+    return values;
+  }
+
+  static assertArrayValues(event: Event): Record<string,any>[] {
+    const values = this.getValues(event);
+    if(!values) throw new Error(`Event has no values`);
+    if(!Array.isArray(values)) throw new Error(`Event values is not an array`);
+    return values;
+  }
+
 
   static valueNamed(event: Event, name: string) {
     const values = this.getValues(event);

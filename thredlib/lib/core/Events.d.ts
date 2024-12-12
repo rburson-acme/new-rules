@@ -13,6 +13,12 @@ export declare class Events {
     static getAdvice(event: Event): EventData['advice'] | undefined;
     static getContent(event: Event): EventContent | undefined;
     static getValues(event: Event): EventContent['values'] | undefined;
+    static getTasks(event: Event): EventContent['tasks'] | undefined;
+    static getResources(event: Event): EventContent['resources'] | undefined;
+    static getInlineContent(event: Event): EventContent['items'] | undefined;
+    static getError(event: Event): EventContent['error'] | undefined;
+    static assertSingleValues(event: Event): Record<string, any>;
+    static assertArrayValues(event: Event): Record<string, any>[];
     static valueNamed(event: Event, name: string): any;
 }
 export declare class EventHelper {

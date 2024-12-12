@@ -4,9 +4,11 @@ export const errorKeys = {
     TASK_ERROR: 'TASK_ERROR',
     OBJECT_ALREADY_EXISTS: 'OBJECT_ALREADY_EXISTS',
     OBJECT_NOT_FOUND: 'OBJECT_NOT_FOUND',
+    THRED_DOES_NOT_EXIST: 'THRED_DOES_NOT_EXIST',
     INVALID_LOGIN: 'INVALID_LOGIN',
     UNAUTHORIZED: 'UNAUTHORIZED',
-    ARGUMENT_VALIDATION_ERROR: 'Argument Validation Error',
+    ARGUMENT_VALIDATION_ERROR: 'ARGUMENT_VALIDATION_ERROR',
+    MISSING_ARGUMENT_ERROR: 'MISSING_ARGUMENT_ERROR',
 };
 export const errorCodes = {
     // 5xxx - server related errors
@@ -27,6 +29,10 @@ export const errorCodes = {
         message: 'Object Already Exists',
         code: 5202,
     },
+    [errorKeys.THRED_DOES_NOT_EXIST]: {
+        message: 'Thred does not exist',
+        code: 5203,
+    },
     // 4xxx - client related errors
     [errorKeys.CLIENT_ERROR]: {
         message: 'Client Error',
@@ -45,5 +51,9 @@ export const errorCodes = {
     [errorKeys.ARGUMENT_VALIDATION_ERROR]: {
         message: 'Invalid Argument(s)',
         code: 4200,
+    },
+    [errorKeys.MISSING_ARGUMENT_ERROR]: {
+        message: 'Missing Argument(s)',
+        code: 4202,
     },
 };

@@ -1,5 +1,5 @@
-import { Events } from './Events.js';
 import { systemEventTypes, eventTypes } from './types.js';
+import { EventBuilder } from './EventBuilder.js';
 export class SystemEvents {
     /***
      *     _____ _                  _     ___            _             _
@@ -9,55 +9,27 @@ export class SystemEvents {
      *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
      *
      */
-    // request to expire current thred reaction
-    static getSystemExpireThredEvent(id, thredId, reactionName, source) {
-        return Events.newEvent({
-            id,
-            type: eventTypes.control.thredControl.type,
-            source,
-            thredId,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.expireReaction,
-                        reactionName,
-                    },
-                },
-            },
-        });
-    }
     // request to explicitly transition a thred to a new state
-    static getSystemTransitionThredEvent(id, thredId, transition, source) {
-        return Events.newEvent({
-            id,
-            type: eventTypes.control.thredControl.type,
+    static getTransitionThredEvent(thredId, transition, source) {
+        const values = { op: systemEventTypes.operations.transitionThred, thredId, transition };
+        return EventBuilder.create({
+            type: eventTypes.control.sysControl.type,
             source,
-            thredId,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.transitionThred,
-                        transition,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Transition Thred' })
+            .build();
     }
     // request to terminate a thred
-    static getSystemTerminateThredEvent(id, thredId, source) {
-        return Events.newEvent({
-            id,
-            type: eventTypes.control.thredControl.type,
+    static getTerminateThredEvent(thredId, source) {
+        const values = { op: systemEventTypes.operations.terminateThred, thredId };
+        return EventBuilder.create({
+            type: eventTypes.control.sysControl.type,
             source,
-            thredId,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.terminateThred,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Terminate Thred' })
+            .build();
     }
     /***
      *     __               ___            _             _
@@ -68,67 +40,47 @@ export class SystemEvents {
      *        |___/
      */
     // request to reset the number of pattern instances to 0 for a particular pattern
-    static getResetPatternEvent(id, patternId, source) {
-        return Events.newEvent({
-            id,
+    static getGetThredsEvent(source) {
+        const values = { op: systemEventTypes.operations.getThreds };
+        return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             source,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.resetPattern,
-                        patternId,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Get Threds' })
+            .build();
     }
-    // save a PatternModel to persistent storage
-    static getSavePatternEvent(id, patternModel, source) {
-        return Events.newEvent({
-            id,
+    static getResetPatternEvent(patternId, source) {
+        const values = { op: systemEventTypes.operations.resetPattern, patternId };
+        return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             source,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.savePattern,
-                        patternModel,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Reset Pattern' })
+            .build();
     }
     // request to shutdown
-    static getShutdownEvent(id, delay, source) {
-        return Events.newEvent({
-            id,
+    static getShutdownEvent(delay, source) {
+        const values = { op: systemEventTypes.operations.shutdown, delay };
+        return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             source,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.shutdown,
-                        delay,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Shutdown' })
+            .build();
     }
     // request to terminate all threds
-    static getTerminateAllThredsEvent(id, source) {
-        return Events.newEvent({
-            id,
+    static getTerminateAllThredsEvent(source) {
+        const values = { op: systemEventTypes.operations.terminateAllThreds };
+        return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             source,
-            data: {
-                content: {
-                    values: {
-                        op: systemEventTypes.operations.terminateAllThreds,
-                    },
-                },
-            },
-        });
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Terminat All Threds' })
+            .build();
     }
     /***
      *        ___      _            ___
@@ -138,19 +90,50 @@ export class SystemEvents {
      *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
      *                                 |_|
      */
-    getStoreObjectEvent(id, source, objectType, obj) {
-        return Events.newEvent({
-            id,
+    static getSavePatternEvent(pattern, source) {
+        return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
             source,
-            data: {
-                content: {
-                    values: {
-                        objectType,
-                        obj,
-                    },
-                },
+        })
+            .mergeTasks({ name: 'storePattern', op: 'create', params: { type: 'PatternModel', values: pattern } })
+            .mergeData({ title: `Store Pattern ${pattern.name}` })
+            .build();
+    }
+    static getFindPatternEvent(patternId, source) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            source,
+        })
+            .mergeTasks({ name: 'findPattern', op: 'findOne', params: { type: 'PatternModel', matcher: { id: patternId } } })
+            .mergeData({ title: 'Find Pattern' })
+            .build();
+    }
+    static getUpdatePatternEvent(patternId, source, updateValues) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            source,
+        })
+            .mergeTasks({
+            name: 'updatePattern',
+            op: 'update',
+            params: {
+                type: 'PatternModel',
+                matcher: { id: patternId },
+                values: updateValues,
             },
-        });
+        })
+            .mergeData({ title: 'Update Pattern' })
+            .build();
+    }
+    static getDeletePatternEvent(patternId, source) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            source,
+        })
+            .mergeTasks([
+            { name: 'deletePattern', op: 'delete', params: { type: 'PatternModel', matcher: { id: patternId } } },
+        ])
+            .mergeData({ title: 'Delete Pattern' })
+            .build();
     }
 }

@@ -11,6 +11,12 @@
             "nodeType": "persistence",
             "nodeId": "persistence1",
             "address": "org.wt.persistence"
+        },
+        {
+            "name": "Admin Agent",
+            "nodeType": "admin",
+            "nodeId": "admin1",
+            "address": "org.wt.admin"
         }
     ]
 }

@@ -2,6 +2,7 @@ import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { Persistence, Query } from '../Persistence.js';
 import { MongoSpec } from './MongoSpec.js';
 import { Persistent } from '../../thredlib/persistence/Persistent.js';
+import { response } from 'express';
 
 /*
   @TODO - have database itself generate created and modfied timestamps.  may require use of aggregation pipeline
@@ -35,19 +36,25 @@ export class MongoPersistence implements Persistence {
     return this.client?.close();
   }
 
-  async create(query: Query, options?: any): Promise<void> {
+  async create(query: Query, options?: any): Promise<string | string[]> {
     if (Array.isArray(query.values)) return this.createAll(query, options);
     if (!query.values) throw Error(`No values specified for query`);
     const mappedValues = MongoSpec.mapInputValues(query.values);
-    await this.getCollection(query.type).insertOne(mappedValues);
+    const result = await this.getCollection(query.type).insertOne(mappedValues);
+    return result.insertedId.toString();
   }
 
-  private async createAll(query: Query, options?: any): Promise<void> {
+  private async createAll(query: Query, options?: any): Promise<string[]> {
     const inputArray = Array.isArray(query.values)
       ? query.values
       : [query.values];
     const mappedValues = MongoSpec.mapInputValues(inputArray);
-    await this.getCollection(query.type).insertMany(mappedValues);
+    const result = await this.getCollection(query.type).insertMany(mappedValues);
+    let ids = [];
+    for(let i = 0; i < Object.keys(result.insertedIds).length; i++) {
+      ids.push(result.insertedIds[i].toString());
+    }
+    return ids;
   }
 
   async findOne<T>(query: Query, options?: any): Promise<Persistent & T> {

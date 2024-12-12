@@ -34,7 +34,7 @@ class Server  {
         const messageService = await RemoteQService.newInstance<Message>({ qBroker, subName: Config.agentConfig.subscriptionName });
         const messageQ: MessageQ = new MessageQ(messageService);
         this.agent = new Agent(Config.agentConfig, eventQ, messageQ);
-        this.agent.start();
+        await this.agent.start();
     }
 
     async shutdown(): Promise<void> {

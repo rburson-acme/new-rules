@@ -28,8 +28,8 @@ export interface EventData {
 export type EventContent = EventValues & EventTasks & Resources & InlineContent & EventError;
 export interface EventError {
     error?: {
-        code: number;
         message: string;
+        code?: number;
         cause?: any;
     };
 }

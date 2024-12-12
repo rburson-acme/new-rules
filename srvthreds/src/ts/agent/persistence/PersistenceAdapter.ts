@@ -1,5 +1,6 @@
 import { Persistence } from '../../persistence/Persistence';
-import { EventContent, EventTask, EventTasks, Series } from '../../thredlib';
+import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
+import { EventThrowable } from '../../thredlib/core/Errors';
 import { Adapter } from '../adapter/Adapter';
 
 export class PersistenceAdapter implements Adapter {
@@ -9,8 +10,13 @@ export class PersistenceAdapter implements Adapter {
     await this.persistence.connect();
   }
 
-  async execute(content?: EventContent): Promise<any> {
-    if (!content?.tasks) return;
+  async execute(event: Event): Promise<EventValues['values']> {
+    const content = event.data?.content;
+    if (!content?.tasks)
+      throw EventThrowable.get(
+        'No tasks provided for Persistence operation',
+        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      );
     // tasks is an array containing tasks and/or arrays of tasks
     // A task array represents a transaction
     return Series.map(content.tasks, async (task: EventTask | EventTask[]) => {

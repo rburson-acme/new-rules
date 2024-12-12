@@ -51,8 +51,8 @@ export type EventContent = EventValues & EventTasks & Resources & InlineContent 
 
 export interface EventError {
     error?: { 
-        code: number,
         message: string,
+        code?: number,
         cause?: any;
     }
 }

@@ -9,7 +9,7 @@ export interface Query {
 
 export interface Persistence {
 
-    create(query: Query, options?: any): Promise<void>;
+    create(query: Query, options?: any): Promise<string | string[]>;
 
     findOne<T>(query: Query, options?: any): Promise<Persistent & T>;
     

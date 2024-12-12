@@ -6,7 +6,10 @@ import {
   systemEventTypes,
   Address,
   Logger,
-  ThredId, SystemEventValues
+  ThredId,
+  SystemEventInputValues,
+  EventBuilder,
+  systemAddress,
 } from '../../thredlib/index.js';
 import { ThredStore } from '../store/ThredStore.js';
 import { Threds } from '../Threds.js';
@@ -25,11 +28,11 @@ export interface SystemThredEventArgs {
   readonly thredStore: ThredStore;
   readonly thredCompanion: ThredCompanion;
 }
-
 /*
     Thred related operations
     These operations perform thred state changes so are therefore are all synchronous
 */
+/*
 export class SystemThredEvent {
   private static operations: StringMap<(args: SystemThredEventArgs) => Promise<void>> = {
     [systemEventTypes.operations.expireReaction]: SystemThredEvent.expireReaction,
@@ -45,13 +48,13 @@ export class SystemThredEvent {
   static thredDoesNotExist(threds: Threds, event: Event) {
     const to = [event.source.id];
     const thredId = event.thredId || '<none>';
-    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
     if (!opName) {
       Logger.error(`No operation name supplied for threadDoesNotExist() on Thred ${thredId}`);
       return;
     }
 
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -67,7 +70,7 @@ export class SystemThredEvent {
     const { thredStore, threds, event } = args;
     const { id: thredId } = thredStore;
     const to = [event.source.id];
-    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
     if (!opName) {
       Logger.error(`No operation name supplied for system thread event on Thred ${thredId}`);
       return;
@@ -89,7 +92,7 @@ export class SystemThredEvent {
         message = `Operation ${opName} failed for Thred ${thredId}`;
       }
     }
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -100,42 +103,46 @@ export class SystemThredEvent {
       message,
     });
   }
-
+    */
   /*
         Expire the reaction if reactionName is the current reaction
     */
-  private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
+  /*private static async expireReaction(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
-    const reactionName = (Events.getContent(event)?.values as SystemEventValues)?.reactionName;
+    const reactionName = (Events.getContent(event)?.values as SystemEventInputValues)?.reactionName;
     if (thredStore.reactionStore.reactionName === reactionName) {
       await thredCompanion.expireReaction(thredStore, threds);
     }
-  }
+  }*/
 
   /*
         Move the thred to give state
     */
-  private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
+ /* private static async transitionThred(args: SystemThredEventArgs): Promise<void> {
     const { event, thredStore, threds, thredCompanion } = args;
-    const transitionModel = (Events.getContent(event)?.values as SystemEventValues)?.transition;
+    const transitionModel = (Events.getContent(event)?.values as SystemEventInputValues)?.transition;
     if (transitionModel) {
       const transition = new Transition(transitionModel);
       await thredCompanion.transition(thredStore, threds, transition);
     }
   }
+    */
 
   /*
         Terminate the thred
     */
-  private static async terminateThred(args: SystemThredEventArgs): Promise<void> {
+        /*
+  static async terminateThred(args: SystemThredEventArgs): Promise<void> {
     const { thredStore, thredCompanion } = args;
     await thredCompanion.terminateThred(thredStore);
   }
 }
+  */
 
 /*
     System level operations
 */
+/*
 export class SystemEvent {
   private static operations: StringMap<(args: SystemEventArgs) => Promise<void>> = {
     [systemEventTypes.operations.resetPattern]: SystemEvent.resetPattern,
@@ -151,7 +158,7 @@ export class SystemEvent {
 
   static async handleSystemEvent(args: SystemEventArgs): Promise<void> {
     const { threds, event } = args;
-    const opName = (Events.getContent(event)?.values as SystemEventValues)?.op;
+    const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
     if (!opName) {
       Logger.error(`No operation name supplied for handleSystemEvent() with event ${event.id}`);
       return;
@@ -174,7 +181,7 @@ export class SystemEvent {
         message = `Operation ${opName} failed for System operation`;
       }
     }
-    dispatch({
+    dispatchStatusEvent({
       threds,
       to,
       id: Id.nextEventId,
@@ -188,7 +195,7 @@ export class SystemEvent {
 
   private static async resetPattern(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const patternId = (Events.getContent(event)?.values as SystemEventValues)?.patternId;
+    const patternId = (Events.getContent(event)?.values as SystemEventInputValues)?.patternId;
     if (!patternId) {
       Logger.error(`No patternId supplied for resetPattern operation on System`);
       return undefined;
@@ -198,27 +205,33 @@ export class SystemEvent {
 
   private static async savePattern(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const patternModel = (Events.getContent(event)?.values as SystemEventValues)?.patternModel;
+    const patternModel = (Events.getContent(event)?.values as SystemEventInputValues)?.patternModel;
     if (!patternModel?.id) {
       Logger.error(`No pattern or pattern with id supplied for resetPattern operation on System`);
       return undefined;
     }
+    const storePatternEvent = EventBuilder.create(eventTypes.system)
+      .fork()
+      .mergeTasks({ op: 'create', params: { type: 'PatternModel', values: patternModel } })
+      .mergeData({ title: 'Store Pattern' })
+      .build();
+      threds.dispatch({ id: storePatternEvent.id, event: storePatternEvent, to: [systemAddress.persistence] });
   }
 
   private static terminateAllThreds(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const scope = (Events.getContent(event)?.values as SystemEventValues)?.scope;
+    const scope = (Events.getContent(event)?.values as SystemEventInputValues)?.scope;
     return threds.terminateAllThreds();
   }
 
   private static shutdown(args: SystemEventArgs): Promise<void> {
     const { event, threds } = args;
-    const delayMillis = (Events.getContent(event)?.values as SystemEventValues)?.delay;
+    const delayMillis = (Events.getContent(event)?.values as SystemEventInputValues)?.delay;
     return threds.shutdown(delayMillis);
   }
 }
 
-const dispatch = ({
+const dispatchStatusEvent = ({
   threds,
   to,
   id,
@@ -274,3 +287,4 @@ const getSystemStatusEvent = (
     },
   });
 };
+*/

@@ -1,14 +1,30 @@
 import { TransitionModel } from '../model/TransitionModel.js';
 import { PatternModel } from '../model/PatternModel.js';
-import { Event } from './Event.js';
-export interface SystemEventValues {
-    readonly op?: string;
-    reactionName?: string;
-    transition?: TransitionModel;
-    patternId?: string;
-    scope?: string;
-    delay?: number;
-    patternModel?: PatternModel;
+import { Event, EventTaskParams } from './Event.js';
+export interface SystemEventInputValues {
+    readonly op: string;
+}
+export interface SystemEventThredInputValues extends SystemEventInputValues {
+    readonly thredId: string;
+}
+export interface GetThredsArgs extends SystemEventInputValues {
+    readonly thredIds?: string[] | undefined;
+}
+export interface ResetPatternArgs extends SystemEventInputValues {
+    readonly patternId: string;
+}
+export interface TerminateAllThredsArgs extends SystemEventInputValues {
+}
+export interface ShutdownArgs extends SystemEventInputValues {
+    readonly delay: number;
+}
+export interface TransitionThredArgs extends SystemEventThredInputValues {
+    readonly transition: TransitionModel;
+}
+export interface ExpireReactionArgs extends SystemEventThredInputValues {
+    readonly reactionName: string;
+}
+export interface TerminateThreadArgs extends SystemEventThredInputValues {
 }
 export declare class SystemEvents {
     /***
@@ -19,9 +35,8 @@ export declare class SystemEvents {
      *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
      *
      */
-    static getSystemExpireThredEvent(id: string, thredId: string, reactionName: string, source: Event['source']): Event;
-    static getSystemTransitionThredEvent(id: string, thredId: string, transition: TransitionModel, source: Event['source']): Event;
-    static getSystemTerminateThredEvent(id: string, thredId: string, source: Event['source']): Event;
+    static getTransitionThredEvent(thredId: string, transition: TransitionModel, source: Event['source']): Event;
+    static getTerminateThredEvent(thredId: string, source: Event['source']): Event;
     /***
      *     __               ___            _             _
      *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
@@ -30,10 +45,10 @@ export declare class SystemEvents {
      *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
      *        |___/
      */
-    static getResetPatternEvent(id: string, patternId: string, source: Event['source']): Event;
-    static getSavePatternEvent(id: string, patternModel: PatternModel, source: Event['source']): Event;
-    static getShutdownEvent(id: string, delay: number, source: Event['source']): Event;
-    static getTerminateAllThredsEvent(id: string, source: Event['source']): Event;
+    static getGetThredsEvent(source: Event['source']): Event;
+    static getResetPatternEvent(patternId: string, source: Event['source']): Event;
+    static getShutdownEvent(delay: number, source: Event['source']): Event;
+    static getTerminateAllThredsEvent(source: Event['source']): Event;
     /***
      *        ___      _            ___
      *       /   \__ _| |_ __ _    /___\_ __  ___
@@ -42,5 +57,8 @@ export declare class SystemEvents {
      *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
      *                                 |_|
      */
-    getStoreObjectEvent(id: string, source: Event['source'], objectType: string, obj: {}): Event;
+    static getSavePatternEvent(pattern: PatternModel, source: Event['source']): Event;
+    static getFindPatternEvent(patternId: string, source: Event['source']): Event;
+    static getUpdatePatternEvent(patternId: string, source: Event['source'], updateValues: EventTaskParams['values']): Event;
+    static getDeletePatternEvent(patternId: string, source: Event['source']): Event;
 }

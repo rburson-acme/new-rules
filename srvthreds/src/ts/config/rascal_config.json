@@ -36,6 +36,12 @@
             "deadLetter": "x-message-dead-letter"
           }
         },
+        "persistence-message-queue": {
+          "assert": true
+        },
+        "admin-message-queue": {
+          "assert": true
+        },
         "x-dead-letter-event-queue": {
           "assert": true
         },
@@ -46,6 +52,8 @@
       "bindings": [
         "event-exchange[#] -> event-queue",
         "message-exchange[session.session1] -> session1-message-queue",
+        "wt-message[persistence] -> persistence-message-queue",
+        "wt-message[admin.admin1] -> admin-message-queue",
         "x-event-dead-letter[#] -> x-dead-letter-event-queue",
         "x-message-dead-letter[#] -> x-dead-letter-message-queue"
       ],
@@ -66,6 +74,14 @@
         },
         "sub_session1_message": {
           "queue": "session1-message-queue",
+          "prefetch": 1
+        },
+        "sub_persistence_message": {
+          "queue": "persistence-message-queue",
+          "prefetch": 1
+        },
+        "sub_admin1_message": {
+          "queue": "admin-message-queue",
           "prefetch": 1
         }
       }

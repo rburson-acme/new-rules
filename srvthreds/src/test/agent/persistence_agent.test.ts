@@ -1,13 +1,10 @@
-import { Logger, LoggerLevel, Event, SMap, Events, EventBuilder, deepMerge } from '../../ts/thredlib/index.js';
-import { AgentConfig, Config as StaticAgentConfig } from '../../ts/agent/Config.js';
-import { EventQ } from '../../ts/queue/EventQ.js';
-import { MessageQ } from '../../ts/queue/MessageQ.js';
-import { AgentQueueConnectionManager, events, withPromise, withPromiseHandlers } from '../testUtils.js';
+import { Logger, LoggerLevel, Event, SMap, EventBuilder } from '../../ts/thredlib/index.js';
+import { Config as StaticAgentConfig } from '../../ts/agent/Config.js';
+import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
-import { S } from 'vitest/dist/chunks/config.CHuotKvS.js';
 
 StaticAgentConfig.agentConfig = agentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -28,6 +25,8 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           expect(event.data?.content?.values).toBeTruthy();
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          // should return id as result if successful
+          expect((event.data?.content?.values as SMap).result).contains('echo_test');
         },
         resolve,
         reject,
@@ -120,8 +119,6 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          // this is an example of a task structured as a transaction - noticed the nested array result
-          // see the event below for more details
           expect((event.data?.content?.values as SMap).result[0].name).toBe('Replacement Pattern');
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
         },

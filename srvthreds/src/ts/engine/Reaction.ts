@@ -6,6 +6,8 @@ import { Event } from '../thredlib/index.js';
 import { Message } from '../thredlib/index.js';
 import { Transition } from './Transition.js';
 import { ThredStore } from './store/ThredStore.js';
+import { PermissionModel } from '../thredlib/model/PermissionModel.js';
+import { Permissions } from './Permissions.js';
 
 export type ReactionResult = { message?: Message, transition?: Transition };
 
@@ -17,6 +19,7 @@ export class Reaction {
 
     readonly name: string;
     readonly condition: Condition;
+    readonly permissions?: Permissions;
     readonly expiry?: {
         interval: number;
         transition?: Transition;
@@ -30,11 +33,13 @@ export class Reaction {
             const transition = transitionModel ? new Transition(transitionModel) : undefined;
             this.expiry = { interval,  transition };
         }
+        if(reactionModel.permissions) this.permissions = new Permissions(reactionModel.permissions);
     }
 
+    // @TODO - catch failures here and notify admin and relevant participant(s)
     async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
         const { condition } = this;
-        const result = await condition.apply(event, thredStore);
+        const result = await condition.apply(event, thredStore );
         if (result) {
             const { transform, publish, transition } = result;
             const newEvent = await transform?.apply(event, thredStore);
@@ -47,5 +52,4 @@ export class Reaction {
     async test(event: Event, context: ThredContext): Promise<boolean> {
         return this.condition.test(event, context);
     }
-
 }

@@ -34,6 +34,8 @@ export class ThredStore {
         return this._currentReaction;
     }
 
+    // This is the proper way to terminate a thred
+    // IMPORTANT: This method must be called from within a lock i.e. the ThredsStore.withThredStore()
     finish(): void {
         this.transitionTo(undefined);
     }
@@ -47,12 +49,26 @@ export class ThredStore {
         return this.reactionStore.isExpired(this.currentReaction.expiry.interval);
     }
 
+    // used for storage
     getState(): ThredStoreState {
         return {
             id: this.id,
             thredContext: this.thredContext.getState(),
             patternId: this.pattern.id,
             reactionStore: this.reactionStore?.getState(),
+            startTime: this.startTime
+        }
+    }
+
+    // used for marshalling to UI
+    toJSON()  {
+        return {
+            id: this.id,
+            patternId: this.pattern.id,
+            currentReaction: {
+                reactionName: this.currentReaction?.name,
+                expiry: this.currentReaction?.expiry
+            },
             startTime: this.startTime
         }
     }
@@ -68,9 +84,10 @@ export class ThredStore {
         );
     }
 
+
 }
 
-interface ThredStoreState {
+export interface ThredStoreState {
     id: string,
     thredContext: any,
     patternId: string,

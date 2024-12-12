@@ -1,6 +1,6 @@
 import { Persistence } from '../../persistence/Persistence.js';
 import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
-import { Message, Event, Events, errorKeys } from '../../thredlib/index.js';
+import { Message, Event, Events, errorKeys, EventValues } from '../../thredlib/index.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
 import { AgentConfig } from '../Config.js';
@@ -31,8 +31,8 @@ export class PersistenceAgent implements MessageHandler {
   async processMessage(message: Message): Promise<void> {
     // @TODO implement transactions for Persistence
     try {
-      const result = await this.adapter.execute(message.event.data?.content);
-      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: message.event, result });
+      const result = await (this.adapter as PersistenceAdapter).execute(message.event);
+      const outboundEvent = this.eventPublisher.createOutboundEvent({ prevEvent: message.event, content: { values: { result } } });
       await this.eventPublisher.publishEvent(outboundEvent);
     } catch (e) {
       const outboundEvent = this.eventPublisher.createOutboundEvent({
