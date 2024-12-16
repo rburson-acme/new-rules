@@ -11,7 +11,7 @@ import { EngineConnectionManager, events, withDispatcherPromise, withReject } fr
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
 import { adminTestPatternModels, adminTestSource } from './adminTestUtils.js';
 
-Logger.setLevel(LoggerLevel.DEBUG);
+Logger.setLevel(LoggerLevel.ERROR);
 
 describe('admin system test', function () {
   beforeAll(async () => {

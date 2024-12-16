@@ -24,6 +24,8 @@ export class Engine implements Dispatcher {
   constructor(readonly inboundQ: EventQ) {
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new EventStore(), new PatternsStore(storage), storage);
+    // this can be determined by config so that we can run 'Admin' nodes seperately
+    // this.threds = new Threds(this.thredsStore, this); 
     this.threds = new AdminThreds(this.thredsStore, this);
   }
 
@@ -42,7 +44,8 @@ export class Engine implements Dispatcher {
     }, delay);
   }
 
-  // messages should also be routed to archival service here for failover and latent delivery
+  // @TODO Messages should also be routed to archival service here for failover and latent delivery
+
   /**
    * These are outbound 'messages', addressed to specific participants
    * 'React Systems' metaphor - message with address. (ie. tell)
