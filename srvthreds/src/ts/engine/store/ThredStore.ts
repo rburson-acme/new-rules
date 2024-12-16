@@ -65,6 +65,7 @@ export class ThredStore {
         return {
             id: this.id,
             patternId: this.pattern.id,
+            patternName: this.pattern.name,
             currentReaction: {
                 reactionName: this.currentReaction?.name,
                 expiry: this.currentReaction?.expiry

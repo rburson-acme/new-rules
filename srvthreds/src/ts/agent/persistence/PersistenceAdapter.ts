@@ -26,7 +26,7 @@ export class PersistenceAdapter implements Adapter {
           return this.executeTask(subTask);
         });
       } else {
-        return this.executeTask(task);
+        return await this.executeTask(task);
       }
     });
   }

@@ -18,7 +18,7 @@ describe('persistence agent test', function () {
     await connMan.purgeAll();
     agent = connMan.agent;
   });
-  test('test store pattern', async function () {
+  test('test store object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -26,33 +26,33 @@ describe('persistence agent test', function () {
           expect(event.data?.content?.values).toBeTruthy();
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
           // should return id as result if successful
-          expect((event.data?.content?.values as SMap).result).contains('echo_test');
+          expect((event.data?.content?.values as SMap).result).contains('object_test');
         },
         resolve,
         reject,
       );
     });
-    agent.processMessage({ event: storePatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: storeObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test find pattern', async function () {
+  test('test find object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((event.data?.content?.values as SMap).result[0][0].name).toBe('Echo Test');
+          expect((event.data?.content?.values as SMap).result[0][0].name).toBe('Object Test');
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
         },
         resolve,
         reject,
       );
     });
-    agent.processMessage({ event: findPatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: findObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test store pattern should fail w/ duplicate', async function () {
+  test('test store object should fail w/ duplicate', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -64,10 +64,10 @@ describe('persistence agent test', function () {
         reject,
       );
     });
-    agent.processMessage({ event: storePatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: storeObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test update pattern', async function () {
+  test('test update object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -79,27 +79,27 @@ describe('persistence agent test', function () {
         reject,
       );
     });
-    agent.processMessage({ event: updatePatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: updateObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test find pattern', async function () {
+  test('test find object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((event.data?.content?.values as SMap).result[0][0].reactions[0].name).toBe('first reaction renamed');
+          expect((event.data?.content?.values as SMap).result[0][0].testItems[0].name).toBe('first testItem renamed');
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
         },
         resolve,
         reject,
       );
     });
-    agent.processMessage({ event: findPatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: findObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test upsert pattern', async function () {
+  test('test upsert object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -111,25 +111,25 @@ describe('persistence agent test', function () {
         reject,
       );
     });
-    agent.processMessage({ event: upsertPatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: upsertObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test find replacement pattern', async function () {
+  test('test find replacement object', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect((event.data?.content?.values as SMap).result[0].name).toBe('Replacement Pattern');
+          expect((event.data?.content?.values as SMap).result[0].name).toBe('Replacement Object');
           expect((event.data?.content?.values as SMap).error).toBeUndefined();
         },
         resolve,
         reject,
       );
     });
-    agent.processMessage({ event: findReplacementPatternEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: findReplacementObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test delete patterns', async function () {
+  test('test delete objects', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -141,10 +141,10 @@ describe('persistence agent test', function () {
         reject,
       );
     });
-    agent.processMessage({ event: deletePatternsEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: deleteObjectsEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
-  test('test find patterns (should have been deleted)', async function () {
+  test('test find objects (should have been deleted)', async function () {
     const pr = new Promise((resolve, reject) => {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
@@ -156,7 +156,7 @@ describe('persistence agent test', function () {
         reject,
       );
     });
-    agent.processMessage({ event: findPatternsEvent, to: ['org.wt.persistence'], id: 'test' });
+    agent.processMessage({ event: findObjectsEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
   // cleanup in case of failure
@@ -170,115 +170,94 @@ describe('persistence agent test', function () {
 let connMan: AgentQueueConnectionManager;
 let agent: Agent;
 
-const testPattern = {
-  name: 'Echo Test',
-  id: 'echo_test',
-  instanceInterval: 0,
-  maxInstances: 0,
-  reactions: [
+const testObject = {
+  name: 'Object Test',
+  id: 'object_test',
+  testItems: [
     {
-      name: 'echo',
-      condition: {
-        type: 'filter',
-        xpr: "$event.type = 'org.wt.echo'",
-        onTrue: {
-          xpr: "$setLocal('echoTimes', $local('echoTimes') ? $local('echoTimes') + 1 : 1)",
-        },
-        transform: {
-          eventDataTemplate: {
-            title: "$xpr( $valueNamed('echoTitle') & ' ' & $local('echoTimes') )",
-            content: { values: { echoContent: "$xpr( $valueNamed('echoContent') )" } },
-          },
-        },
-        publish: {
-          to: "$xpr( $valueNamed('echoTo') )",
-        },
-        transition: {
-          name: 'echo',
-        },
-      },
+      name: 'test item',
     },
   ],
 };
 
-const replacementPattern = {
-  name: 'Replacement Pattern',
+const replacementObject = {
+  name: 'Replacement Object',
   id: 'replacement_test',
 };
 
 // create a base builder with the common parameters
 const baseBldr = EventBuilder.create({ type: 'org.wt.tell', source: { id: 'SYSTEM', name: 'Workthreds Bot' } });
 
-// fork the base builder and merge the tasks and data for the store pattern event
-const storePatternEvent = baseBldr
+// fork the base builder and merge the tasks and data for the store object event
+const storeObjectEvent = baseBldr
   .fork()
-  .mergeTasks({ name: 'storePattern', op: 'create', params: { type: 'PatternModel', values: testPattern } })
-  .mergeData({ title: 'Store Pattern' })
+  .mergeTasks({ name: 'storeObject', op: 'create', params: { type: 'ObjectModel', values: testObject } })
+  .mergeData({ title: 'Store Object' })
   .build();
 
 // this event is structured as a transaction as an examaple (even though there is only 1 task)
-// notice the nested array structure which denotes a transaction
+// notice the nested array structure in the task which denotes a transaction
 // the results will be structured in the same way (see the tests that use this event)
-const findPatternEvent = baseBldr
+const findObjectEvent = baseBldr
   .fork()
-  .mergeTasks([{ name: 'findPattern', op: 'findOne', params: { type: 'PatternModel', matcher: { id: 'echo_test' } } }])
-  .mergeData({ title: 'Find Pattern' })
+  .mergeTasks([{ name: 'findObject', op: 'findOne', params: { type: 'ObjectModel', matcher: { id: 'object_test' } } }])
+  .mergeData({ title: 'Find Object' })
   .build();
 
-const updatePatternEvent = baseBldr
+const updateObjectEvent = baseBldr
   .fork()
   .mergeTasks({
-    name: 'updatePattern',
+    name: 'updateObject',
     op: 'update',
     params: {
-      type: 'PatternModel',
-      matcher: { id: 'echo_test' },
-      values: { 'reactions.0.name': 'first reaction renamed' },
+      type: 'ObjectModel',
+      matcher: { id: 'object_test' },
+      values: { 'testItems.0.name': 'first testItem renamed' },
     },
   })
-  .mergeData({ title: 'Update Pattern' })
+  .mergeData({ title: 'Update Object' })
   .build();
 
-const upsertPatternEvent = baseBldr
+const upsertObjectEvent = baseBldr
   .fork()
   .mergeTasks({
-    name: 'upsertPattern',
+    name: 'upsertObject',
     op: 'upsert',
     params: {
-      type: 'PatternModel',
+      type: 'ObjectModel',
       matcher: { id: 'replacement_test' },
-      values: replacementPattern,
+      values: replacementObject,
     },
   })
-  .mergeData({ title: 'Upsert Pattern' })
+  .mergeData({ title: 'Upsert Object' })
   .build();
 
-const findReplacementPatternEvent = baseBldr
+const findReplacementObjectEvent = baseBldr
   .fork()
   .mergeTasks({
-    name: 'findReplacementPattern',
+    name: 'findReplacementObject',
     op: 'findOne',
-    params: { type: 'PatternModel', matcher: { id: 'replacement_test' } },
+    params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } },
   })
-  .mergeData({ title: 'Find Pattern' })
+  .mergeData({ title: 'Find Object' })
   .build();
 
 // run deletes as a transaction, note: [][]
-const deletePatternsEvent = baseBldr
+const deleteObjectsEvent = baseBldr
   .fork()
   .mergeTasks([
-    { name: 'deletePatterns', op: 'delete', params: { type: 'PatternModel', matcher: { id: 'echo_test' } } },
-    { name: 'deletePatterns', op: 'delete', params: { type: 'PatternModel', matcher: { id: 'replacement_test' } } },
+    { name: 'deleteObjects', op: 'delete', params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
+    { name: 'deleteObjects', op: 'delete', params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } } },
   ])
-  .mergeData({ title: 'Delete Patterns' })
+  .mergeData({ title: 'Delete Objects' })
   .build();
 
-const findPatternsEvent = baseBldr
+const findObjectsEvent = baseBldr
   .fork()
   .mergeTasks({
-    name: 'findPatterns',
+    name: 'findObjects',
     op: 'find',
-    params: { type: 'PatternModel', matcher: { id: { $in: ['echo_test', 'replacement_test'] } } },
+    params: { type: 'ObjectModel', matcher: { id: { $in: ['object_test', 'replacement_test'] } } },
   })
-  .mergeData({ title: 'Find Pattern' })
+  .mergeData({ title: 'Find Object' })
   .build();
