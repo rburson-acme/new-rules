@@ -4,8 +4,7 @@ import { MessageQ } from '../queue/MessageQ.js';
 import { Sessions } from '../sessions/Sessions.js';
 import { Message, Logger, StringMap, Parallel } from '../thredlib/index.js';
 import { Session } from '../sessions/Session.js';
-import { Config, RunConfig } from './Config.js';
-import { AddressResolver } from '../sessions/AddressResolver.js';
+import { RunConfig } from './Config.js';
 
 /**
  * The Server is the main entry point for the engine.
@@ -24,12 +23,13 @@ export class Server {
     inboundQ: EventQ,
     private outboundQ: MessageQ,
     private sessions: Sessions,
+    PROC?: {shutdown: () => Promise<void>},
   ) {
-    this.engine = new Engine(inboundQ);
+    this.engine = new Engine(inboundQ, PROC);
     this.engine.dispatchers.push(this.tell.bind(this));
   }
 
-  async start(config: RunConfig):Promise<void> {
+  async start(config?: RunConfig):Promise<void> {
     return this.engine.start(config);
   }
 

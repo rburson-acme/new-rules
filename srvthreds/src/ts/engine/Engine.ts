@@ -15,13 +15,14 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
 import { Dispatcher } from './Dispatcher.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
+import { PersistenceManager } from './persistence/PersistenceManager.js';
 
 export class Engine implements Dispatcher {
   dispatchers: (((message: Message) => Promise<void>) | ((message: Message) => void))[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
 
-  constructor(readonly inboundQ: EventQ) {
+  constructor(readonly inboundQ: EventQ, readonly PROC?: {shutdown: (delay: number) => Promise<void>}) {
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new EventStore(), new PatternsStore(storage), storage);
     // this can be determined by config so that we can run 'Admin' nodes seperately
@@ -29,8 +30,9 @@ export class Engine implements Dispatcher {
     this.threds = new AdminThreds(this.thredsStore, this);
   }
 
-  public async start(config: RunConfig) {
-    const { patternModels } = config;
+  public async start(config?: RunConfig) {
+    // config can override patterns
+    const patternModels = config?.patternModels || await PersistenceManager.get().getAllPatterns();
     const patterns = patternModels.map((patternModel: PatternModel) => new Pattern(patternModel));
     this.thredsStore.patternsStore.addPatterns(patterns);
     await this.threds.initialize();
@@ -38,10 +40,7 @@ export class Engine implements Dispatcher {
   }
 
   public async shutdown(delay: number = 0): Promise<void> {
-    setTimeout(async () => {
-      await StorageFactory.disconnectAll();
-      process.exit();
-    }, delay);
+    return this.PROC?.shutdown(delay); 
   }
 
   // @TODO Messages should also be routed to archival service here for failover and latent delivery

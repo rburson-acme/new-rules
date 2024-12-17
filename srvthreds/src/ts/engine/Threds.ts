@@ -6,6 +6,7 @@ import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { Dispatcher } from './Dispatcher.js';
+import { PersistenceManager } from './persistence/PersistenceManager.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.

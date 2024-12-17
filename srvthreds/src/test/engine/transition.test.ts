@@ -1,4 +1,4 @@
-import { PatternModel, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
+import { PatternModel, Logger, LoggerLevel, Events } from '../../ts/thredlib/index.js';
 import { events, EngineConnectionManager, withDispatcherPromise, withReject } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
@@ -111,8 +111,11 @@ describe('transitions', function () {
   });
   // send an event to the thred
   test('thred already terminated', async function () {
-    await connMan.engine.consider({ ...events.noMatch, thredId });
-    expect(connMan.engine.numThreds).toBe(0);
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(Events.getError(message.event)).toBeDefined();
+    });
+    connMan.eventQ.queue({ ...events.noMatch, thredId });
+    return pr;
   });
   // cleanup in case of failure
   afterAll(async () => {

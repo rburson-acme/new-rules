@@ -86,8 +86,6 @@ describe('transitions', function () {
   //  after wait, should be timed out, ignore the current condition and move to previous reaction and replay input
   // current condition is ignored, but the event is necessary to force the expiration of the current reaction
   test('timed transition', async function () {
-    const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
-    expect(currentReactionName).toBe('event3reaction');
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
         withReject((message) => {

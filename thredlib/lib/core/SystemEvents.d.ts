@@ -13,6 +13,9 @@ export interface GetThredsArgs extends SystemEventInputValues {
 export interface ResetPatternArgs extends SystemEventInputValues {
     readonly patternId: string;
 }
+export interface ReloadPatternArgs extends SystemEventInputValues {
+    readonly patternId: string;
+}
 export interface TerminateAllThredsArgs extends SystemEventInputValues {
 }
 export interface ShutdownArgs extends SystemEventInputValues {

@@ -1,6 +1,7 @@
 import { Pattern } from '../Pattern.js';
 import { PatternStore } from './PatternStore.js';
 import { Lock, Storage, Types } from '../../storage/Storage.js';
+import { Logger } from '../../thredlib/index.js';
 
 // Pattern locking is handled here and should be contained to this class
 
@@ -10,7 +11,10 @@ export class PatternsStore {
   constructor(readonly storage: Storage) {}
 
   addPatterns(patterns: Pattern[]): void {
-    patterns.forEach((pattern) => (this.patternStores[pattern.id] = new PatternStore(pattern)));
+    patterns.forEach(pattern => {
+     this.patternStores[pattern.id] = new PatternStore(pattern);
+     Logger.info(`Added Pattern: ${pattern.id} : ${pattern.name}`);
+    });
   }
 
   getPattern(patternId: string): Pattern {
@@ -31,8 +35,6 @@ export class PatternsStore {
   get numThreds(): number {
     return Object.values(this.patternStores).reduce((total, patternStore) => total + patternStore.numThreds, 0);
   }
-
-  // Note: if the locking here gets too complex, move the aquire logic out to a Patterns class (i.e. Threds and ThredStore)
 
   async thredStarted(patternId: string, lastStartTime: number): Promise<void> {
     await this.storage.aquire(

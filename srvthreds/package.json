@@ -9,6 +9,7 @@
     "start-debug": "node --inspect=0.0.0.0:9229 ./dist-server/index.js",
     "start-dev": "tsx watch ./src/index.ts",
     "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/index.ts",
+    "bootstrap": "npx tsx src/test/bootstrap.ts",
     "watch:dev": "nodemon",
     "transpile": "tsc --project tsconfig.prod.json",
     "check": "tsc",

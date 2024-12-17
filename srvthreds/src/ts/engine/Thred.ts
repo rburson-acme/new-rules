@@ -19,17 +19,6 @@ export class Thred {
     // note, this can advance the state to a new reaction
     await Thred.synchronizeThredState(thredStore, threds);
 
-    // system event hook
-    /*
-    if (SystemThredEvent.isSystemThredEvent(event))
-      return SystemThredEvent.handleSystemThredEvent({
-        event,
-        thredStore,
-        threds,
-        thredCompanion: Thred.createCompanion(),
-      });
-      */
-
     // loop wil continue as long as there is a currentReaction and an inputEvent
     transitionLoop: do {
       // apply the event to the current state. There will be a result if the event triggers a state change

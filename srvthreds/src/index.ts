@@ -18,7 +18,7 @@ import { RemoteQService } from './ts/queue/remote/RemoteQService.js';
 import { Agent } from './ts/agent/Agent.js';
 import { Config as StaticEngineConfig } from './ts/engine/Config.js';
 import { Config as StaticAgentConfig } from './ts/agent/Config.js';
-    
+
 import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
 import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 //import sessionsModel from './ts/config/sessions/downtime.sessions.json' with { type: 'json' };
@@ -35,6 +35,7 @@ StaticAgentConfig.agentConfig = agentConfig;
 
 import path from 'node:path';
 import url from 'node:url';
+import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,14 +48,13 @@ Logger.setLevel(LoggerLevel.DEBUG);
 
 */
 
-
 /***
- *     __    __     _       __                            __      _               
- *    / / /\ \ \___| |__   / _\ ___ _ ____   _____ _ __  / _\ ___| |_ _   _ _ __  
- *    \ \/  \/ / _ \ '_ \  \ \ / _ \ '__\ \ / / _ \ '__| \ \ / _ \ __| | | | '_ \ 
+ *     __    __     _       __                            __      _
+ *    / / /\ \ \___| |__   / _\ ___ _ ____   _____ _ __  / _\ ___| |_ _   _ _ __
+ *    \ \/  \/ / _ \ '_ \  \ \ / _ \ '__\ \ / / _ \ '__| \ \ / _ \ __| | | | '_ \
  *     \  /\  /  __/ |_) | _\ \  __/ |   \ V /  __/ |    _\ \  __/ |_| |_| | |_) |
- *      \/  \/ \___|_.__/  \__/\___|_|    \_/ \___|_|    \__/\___|\__|\__,_| .__/ 
- *                                                                         |_|    
+ *      \/  \/ \___|_.__/  \__/\___|_|    \_/ \___|_|    \__/\___|\__|\__,_| .__/
+ *                                                                         |_|
  */
 
 const app: Express = express();
@@ -64,31 +64,30 @@ const httpServer: http.Server = http.createServer(app);
     cert: fs.readFileSync(__dirname + '/config/fullchain.pem'),
     ca: fs.readFileSync(__dirname + '/config/fullchain.pem')
   }, app);*/
- 
 
 /************** Web Server ************************/
 app.use(express.static(__dirname + '/web'));
 app.get('/', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/index.html');
+  res.sendFile(__dirname + '/web/index.html');
 });
 
 // test event interface
 app.get('/event', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/event.html');
+  res.sendFile(__dirname + '/web/event.html');
 });
 
 // assembly demo
 app.get('/assembly', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/assembly.html');
+  res.sendFile(__dirname + '/web/assembly.html');
 });
 app.get('/rms', function (req: Request, res: Response) {
-    res.sendFile(__dirname + '/web/rms.html');
+  res.sendFile(__dirname + '/web/rms.html');
 });
 
 //@TEMP sms
 // this should go in the sms agent - left here for reference
 app.post('/sms', (req: Request, res: Response) => {
-    /*
+  /*
     const twiml = new twilio.twiml.MessagingResponse();
     twiml.message('The Robots are coming! Head for the hills!');
     res.writeHead(200, { 'Content-Type': 'text/xml' });
@@ -103,35 +102,40 @@ httpServer.listen(443, function () {
 */
 
 httpServer.listen(3000, function () {
-    Logger.info('listening on *:3000');
+  Logger.info('listening on *:3000');
 });
-
-startServices();
 
 /************End Web Server ************************/
 
 /***
- *     __                 _                     _               
- *    / _\ ___ _ ____   _(_) ___ ___   ___  ___| |_ _   _ _ __  
- *    \ \ / _ \ '__\ \ / / |/ __/ _ \ / __|/ _ \ __| | | | '_ \ 
+ *     __                 _                     _
+ *    / _\ ___ _ ____   _(_) ___ ___   ___  ___| |_ _   _ _ __
+ *    \ \ / _ \ '__\ \ / / |/ __/ _ \ / __|/ _ \ __| | | | '_ \
  *    _\ \  __/ |   \ V /| | (_|  __/ \__ \  __/ |_| |_| | |_) |
- *    \__/\___|_|    \_/ |_|\___\___| |___/\___|\__|\__,_| .__/ 
- *                                                       |_|    
+ *    \__/\___|_|    \_/ |_|\___\___| |___/\___|\__|\__,_| .__/
+ *                                                       |_|
  */
 
+class ServiceManager {
+  agent?: Agent;
+  engineEventService?: RemoteQService<Event>;
+  engineMessageService?: RemoteQService<Message>;
 
+  constructor() {}
 
- // Start server
-async function startServices() {
-
+  // Start server
+  async startServices() {
     // set up the message broker to be used by all q services in this process
     const qBroker = new RemoteQBroker(rascal_config);
 
     // set up the remote Qs for the engine
-    const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
-    const engineEventQ: EventQ = new EventQ(engineEventService);
-    const engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
-    const engineMessageQ: MessageQ = new MessageQ(engineMessageService);
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    const engineEventQ: EventQ = new EventQ(this.engineEventService);
+    this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
+    const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
+
+    // connect to persistence
+    await PersistenceManager.get().connect();
 
     // @TODO separate library
     // setup the Sessions service
@@ -139,60 +143,60 @@ async function startServices() {
 
     // @TODO separate service
     //  setup the engine server
-    const engineServer = new Server(engineEventQ, engineMessageQ, sessions);
-    await engineServer.start({ patternModels });
+    const engineServer = new Server(engineEventQ, engineMessageQ, sessions, { shutdown: this.shutdown.bind(this) });
+    //await engineServer.start({ patternModels });
+    await engineServer.start();
 
     // set up the remote Qs for the session service agent
     const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
-    const sessionMessageService = await RemoteQService.newInstance<Message>({ qBroker, subName: 'sub_session1_message' });
-    const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
-    
-    // create and run a Session Agent
-    const agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, { httpServer, sessionsModel });
-    await agent.start();
-
-
-    /***
-    *     __                              ___ _                              
-    *    / _\ ___ _ ____   _____ _ __    / __\ | ___  __ _ _ __  _   _ _ __  
-    *    \ \ / _ \ '__\ \ / / _ \ '__|  / /  | |/ _ \/ _` | '_ \| | | | '_ \ 
-    *    _\ \  __/ |   \ V /  __/ |    / /___| |  __/ (_| | | | | |_| | |_) |
-    *    \__/\___|_|    \_/ \___|_|    \____/|_|\___|\__,_|_| |_|\__,_| .__/ 
-    *                                                                 |_|    
-    *
-    */
-
-    // 
-    // quit on ctrl-c when running docker in terminal
-    process.on('SIGINT', function onSigint() {
-        Logger.info('Got SIGINT (aka ctrl-c ). Waiting for shutdown...', new Date().toISOString());
-        shutdown();
+    const sessionMessageService = await RemoteQService.newInstance<Message>({
+      qBroker,
+      subName: 'sub_session1_message',
     });
+    const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
 
-    // quit properly on docker stop
-    process.on('SIGTERM', function onSigterm() {
-        Logger.info('Got SIGTERM (docker container stop). Graceful shutdown ', new Date().toISOString());
-        shutdown();
-    })
+    // create and run a Session Agent
+    this.agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, {
+      httpServer,
+      sessionsModel,
+    });
+    await this.agent.start();
+  }
 
-    // shut down server
-    function shutdown() {
-        disconnectAll().then(() => {
-            Logger.info('Shutdown completed successfully.', new Date().toISOString());
-            process.exit(0);
-        }).catch((err) =>  {
-            Logger.error(`Shutdown error:`, err);
-            process.exit(1);
+  /***
+   *     __                              ___ _
+   *    / _\ ___ _ ____   _____ _ __    / __\ | ___  __ _ _ __  _   _ _ __
+   *    \ \ / _ \ '__\ \ / / _ \ '__|  / /  | |/ _ \/ _` | '_ \| | | | '_ \
+   *    _\ \  __/ |   \ V /  __/ |    / /___| |  __/ (_| | | | | |_| | |_) |
+   *    \__/\___|_|    \_/ \___|_|    \____/|_|\___|\__,_|_| |_|\__,_| .__/
+   *                                                                 |_|
+   *
+   */
+
+  //
+  // quit on ctrl-c when running docker in terminal
+  // shut down server
+  async shutdown(delay = 0) {
+    setTimeout(async () => {
+      this.disconnectAll()
+        .then(() => {
+          Logger.info('Shutdown completed successfully.', new Date().toISOString());
+          process.exit(0);
+        })
+        .catch((err) => {
+          Logger.error(`Shutdown error:`, err);
+          process.exit(1);
         });
-    }
+    }, delay);
+  }
 
-    async function disconnectAll() {
-        // await eventService.deleteAll().catch(Logger.error);
-        // these disconnect the underlying broker,
-        // so we don't have to also disconnect this.messageService
+  async disconnectAll() {
+    // await eventService.deleteAll().catch(Logger.error);
+    // these disconnect the underlying broker,
+    // so we don't have to also disconnect this.messageService
 
-        /*
+    /*
             Order is important here.
             1) Finish serving Q messages (if any)
                The rascal config value 'deferCloseChannel' determines how long
@@ -200,19 +204,36 @@ async function startServices() {
             2) Shutdown the Agent so that disconnects can prompt session removals
             3) Shutdown the Redis connection
         */
-
-        Logger.info(`Disconnecting RemoteQ broker...`);
-        // @TODO
-        // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
-        // need to set them up for redelivery
-        await engineEventService.disconnect().catch(Logger.error);
-        Logger.info(`RemoteQ Broker disconnected successfully.`);
-        Logger.info(`Shutting down session agent...`);
-        await agent.shutdown();
-        Logger.info(`Agent shutdown successfully.`);
-        Logger.info(`Disconnecting Redis storage...`);
-        await StorageFactory.disconnectAll();
-        Logger.info(`Redis storage disconnected successfuly.`);
-    }
+    Logger.info(`Disconnecting PersistenceManager..`);
+    await PersistenceManager.get().disconnect();
+    Logger.info(`Disconnecting all Storage connections...`);
+    await StorageFactory.disconnectAll();
+    Logger.info(`Disconnecting RemoteQ broker...`);
+    // @TODO
+    // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
+    // need to set them up for redelivery
+    // these use the same broker so only need to disconnect one queue
+    await this.engineEventService?.disconnect().catch(Logger.error);
+    Logger.info(`RemoteQ Broker disconnected successfully.`);
+    Logger.info(`Shutting down session agent...`);
+    await this.agent?.shutdown();
+    Logger.info(`Agent shutdown successfully.`);
+    Logger.info(`Disconnecting Redis storage...`);
+    await StorageFactory.disconnectAll();
+    Logger.info(`Redis storage disconnected successfuly.`);
+  }
 }
 
+const serviceManager = new ServiceManager();
+serviceManager.startServices();
+
+process.on('SIGINT', function onSigint() {
+  Logger.info('Got SIGINT (aka ctrl-c ). Waiting for shutdown...', new Date().toISOString());
+  serviceManager.shutdown();
+});
+
+// quit properly on docker stop
+process.on('SIGTERM', function onSigterm() {
+  Logger.info('Got SIGTERM (docker container stop). Graceful shutdown ', new Date().toISOString());
+  serviceManager.shutdown();
+});

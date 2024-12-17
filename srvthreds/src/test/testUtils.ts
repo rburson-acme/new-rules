@@ -190,9 +190,11 @@ export class EngineConnectionManager {
   }
 
   async stopAllThreds() {
-    const pr = getDispatcherPromise(this.engine);
-    await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, { id: 'testUser' }));
-    await pr.catch(Logger.error);
+    await this.engine.thredsStore.terminateAllThreds();
+    /*const pr = getDispatcherPromise(this.engine);
+    await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent({ id: 'admin1', name: 'Admin User' }));
+    await pr.catch(Logger.error); */
+
   }
 }
 
@@ -264,12 +266,13 @@ export class ServerConnectionManager {
     await this.agent.shutdown();
   }
 
-  async stopAllThreds(participantId: string) {
-    let pr = getDispatcherPromise((this.agent as any).handler);
+  async stopAllThreds(id: string) {
+    await (this.engineServer as any).engine.thredsStore.terminateAllThreds();
+    /*let pr = getDispatcherPromise((this.agent as any).handler);
     await this.agent
-      .publishEvent(SystemEvents.getTerminateAllThredsEvent(Id.nextEventId, { id: participantId }), participantId)
+      .publishEvent(SystemEvents.getTerminateAllThredsEvent({ id, name: 'Admin User' }), id)
       .catch();
-    await pr.catch();
+    await pr.catch();*/
   }
 }
 

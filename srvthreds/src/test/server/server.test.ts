@@ -84,7 +84,7 @@ describe('connMan.sessionServer test', function () {
 
   // cleanup in case of failure
   afterAll(async () => {
-    await connMan.stopAllThreds('participant1');
+    await connMan.stopAllThreds('participant0');
     await connMan.purgeAll();
     await connMan.disconnectAll();
   });

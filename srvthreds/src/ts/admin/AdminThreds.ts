@@ -1,4 +1,3 @@
-import { AdminAdapter } from '../agent/admin/AdminAdapter.js';
 import { PersistenceAdapter } from '../agent/persistence/PersistenceAdapter.js';
 import { Dispatcher } from '../engine/Dispatcher.js';
 import { Events } from '../engine/Events.js';
