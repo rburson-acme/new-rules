@@ -11,14 +11,14 @@ describe('transitions', function () {
   // test an event that does not match the pattern
   test('ignore unknown event', function () {
     //direct call so that we can synchronize result
-    return connMan.engine.consider(events.noMatch).then(() => {
-      expect(connMan.engine.numThreds).toBe(0);
-    });
+    return connMan.engine.consider(events.noMatch).then(async () =>
+      expect(await connMan.engine.numThreds).toBe(0)
+    );
   });
   // match the first event and start the thred
   test('match first event', () => {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
-      expect(connMan.engine.numThreds).toBe(1);
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
+      expect(await connMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.to).toContain('outbound.event0.recipient');
       thredId = message.event.thredId;
@@ -58,7 +58,7 @@ describe('transitions', function () {
   // send an event to the thred that should NOT cause any state changes
   test('ignore unknown event', async () => {
     await connMan.engine.consider({ ...events.noMatch, thredId });
-    expect(connMan.engine.numThreds).toBe(1);
+    expect(await connMan.engine.numThreds).toBe(1);
   });
   //  should move to the named transition
   test('named transition', () => {
@@ -104,9 +104,9 @@ describe('transitions', function () {
       expect(message.event.data?.title).toBe('outbound.event5');
       expect(message.to).toContain('outbound.event5.recipient');
     });
-    await connMan.engine.consider({ ...events.event5, thredId }).then(() => {
-      expect(connMan.engine.numThreds).toBe(0);
-    });
+    await connMan.engine.consider({ ...events.event5, thredId }).then(async () => 
+      expect(await connMan.engine.numThreds).toBe(0)
+    );
     return pr;
   });
   // send an event to the thred

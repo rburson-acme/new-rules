@@ -12,8 +12,8 @@ describe('transitions', function () {
   // match the first event and start the thred
   test('match first event', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(connMan.engine.numThreds).toBe(1);
+      async (message) => {
+        expect(await connMan.engine.numThreds).toBe(1);
         expect(message.event.data?.title).toBe('outbound.event0');
         expect(message.to).toContain('outbound.event0.recipient');
         thredId = message.event.thredId;
@@ -81,7 +81,7 @@ describe('transitions', function () {
   // send an event to the thred that should NOT cause any state changes
   test('ignore unknown event', async function () {
     await connMan.eventQ.queue({ ...events.noMatch, thredId });
-    expect(connMan.engine.numThreds).toBe(1);
+    expect(await connMan.engine.numThreds).toBe(1);
   });
   //  after wait, should be timed out, ignore the current condition and move to previous reaction and replay input
   // current condition is ignored, but the event is necessary to force the expiration of the current reaction
@@ -122,7 +122,7 @@ describe('transitions', function () {
   //  should move to the named transition and expire
   test('finished', async function () {
     await delay(1000);
-    expect(connMan.engine.numThreds).toBe(0);
+    expect(await connMan.engine.numThreds).toBe(0);
   });
   // cleanup in case of failure
   // cleanup in case of failure

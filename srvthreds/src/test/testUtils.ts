@@ -127,7 +127,7 @@ export const withPromiseHandlers = (
 ): ((...args: any[]) => any) => {
   return async (...args: any[]) => {
     try {
-      op(...args);
+      await op(...args);
       resolve();
     } catch (e) {
       reject(e);
@@ -136,12 +136,12 @@ export const withPromiseHandlers = (
 };
 
 export const withReject = (
-  op: (...args: any[]) => void,
+  op: (...args: any[]) => any,
   reject: (reason?: any) => void,
 ): ((...args: any[]) => void) => {
-  return (...args: any[]) => {
+  return async (...args: any[]) => {
     try {
-      op(...args);
+      await op(...args);
     } catch (e) {
       reject(e);
     }

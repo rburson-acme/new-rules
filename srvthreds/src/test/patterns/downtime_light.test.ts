@@ -14,9 +14,9 @@ describe('engine', function () {
   // set test thredId to this thred
   // 2 reactions via input: forward
   it('inbound inception event', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
       thredId = message.event.thredId;
-      expect(connMan.engine.numThreds).toBe(1);
+      expect(await connMan.engine.numThreds).toBe(1);
       expect(message.to).toContain('wonkaInc.rms.agent');
       expect(message.event.data?.content.tasks[0].params.matcher.code).toBe('EC_1034');
       expect(message.event.data?.content.tasks[0].params.matcher.location).toBe('Gobstopper Assembly 339');

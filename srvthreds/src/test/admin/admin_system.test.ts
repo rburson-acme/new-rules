@@ -19,8 +19,8 @@ describe('admin system test', function () {
     await engineConnMan.purgeAll();
   });
   test('should start a new thred', function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-      expect(engineConnMan.engine.numThreds).toBe(1);
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
+      expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
@@ -41,9 +41,9 @@ describe('admin system test', function () {
     return pr;
   });
   test('thred should no longer be available', function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       const { event, to } = message;
-      expect(engineConnMan.engine.numThreds).toBe(0);
+      expect(await engineConnMan.engine.numThreds).toBe(0);
       expect(to).toContain('test.dataset');
       expect(event.re).toBe(events.event1.id);
       expect(Events.getError(event)).toBeDefined();
@@ -52,8 +52,8 @@ describe('admin system test', function () {
     return pr;
   });
   test('should start a new thred', function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-      expect(engineConnMan.engine.numThreds).toBe(1);
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
+      expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
@@ -80,9 +80,9 @@ describe('admin system test', function () {
   });
   // should be in event2Reaction
   test('thred should have moved to new reaction', async function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       const { event, to } = message;
-      expect(engineConnMan.engine.numThreds).toBe(1);
+      expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(to).toContain('outbound.event2.recipient');
     });
     engineConnMan.eventQ.queue({ ...events.event2, thredId });
@@ -98,8 +98,8 @@ describe('admin system test', function () {
     // first dispatched should be the event0Reaction's output
     const pr = new Promise<void>((resolve, reject) => {
       engineConnMan.engine.dispatchers = [
-        withReject((message) => {
-          expect(engineConnMan.engine.numThreds).toBe(1);
+        withReject(async (message) => {
+          expect(await engineConnMan.engine.numThreds).toBe(1);
           expect(message.event.data?.title).toBe('outbound.event0');
           expect(message.event.re).toBe('0');
           expect(message.to).toContain('outbound.event0.recipient');
@@ -120,17 +120,17 @@ describe('admin system test', function () {
     return pr;
   });
   test('thred should have moved to new reaction', async function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       const { event, to } = message;
-      expect(engineConnMan.engine.numThreds).toBe(1);
+      expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(to).toContain('outbound.event1.recipient');
     });
     engineConnMan.eventQ.queue({ ...events.event1, thredId });
     return pr;
   });
   test('should start an additional Thred', function () {
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-      expect(engineConnMan.engine.numThreds).toBe(2);
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
+      expect(await engineConnMan.engine.numThreds).toBe(2);
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
@@ -159,12 +159,12 @@ describe('admin system test', function () {
   });
   test('terminate all Threds', async function () {
     const terminateAllThredsEvent = SystemEvents.getTerminateAllThredsEvent(adminTestSource);
-    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(terminateAllThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.terminateAllThreds);
-      expect(engineConnMan.engine.numThreds).toBe(0);
+      expect(await engineConnMan.engine.numThreds).toBe(0);
     });
     engineConnMan.eventQ.queue(terminateAllThredsEvent);
     return pr;

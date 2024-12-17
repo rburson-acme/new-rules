@@ -108,10 +108,7 @@ export class Engine implements Dispatcher {
     return this.threds.consider(event);
   }
 
-  /*
-    @Deprecated
-  */
-  get numThreds(): number {
+  get numThreds(): Promise<number> {
     return this.thredsStore.numThreds;
   }
 }
