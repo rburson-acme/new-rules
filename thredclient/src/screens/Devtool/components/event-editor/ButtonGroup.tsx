@@ -54,7 +54,7 @@ export const ButtonGroup = observer(({ localStore, shakeAnim, thredsStore }: But
       const event = data as Event;
 
       if (event.data?.advice?.template) {
-        localStore.setTemplate(event.data.advice.template);
+        localStore.setTemplateStore(event.data.advice.template);
       } else {
         alert('Event does not have advice template');
       }

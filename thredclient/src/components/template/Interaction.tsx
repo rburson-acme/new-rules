@@ -2,22 +2,14 @@ import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { ComponentTree } from '@/src/components/ComponentTree';
-import { ThredsStore } from '@/src/stores/ThredsStore';
-import { RootStore } from '@/src/stores/rootStore';
-import { TemplateStore } from '@/src/stores/TemplateStore';
 import { typeConfig } from './typeConfig';
+import { InteractionStore } from '@/src/stores/InteractionStore';
 
 type InteractionProps = {
-  stores: {
-    templateStore: TemplateStore;
-    rootStore: RootStore;
-    thredsStore: ThredsStore;
-  };
+  interactionStore: InteractionStore;
   componentTypes: Record<string, React.ComponentType<any>>;
 };
-export const Interaction = observer(({ stores, componentTypes }: InteractionProps) => {
-  const { templateStore } = stores;
-  const interactionStore = templateStore.currentInteractionStore;
+export const Interaction = observer(({ interactionStore, componentTypes }: InteractionProps) => {
   if (!interactionStore) {
     return null;
   }
@@ -25,7 +17,13 @@ export const Interaction = observer(({ stores, componentTypes }: InteractionProp
 
   return (
     <View style={{ ...styles.containerStyle, ...style }}>
-      <ComponentTree root={content} typeConfig={typeConfig} componentTypes={componentTypes} props={{ stores }} />
+      <ComponentTree
+        root={content}
+        typeConfig={typeConfig}
+        componentTypes={componentTypes}
+        props={{ interactionStore }}
+        style={{ gap: 8 }}
+      />
     </View>
   );
 });
@@ -35,6 +33,7 @@ const styles = {
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'stretch',
+    gap: 8,
   },
   textDescriptionStyle: {
     fontSize: 12,

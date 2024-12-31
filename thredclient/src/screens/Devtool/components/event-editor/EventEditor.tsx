@@ -8,6 +8,7 @@ import { EventOutput } from './EventOutput';
 import { ButtonGroup } from './ButtonGroup';
 import { Queue } from './Queue';
 import { RootStore } from '@/src/stores/rootStore';
+import { TemplateStore } from '@/src/stores/TemplateStore';
 
 export type EventEditorLocals = {
   text: string;
@@ -15,8 +16,8 @@ export type EventEditorLocals = {
   queue: Event[];
   isTextRed: boolean;
   setIsTextRed(value: boolean): void;
-  template: TemplateModel | null;
-  setTemplate(value: TemplateModel): void;
+  templateStore: TemplateStore | null;
+  setTemplateStore(value: TemplateModel): void;
 };
 
 type EventEditorProps = { rootStore: RootStore };
@@ -39,9 +40,9 @@ export const EventEditor = observer(({ rootStore }: EventEditorProps) => {
     setIsTextRed(value: boolean) {
       this.isTextRed = value;
     },
-    template: null,
-    setTemplate(value: TemplateModel) {
-      this.template = value;
+    templateStore: null,
+    setTemplateStore(value: TemplateModel) {
+      this.templateStore = new TemplateStore(value);
     },
   }));
 
@@ -51,7 +52,7 @@ export const EventEditor = observer(({ rootStore }: EventEditorProps) => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={{ flexDirection: 'row', gap: 24 }}>
         <EventInput localStore={localStore} />
-        <EventOutput localStore={localStore} rootStore={rootStore}/>
+        <EventOutput localStore={localStore} />
       </View>
       <ButtonGroup localStore={localStore} shakeAnim={shakeAnim} thredsStore={thredsStore} />
       <Queue localStore={localStore} shakeAnim={shakeAnim} />

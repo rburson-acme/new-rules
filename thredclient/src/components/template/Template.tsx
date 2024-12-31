@@ -12,7 +12,7 @@ type TemplateProps = {
   };
 };
 export const Template = ({ stores }: TemplateProps) => {
-  const { thredsStore, rootStore } = stores;
+  const { thredsStore } = stores;
   const templateStore = thredsStore.currentThredStore?.eventsStore?.openEventStore?.openTemplateStore;
   if (templateStore) {
     const { name } = templateStore.template;

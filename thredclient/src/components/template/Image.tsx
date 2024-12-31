@@ -1,14 +1,23 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image as RNImage } from 'react-native';
 
-export const Image = () => {
-  return <View style={styles.containerStyle}></View>;
+type ImageProps = {
+  uri: string;
+  height: number;
+  width: number;
+};
+export const Image = ({ uri, height, width }: ImageProps) => {
+  return (
+    <View style={styles.containerStyle}>
+      <RNImage source={{ uri }} resizeMode="contain" resizeMethod="auto" style={{ height, width }} />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'stretch',
+    alignItems: 'center',
   },
 });

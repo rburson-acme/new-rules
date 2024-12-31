@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { Template } from '../template/Template';
 import { EventStore } from '@/src/stores/EventStore';
+import { Template } from '@/src/components/template/Template';
 
 type ContentProps = {
   eventStore: EventStore;
@@ -10,7 +10,7 @@ type ContentProps = {
 export const Content = ({ eventStore, containerStyle }: ContentProps) => {
   return (
     <View style={[styles.defaultContainerStyle, containerStyle]}>
-      <Template eventStore={eventStore} />
+      {/* <Template stores={{}} /> */}
     </View>
   );
 };
