@@ -12,7 +12,8 @@ import {
   GetThredsArgs,
   TransitionThredArgs, ResetPatternArgs,
   TerminateAllThredsArgs,
-  ShutdownArgs
+  ShutdownArgs,
+  ReloadPatternArgs
 } from '../thredlib/index.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
@@ -157,6 +158,21 @@ export class AdminService {
     return { status: systemEventTypes.successfulStatus, op, patternId };
   };
 
+  reloadPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op, patternId },
+    } = this.getArgs<ReloadPatternArgs>(args);
+    if(!patternId) {
+      throw EventThrowable.get(
+        `No patternId supplied for reloadPattern operation on System`,
+        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      );
+    }
+    await this.threds.thredsStore.reloadPatternStore(patternId);
+    return { status: systemEventTypes.successfulStatus, op, patternId };
+  };
+
   terminateAllThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
@@ -198,6 +214,7 @@ export class AdminService {
     [systemEventTypes.operations.getThreds]: this.getThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,
     [systemEventTypes.operations.resetPattern]: this.resetPattern,
+    [systemEventTypes.operations.reloadPattern]: this.reloadPattern,
     [systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,
     [systemEventTypes.operations.shutdown]: this.shutdown,
   };

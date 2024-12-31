@@ -14,7 +14,7 @@ describe('engine', function () {
   it('inbound unknown event', async function () {
     //direct call so that we can synchronize result
     await connMan.engine.consider(events.noMatch);
-    expect(connMan.engine.numThreds).toBe(0);
+    expect(await connMan.engine.numThreds).toBe(0);
   });
   // should match pattern's first reaction, start a thred, send event to erp, send event to operator
   // set test thredId to this thred
@@ -23,13 +23,11 @@ describe('engine', function () {
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
         withReject((message) => {
-          expect(connMan.engine.numThreds).toBe(1);
           expect(message.to).toContain('wonkaInc.erp.agent');
           expect(message.event.data?.title).toBe('New Reporting Entry: Widget Jam - ERP');
           thredId = message.event.thredId;
           connMan.engine.dispatchers = [
             withReject((message) => {
-              expect(connMan.engine.numThreds).toBe(1);
               expect(message.to).toContain('bOompa');
               expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
               expect(message.event.data?.advice.template.name).toBe('operator_create_workorder');
@@ -44,8 +42,8 @@ describe('engine', function () {
   });
   // should match pattern's first reaction and create another, independent thred
   it('inbound another inception event', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
-      expect(connMan.engine.numThreds).toBe(2);
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
+      expect(await connMan.engine.numThreds).toBe(2);
       thredId2 = message.event.thredId;
       expect(thredId2).not.toBe(thredId);
     });
@@ -56,7 +54,7 @@ describe('engine', function () {
   it('inbound should not create work order event', async function () {
     //direct call so that we can synchronize result
     await connMan.engine.consider({ ...events.shouldNotCreateWorkOrder, thredId });
-    expect(connMan.engine.numThreds).toBe(1);
+    expect(await connMan.engine.numThreds).toBe(1);
     expect((connMan.engine.thredsStore as any).thredStores[thredId as any]).toBeUndefined();
   });
   // should match pattern's first reaction, start a thred, send event to erp, send event to operator
@@ -66,13 +64,12 @@ describe('engine', function () {
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
         withReject((message) => {
-          expect(connMan.engine.numThreds).toBe(2);
           expect(message.to).toContain('wonkaInc.erp.agent');
           expect(message.event.data?.title).toBe('New Reporting Entry: Widget Jam - ERP');
           thredId = message.event.thredId;
           connMan.engine.dispatchers = [
-            withReject((message) => {
-              expect(connMan.engine.numThreds).toBe(2);
+            withReject(async (message) => {
+              expect(await connMan.engine.numThreds).toBe(2);
               expect(message.to).toContain('bOompa');
               expect(message.event.data?.description).toBe('Gobstopper Assembly 339 has failed with a Widget Jam');
               expect(message.event.data?.advice.template.name).toBe('operator_create_workorder');

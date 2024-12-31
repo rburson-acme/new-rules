@@ -8,7 +8,7 @@ export interface EngineConfig {
             address: string;
         }[]
 }
-export type RunConfig = { patternModels: PatternModel[] }
+export type RunConfig = { patternModels?: PatternModel[] }
 
 export class Config {
     static engineConfig: EngineConfig;

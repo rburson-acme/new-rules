@@ -1,10 +1,11 @@
 export var LoggerLevel;
 (function (LoggerLevel) {
-    LoggerLevel[LoggerLevel["ERROR"] = 0] = "ERROR";
-    LoggerLevel[LoggerLevel["WARN"] = 1] = "WARN";
-    LoggerLevel[LoggerLevel["INFO"] = 2] = "INFO";
-    LoggerLevel[LoggerLevel["DEBUG"] = 3] = "DEBUG";
-    LoggerLevel[LoggerLevel["TRACE"] = 4] = "TRACE";
+    LoggerLevel[LoggerLevel["NONE"] = 0] = "NONE";
+    LoggerLevel[LoggerLevel["ERROR"] = 1] = "ERROR";
+    LoggerLevel[LoggerLevel["WARN"] = 2] = "WARN";
+    LoggerLevel[LoggerLevel["INFO"] = 3] = "INFO";
+    LoggerLevel[LoggerLevel["DEBUG"] = 4] = "DEBUG";
+    LoggerLevel[LoggerLevel["TRACE"] = 5] = "TRACE";
 })(LoggerLevel || (LoggerLevel = {}));
 export class Logger {
     static debug = (...args) => { };
@@ -14,10 +15,12 @@ export class Logger {
     static trace = (...args) => { };
     static setLevel(loggerLevel) {
         Logger.debug = (...args) => { };
-        Logger.error = (...args) => console.error(...args);
+        Logger.error = (...args) => { };
         Logger.info = (...args) => { };
         Logger.warn = (...args) => { };
         Logger.trace = (...args) => { };
+        if (loggerLevel >= LoggerLevel.ERROR)
+            Logger.error = (...args) => console.error(...args);
         if (loggerLevel >= LoggerLevel.TRACE)
             Logger.trace = (...args) => console.log(...args);
         if (loggerLevel >= LoggerLevel.DEBUG)

@@ -71,11 +71,8 @@ export class ThredsStore {
     return this.patternsStore.resetPatternStore(patternId);
   }
 
-  /*
-    @Deprecated
-  */
-  get numThreds(): number {
-    return this.patternsStore.numThreds;
+  get numThreds(): Promise<number> {
+    return this.storage.setCount(Types.Thred, indexId);
   }
   
   

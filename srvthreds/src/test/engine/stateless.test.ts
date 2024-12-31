@@ -11,8 +11,8 @@ describe('stateless', function () {
   });
   // match the first event and start the thred
   test('match filter', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
-      expect(connMan.engine.numThreds).toBe(1);
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
+      expect(await connMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.to).toContain('outbound.event0.recipient');
       thredId = message.event.thredId;
