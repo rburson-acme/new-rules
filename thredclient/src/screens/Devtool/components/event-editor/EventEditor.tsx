@@ -21,11 +21,6 @@ export type EventEditorLocals = {
 };
 
 type EventEditorProps = { rootStore: RootStore };
-// TODO: We need to figure out a better way to handle this typeConfig
-// ...either figure out this, or make a more rigid interactionModel so this is not needed.
-
-// ComponentTree will give all sorts of nasty errors that might crash the app
-//if we don't give types to some of these interaction pieces
 
 export const EventEditor = observer(({ rootStore }: EventEditorProps) => {
   const { thredsStore } = rootStore;

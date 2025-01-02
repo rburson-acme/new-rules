@@ -1,23 +1,22 @@
-import rootStore from '../stores/rootStore';
 import { DevtoolNames, ModuleNames } from './RouteList';
 
 export type AdminDrawerParamList = {
-  Home: { rootStore: typeof rootStore };
-  Modules: { rootStore: typeof rootStore };
-  Devtools: { rootStore: typeof rootStore };
+  Home: {};
+  Modules: {};
+  Devtools: {};
 };
 
 export type MessengerDrawerParamList = {
-  Home: { rootStore: typeof rootStore };
-  Modules: { rootStore: typeof rootStore };
-  Devtools: { rootStore: typeof rootStore };
+  Home: {};
+  Modules: {};
+  Devtools: {};
 };
 export type ModuleStackParamList = {
-  ModuleListLayout: { rootStore: typeof rootStore };
-  Module: { rootStore: typeof rootStore; name: ModuleNames };
+  ModuleListLayout: {};
+  Module: { name: ModuleNames };
 };
 
 export type DevtoolStackParamList = {
-  DevtoolListLayout: { rootStore: typeof rootStore };
-  Devtool: { rootStore: typeof rootStore; name: DevtoolNames };
+  DevtoolListLayout: {};
+  Devtool: { name: DevtoolNames };
 };

@@ -4,6 +4,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { DevtoolStackParamList } from '@/src/core/Navigation';
 import { DevtoolNames, RouteListItemType } from '@/src/core/RouteList';
 import { RouteListItem } from '@/src/components/RouteListItem';
+import { RootStore } from '@/src/stores/rootStore';
 
 type DevtoolsLayoutProps = StackScreenProps<DevtoolStackParamList, 'DevtoolListLayout'>;
 
@@ -13,19 +14,19 @@ export const DevtoolListLayout = observer(({ route, navigation }: DevtoolsLayout
       name: 'Event Editor',
       description: 'edit events',
       iconName: 'golf-course',
-      navigateFn: () => navigation.navigate('Devtool', { name: 'Event Editor', rootStore: route.params.rootStore }),
+      navigateFn: () => navigation.navigate('Devtool', { name: 'Event Editor' }),
     },
     {
       name: 'Thred Manager',
       description: 'manage threds',
       iconName: 'golf-course',
-      navigateFn: () => navigation.navigate('Devtool', { name: 'Thred Manager', rootStore: route.params.rootStore }),
+      navigateFn: () => navigation.navigate('Devtool', { name: 'Thred Manager' }),
     },
     {
       name: 'System Event GUI',
       description: 'gui for system events',
       iconName: 'golf-course',
-      navigateFn: () => navigation.navigate('Devtool', { name: 'System Event GUI', rootStore: route.params.rootStore }),
+      navigateFn: () => navigation.navigate('Devtool', { name: 'System Event GUI' }),
     },
   ];
 
@@ -33,7 +34,7 @@ export const DevtoolListLayout = observer(({ route, navigation }: DevtoolsLayout
     <SafeAreaView style={styles.container}>
       <FlatList
         data={devtools}
-        renderItem={item => <RouteListItem<DevtoolNames> listItem={item} rootStore={route.params.rootStore} />}
+        renderItem={item => <RouteListItem<DevtoolNames> listItem={item} rootStore={RootStore.get()} />}
         contentContainerStyle={styles.list}
       />
     </SafeAreaView>

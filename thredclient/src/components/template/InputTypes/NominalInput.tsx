@@ -15,8 +15,6 @@ type NominalInputProps = {
 };
 
 export const NominalInput = ({ name, set, multiple, interactionStore }: NominalInputProps) => {
-  // TODO: Extract Dropdown and MultiSelect to their own reusable components
-
   if (!multiple) {
     const [value, setValue] = useState(null);
 

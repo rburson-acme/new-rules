@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import rootStore from '../stores/rootStore';
 import { LoginScreen } from './Login/LoginScreen';
 import { MessengerLayout } from './Messenger/MessengerLayout';
 import { AdminLayout } from './Admin/AdminLayout';
@@ -16,11 +15,12 @@ import {
 import { ModuleListLayout } from './ModuleList/ModuleListLayout';
 import { DevtoolListLayout } from './DevtoolList/DevtoolListLayout';
 import { DevtoolLayout } from './Devtool/DevtoolLayout';
+import { RootStore } from '../stores/rootStore';
 
 export const Layout = observer(({}) => {
   const AuthDrawer = createDrawerNavigator<AdminDrawerParamList>();
   const MessengerDrawer = createDrawerNavigator<MessengerDrawerParamList>();
-  const { authStore } = rootStore;
+  const { authStore } = RootStore.get();
 
   function logOut() {
     authStore.logOut();
@@ -35,10 +35,9 @@ export const Layout = observer(({}) => {
           }}
           name="Home"
           component={AdminLayout}
-          initialParams={{ rootStore }}
         />
         <AuthDrawer.Screen name="Modules" component={ModuleStackDef} />
-        <AuthDrawer.Screen name="Devtools" component={DevtoolStackDef} initialParams={{ rootStore }} />
+        <AuthDrawer.Screen name="Devtools" component={DevtoolStackDef} />
       </AuthDrawer.Navigator>
     );
   }
@@ -52,10 +51,9 @@ export const Layout = observer(({}) => {
           }}
           name="Home"
           component={MessengerLayout}
-          initialParams={{ rootStore }}
         />
         <AuthDrawer.Screen name="Modules" component={ModuleStackDef} />
-        <AuthDrawer.Screen name="Devtools" component={DevtoolStackDef} initialParams={{ rootStore }} />
+        <AuthDrawer.Screen name="Devtools" component={DevtoolStackDef} />
       </MessengerDrawer.Navigator>
     );
   } else return <LoginScreen />;
@@ -66,12 +64,7 @@ function ModuleStackDef() {
 
   return (
     <ModuleStack.Navigator>
-      <ModuleStack.Screen
-        name="ModuleListLayout"
-        options={{ headerShown: false }}
-        component={ModuleListLayout}
-        initialParams={{ rootStore }}
-      />
+      <ModuleStack.Screen name="ModuleListLayout" options={{ headerShown: false }} component={ModuleListLayout} />
       <ModuleStack.Screen
         name="Module"
         options={({ route }) => ({ title: route.params.name })}
@@ -86,17 +79,11 @@ function DevtoolStackDef() {
 
   return (
     <DevtoolStack.Navigator>
-      <DevtoolStack.Screen
-        name="DevtoolListLayout"
-        options={{ headerShown: false }}
-        component={DevtoolListLayout}
-        initialParams={{ rootStore }}
-      />
+      <DevtoolStack.Screen name="DevtoolListLayout" options={{ headerShown: false }} component={DevtoolListLayout} />
       <DevtoolStack.Screen
         name="Devtool"
         component={DevtoolLayout}
         options={({ route }) => ({ title: route.params.name })}
-        initialParams={{ rootStore }}
       />
     </DevtoolStack.Navigator>
   );
