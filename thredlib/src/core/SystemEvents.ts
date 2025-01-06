@@ -3,6 +3,7 @@ import { TransitionModel } from '../model/TransitionModel.js';
 import { PatternModel } from '../model/PatternModel.js';
 import { Event, EventTaskParams } from './Event.js';
 import { EventBuilder } from './EventBuilder.js';
+import { Spec } from '../provider/Spec.js';
 
 export interface SystemEventInputValues {
   readonly op: string;
@@ -13,10 +14,6 @@ export interface SystemEventThredInputValues extends SystemEventInputValues {
 
 export interface GetThredsArgs extends SystemEventInputValues {
   readonly thredIds?: string[] | undefined;
-}
-
-export interface ResetPatternArgs extends SystemEventInputValues {
-  readonly patternId: string;
 }
 
 export interface ReloadPatternArgs extends SystemEventInputValues {
@@ -94,14 +91,14 @@ export class SystemEvents {
       .build();
   }
 
-  static getResetPatternEvent(patternId: string, source: Event['source']) {
-    const values: ResetPatternArgs = { op: systemEventTypes.operations.resetPattern, patternId };
+  static getReloadPatternEvent(patternId: string, source: Event['source']) {
+    const values: ReloadPatternArgs = { op: systemEventTypes.operations.reloadPattern, patternId };
     return EventBuilder.create({
       type: eventTypes.control.sysControl.type,
       source,
     })
       .mergeValues(values)
-      .mergeData({ title: 'Run Reset Pattern' })
+      .mergeData({ title: 'Run Reload Pattern' })
       .build();
   }
 
@@ -143,7 +140,7 @@ export class SystemEvents {
       type: eventTypes.control.dataControl.type,
       source,
     })
-      .mergeTasks({ name: 'storePattern', op: 'create', params: { type: 'PatternModel', values: pattern } })
+      .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: 'PatternModel', values: pattern } })
       .mergeData({ title: `Store Pattern ${pattern.name}` })
       .build();
   }
@@ -153,7 +150,7 @@ export class SystemEvents {
       type: eventTypes.control.dataControl.type,
       source,
     })
-      .mergeTasks({ name: 'findPattern', op: 'findOne', params: { type: 'PatternModel', matcher: { id: patternId } } })
+      .mergeTasks({ name: 'findPattern', op: Spec.GET_ONE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } })
       .mergeData({ title: 'Find Pattern' })
       .build();
   }
@@ -165,7 +162,7 @@ export class SystemEvents {
     })
       .mergeTasks({
         name: 'updatePattern',
-        op: 'update',
+        op: Spec.UPDATE_OP,
         params: {
           type: 'PatternModel',
           matcher: { id: patternId },
@@ -182,7 +179,7 @@ export class SystemEvents {
       source,
     })
       .mergeTasks([
-        { name: 'deletePattern', op: 'delete', params: { type: 'PatternModel', matcher: { id: patternId } } },
+        { name: 'deletePattern', op: Spec.DELETE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } },
       ])
       .mergeData({ title: 'Delete Pattern' })
       .build();

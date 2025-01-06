@@ -1,4 +1,7 @@
 {
+    "meta": {
+        "active": true
+    },
     "name": "Echo Test",
     "id": "echo_test",
     "instanceInterval": 0,

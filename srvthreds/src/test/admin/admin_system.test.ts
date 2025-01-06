@@ -169,10 +169,7 @@ describe('admin system test', function () {
     engineConnMan.eventQ.queue(terminateAllThredsEvent);
     return pr;
   });
-
-  
-
-  test('shutdown after 10 secs (but not really...)', async function () {
+  test('shutdown after 10 secs...)', async function () {
     const shutdownEvent = SystemEvents.getShutdownEvent(10000, adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');

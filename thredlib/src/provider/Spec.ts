@@ -7,12 +7,12 @@ export class Spec {
     /*
       Supported Operations
     */
-    // put is an upsert depending on whether the object has an id
-    static readonly CREATE_OP = 'create';
-    static readonly FIND_ONE_OP = 'findOne';
-    static readonly FIND_OP = 'find';
+    static readonly PUT_OP = 'put';
+    static readonly GET_ONE_OP = 'getOne';
+    static readonly GET_OP = 'get';
     static readonly UPDATE_OP = 'update';
     static readonly UPSERT_OP = 'upsert';
+    static readonly REPLACE_OP = 'replace';
     static readonly DELETE_OP = 'delete';
     static readonly COUNT_OP = 'count';
     static readonly RUN_OP = 'run';

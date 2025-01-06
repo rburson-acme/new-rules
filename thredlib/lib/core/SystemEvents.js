@@ -1,5 +1,6 @@
 import { systemEventTypes, eventTypes } from './types.js';
 import { EventBuilder } from './EventBuilder.js';
+import { Spec } from '../provider/Spec.js';
 export class SystemEvents {
     /***
      *     _____ _                  _     ___            _             _
@@ -50,14 +51,14 @@ export class SystemEvents {
             .mergeData({ title: 'Run Get Threds' })
             .build();
     }
-    static getResetPatternEvent(patternId, source) {
-        const values = { op: systemEventTypes.operations.resetPattern, patternId };
+    static getReloadPatternEvent(patternId, source) {
+        const values = { op: systemEventTypes.operations.reloadPattern, patternId };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             source,
         })
             .mergeValues(values)
-            .mergeData({ title: 'Run Reset Pattern' })
+            .mergeData({ title: 'Run Reload Pattern' })
             .build();
     }
     // request to shutdown
@@ -95,7 +96,7 @@ export class SystemEvents {
             type: eventTypes.control.dataControl.type,
             source,
         })
-            .mergeTasks({ name: 'storePattern', op: 'create', params: { type: 'PatternModel', values: pattern } })
+            .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: 'PatternModel', values: pattern } })
             .mergeData({ title: `Store Pattern ${pattern.name}` })
             .build();
     }
@@ -104,7 +105,7 @@ export class SystemEvents {
             type: eventTypes.control.dataControl.type,
             source,
         })
-            .mergeTasks({ name: 'findPattern', op: 'findOne', params: { type: 'PatternModel', matcher: { id: patternId } } })
+            .mergeTasks({ name: 'findPattern', op: Spec.GET_ONE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } })
             .mergeData({ title: 'Find Pattern' })
             .build();
     }
@@ -115,7 +116,7 @@ export class SystemEvents {
         })
             .mergeTasks({
             name: 'updatePattern',
-            op: 'update',
+            op: Spec.UPDATE_OP,
             params: {
                 type: 'PatternModel',
                 matcher: { id: patternId },
@@ -131,7 +132,7 @@ export class SystemEvents {
             source,
         })
             .mergeTasks([
-            { name: 'deletePattern', op: 'delete', params: { type: 'PatternModel', matcher: { id: patternId } } },
+            { name: 'deletePattern', op: Spec.DELETE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } },
         ])
             .mergeData({ title: 'Delete Pattern' })
             .build();

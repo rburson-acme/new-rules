@@ -10,9 +10,6 @@ export interface SystemEventThredInputValues extends SystemEventInputValues {
 export interface GetThredsArgs extends SystemEventInputValues {
     readonly thredIds?: string[] | undefined;
 }
-export interface ResetPatternArgs extends SystemEventInputValues {
-    readonly patternId: string;
-}
 export interface ReloadPatternArgs extends SystemEventInputValues {
     readonly patternId: string;
 }
@@ -49,7 +46,7 @@ export declare class SystemEvents {
      *        |___/
      */
     static getGetThredsEvent(source: Event['source']): Event;
-    static getResetPatternEvent(patternId: string, source: Event['source']): Event;
+    static getReloadPatternEvent(patternId: string, source: Event['source']): Event;
     static getShutdownEvent(delay: number, source: Event['source']): Event;
     static getTerminateAllThredsEvent(source: Event['source']): Event;
     /***

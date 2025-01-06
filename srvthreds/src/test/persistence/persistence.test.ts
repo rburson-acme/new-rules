@@ -11,17 +11,17 @@ describe('persistence', function () {
   });
   // objects
   test('simple save', async function () {
-    await persistence.create({ type: testObjType, values: testObj1 });
+    await persistence.put({ type: testObjType, values: testObj1 });
   });
   test('save should fail becuase of dup id', async function () {
     try {
-      await persistence.create({ type: testObjType, values: testObj1 });
+      await persistence.put({ type: testObjType, values: testObj1 });
     } catch (e) {
       expect(e).toBeTruthy();
     }
   });
   test('simple find', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -35,7 +35,7 @@ describe('persistence', function () {
     });
   });
   test('find updated value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -49,7 +49,7 @@ describe('persistence', function () {
     });
   });
   test('find replaced value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -59,7 +59,7 @@ describe('persistence', function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
   });
   test('shouldnt find deleted value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -73,7 +73,7 @@ describe('persistence', function () {
     });
   });
   test('find replaced value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -90,7 +90,7 @@ describe('persistence', function () {
     });
   });
   test('find upsert value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -104,7 +104,7 @@ describe('persistence', function () {
     });
   });
   test('find upsert value', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { id: testObjId },
     });
@@ -123,17 +123,17 @@ describe('persistence', function () {
         testNumeric: i,
       });
     }
-    await persistence.create({ type: testObjType, values: docs });
+    await persistence.put({ type: testObjType, values: docs });
   });
   test('find gte', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { testNumeric: { $gte: 50 } },
     });
     expect(obj.id).toBe(`TEST_ID_50`);
   });
   test('find many gte', async function () {
-    const obj = await persistence.find({
+    const obj = await persistence.get({
       type: testObjType,
       matcher: { testNumeric: { $gte: 50 } },
     });
@@ -141,7 +141,7 @@ describe('persistence', function () {
     expect(obj.length).toBe(50);
   });
   test('find many no match', async function () {
-    const obj = await persistence.find({
+    const obj = await persistence.get({
       type: testObjType,
       matcher: { testNumeric: { $gte: 100 } },
     });
@@ -149,7 +149,7 @@ describe('persistence', function () {
     expect(obj.length).toBe(0);
   });
   test('find many lt', async function () {
-    const obj = await persistence.find({
+    const obj = await persistence.get({
       type: testObjType,
       matcher: { testNumeric: { $lt: 10 } },
     });
@@ -157,14 +157,14 @@ describe('persistence', function () {
     expect(obj.length).toBe(10);
   });
   test('find or', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { $or: [{ testNumeric: 200 }, { testNumeric: 50 }] },
     });
     expect(obj.id).toBe(`TEST_ID_50`);
   });
   test('find many or', async function () {
-    const obj = await persistence.find({
+    const obj = await persistence.get({
       type: testObjType,
       matcher: { $or: [{ testNumeric: 10 }, { testNumeric: 50 }] },
     });
@@ -172,14 +172,14 @@ describe('persistence', function () {
     expect(obj.length).toBe(2);
   });
   test('find in', async function () {
-    const obj = await persistence.findOne({
+    const obj = await persistence.getOne({
       type: testObjType,
       matcher: { testArray: { $in: ['testarrayitem10'] } },
     });
     expect(obj.id).toBe(`TEST_ID_10`);
   });
   test('find many in', async function () {
-    const obj = await persistence.find({
+    const obj = await persistence.get({
       type: testObjType,
       matcher: {
         $or: [

@@ -2,7 +2,6 @@ import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { Persistence, Query } from '../Persistence.js';
 import { MongoSpec } from './MongoSpec.js';
 import { Persistent } from '../../thredlib/persistence/Persistent.js';
-import { response } from 'express';
 
 /*
   @TODO - have database itself generate created and modfied timestamps.  may require use of aggregation pipeline
@@ -36,15 +35,15 @@ export class MongoPersistence implements Persistence {
     return this.client?.close();
   }
 
-  async create(query: Query, options?: any): Promise<string | string[]> {
-    if (Array.isArray(query.values)) return this.createAll(query, options);
+  async put(query: Query, options?: any): Promise<string | string[]> {
+    if (Array.isArray(query.values)) return this.putAll(query, options);
     if (!query.values) throw Error(`No values specified for query`);
     const mappedValues = MongoSpec.mapInputValues(query.values);
     const result = await this.getCollection(query.type).insertOne(mappedValues);
     return result.insertedId.toString();
   }
 
-  private async createAll(query: Query, options?: any): Promise<string[]> {
+  private async putAll(query: Query, options?: any): Promise<string[]> {
     const inputArray = Array.isArray(query.values)
       ? query.values
       : [query.values];
@@ -57,14 +56,14 @@ export class MongoPersistence implements Persistence {
     return ids;
   }
 
-  async findOne<T>(query: Query, options?: any): Promise<Persistent & T> {
+  async getOne<T>(query: Query, options?: any): Promise<Persistent & T> {
     if (!query.matcher) query.matcher = {};
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const result = await this.getCollection(query.type).findOne(mappedMatcher);
     return result ? MongoSpec.mapOutputValues(result) : null;
   }
 
-  async find<T>(query: Query, options?: any): Promise<(Persistent & T)[]> {
+  async get<T>(query: Query, options?: any): Promise<(Persistent & T)[]> {
     if (!query.matcher) query.matcher = {};
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const result = await this.getCollection(query.type)

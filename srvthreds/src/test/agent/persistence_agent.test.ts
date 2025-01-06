@@ -5,6 +5,7 @@ import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
+import { Spec } from '../../ts/thredlib/provider/Spec.js';
 
 StaticAgentConfig.agentConfig = agentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -191,7 +192,7 @@ const baseBldr = EventBuilder.create({ type: 'org.wt.tell', source: { id: 'SYSTE
 // fork the base builder and merge the tasks and data for the store object event
 const storeObjectEvent = baseBldr
   .fork()
-  .mergeTasks({ name: 'storeObject', op: 'create', params: { type: 'ObjectModel', values: testObject } })
+  .mergeTasks({ name: 'storeObject', op: Spec.PUT_OP, params: { type: 'ObjectModel', values: testObject } })
   .mergeData({ title: 'Store Object' })
   .build();
 
@@ -200,7 +201,7 @@ const storeObjectEvent = baseBldr
 // the results will be structured in the same way (see the tests that use this event)
 const findObjectEvent = baseBldr
   .fork()
-  .mergeTasks([{ name: 'findObject', op: 'findOne', params: { type: 'ObjectModel', matcher: { id: 'object_test' } } }])
+  .mergeTasks([{ name: 'findObject', op: Spec.GET_ONE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } }])
   .mergeData({ title: 'Find Object' })
   .build();
 
@@ -208,7 +209,7 @@ const updateObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'updateObject',
-    op: 'update',
+    op: Spec.UPDATE_OP,
     params: {
       type: 'ObjectModel',
       matcher: { id: 'object_test' },
@@ -222,7 +223,7 @@ const upsertObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'upsertObject',
-    op: 'upsert',
+    op: Spec.UPSERT_OP,
     params: {
       type: 'ObjectModel',
       matcher: { id: 'replacement_test' },
@@ -236,7 +237,7 @@ const findReplacementObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'findReplacementObject',
-    op: 'findOne',
+    op: Spec.GET_ONE_OP,
     params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } },
   })
   .mergeData({ title: 'Find Object' })
@@ -246,8 +247,8 @@ const findReplacementObjectEvent = baseBldr
 const deleteObjectsEvent = baseBldr
   .fork()
   .mergeTasks([
-    { name: 'deleteObjects', op: 'delete', params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
-    { name: 'deleteObjects', op: 'delete', params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } } },
+    { name: 'deleteObjects', op: Spec.DELETE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
+    { name: 'deleteObjects', op: Spec.DELETE_OP, params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } } },
   ])
   .mergeData({ title: 'Delete Objects' })
   .build();
@@ -256,7 +257,7 @@ const findObjectsEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'findObjects',
-    op: 'find',
+    op: Spec.GET_OP,
     params: { type: 'ObjectModel', matcher: { id: { $in: ['object_test', 'replacement_test'] } } },
   })
   .mergeData({ title: 'Find Object' })

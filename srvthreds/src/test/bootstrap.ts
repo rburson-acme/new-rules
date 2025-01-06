@@ -2,7 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { PersistenceManager } from '../ts/engine/persistence/PersistenceManager';
-import { Series } from '../ts/thredlib';
+import { Logger, LoggerLevel, Series } from '../ts/thredlib';
+import { ConfigLoader } from '../ts/config/ConfigLoader';
+import { StorageFactory } from '../ts/storage/StorageFactory';
+import { PersistenceFactory } from '../ts/persistence/PersistenceFactory';
+
+Logger.setLevel(LoggerLevel.DEBUG);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,18 +26,32 @@ function loadPatterns(directory: string): any[] {
   return patterns;
 }
 
-async function insertPatterns(patterns: any[]): Promise<void> {
+async function persistPatterns(patterns: any[]): Promise<void> {
   await Series.forEach(patterns, async (pattern) => {
     return PersistenceManager.get().upsertPattern(pattern);
   });
 }
 
+async function loadPatternsIntoStorage() {
+  await ConfigLoader.loadStorageFromPersistence(PersistenceManager.get(), StorageFactory.getStorage());
+}
+
+//@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)
+
 async function run() {
+  Logger.info('  > Clearing database and storage...')
+  await PersistenceFactory.removeDatabase();
+  await StorageFactory.purgeAll();
+  Logger.info('  > Loading patterns into database...');
   await PersistenceManager.get().connect();
   const relativeDirectory = path.join(__dirname, '../ts/config/patterns');
   const patterns = loadPatterns(relativeDirectory);
-  await insertPatterns(patterns);
+  await persistPatterns(patterns);
+  Logger.info('  > Loading patterns into storage...');
+  await loadPatternsIntoStorage();
+  await StorageFactory.getStorage().disconnect();
   await PersistenceManager.get().disconnect();
+  Logger.info('  > Done!');
 }
 
 await run();

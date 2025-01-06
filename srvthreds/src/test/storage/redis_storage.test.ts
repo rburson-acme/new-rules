@@ -11,7 +11,7 @@ describe('redis storage', function () {
   });
   // objects
   test('save', function () {
-    return storage.save(testObjType, testObj1, testObjId);
+    return storage.save(testObjType, testObj1, testObjId, testMeta1);
   });
   test('exists', async function () {
     const result = await storage.exists(testObjType, testObjId);
@@ -155,6 +155,7 @@ describe('redis storage', function () {
 const testObjId = 'TEST_ID';
 const testObjId2 = 'TEST_ID_2';
 const testObjType = 'TestType';
+const testMeta1 = { timestamp: 'now' };
 const testObj1 = { testkey: 'testvalue' };
 const testObj2 = { testkey2: 'testvalue2' };
 const setId = 'TEST_SET_ID';

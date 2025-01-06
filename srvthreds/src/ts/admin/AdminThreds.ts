@@ -20,11 +20,12 @@ export class AdminThreds extends Threds {
   }
 
     async initialize(): Promise<void> {
+      await super.initialize();
       return this.persistenceAdapter.initialize();
     }
 
   async consider(event: Event): Promise<void> {
-    if (AdminService.isSystemEvent(event)) {
+    if (AdminService.isAdminEvent(event)) {
       const _event = { ...event, thredId: Id.getNextThredId(ThredId.SYSTEM) };
       let values: EventValues['values'] | undefined;
       try {

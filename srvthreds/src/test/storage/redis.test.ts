@@ -7,13 +7,7 @@ Logger.setLevel(LoggerLevel.INFO);
 
 describe('redis storage', function () {
   beforeAll(async () => {
-    client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-      },
-    });
+    client = await newRedisClient();
     client.on('error', function (error) {
       Logger.error(error);
     });
@@ -24,7 +18,6 @@ describe('redis storage', function () {
       Logger.info('Reconnecting...');
     });
     client.on('end', function () {});
-    await client.flushdb();
     /*
         Adjust retryCount and retry delay upwards if too many clients are failing to aquire the same locked object
     */
@@ -39,8 +32,19 @@ describe('redis storage', function () {
       retryJitter: 200, // time in ms
     });
     redlock.on('clientError', function (err) {
-      
+      Logger.error('A redis error has occurred:', err);
     });
+    await client.flushdb();
+
+    /*
+    const subClient = await newRedisClient();
+    subClient.config('SET', 'notify-keyspace-events', 'K$');
+    await subClient.psubscribe('__key*__:*');
+    subClient.on(`pmessage`, (_pattern, redisKey, redisOpeation) => {
+      console.log(`there was an operation on ${redisKey}: ${redisOpeation}`);
+    });
+    */
+
   });
   test('save and claim w/ quick release', async function () {
     const id = testObjId;
@@ -63,16 +67,29 @@ describe('redis storage', function () {
     const data = JSON.stringify(item);
     multi.set(id, data);
     await multi.exec();
-    await expect(redlock.release(lock, {
-      retryCount: 3,
-    })).rejects.toBeTruthy();
+    await expect(
+      redlock.release(lock, {
+        retryCount: 3,
+      }),
+    ).rejects.toBeTruthy();
     delete locks[id];
   });
   afterAll(async () => {
-      await client.flushdb();
-      await client.quit().then((resp) => undefined);
+    await client.flushdb();
+    await client.quit().then((resp) => undefined);
   });
 });
+
+const newRedisClient = async () => {
+    const client = new Redis({
+      // This is the default value of `retryStrategy`
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    });
+    return client;
+}
 
 let client: Redis;
 let redlock: Redlock;

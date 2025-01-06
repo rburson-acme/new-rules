@@ -22,6 +22,7 @@ export class RedisStorage implements Storage {
     // see https://www.awsarchitectureblog.com/2015/03/backoff.html
     retryJitter: 200, // time in ms
   };
+  private DATAKEY = 'data';
 
   private client: Redis;
   private redlock: Redlock;
@@ -43,7 +44,7 @@ export class RedisStorage implements Storage {
       /* Logger.info('Ready'); */
     });
     this.client.on('reconnecting', function () {
-      Logger.info('Reconnecting...');
+      Logger.info('Redis reconnecting...');
     });
     this.client.on('end', function () {});
     /*
@@ -79,16 +80,17 @@ export class RedisStorage implements Storage {
     );
   }
 
-
   /*
         Save and add the id to the type index
     */
-  async save(type: string, item: any, id: string): Promise<void> {
+  async save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     try {
       const multi = this.client.multi();
       const data = JSON.stringify(item);
-      multi.set($key(type, id), data);
+      //multi.set($key(type, id), data);
+      const fields = { [this.DATAKEY]: data, ...meta };
+      multi.hset($key(type, id), fields);
       this.addToIndex(type, id, multi);
       await multi.exec().then(this.checkMultiResult);
     } catch (e) {
@@ -97,14 +99,17 @@ export class RedisStorage implements Storage {
   }
 
   /*
-        Get all objects of type
+        Get all objects of type for given ids
     */
   retrieveAll(type: string, ids: string[]): Promise<any[]> {
-    const targets = ids.map((id) => $key(type, id));
+    //const targets = ids.map((id) => $key(type, id));
     try {
-      return this.client
+      /*return this.client
         .mget(...targets)
-        .then((resp) => resp.map((jsonStr) => (jsonStr ? JSON.parse(jsonStr) : undefined)));
+        .then((resp) => resp.map((jsonStr) => (jsonStr ? JSON.parse(jsonStr) : undefined)));*/
+      return Series.map(ids, (id) =>
+        this.client.hget($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined)),
+      );
     } catch (e) {
       return Promise.reject(e);
     }
@@ -116,7 +121,30 @@ export class RedisStorage implements Storage {
   retrieve(type: string, id: string): Promise<any> {
     // Logger.info(`Retrieving ${type}:${id}`);
     try {
-      return this.client.get($key(type, id)).then((resp) => (resp ? JSON.parse(resp) : undefined));
+      //return this.client.get($key(type, id)).then((resp) => (resp ? JSON.parse(resp) : undefined));
+      return this.client.hget($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  /*
+        Get a single meta value associated with the object
+    */
+  getMetaValue(type: string, id: string, key: string): Promise<string | null> {
+    try {
+      return this.client.hget($key(type, id), key);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  /*
+        Set a single meta value and associate with the object
+    */
+  async setMetaValue(type: string, id: string, key: string, value: string | number | Buffer): Promise<void> {
+    try {
+      await this.client.hset($key(type, id), key, value);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -214,14 +242,13 @@ export class RedisStorage implements Storage {
       throw e;
     }
   }
- 
+
   /*
     Remove all keys from the database
   */
   async purgeAll(): Promise<void> {
     await this.client.flushdb();
   }
-
 
   // ****************** Manual lock operations ******************
   // ****************** Be careful with these *******************
@@ -244,29 +271,29 @@ export class RedisStorage implements Storage {
   /*
         save() with unlock
     */
-  async saveAndRelease(lock: LockWrapper, type: string, item: any, id: string): Promise<void> {
+  async saveAndRelease(lock: LockWrapper, type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
     const key = $key(type, id);
-    await this.save(type, item, id);
+    await this.save(type, item, id, meta);
     await this._release(lock.lock);
   }
 
   async release(lock: Lock): Promise<void> {
-      this._release(lock.lock);
+    this._release(lock.lock);
   }
- 
- async _release(lock: RLock): Promise<void> {
+
+  async _release(lock: RLock): Promise<void> {
     await this.redlock.release(lock, { retryCount: 1 });
   }
 
   /*
         save() with lock
     */
-  async saveAndClaim(type: string, item: any, id: string, ttl?: number): Promise<{ lock: Lock }> {
+  async saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<{ lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      await this.save(type, item, id);
-      return { lock: { lock }};
+      await this.save(type, item, id, meta);
+      return { lock: { lock } };
     } catch (e) {
       await this._release(lock);
       throw e;
@@ -330,10 +357,8 @@ export class RedisStorage implements Storage {
       throw e;
     }
   }
-  
+
   // ****************** End manual lock operations ******************
-
-
 
   private addToIndex(type: string, id: string, client: ChainableCommander): ChainableCommander {
     this.client.sadd($key(type, indexId), id);

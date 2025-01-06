@@ -1,46 +1,48 @@
-import { errorCodes, errorKeys, Logger, Parallel, Series, StringMap } from '../thredlib/index.js';
-import { PatternModel } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Message } from '../thredlib/index.js';
-import { Pattern } from './Pattern.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
 import { EventStore } from './store/EventStore.js';
 import { PatternsStore } from './store/PatternsStore.js';
 import { EventQ } from '../queue/EventQ.js';
 import { StorageFactory } from '../storage/StorageFactory.js';
-import { RunConfig, Config } from './Config.js';
+import { RunConfig } from './Config.js';
 import { QMessage } from '../queue/QService.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
 import { Dispatcher } from './Dispatcher.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
-import { PersistenceManager } from './persistence/PersistenceManager.js';
 
 export class Engine implements Dispatcher {
   dispatchers: (((message: Message) => Promise<void>) | ((message: Message) => void))[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
 
-  constructor(readonly inboundQ: EventQ, readonly PROC?: {shutdown: (delay: number) => Promise<void>}) {
+  constructor(
+    readonly inboundQ: EventQ,
+    // process handle
+    readonly PROC?: { shutdown: (delay: number) => Promise<void> },
+  ) {
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new EventStore(), new PatternsStore(storage), storage);
     // this can be determined by config so that we can run 'Admin' nodes seperately
-    // this.threds = new Threds(this.thredsStore, this); 
+    // this.threds = new Threds(this.thredsStore, this);
     this.threds = new AdminThreds(this.thredsStore, this);
   }
 
   public async start(config?: RunConfig) {
-    // config can override patterns
-    const patternModels = config?.patternModels || await PersistenceManager.get().getAllPatterns();
-    const patterns = patternModels.map((patternModel: PatternModel) => new Pattern(patternModel));
-    this.thredsStore.patternsStore.addPatterns(patterns);
+    if(config?.patternModels) {
+      await this.thredsStore.patternsStore.addPatterns(config.patternModels);
+    } else {
+      await this.thredsStore.patternsStore.loadPatterns();
+    }
     await this.threds.initialize();
     this.run();
   }
 
   public async shutdown(delay: number = 0): Promise<void> {
-    return this.PROC?.shutdown(delay); 
+    return this.PROC?.shutdown(delay);
   }
 
   // @TODO Messages should also be routed to archival service here for failover and latent delivery
