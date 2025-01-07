@@ -1,6 +1,7 @@
 import { Persistence } from '../../persistence/Persistence';
 import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors';
+import { Spec } from '../../thredlib/provider/Spec';
 import { Adapter } from '../adapter/Adapter';
 
 export class PersistenceAdapter implements Adapter {
@@ -36,23 +37,23 @@ export class PersistenceAdapter implements Adapter {
     if (!params) return;
     const { type, matcher, values, selector } = params;
     switch (op) {
-      case 'create':
-        return this.persistence.create({ type, values });
-      case 'findOne':
-        return this.persistence.findOne({ type, matcher, selector });
-      case 'find':
-        return this.persistence.find({ type, matcher });
-      case 'update':
+      case Spec.PUT_OP:
+        return this.persistence.put({ type, values });
+      case Spec.GET_ONE_OP:
+        return this.persistence.getOne({ type, matcher, selector });
+      case Spec.GET_OP:
+        return this.persistence.get({ type, matcher });
+      case Spec.UPDATE_OP:
         return this.persistence.update({ type, matcher, values });
-      case 'upsert':
+      case Spec.UPSERT_OP:
         return this.persistence.upsert({ type, matcher, values });
-      case 'replace':
+      case Spec.REPLACE_OP:
         return this.persistence.replace({ type, matcher, values });
-      case 'delete':
+      case Spec.DELETE_OP:
         return this.persistence.delete({ type, matcher });
-      case 'count':
+      case Spec.COUNT_OP:
         return this.persistence.count({ type, matcher });
-      case 'run':
+      case Spec.RUN_OP: 
         return this.persistence.run(values);
       default:
         throw new Error(`Unsupported task operation: ${task.op}`);

@@ -1,3 +1,4 @@
+import { Provider } from "../provider/Provider";
 import { Persistent } from "../thredlib/persistence/Persistent";
 
 export interface Query {
@@ -7,29 +8,11 @@ export interface Query {
     values?: Record<string, any> | any[];
 }
 
-export interface Persistence {
+export interface Persistence extends Provider {
 
-    create(query: Query, options?: any): Promise<string | string[]>;
-
-    findOne<T>(query: Query, options?: any): Promise<Persistent & T>;
+    getOne<T>(query: Query, options?: any): Promise<Persistent & T>;
     
-    find<T>(query: Query, options?: any): Promise<(Persistent & T)[]>;
-
-    update(query: Query, options?: any): Promise<void>;
-
-    upsert(query: Query, options?: any): Promise<void>;
-    
-    replace(query: Query, options?: any): Promise<void>;
-
-    delete(query: Query, options?: any): Promise<void>;
-
-    count(query: Query, options?: any): Promise<number>;
-
-    run(params: any): Promise<any>;
-
-    connect(): Promise<void>;
-
-    disconnect(): Promise<void>;
+    get<T>(query: Query, options?: any): Promise<(Persistent & T)[]>;
 
     removeDatabase(): Promise<void>;
 

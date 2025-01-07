@@ -1,47 +1,30 @@
+import { PatternModel } from "../../thredlib/index.js";
 import { Pattern } from "../Pattern.js";
 
 export class PatternStore {
 
-    constructor(readonly pattern: Pattern, private _numThreds: number = 0, private _lastThredStart: number = 0) {}
+    static TIMESTAMP_KEY = 'ts';
+    readonly pattern: Pattern;
 
-    incNumThreds() {
-        return this._numThreds++;
+    constructor(readonly patternModel: PatternModel, readonly timestamp: number) {
+        this.pattern = new Pattern(patternModel);
     }
 
-    decNumThreds() {
-        if(this._numThreds > 0) {
-            this._numThreds--;
-        }
-    }
-
-    get numThreds() {
-        return this._numThreds;
-    }
-
-    get lastThredStart() {
-        return this._lastThredStart;
-    }
-
-    set lastThredStart(lastThredStart: number) {
-        this._lastThredStart =lastThredStart;
+    isStale(newTimestamp: number): boolean {
+        return this.timestamp < newTimestamp;
     }
 
     getState(): PatternStoreState {
-        return {
-            numThreds: this.numThreds,
-            lastThredStart: this.lastThredStart
-        }
+        return { patternModel: this.patternModel, timestamp: this.timestamp };
     }
 
-    fromState(state: PatternStoreState): PatternStore {
-        this._numThreds = state.numThreds;
-        this._lastThredStart = state.lastThredStart;
-        return this;
+    static fromState(state: PatternStoreState): PatternStore {
+        return new PatternStore(state.patternModel, state.timestamp);   
     }
 
 }
 
 interface PatternStoreState {
-    numThreds: number;
-    lastThredStart: number;
+    patternModel: PatternModel,
+    timestamp: number;
 }

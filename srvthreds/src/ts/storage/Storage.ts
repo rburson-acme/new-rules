@@ -5,9 +5,11 @@ export interface Storage {
   */
   aquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]>;
 
-  save(type: string, item: any, id: string): Promise<void>;
+  save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void>;
   retrieveAll(type: string, ids: string[]): Promise<any[]>;
   retrieve(type: string, id: string): Promise<any>;
+  getMetaValue(type: string, id: string, key: string): Promise<string | null>;
+  setMetaValue(type: string, id: string, key: string, value: string | number | Buffer): Promise<void>;
   delete(type: string, id: string): Promise<void>;
   retrieveSet(type: string, setId: string): Promise<string[]>;
   deleteSet(type: string, setId: string): Promise<void>;
@@ -27,13 +29,13 @@ export interface Storage {
   /*
      save() with unlock
     */
-  saveAndRelease(lock: Lock, type: string, item: any, id: string): Promise<void>;
+  saveAndRelease(lock: Lock, type: string, item: any, id: string, meta?: Record<string, string>): Promise<void>;
 
   release(lock: Lock): Promise<void>;
   /*
      save() with lock
     */
-  saveAndClaim(type: string, item: any, id: string, ttl?: number): Promise<{ lock: Lock }>;
+  saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<{ lock: Lock }>;
   claimAndDelete(type: string, id: string, ttl?: number): Promise<void>;
   /* 
      extend the lock

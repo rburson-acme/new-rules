@@ -23,6 +23,14 @@ export class LocalStorage implements Storage {
     throw new Error('Method not implemented');
   }
 
+  getMetaValue(type: string, id: string, key: string): Promise<string | null> {
+    throw new Error('Method not implemented');
+  }
+
+  setMetaValue(type: string, id: string, key: string, value: string | number | Buffer): Promise<void> {
+    throw new Error('Method not implemented');
+  }
+
   /*
      retrieve() with a lock
      this is a local mock implementation that does not lock objects
@@ -54,7 +62,8 @@ export class LocalStorage implements Storage {
      this is a local mock implementation that does not lock objects
      With a RemoteStorage implementation, objects could be locked and we'd be notified when they are released
     */
-  saveAndRelease(lock: Lock, type: string, item: any, id: string): Promise<void> {
+  saveAndRelease(lock: Lock, type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
+    if(meta) throw new Error('Meta not yet implemented');
     try {
       const data = JSON.stringify(item);
       fs.writeFileSync(`tmp/${type}_${id}.json`, data);
@@ -73,7 +82,8 @@ export class LocalStorage implements Storage {
      this is a local mock implementation that does not lock objects
      With a RemoteStorage implementation, objects could be locked and we'd be notified when they are released
     */
-  saveAndClaim(type: string, item: any, id: string): Promise<Lock> {
+  saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<Lock> {
+    if(meta) throw new Error('Meta not yet implemented');
     try {
       const data = JSON.stringify(item);
       fs.writeFileSync(`tmp/${type}_${id}.json`, data);
@@ -95,8 +105,9 @@ export class LocalStorage implements Storage {
     throw new Error('Method not implemented');
   }
 
-  save(type: string, item: any, id: string): Promise<void> {
+  save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
+    if(meta) throw new Error('Meta not yet implemented');
     return new Promise((resolve, reject) => {
       try {
         const data = JSON.stringify(item);

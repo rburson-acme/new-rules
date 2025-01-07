@@ -36,6 +36,7 @@ StaticAgentConfig.agentConfig = agentConfig;
 import path from 'node:path';
 import url from 'node:url';
 import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
+import { ConfigLoader } from './ts/config/ConfigLoader.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,15 +96,6 @@ app.post('/sms', (req: Request, res: Response) => {
     */
 });
 
-/*
-httpServer.listen(443, function () {
-    Logger.info('listening on *:443');
-});
-*/
-
-httpServer.listen(3000, function () {
-  Logger.info('listening on *:3000');
-});
 
 /************End Web Server ************************/
 
@@ -144,7 +136,11 @@ class ServiceManager {
     // @TODO separate service
     //  setup the engine server
     const engineServer = new Server(engineEventQ, engineMessageQ, sessions, { shutdown: this.shutdown.bind(this) });
+
+    // uncomment for manual testing
     //await engineServer.start({ patternModels });
+
+    // comment this out for manual testing
     await engineServer.start();
 
     // set up the remote Qs for the session service agent
@@ -225,7 +221,7 @@ class ServiceManager {
 }
 
 const serviceManager = new ServiceManager();
-serviceManager.startServices();
+await serviceManager.startServices();
 
 process.on('SIGINT', function onSigint() {
   Logger.info('Got SIGINT (aka ctrl-c ). Waiting for shutdown...', new Date().toISOString());
@@ -236,4 +232,14 @@ process.on('SIGINT', function onSigint() {
 process.on('SIGTERM', function onSigterm() {
   Logger.info('Got SIGTERM (docker container stop). Graceful shutdown ', new Date().toISOString());
   serviceManager.shutdown();
+});
+
+/*
+httpServer.listen(443, function () {
+    Logger.info('listening on *:443');
+});
+*/
+
+httpServer.listen(3000, function () {
+  Logger.info('listening on *:3000');
 });

@@ -4,6 +4,7 @@ export const adminTestSource = { id: 'admin1', name: 'Admin User' };
 
 export const adminTestPatternModels: PatternModel[] = [
   {
+    meta: { active: true }, 
     name: 'System Test',
     id: 'systemTest',
     instanceInterval: 0,

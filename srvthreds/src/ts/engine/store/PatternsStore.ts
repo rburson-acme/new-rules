@@ -1,119 +1,129 @@
 import { Pattern } from '../Pattern.js';
 import { PatternStore } from './PatternStore.js';
-import { Lock, Storage, Types } from '../../storage/Storage.js';
-import { Logger } from '../../thredlib/index.js';
+import { indexId, Lock, Storage, Types } from '../../storage/Storage.js';
+import { Logger, PatternModel, Persistent, Series } from '../../thredlib/index.js';
 
 // Pattern locking is handled here and should be contained to this class
+// this class works directly with the memory cache and does not interact with the persistence layer
 
 export class PatternsStore {
   private patternStores: { [patternId: string]: PatternStore } = {};
 
   constructor(readonly storage: Storage) {}
 
-  addPatterns(patterns: Pattern[]): void {
-    patterns.forEach(pattern => {
-     this.patternStores[pattern.id] = new PatternStore(pattern);
-     Logger.info(`Added Pattern: ${pattern.id} : ${pattern.name}`);
+  // load all patterns that are already cached in storage
+  async loadPatterns(): Promise<void> {
+    const patternIds = await this.storage.retrieveSet(Types.Pattern, indexId);
+    await Series.forEach(patternIds, async (patternId) => {
+      await this.loadPattern(patternId);
     });
   }
 
+  // add patterns to store and cache them in storage
+  async addPatterns(patternModels: PatternModel[]): Promise<void> {
+    await Series.forEach(patternModels, async (patternModel) => {
+      const patternStore = new PatternStore(patternModel, patternModel.modified?.getTime() || new Date().getTime());
+      const patternId = patternStore.pattern.id;
+      this.patternStores[patternId] = patternStore;
+      await this.storePattern(patternStore, this.storage);
+      Logger.info(`Added Pattern: ${patternModel.id} : ${patternModel.name}`);
+    });
+  }
+
+  /*
+      Check the timestamp of the pattern against the timestamp in storage and reload if stale
+    */
+  async staleCheck(patternId: string): Promise<void> {
+    const patternStore = this.patternStore(patternId);
+    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY);
+    const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
+    if (patternStore.isStale(timestamp)) {
+      await this.loadPattern(patternId);
+    }
+  }
+
+  async loadPattern(patternId: string): Promise<void> {
+    await this.withLock(patternId, async () => {
+      await this.lock_loadPatternStore(patternId);
+    });
+  }
+
+  async storePatternModel(patternModel: PatternModel): Promise<void> {
+    const patternStore = new PatternStore(patternModel, patternModel.modified?.getTime() || new Date().getTime());
+    await this.storePattern(patternStore, this.storage);
+  }
+
+  async storePattern(patternStore: PatternStore, storage: Storage): Promise<void> {
+    await this.withLock(patternStore.pattern.id, async () => {
+      await this.lock_storePatternStore(patternStore, storage);
+    });
+  }
+
+  // gets a currently loaded pattern
   getPattern(patternId: string): Pattern {
     return this.patternStores[patternId]?.pattern;
   }
 
+  // get a currently loaded pattern store
   patternStore(patternId: string): PatternStore {
     return this.patternStores[patternId];
   }
 
+  // gets all currently loaded patterns
   get patterns(): Pattern[] {
     return Object.values(this.patternStores).map((patternStore) => patternStore.pattern);
   }
 
   /*
-    @Deprecated
+      aquire a lock on the given pattern and execute the operation, returning it's result
+      lock is released at the end of the operation
   */
-  get numThreds(): number {
-    return Object.values(this.patternStores).reduce((total, patternStore) => total + patternStore.numThreds, 0);
+  async withLock(patternId: string, op: () => Promise<any>, ttl?: number): Promise<any> {
+    return await this.storage.aquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
   }
 
-  async thredStarted(patternId: string, lastStartTime: number): Promise<void> {
-    await this.storage.aquire(
-      [{ type: Types.Pattern, id: patternId }],
-      [
-        async () => {
-          let patternStore;
-          try {
-            patternStore = await this.retrievePatternStore(patternId);
-            patternStore.incNumThreds();
-            patternStore.lastThredStart = lastStartTime;
-            await this.savePatternStore(patternId);
-          } catch (e) {
-            patternStore?.decNumThreds();
-            throw new Error(`Could not start thred for patternId ${patternId}`, { cause: e });
-          }
-        },
-      ],
-    );
-  }
-
-  async thredEnded(patternId: string): Promise<void> {
-    await this.storage.aquire(
-      [{ type: Types.Pattern, id: patternId }],
-      [
-        async () => {
-          let patternStore;
-          try {
-            patternStore = await this.retrievePatternStore(patternId);
-            patternStore.decNumThreds();
-            if (patternStore?.numThreds === 0) {
-              await this._resetPatternStore(patternId);
-            } else {
-              await this.savePatternStore(patternId);
-            }
-          } catch (e) {
-            patternStore?.incNumThreds(); 
-            throw new Error(`Could not end thred for patternId ${patternId}`, { cause: e });
-          }
-        },
-      ],
-    );
-  }
-
-  async resetPatternStore(patternId: string): Promise<void> {
+  // unload a pattern store
+  async unloadPatternStore(patternId: string): Promise<void> {
     this.storage.aquire(
       [{ type: Types.Pattern, id: patternId }],
       [
         async () => {
           try {
-            await this._resetPatternStore(patternId);
+            await this.lock_unloadPatternStore(patternId);
           } catch (e) {
-            throw new Error(`Could not reset pattern store for patternId ${patternId}`, { cause: e });
+            throw new Error(`Could not unload pattern store for patternId ${patternId}`, { cause: e });
           }
         },
       ],
     );
   }
 
-  // Important - callers of most private methods should do so within a locked block
+  // Important - callers of thise methods should do so within a locked block
 
-  private async _resetPatternStore(patternId: string): Promise<void> {
-    const patternStore = this.patternStores[patternId];
+  // requires lock
+  private async lock_unloadPatternStore(patternId: string): Promise<void> {
+    const patternStore = this.patternStore(patternId);
     if (patternStore) {
       await this.storage.delete(Types.Pattern, patternId);
-      this.patternStores[patternId] = patternStore.fromState({ numThreds: 0, lastThredStart: 0 });
     }
+    delete this.patternStores[patternId];
   }
 
-  private async retrievePatternStore(patternId: string): Promise<PatternStore> {
-    const state = await this.storage.retrieve(Types.Pattern, patternId);
-    const patternStore = this.patternStores[patternId];
-    if (!patternStore) throw new Error(`PatternStore for patternId ${patternId} not found`);
-    if (state) this.patternStores[patternId] = patternStore.fromState(state);
-    return patternStore;
+  // requires lock
+  private async lock_loadPatternStore(patternId: string): Promise<PatternStore> {
+    const patternModel = await this.storage.retrieve(Types.Pattern, patternId);
+    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY);
+    const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
+    if (patternModel) this.patternStores[patternId] = PatternStore.fromState({ patternModel, timestamp });
+    Logger.info(`Loaded Pattern: ${patternModel.id} : ${patternModel.name}`);
+    return this.patternStore(patternId);
   }
 
-  private savePatternStore(patternId: string): Promise<void> {
-    const patternStore = this.patternStores[patternId];
-    return this.storage.save(Types.Pattern, patternStore.getState(), patternId);
+  // requires lock
+  private async lock_storePatternStore(patternStore: PatternStore, storage: Storage): Promise<void> {
+    const patternId = patternStore.pattern.id;
+    const { patternModel, timestamp } = patternStore.getState();
+    await storage.save(Types.Pattern, patternModel, patternId);
+    await storage.setMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY, timestamp);
   }
 }

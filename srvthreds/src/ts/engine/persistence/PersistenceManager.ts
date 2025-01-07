@@ -1,6 +1,6 @@
-import { Persistence } from "../../persistence/Persistence";
-import { PersistenceFactory } from "../../persistence/PersistenceFactory";
-import { PatternModel } from "../../thredlib";
+import { Persistence } from '../../persistence/Persistence';
+import { PersistenceFactory } from '../../persistence/PersistenceFactory';
+import { PatternModel } from '../../thredlib';
 
 export class PersistenceManager {
   private static instance: PersistenceManager;
@@ -15,7 +15,7 @@ export class PersistenceManager {
     }
     return PersistenceManager.instance;
   }
-  
+
   async connect() {
     return this.persistence.connect();
   }
@@ -24,17 +24,19 @@ export class PersistenceManager {
     return this.persistence.disconnect();
   }
 
-  async getAllPatterns(): Promise<PatternModel[]> {
-    return this.persistence.find({ type: Types.PatternModel });
+  async getAllActivePatterns(): Promise<PatternModel[]> {
+    return this.persistence.get({ type: Types.PatternModel, matcher: { meta: { active: true } } });
   }
 
   async upsertPattern(pattern: PatternModel): Promise<void> {
     return this.persistence.upsert({ type: Types.PatternModel, matcher: { id: pattern.id }, values: pattern });
   }
 
-
+  async getActivePattern(patternId: string): Promise<PatternModel | undefined> {
+    return this.persistence.getOne({ type: Types.PatternModel, matcher: { id: patternId, meta: { active: true } } });
+  }
 }
 
 export const Types = {
-    PatternModel: 'PatternModel',
-}
+  PatternModel: 'PatternModel',
+};

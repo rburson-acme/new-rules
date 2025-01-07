@@ -18,7 +18,7 @@ import { Config } from './Config.js';
  *                                                       |_|    
  */
 
-const defaultConfigFile = '../config/agent_config.json'
+const defaultConfigPath = '../config/agent_config.json'
 
 class Server  {
 
@@ -59,10 +59,10 @@ const args = yargs(hideBin(process.argv)).usage('$0 [options]')
     .help()
     .alias('help', 'h').parseSync();
 
-const configFile = args.config || defaultConfigFile;
+const configPath = args.config || defaultConfigPath;
 
 const server = new Server();
-server.start(configFile);
+server.start(configPath);
 
 
 

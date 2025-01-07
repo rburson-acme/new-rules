@@ -6,7 +6,8 @@ import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { Dispatcher } from './Dispatcher.js';
-import { PersistenceManager } from './persistence/PersistenceManager.js';
+import { PubSubFactory } from '../pubsub/PubSubFactory.js';
+import { Topics } from '../pubsub/Topics.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
@@ -19,8 +20,11 @@ export class Threds {
   ) {}
 
 
-  // a no-op for the base threds class
-  async initialize(): Promise<void> { }
+  async initialize(): Promise<void> {
+    await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {
+      await this.thredsStore.patternsStore.staleCheck(message.id);
+     });
+  }
 
   // handleAttached and handleDetached are the two main entry point for Thred locking (per thredId)
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation

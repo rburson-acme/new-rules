@@ -1,4 +1,7 @@
 {
+    "meta": {
+        "active": true
+    },
     "name": "Simple Test",
     "id": "simple_test",
     "instanceInterval": 0,

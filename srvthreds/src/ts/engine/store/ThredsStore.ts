@@ -67,14 +67,9 @@ export class ThredsStore {
     return results[0];
   }
 
-  resetPatternStore(patternId: string): Promise<void> {
-    return this.patternsStore.resetPatternStore(patternId);
-  }
-
   get numThreds(): Promise<number> {
     return this.storage.setCount(Types.Thred, indexId);
   }
-  
   
   // no need to lock - read only
   async getAllThredStores(): Promise<ThredStore[]> {
@@ -133,7 +128,6 @@ export class ThredsStore {
 
   // requires lock
   private async addThredStore(thredStore: ThredStore): Promise<void> {
-    await this.patternsStore.thredStarted(thredStore.pattern.id, thredStore.startTime);
     this.thredStores[thredStore.id] = thredStore;
   }
 
@@ -159,13 +153,9 @@ export class ThredsStore {
   }
 
   // requires lock
-  private terminateThred(thredId: string): Promise<void> {
+  private async terminateThred(thredId: string): Promise<void> {
     // @todo archive the context so that the thred could be replayed
     const thredStore = this.thredStores[thredId];
     delete this.thredStores[thredId];
-    return this.patternsStore.thredEnded(thredStore.pattern.id).catch((e) => {
-      Logger.warn(`terminateThred::Failed to update pattern ${thredStore.pattern.id}`);
-      throw e;
-    });
   }
 }

@@ -33,7 +33,6 @@ export const systemEventTypes = {
     operations: {
         transitionThred: "transitionThred",
         terminateThred: "terminateThred",
-        resetPattern: "resetPattern",
         reloadPattern: "reloadPattern",
         getThreds: "getThreds",
         terminateAllThreds: "terminateAllThreds",

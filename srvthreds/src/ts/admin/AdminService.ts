@@ -10,7 +10,7 @@ import {
   TerminateThreadArgs,
   SystemEventThredInputValues,
   GetThredsArgs,
-  TransitionThredArgs, ResetPatternArgs,
+  TransitionThredArgs,
   TerminateAllThredsArgs,
   ShutdownArgs,
   ReloadPatternArgs
@@ -19,6 +19,9 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
 import { Transition } from '../engine/Transition.js';
+import { PersistenceManager } from '../engine/persistence/PersistenceManager.js';
+import { PubSubFactory } from '../pubsub/PubSubFactory.js';
+import { Topics } from '../pubsub/Topics.js';
 
 
 
@@ -44,7 +47,7 @@ export class AdminService {
   constructor(private threds: Threds) {}
 
   //@TODO authenticate sender source (up channel) so this is secure
-  static isSystemEvent(event: Event): boolean {
+  static isAdminEvent(event: Event): boolean {
     return event.type === eventTypes.control.sysControl.type || event.type === eventTypes.control.dataControl.type;
   }
 
@@ -142,22 +145,6 @@ export class AdminService {
     return { status: systemEventTypes.successfulStatus, op, threds: thredStores.map((thredStore) => thredStore.toJSON()) };
   };
 
-
-  resetPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
-    const {
-      event,
-      args: { op, patternId },
-    } = this.getArgs<ResetPatternArgs>(args);
-    if(!patternId) {
-      throw EventThrowable.get(
-        `No patternId supplied for resetPattern operation on System`,
-        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      );
-    }
-    await this.threds.thredsStore.resetPatternStore(patternId);
-    return { status: systemEventTypes.successfulStatus, op, patternId };
-  };
-
   reloadPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
@@ -169,7 +156,16 @@ export class AdminService {
         errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
       );
     }
-    await this.threds.thredsStore.reloadPatternStore(patternId);
+    const patternModel = await PersistenceManager.get().getActivePattern(patternId);
+    if (!patternModel) {
+      throw EventThrowable.get(
+        `Pattern ${patternId} not found or NOT ACTIVE for reloadPattern operation on System`,
+        errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
+      );
+    }
+
+    await this.threds.thredsStore.patternsStore.storePatternModel(patternModel);
+    await PubSubFactory.getPubSub().publish(Topics.PatternChanged, { id: patternId });
     return { status: systemEventTypes.successfulStatus, op, patternId };
   };
 
@@ -213,7 +209,6 @@ export class AdminService {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,
     [systemEventTypes.operations.getThreds]: this.getThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,
-    [systemEventTypes.operations.resetPattern]: this.resetPattern,
     [systemEventTypes.operations.reloadPattern]: this.reloadPattern,
     [systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,
     [systemEventTypes.operations.shutdown]: this.shutdown,
