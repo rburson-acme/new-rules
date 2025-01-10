@@ -94,7 +94,7 @@ export const DEFAULT_EVENT_JSON_STRING = JSON.stringify(
                 content: [
                   {
                     input: {
-                      name: 'favorite_color',
+                      name: 'favorite_foods',
                       type: 'nominal',
                       display: 'Pick two foods you like.',
                       set: [
