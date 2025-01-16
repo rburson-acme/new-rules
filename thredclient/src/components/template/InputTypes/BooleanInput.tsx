@@ -1,8 +1,8 @@
 import { InteractionStore } from '@/src/stores/InteractionStore';
-import { Button } from '../../Button';
 import { StyleSheet, View } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { BooleanInputSetItem } from './InputType';
+import { Button } from '../../common/Button';
 
 type BooleanInputProps = {
   name: string;

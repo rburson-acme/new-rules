@@ -1,7 +1,7 @@
 import { InteractionStore } from '@/src/stores/InteractionStore';
 import { BooleanInput } from './BooleanInput';
 import { TextInput } from './TextInput';
-import { TextBubble } from '../../TextBubble';
+import { TextBubble } from '../../common/TextBubble';
 import { observer } from 'mobx-react-lite';
 import { NominalInput } from './NominalInput';
 

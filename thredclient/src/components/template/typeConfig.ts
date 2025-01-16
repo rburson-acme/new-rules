@@ -5,4 +5,6 @@ export const typeConfig = {
   input: { attrsToTransform: [] },
   image: { attrsToTransform: [] },
   text: { attrsToTransform: [] },
+  video: { attrsToTransform: [] },
+  map: { attrsToTransform: [] },
 };

@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# to run this demo:
-# make sure the client has the correct server address specified (currently in ThredsStore.ts)
-# make sure the server has is running the correct patterns and uncomment the temporary admin delivery lines (search for @DEMO)
-# start the new rules server and the expo server (npx expo start)
-./demoLaunchAndroid
-./demoLaunchChrome
