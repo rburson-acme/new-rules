@@ -13,129 +13,104 @@ export const DEFAULT_EVENT_JSON_STRING = JSON.stringify(
         template: {
           name: 'operator_create_workorder',
           interactions: [
-            // {
-            //   interaction: {
-            //     content: [
-            //       {
-            //         input: {
-            //           name: 'technician_response',
-            //           type: 'boolean',
-            //           display: 'Are you available to accept the work order?',
-            //           set: [
-            //             {
-            //               display: 'Yes, I can accept',
-            //               value: true,
-            //             },
-            //             {
-            //               display: 'No, not right now',
-            //               value: false,
-            //             },
-            //           ],
-            //         },
-            //       },
-            //       {
-            //         image: {
-            //           uri: 'https://catalystserverstorage.blob.core.usgovcloudapi.net/public/pathfinder/logo.png',
-            //           height: 100,
-            //           width: 100,
-            //         },
-            //       },
-            //     ],
-            //   },
-            // },
-            // {
-            //   interaction: {
-            //     content: [
-            //       {
-            //         input: {
-            //           name: 'operator_response',
-            //           type: 'text',
-            //           display: 'What materials do you need for this work order?',
-            //         },
-            //       },
-            //     ],
-            //   },
-            // },
-            // {
-            //   interaction: {
-            //     content: [
-            //       {
-            //         input: {
-            //           name: 'how_many',
-            //           type: 'numeric',
-            //           display: 'How many workers will be needed for this work order?',
-            //         },
-            //       },
-            //     ],
-            //   },
-            // },
-            // {
-            //   interaction: {
-            //     content: [
-            //       {
-            //         input: {
-            //           name: 'favorite_color',
-            //           type: 'nominal',
-            //           display: 'What is your favorite color?',
-            //           set: [
-            //             { display: 'Red', value: 'red' },
-            //             { display: 'Blue', value: 'blue' },
-            //             { display: 'Green', value: 'green' },
-            //             { display: 'Purple', value: 'purple' },
-            //             { display: 'Orange', value: 'orange' },
-            //           ],
-            //         },
-            //       },
-            //     ],
-            //   },
-            // },
-            // {
-            //   interaction: {
-            //     content: [
-            //       {
-            //         input: {
-            //           name: 'favorite_foods',
-            //           type: 'nominal',
-            //           display: 'Pick two foods you like.',
-            //           set: [
-            //             { display: 'Pizza', value: 'pizza' },
-            //             { display: 'Tacos', value: 'tacos' },
-            //             { display: 'Burgers', value: 'burgers' },
-            //             { display: 'Pasta', value: 'pasta' },
-            //             { display: 'Salad', value: 'salad' },
-            //           ],
-            //           multiple: true,
-            //         },
-            //       },
-            //     ],
-            //   },
-            // },
             {
               interaction: {
                 content: [
                   {
-                    text: { value: 'Work order submitted. Thank you for your response.' },
-                  },
-                  {
-                    map: {
-                      locations: [
-                        { name: 'Salem, OH', latitude: 40.901382086654635, longitude: -80.8565825442029 },
+                    input: {
+                      name: 'technician_response',
+                      type: 'boolean',
+                      display: 'Are you available to accept the work order?',
+                      set: [
                         {
-                          name: 'Salem School District',
-                          latitude: 40.90765006218226,
-                          longitude: -80.84298043062863,
+                          display: 'Yes, I can accept',
+                          value: true,
+                        },
+                        {
+                          display: 'No, not right now',
+                          value: false,
                         },
                       ],
                     },
                   },
                   {
-                    video: {
-                      uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    image: {
+                      uri: 'https://catalystserverstorage.blob.core.usgovcloudapi.net/public/pathfinder/logo.png',
+                      height: 100,
+                      width: 100,
                     },
                   },
                 ],
               },
             },
+            {
+              interaction: {
+                content: [
+                  {
+                    input: {
+                      name: 'operator_response',
+                      type: 'text',
+                      display: 'What materials do you need for this work order?',
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              interaction: {
+                content: [
+                  {
+                    input: {
+                      name: 'how_many',
+                      type: 'numeric',
+                      display: 'How many workers will be needed for this work order?',
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              interaction: {
+                content: [
+                  {
+                    input: {
+                      name: 'favorite_color',
+                      type: 'nominal',
+                      display: 'What is your favorite color?',
+                      set: [
+                        { display: 'Red', value: 'red' },
+                        { display: 'Blue', value: 'blue' },
+                        { display: 'Green', value: 'green' },
+                        { display: 'Purple', value: 'purple' },
+                        { display: 'Orange', value: 'orange' },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              interaction: {
+                content: [
+                  {
+                    input: {
+                      name: 'favorite_foods',
+                      type: 'nominal',
+                      display: 'Pick two foods you like.',
+                      set: [
+                        { display: 'Pizza', value: 'pizza' },
+                        { display: 'Tacos', value: 'tacos' },
+                        { display: 'Burgers', value: 'burgers' },
+                        { display: 'Pasta', value: 'pasta' },
+                        { display: 'Salad', value: 'salad' },
+                      ],
+                      multiple: true,
+                    },
+                  },
+                ],
+              },
+            },
+            { interaction: { content: [{ text: { value: 'Work order submitted. Thank you for your response.' } }] } },
           ],
         },
       },

@@ -1,12 +1,30 @@
-import { ElementModel } from './ElementModel.js';
-export declare enum InputType {
-    CONSTANT = "constant",
-    NOMINAL = "nominal",
-    ORDINAL = "ordinal",
-    BOOLEAN = "boolean"
-}
-export interface InputModel extends ElementModel {
+export interface BooleanInput {
     name: string;
-    type: InputType;
+    type: "boolean";
+    display: string;
+    set: {
+        display: string;
+        value: boolean;
+    }[];
+}
+export interface NumericInput {
+    name: string;
+    type: "numeric";
     display: string;
 }
+export interface TextInput {
+    name: string;
+    type: "text";
+    display: string;
+}
+export interface NominalInput {
+    name: string;
+    type: "nominal";
+    display: string;
+    set: {
+        display: string;
+        value: string;
+    }[];
+    multiple?: boolean;
+}
+export type InputModel = BooleanInput | NumericInput | TextInput | NominalInput;
