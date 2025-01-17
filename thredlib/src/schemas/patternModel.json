@@ -420,10 +420,16 @@
       "additionalProperties": false,
       "properties": {
         "latitude": {
-          "type": "number"
+          "type": [
+            "number",
+            "string"
+          ]
         },
         "longitude": {
-          "type": "number"
+          "type": [
+            "number",
+            "string"
+          ]
         },
         "name": {
           "type": "string"
@@ -550,8 +556,6 @@
       },
       "required": [
         "name",
-        "instanceInterval",
-        "maxInstances",
         "reactions"
       ],
       "type": "object"
@@ -608,6 +612,19 @@
     "ReactionModel": {
       "additionalProperties": false,
       "properties": {
+        "allowedSources": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
         "condition": {
           "anyOf": [
             {
