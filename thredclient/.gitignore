@@ -36,4 +36,16 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# vscode
+.vscode/
+*.code-workspace
+
+#misc
+*.log
+*.tmp
+*.bak
+.expo/
+.history/
+
+
 app-example
