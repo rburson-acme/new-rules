@@ -2,6 +2,68 @@
   "$ref": "#/definitions/Event",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "BooleanInput": {
+      "additionalProperties": false,
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "set": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "display": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "display",
+              "value"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "boolean",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "display",
+        "set"
+      ],
+      "type": "object"
+    },
+    "ElementModel": {
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/ImageModel"
+        },
+        "input": {
+          "$ref": "#/definitions/InputModel"
+        },
+        "map": {
+          "$ref": "#/definitions/MapModel"
+        },
+        "text": {
+          "$ref": "#/definitions/TextModel"
+        },
+        "video": {
+          "$ref": "#/definitions/VideoModel"
+        }
+      },
+      "type": "object"
+    },
     "Event": {
       "additionalProperties": false,
       "properties": {
@@ -204,6 +266,26 @@
       ],
       "type": "object"
     },
+    "ImageModel": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "type": "number"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "uri",
+        "height",
+        "width"
+      ],
+      "type": "object"
+    },
     "InlineItem": {
       "additionalProperties": false,
       "properties": {
@@ -221,6 +303,146 @@
         "contentType",
         "encoding",
         "content"
+      ],
+      "type": "object"
+    },
+    "InputModel": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/BooleanInput"
+        },
+        {
+          "$ref": "#/definitions/NumericInput"
+        },
+        {
+          "$ref": "#/definitions/TextInput"
+        },
+        {
+          "$ref": "#/definitions/NominalInput"
+        }
+      ]
+    },
+    "InteractionModel": {
+      "additionalProperties": false,
+      "properties": {
+        "interaction": {
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "items": {
+                "$ref": "#/definitions/ElementModel"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "interaction"
+      ],
+      "type": "object"
+    },
+    "MapLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "latitude",
+        "longitude"
+      ],
+      "type": "object"
+    },
+    "MapModel": {
+      "additionalProperties": false,
+      "properties": {
+        "locations": {
+          "items": {
+            "$ref": "#/definitions/MapLocation"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "locations"
+      ],
+      "type": "object"
+    },
+    "NominalInput": {
+      "additionalProperties": false,
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "multiple": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "set": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "display": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "display",
+              "value"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "nominal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "display",
+        "set"
+      ],
+      "type": "object"
+    },
+    "NumericInput": {
+      "additionalProperties": false,
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "numeric",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "display"
       ],
       "type": "object"
     },
@@ -247,7 +469,9 @@
           "type": "string"
         },
         "interactions": {
-          "items": {},
+          "items": {
+            "$ref": "#/definitions/InteractionModel"
+          },
           "type": "array"
         },
         "name": {
@@ -257,6 +481,51 @@
       "required": [
         "name",
         "interactions"
+      ],
+      "type": "object"
+    },
+    "TextInput": {
+      "additionalProperties": false,
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "display"
+      ],
+      "type": "object"
+    },
+    "TextModel": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "VideoModel": {
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
       ],
       "type": "object"
     }

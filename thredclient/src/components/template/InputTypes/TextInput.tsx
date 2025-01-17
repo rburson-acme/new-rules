@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 
 import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { TextInput as RNTextInput } from '../../TextInput';
-import { Button } from '../../Button';
+import { TextInput as RNTextInput } from '../../common/TextInput';
+import { Button } from '../../common/Button';
 
 type TextInputProps = {
   name: string;

@@ -110,6 +110,29 @@ export const DEFAULT_EVENT_JSON_STRING = JSON.stringify(
                 ],
               },
             },
+            {
+              interaction: {
+                content: [
+                  {
+                    map: {
+                      locations: [
+                        { name: 'Salem, OH', latitude: 40.901382086654635, longitude: -80.8565825442029 },
+                        {
+                          name: 'Salem School District',
+                          latitude: 40.90765006218226,
+                          longitude: -80.84298043062863,
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    video: {
+                      uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    },
+                  },
+                ],
+              },
+            },
             { interaction: { content: [{ text: { value: 'Work order submitted. Thank you for your response.' } }] } },
           ],
         },

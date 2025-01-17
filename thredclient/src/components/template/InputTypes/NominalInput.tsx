@@ -3,9 +3,10 @@ import { Set, SetItem } from './InputType';
 import { InteractionStore } from '@/src/stores/InteractionStore';
 import { createRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button } from '../../Button';
-import { MultiSelect } from '../../MultiSelect';
-import { Dropdown } from '../../Dropdown';
+import { Dropdown } from '../../common/Dropdown';
+import { Button } from '../../common/Button';
+import { MultiSelect } from '../../common/MultiSelect';
+import React from 'react';
 
 type NominalInputProps = {
   name: string;

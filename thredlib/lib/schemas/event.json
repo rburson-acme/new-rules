@@ -1,31 +1,190 @@
 {
+    "$ref": "#/definitions/Event",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "properties": {
-        "data": {
+    "definitions": {
+        "BooleanInput": {
+            "additionalProperties": false,
+            "properties": {
+                "display": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "set": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "display": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "display",
+                            "value"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "type": {
+                    "const": "boolean",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "type",
+                "display",
+                "set"
+            ],
+            "type": "object"
+        },
+        "ElementModel": {
+            "additionalProperties": false,
+            "properties": {
+                "image": {
+                    "$ref": "#/definitions/ImageModel"
+                },
+                "input": {
+                    "$ref": "#/definitions/InputModel"
+                },
+                "map": {
+                    "$ref": "#/definitions/MapModel"
+                },
+                "text": {
+                    "$ref": "#/definitions/TextModel"
+                },
+                "video": {
+                    "$ref": "#/definitions/VideoModel"
+                }
+            },
+            "type": "object"
+        },
+        "Event": {
+            "additionalProperties": false,
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/EventData"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "re": {
+                    "type": "string"
+                },
+                "source": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "uri": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id"
+                    ],
+                    "type": "object"
+                },
+                "thredId": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "source"
+            ],
+            "type": "object"
+        },
+        "EventContent": {
+            "additionalProperties": false,
+            "properties": {
+                "error": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "cause": {},
+                        "code": {
+                            "type": "number"
+                        },
+                        "message": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "message"
+                    ],
+                    "type": "object"
+                },
+                "items": {
+                    "items": {
+                        "$ref": "#/definitions/InlineItem"
+                    },
+                    "type": "array"
+                },
+                "resources": {
+                    "items": {
+                        "$ref": "#/definitions/Resource"
+                    },
+                    "type": "array"
+                },
+                "tasks": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/EventTask"
+                            },
+                            {
+                                "items": {
+                                    "$ref": "#/definitions/EventTask"
+                                },
+                                "type": "array"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "values": {
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "EventData": {
+            "additionalProperties": false,
             "properties": {
                 "advice": {
+                    "additionalProperties": false,
                     "properties": {
                         "eventType": {
                             "type": "string"
                         },
                         "template": {
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "interactions": {
-                                    "items": {},
-                                    "type": "array"
-                                },
-                                "name": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "interactions",
-                                "name"
-                            ],
-                            "type": "object"
+                            "$ref": "#/definitions/TemplateModel"
                         },
                         "title": {
                             "type": "string"
@@ -37,201 +196,13 @@
                     "type": "object"
                 },
                 "content": {
-                    "allOf": [
-                        {
-                            "properties": {
-                                "values": {
-                                    "anyOf": [
-                                        {
-                                            "items": {
-                                                "type": "object"
-                                            },
-                                            "type": "array"
-                                        },
-                                        {
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "properties": {
-                                "tasks": {
-                                    "items": {
-                                        "anyOf": [
-                                            {
-                                                "properties": {
-                                                    "name": {
-                                                        "type": "string"
-                                                    },
-                                                    "op": {
-                                                        "type": "string"
-                                                    },
-                                                    "params": {
-                                                        "properties": {
-                                                            "matcher": {
-                                                                "type": "object"
-                                                            },
-                                                            "selector": {
-                                                                "type": "object"
-                                                            },
-                                                            "type": {
-                                                                "type": "string"
-                                                            },
-                                                            "values": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "items": {},
-                                                                        "type": "array"
-                                                                    },
-                                                                    {
-                                                                        "type": "object"
-                                                                    }
-                                                                ]
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "type"
-                                                        ],
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "op"
-                                                ],
-                                                "type": "object"
-                                            },
-                                            {
-                                                "items": {
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "op": {
-                                                            "type": "string"
-                                                        },
-                                                        "params": {
-                                                            "properties": {
-                                                                "matcher": {
-                                                                    "type": "object"
-                                                                },
-                                                                "selector": {
-                                                                    "type": "object"
-                                                                },
-                                                                "type": {
-                                                                    "type": "string"
-                                                                },
-                                                                "values": {
-                                                                    "anyOf": [
-                                                                        {
-                                                                            "items": {},
-                                                                            "type": "array"
-                                                                        },
-                                                                        {
-                                                                            "type": "object"
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "type"
-                                                            ],
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "op"
-                                                    ],
-                                                    "type": "object"
-                                                },
-                                                "type": "array"
-                                            }
-                                        ]
-                                    },
-                                    "type": "array"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "properties": {
-                                "resources": {
-                                    "items": {
-                                        "properties": {
-                                            "contentType": {
-                                                "type": "string"
-                                            },
-                                            "uri": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "required": [
-                                            "contentType",
-                                            "uri"
-                                        ],
-                                        "type": "object"
-                                    },
-                                    "type": "array"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "properties": {
-                                "items": {
-                                    "items": {
-                                        "properties": {
-                                            "content": {
-                                                "type": "string"
-                                            },
-                                            "contentType": {
-                                                "type": "string"
-                                            },
-                                            "encoding": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "required": [
-                                            "content",
-                                            "contentType",
-                                            "encoding"
-                                        ],
-                                        "type": "object"
-                                    },
-                                    "type": "array"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "properties": {
-                                "error": {
-                                    "properties": {
-                                        "cause": {},
-                                        "code": {
-                                            "type": "number"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "code",
-                                        "message"
-                                    ],
-                                    "type": "object"
-                                }
-                            },
-                            "type": "object"
-                        }
-                    ]
+                    "$ref": "#/definitions/EventContent"
                 },
                 "description": {
                     "type": "string"
                 },
                 "display": {
+                    "additionalProperties": false,
                     "properties": {
                         "uri": {
                             "type": "string"
@@ -248,18 +219,237 @@
             },
             "type": "object"
         },
-        "id": {
-            "type": "string"
-        },
-        "re": {
-            "type": "string"
-        },
-        "source": {
+        "EventTask": {
+            "additionalProperties": false,
             "properties": {
-                "id": {
+                "name": {
+                    "type": "string"
+                },
+                "op": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/EventTaskParams"
+                }
+            },
+            "required": [
+                "op"
+            ],
+            "type": "object"
+        },
+        "EventTaskParams": {
+            "additionalProperties": false,
+            "properties": {
+                "matcher": {
+                    "type": "object"
+                },
+                "selector": {
+                    "type": "object"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "values": {
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "items": {},
+                            "type": "array"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "ImageModel": {
+            "additionalProperties": false,
+            "properties": {
+                "height": {
+                    "type": "number"
+                },
+                "uri": {
+                    "type": "string"
+                },
+                "width": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "uri",
+                "height",
+                "width"
+            ],
+            "type": "object"
+        },
+        "InlineItem": {
+            "additionalProperties": false,
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "encoding": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "contentType",
+                "encoding",
+                "content"
+            ],
+            "type": "object"
+        },
+        "InputModel": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/BooleanInput"
+                },
+                {
+                    "$ref": "#/definitions/NumericInput"
+                },
+                {
+                    "$ref": "#/definitions/TextInput"
+                },
+                {
+                    "$ref": "#/definitions/NominalInput"
+                }
+            ]
+        },
+        "InteractionModel": {
+            "additionalProperties": false,
+            "properties": {
+                "interaction": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "content": {
+                            "items": {
+                                "$ref": "#/definitions/ElementModel"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "content"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "interaction"
+            ],
+            "type": "object"
+        },
+        "MapLocation": {
+            "additionalProperties": false,
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "latitude",
+                "longitude"
+            ],
+            "type": "object"
+        },
+        "MapModel": {
+            "additionalProperties": false,
+            "properties": {
+                "locations": {
+                    "items": {
+                        "$ref": "#/definitions/MapLocation"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "locations"
+            ],
+            "type": "object"
+        },
+        "NominalInput": {
+            "additionalProperties": false,
+            "properties": {
+                "display": {
+                    "type": "string"
+                },
+                "multiple": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "set": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "display": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "display",
+                            "value"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "type": {
+                    "const": "nominal",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "type",
+                "display",
+                "set"
+            ],
+            "type": "object"
+        },
+        "NumericInput": {
+            "additionalProperties": false,
+            "properties": {
+                "display": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "const": "numeric",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "type",
+                "display"
+            ],
+            "type": "object"
+        },
+        "Resource": {
+            "additionalProperties": false,
+            "properties": {
+                "contentType": {
                     "type": "string"
                 },
                 "uri": {
@@ -267,24 +457,77 @@
                 }
             },
             "required": [
-                "id"
+                "contentType",
+                "uri"
             ],
             "type": "object"
         },
-        "thredId": {
-            "type": "string"
+        "TemplateModel": {
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "interactions": {
+                    "items": {
+                        "$ref": "#/definitions/InteractionModel"
+                    },
+                    "type": "array"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "interactions"
+            ],
+            "type": "object"
         },
-        "time": {
-            "type": "number"
+        "TextInput": {
+            "additionalProperties": false,
+            "properties": {
+                "display": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "const": "text",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "type",
+                "display"
+            ],
+            "type": "object"
         },
-        "type": {
-            "type": "string"
+        "TextModel": {
+            "additionalProperties": false,
+            "properties": {
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "type": "object"
+        },
+        "VideoModel": {
+            "additionalProperties": false,
+            "properties": {
+                "uri": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "uri"
+            ],
+            "type": "object"
         }
-    },
-    "required": [
-        "id",
-        "source",
-        "type"
-    ],
-    "type": "object"
+    }
 }

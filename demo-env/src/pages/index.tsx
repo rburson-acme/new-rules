@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from 'next/font/google';
-import { MapProvider } from '@/providers/MapsProvider';
 import Link from 'next/link';
 import { PinIcon } from '@/components/icons/PinIcon';
 import { BeakerIcon } from '@/components/icons/BeakerIcon';

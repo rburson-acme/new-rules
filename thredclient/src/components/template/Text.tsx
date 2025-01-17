@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, StyleSheet, TextStyle, ViewProps } from 'react-native';
-import { TextBubble } from '@/src/components/TextBubble';
+import { TextBubble } from '@/src/components/common/TextBubble';
 
 type TextProps = {
   value: string;

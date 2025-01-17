@@ -12,11 +12,11 @@ export type MessengerDrawerParamList = {
   Devtools: {};
 };
 export type ModuleStackParamList = {
-  ModuleListLayout: {};
-  Module: { name: ModuleNames };
+  ModuleList: {};
+  Modules: { name: ModuleNames };
 };
 
 export type DevtoolStackParamList = {
-  DevtoolListLayout: {};
-  Devtool: { name: DevtoolNames };
+  DevtoolList: {};
+  Devtools: { name: DevtoolNames };
 };
