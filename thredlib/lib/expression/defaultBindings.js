@@ -10,7 +10,7 @@ export const defaultBindings = (params) => {
     const getAdvice = () => Events.getAdvice(event);
     const getContent = () => Events.getContent(event);
     const getValues = () => Events.getValues(event);
-    const valueNamed = (name) => Events.valueNamed(event, name);
+    const valueNamed = (name, _event) => Events.valueNamed(_event || event, name);
     // to use these in an expression:
     // $event, $data, $advice, $content, $values, $valueNamed('name'), $local('name'), $setLocal('name', value)
     return {

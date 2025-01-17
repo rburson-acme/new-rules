@@ -14,7 +14,7 @@ export const patternModel: PatternModel = {
         type: 'filter',
         xpr: "$event.type = 'org.wt.sensor.detectionEvent'",
         onTrue: {
-          xpr: "$setLocal('sensorId', $valueNamed('sensorId'))",
+          xpr: "$setLocal('sensorEvent', $event)",
         },
         transform: {
           eventDataTemplate: {
@@ -52,8 +52,7 @@ export const patternModel: PatternModel = {
         transform: {
           eventDataTemplate: {
             title: 'Possible UAV Detected',
-            description:
-              "$xpr( $local('sensorId') & ' has detected a possible UAV')",
+            description: "$xpr( $local('sensorId') & ' has detected a possible UAV')",
             advice: {
               eventType: 'org.wt.client.tell',
               template: {
@@ -63,28 +62,12 @@ export const patternModel: PatternModel = {
                     interaction: {
                       content: [
                         {
-                          input: {
-                            name: 'uav_response',
-                            type: 'boolean',
-                            display: 'Would you like to see a live video feed of the area?',
-                          },
-                        },
-                        {
-                          group: {
-                            items: [
+                          map: {
+                            locations: [
                               {
-                                value: {
-                                  forInput: 'uav_response',
-                                  display: 'Yes, show me video',
-                                  set: [true],
-                                },
-                              },
-                              {
-                                value: {
-                                  forInput: 'uav_response',
-                                  display: "No video",
-                                  set: [false],
-                                },
+                                name: 'detection_location',
+                                latitude: "$xpr( $valueNamed('latitude', $local('sensorEvent') ) )",
+                                longitude: "$xpr( $valueNamed('longitude', $local('sensorEvent') ) )",
                               },
                             ],
                           },

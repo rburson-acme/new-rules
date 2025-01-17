@@ -13,6 +13,7 @@ export class MongoPersistence implements Persistence {
   private static defaultDb = 'nr';
 
   private client: MongoClient;
+  private dbs: Record<string, Db> = {};
   private db?: Db;
 
   constructor(
