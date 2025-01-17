@@ -3,6 +3,7 @@ import { StringMap, Logger, EventManager, Event } from 'thredlib';
 import { RootStore } from './rootStore';
 import { ThredStore } from './ThredStore';
 import { Thred } from '../core/Thred';
+import { Platform } from 'react-native';
 
 export class ThredsStore {
   thredStores: StringMap<ThredStore> = {};
@@ -19,7 +20,6 @@ export class ThredsStore {
       numThreds: computed,
       currentThredStore: computed,
     });
-
     this.eventManager = new EventManager();
     this.eventManager.subscribe(this.consume);
   }
@@ -45,11 +45,13 @@ export class ThredsStore {
   }
 
   consume = (event: Event) => {
+    console.log('consuming event');
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     if (!this.thredStores[thredId]) {
       this.addThred({ id: thredId, name: thredId });
     }
+    console.log('adding event to current thred');
     this.thredStores[thredId].addEvent(event);
   };
 
@@ -58,13 +60,23 @@ export class ThredsStore {
   }
 
   // @todo build seperate authentication using threds/events
-  connect(userId: string) {
-    this.eventManager
-      .connect('http://10.0.2.2:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
+  async connect(userId: string) {
+    let url: string;
+
+    if (Platform.OS === 'web') {
+      url = 'localhost:3000';
+    } else {
+      url = 'http://10.0.2.2:3000';
+    }
+
+    await this.eventManager
+      .connect(url, { transports: ['websocket'], jsonp: false, auth: { token: userId } })
       //this.engine.connect('http://proximl.com:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
       .catch(e => {
         Logger.error(e);
       })
-      .then(() => {});
+      .then(() => {
+        console.log('connected');
+      });
   }
 }

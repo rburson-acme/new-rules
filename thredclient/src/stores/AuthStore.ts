@@ -1,12 +1,11 @@
 import { observable, action, makeObservable } from 'mobx';
-import { RootStore } from './rootStore';
 
 export class AuthStore {
   userId?: string = undefined;
   name?: string = undefined;
   role?: 'admin' | 'user' = undefined; //  This is temporary to determine which flow to use
 
-  constructor(readonly rootStore: RootStore) {
+  constructor() {
     makeObservable(this, {
       userId: observable,
       role: observable,

@@ -2,22 +2,23 @@ import React from 'react';
 import { View, TextInput, Text, Image, StyleSheet } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { Button } from '@/src/components/Button';
-import rootStore from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/rootStore';
 
 const logo = require('../../../assets/workthreds_logo.png');
 
 export const LoginScreen = observer(() => {
-  const { authStore, thredsStore } = rootStore;
-  const handleMessengerView = () => {
+  const { authStore, thredsStore } = RootStore.get();
+  const handleMessengerView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('user');
-    thredsStore.connect(authStore.userId);
+    await thredsStore.connect(authStore.userId);
   };
-  const handleAdminView = () => {
+  const handleAdminView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
-    thredsStore.connect(authStore.userId);
+    await thredsStore.connect(authStore.userId);
   };
+
   return (
     <View style={styles.container}>
       <Image source={logo} style={styles.logoStyle} />

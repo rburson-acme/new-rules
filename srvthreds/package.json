@@ -16,7 +16,8 @@
     "copy": "copyfiles -u 1 ./src/web/* ./src/web/**/* ./dist-server",
     "copy-configfiles": "copyfiles -u 2 ./src/ts/**/config/** ./dist-server",
     "clean": "rimraf dist-server",
-    "test": "npx vitest --run --bail=1 --no-file-parallelism"
+    "test": "npx vitest --run --bail=1 --no-file-parallelism",
+    "generate-schemas": "cd .. ;cd thredlib ; npm run generate-event ; npm run generate-pattern"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

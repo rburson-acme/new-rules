@@ -19,6 +19,7 @@ export * from './lib/types.js';
 export * from './lib/lib.js';
 export * from './lib/Logger.js';
 export * from './lib/StringMap.js';
+export * from './lib/Validator.js';
 export * from './machine/Machine.js';
 export * from './machine/MachineContext.js';
 export * from './machine/State.js';

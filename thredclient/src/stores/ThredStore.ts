@@ -1,8 +1,8 @@
 import { observable, makeObservable } from 'mobx';
-import { EventsStore } from './EventsStore';
 import { Event } from 'thredlib';
 import { RootStore } from './rootStore';
 import { Thred } from '../core/Thred';
+import { EventsStore } from './EventsStore';
 
 export class ThredStore {
   eventsStore?: EventsStore = undefined;

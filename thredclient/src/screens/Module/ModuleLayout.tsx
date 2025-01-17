@@ -4,10 +4,11 @@ import { Text } from 'react-native';
 import { InjuryModule } from './components/InjuryModule';
 import { GeoModule } from './components/geolocation/GeoModule';
 import { HealthModule } from './components/health/HealthModule';
+import { RootStore } from '@/src/stores/rootStore';
 
 type ModuleLayoutProps = StackScreenProps<ModuleStackParamList, 'Module'>;
 export const ModuleLayout = ({ route, navigation }: ModuleLayoutProps) => {
-  const { healthModuleStore, geoModuleStore } = route.params.rootStore;
+  const { healthModuleStore, geoModuleStore } = RootStore.get();
 
   switch (route.params.name) {
     case 'Health Information':

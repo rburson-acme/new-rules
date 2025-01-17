@@ -34,10 +34,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    paddingTop: 3,
-    paddingBottom: 3,
-    paddingLeft: 7,
-    paddingRight: 7,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   text: {
     color: '#777',

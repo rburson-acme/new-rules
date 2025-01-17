@@ -14,6 +14,7 @@ export const HealthModule = observer(({ healthModuleStore }: HealthModuleProps) 
     healthModuleStore.initialize();
   }, []);
 
+  // TODO: Check why its spinning.
   const areTherePermissions = healthModuleStore.grantedPermissions.length > 0;
 
   if (!healthModuleStore.hasInitialized) {

@@ -1,0 +1,264 @@
+{
+  "$ref": "#/definitions/Event",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Event": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/EventData"
+        },
+        "id": {
+          "type": "string"
+        },
+        "re": {
+          "type": "string"
+        },
+        "source": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        },
+        "thredId": {
+          "type": "string"
+        },
+        "time": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "source"
+      ],
+      "type": "object"
+    },
+    "EventContent": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "additionalProperties": false,
+          "properties": {
+            "cause": {},
+            "code": {
+              "type": "number"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ],
+          "type": "object"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/definitions/InlineItem"
+          },
+          "type": "array"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/definitions/Resource"
+          },
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/EventTask"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/EventTask"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "EventData": {
+      "additionalProperties": false,
+      "properties": {
+        "advice": {
+          "additionalProperties": false,
+          "properties": {
+            "eventType": {
+              "type": "string"
+            },
+            "template": {
+              "$ref": "#/definitions/TemplateModel"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "eventType"
+          ],
+          "type": "object"
+        },
+        "content": {
+          "$ref": "#/definitions/EventContent"
+        },
+        "description": {
+          "type": "string"
+        },
+        "display": {
+          "additionalProperties": false,
+          "properties": {
+            "uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uri"
+          ],
+          "type": "object"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "EventTask": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/EventTaskParams"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "type": "object"
+    },
+    "EventTaskParams": {
+      "additionalProperties": false,
+      "properties": {
+        "matcher": {
+          "type": "object"
+        },
+        "selector": {
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "InlineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "contentType",
+        "encoding",
+        "content"
+      ],
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "contentType",
+        "uri"
+      ],
+      "type": "object"
+    },
+    "TemplateModel": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "interactions": {
+          "items": {},
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "interactions"
+      ],
+      "type": "object"
+    }
+  }
+}

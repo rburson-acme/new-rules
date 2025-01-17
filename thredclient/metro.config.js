@@ -4,7 +4,7 @@ const path = require('path');
 
 const extraNodeModules = new Proxy(
   {
-    'thredlib': path.resolve(__dirname, '../thredlib'),
+    thredlib: path.resolve(__dirname, '../thredlib'),
   },
   {
     get: (target, name) => {
@@ -16,21 +16,18 @@ const extraNodeModules = new Proxy(
   },
 );
 
-const watchFolders = [
-  path.resolve(__dirname, '../thredlib'),
-];
+const watchFolders = [path.resolve(__dirname, '../thredlib')];
 
-const config ={
+const config = {
   projectRoot: path.resolve(__dirname),
   /*transformer: {
     assetPlugins: ['expo-asset/tools/hashAssetFiles'],
   },*/
   resolver: {
-    extraNodeModules
+    extraNodeModules,
   },
-  watchFolders
+  watchFolders,
 };
-
 
 /**
  * Metro configuration

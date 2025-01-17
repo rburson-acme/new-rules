@@ -1,7 +1,7 @@
 import React from 'react';
-import { Template } from '../template/Template';
 import { RootStore } from '@/src/stores/rootStore';
 import { ThredsStore } from '@/src/stores/ThredsStore';
+import { Template } from '@/src/components/template/Template';
 
 type ContentProps = {
   stores: {
