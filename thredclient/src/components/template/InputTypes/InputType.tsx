@@ -21,6 +21,7 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
 
   if (value) {
     const isValueString = typeof value === 'string';
+    const isValueBoolean = typeof value === 'boolean';
     const isValueStringArray = Array.isArray(value) && value.every(item => typeof item === 'string');
     function getText() {
       if (isValueString) {
@@ -28,6 +29,9 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
       }
       if (isValueStringArray) {
         return value.join(', ');
+      }
+      if (isValueBoolean) {
+        return value ? 'Yes' : 'No';
       } else return 'Invalid String';
     }
     return (
