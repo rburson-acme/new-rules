@@ -1,4 +1,5 @@
 import io from 'socket.io-client';
+import { Logger } from '../lib/Logger.js';
 export class SocketIOConnection {
     url;
     options;
@@ -15,7 +16,7 @@ export class SocketIOConnection {
         return new Promise((resolve, reject) => {
             this.socket = io(this.url, this.options);
             this.socket.on('connect', () => {
-                console.log('connected!');
+                Logger.debug('client connected!');
                 resolve();
             });
             this.socket.on('message', this.onMessage);

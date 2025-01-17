@@ -1,21 +1,21 @@
-import { Logger, LoggerLevel, Event, SMap, EventBuilder } from '../../ts/thredlib/index.js';
-import { Config as StaticAgentConfig } from '../../ts/agent/Config.js';
+import { Logger, LoggerLevel, Event, SMap, EventBuilder, Events } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
-import { Spec } from '../../ts/thredlib/provider/Spec.js';
+import { Spec } from '../../ts/thredlib/task/Spec.js';
+import { AgentConfig } from '../../ts/agent/Config.js';
 
-StaticAgentConfig.agentConfig = agentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
-StaticAgentConfig.agentConfig.agentImpl = PersistenceAgent;
+const persistenceAgentConfig = agentConfig as AgentConfig;
+persistenceAgentConfig.agentImpl = PersistenceAgent;
 
-Logger.setLevel(LoggerLevel.INFO);
+Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('persistence agent test', function () {
   beforeAll(async () => {
-    connMan = await AgentQueueConnectionManager.newAgentInstance(StaticAgentConfig.agentConfig);
+    connMan = await AgentQueueConnectionManager.newAgentInstance(persistenceAgentConfig);
     await connMan.purgeAll();
     agent = connMan.agent;
   });
@@ -25,9 +25,9 @@ describe('persistence agent test', function () {
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
           expect(event.data?.content?.values).toBeTruthy();
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect(event.data?.content?.error).toBeUndefined();
           // should return id as result if successful
-          expect((event.data?.content?.values as SMap).result).contains('object_test');
+          expect(Events.valueNamed(event, 'result')).contains('object_test');
         },
         resolve,
         reject,
@@ -43,8 +43,8 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((event.data?.content?.values as SMap).result[0][0].name).toBe('Object Test');
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect((Events.valueNamed(event, 'result'))[0][0].name).toBe('Object Test');
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -73,8 +73,9 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
+          // update returns undefined
           expect(event.data?.content?.values).toBeTruthy();
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -90,8 +91,8 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((event.data?.content?.values as SMap).result[0][0].testItems[0].name).toBe('first testItem renamed');
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect((Events.valueNamed(event, 'result'))[0][0].testItems[0].name).toBe('first testItem renamed');
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -106,7 +107,7 @@ describe('persistence agent test', function () {
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
           expect(event.data?.content?.values).toBeTruthy();
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -120,8 +121,8 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect((event.data?.content?.values as SMap).result[0].name).toBe('Replacement Object');
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect((Events.valueNamed(event, 'result'))[0].name).toBe('Replacement Object');
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -135,8 +136,8 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect(event.data?.content?.values as SMap).toBeTruthy();
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect(Events.valueNamed(event, 'result')).toBeTruthy();
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -150,8 +151,8 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect((event.data?.content?.values as SMap).result[0].length).toBe(0);
-          expect((event.data?.content?.values as SMap).error).toBeUndefined();
+          expect((Events.valueNamed(event, 'result'))[0].length).toBe(0);
+          expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
         reject,
@@ -197,7 +198,7 @@ const storeObjectEvent = baseBldr
   .build();
 
 // this event is structured as a transaction as an examaple (even though there is only 1 task)
-// notice the nested array structure in the task which denotes a transaction
+// notice the nested array structure in the task (an array is getting merged into the tasks array) which denotes a transaction
 // the results will be structured in the same way (see the tests that use this event)
 const findObjectEvent = baseBldr
   .fork()

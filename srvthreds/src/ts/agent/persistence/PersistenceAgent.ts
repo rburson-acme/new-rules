@@ -20,7 +20,8 @@ export class PersistenceAgent implements MessageHandler {
   constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
     this.eventPublisher = eventPublisher;
-    this.persistence = PersistenceFactory.getPersistence();
+    const dbname = additionalArgs?.dbname || this.agentConfig.customConfig?.dbname;
+    this.persistence = PersistenceFactory.getPersistence(dbname);
     this.adapter = new PersistenceAdapter(this.persistence);
   }
 
@@ -47,3 +48,5 @@ export class PersistenceAgent implements MessageHandler {
     return Promise.resolve();
   }
 }
+
+export default PersistenceAgent;

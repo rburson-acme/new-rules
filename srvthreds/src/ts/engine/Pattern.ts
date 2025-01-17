@@ -11,9 +11,9 @@ export class Pattern {
     readonly id: string;
     readonly name: string;
     // @todo needs impl - time required between creation of new threads 0 for none required
-    readonly instanceInterval: number;
+    readonly instanceInterval?: number;
     // @todo needs impl - number of simultaneous thred instances allowed (0 default no limit)
-    readonly maxInstances: number;
+    readonly maxInstances?: number;
     private readonly reactionModelByName: StringMap<ReactionModel>;
 
     /*

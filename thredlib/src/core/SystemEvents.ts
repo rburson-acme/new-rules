@@ -3,7 +3,7 @@ import { TransitionModel } from '../model/TransitionModel.js';
 import { PatternModel } from '../model/PatternModel.js';
 import { Event, EventTaskParams } from './Event.js';
 import { EventBuilder } from './EventBuilder.js';
-import { Spec } from '../provider/Spec.js';
+import { Spec } from '../task/Spec.js';
 
 export interface SystemEventInputValues {
   readonly op: string;

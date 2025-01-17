@@ -6,6 +6,7 @@ export interface ReactionModel {
     readonly name?: string;
     readonly description?: string;
     readonly condition: ConditionModel | FilterModel;
+    readonly allowedSources?: string[] | string;
     readonly permissions?: PermissionModel;
     readonly expiry?: {
         interval: number;

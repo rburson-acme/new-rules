@@ -142,12 +142,12 @@ export class ThredsStore {
 
   // requires lock
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
-    Logger.debug(`releaseAndTerminateThred::terminating Thred ${thredId}`);
+    Logger.debug(Logger.h2(`releaseAndTerminateThred::terminating Thred ${thredId}`));
     try {
       //If locked, the lock will simply expire
       await this.storage.delete(Types.Thred, thredId);
     } catch (e) {
-      Logger.warn(`releaseAndTerminateThred::Failed to delete Thred ${thredId}`);
+      Logger.warn(Logger.crit(`releaseAndTerminateThred::Failed to delete Thred ${thredId}`));
     }
     return this.terminateThred(thredId);
   }

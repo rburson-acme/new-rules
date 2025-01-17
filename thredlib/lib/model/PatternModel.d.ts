@@ -4,7 +4,7 @@ export interface PatternModel extends Persistent {
     id?: string;
     name: string;
     description?: string;
-    instanceInterval: number;
-    maxInstances: number;
+    instanceInterval?: number;
+    maxInstances?: number;
     reactions: ReactionModel[];
 }

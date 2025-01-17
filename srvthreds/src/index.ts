@@ -17,7 +17,6 @@ import { RemoteQBroker } from './ts/queue/remote/RemoteQBroker.js';
 import { RemoteQService } from './ts/queue/remote/RemoteQService.js';
 import { Agent } from './ts/agent/Agent.js';
 import { Config as StaticEngineConfig } from './ts/engine/Config.js';
-import { Config as StaticAgentConfig } from './ts/agent/Config.js';
 
 import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
 import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
@@ -25,23 +24,23 @@ import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json'
 //import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
-import simpleTestPattern from './ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
-import echoTestPattern from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
-const patternModels: PatternModel[] = [echoTestPattern, simpleTestPattern] as PatternModel[];
+//import patternModel from './ts/config/patterns/uav_detection.pattern.json' with { type:'json' };
+import { patternModel } from './ts/config/patterns/ts/uav_detection_pattern.js';
+//import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
+const patternModels: PatternModel[] = [patternModel] as PatternModel[];
 import engineConfig from './ts/config/engine.json' with { type: 'json' };
 StaticEngineConfig.engineConfig = engineConfig;
-import agentConfig from './ts/config/session_agent.json' with { type: 'json' };
-StaticAgentConfig.agentConfig = agentConfig;
+import sessionAgentConfig from './ts/config/session_agent.json' with { type: 'json' };
+import persistenceAgentConfig from './ts/config/uav_demo/persistence_agent.json' with { type: 'json' };
 
 import path from 'node:path';
 import url from 'node:url';
 import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
 import { ConfigLoader } from './ts/config/ConfigLoader.js';
+import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-Logger.setLevel(LoggerLevel.DEBUG);
 
 /*
 
@@ -109,7 +108,8 @@ app.post('/sms', (req: Request, res: Response) => {
  */
 
 class ServiceManager {
-  agent?: Agent;
+  sessionAgent?: Agent;
+  persistenceAgent?: Agent;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
 
@@ -138,10 +138,10 @@ class ServiceManager {
     const engineServer = new Server(engineEventQ, engineMessageQ, sessions, { shutdown: this.shutdown.bind(this) });
 
     // uncomment for manual testing
-    //await engineServer.start({ patternModels });
+    await engineServer.start({ patternModels });
 
     // comment this out for manual testing
-    await engineServer.start();
+    //await engineServer.start();
 
     // set up the remote Qs for the session service agent
     const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
@@ -153,11 +153,23 @@ class ServiceManager {
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
 
     // create and run a Session Agent
-    this.agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, {
+    this.sessionAgent = new Agent(sessionAgentConfig, sessionEventQ, sessionMessageQ, {
       httpServer,
       sessionsModel,
     });
-    await this.agent.start();
+    await this.sessionAgent.start();
+ 
+    // set up the remote Qs for the persistence agent
+    const persistenceEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const persistenceEventQ: EventQ = new EventQ(persistenceEventService);
+    const persistenceMessageService = await RemoteQService.newInstance<Message>({
+      qBroker,
+      subName: 'sub_persistence_message',
+    });
+
+    const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);
+    this.persistenceAgent = new Agent(persistenceAgentConfig, persistenceEventQ, persistenceMessageQ, { dbname: 'demo'});
+    await this.persistenceAgent.start();
   }
 
   /***
@@ -204,6 +216,8 @@ class ServiceManager {
     await PersistenceManager.get().disconnect();
     Logger.info(`Disconnecting all Storage connections...`);
     await StorageFactory.disconnectAll();
+    Logger.info(`Disconnecting PubSub connections...`);
+    await PubSubFactory.disconnectAll();
     Logger.info(`Disconnecting RemoteQ broker...`);
     // @TODO
     // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
@@ -212,7 +226,7 @@ class ServiceManager {
     await this.engineEventService?.disconnect().catch(Logger.error);
     Logger.info(`RemoteQ Broker disconnected successfully.`);
     Logger.info(`Shutting down session agent...`);
-    await this.agent?.shutdown();
+    await this.sessionAgent?.shutdown();
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Disconnecting Redis storage...`);
     await StorageFactory.disconnectAll();

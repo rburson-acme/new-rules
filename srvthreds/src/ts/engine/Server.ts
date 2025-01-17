@@ -6,6 +6,8 @@ import { Message, Logger, StringMap, Parallel } from '../thredlib/index.js';
 import { Session } from '../sessions/Session.js';
 import { RunConfig } from './Config.js';
 
+const { debug, error, warn, crit, h1, h2 } = Logger;
+
 /**
  * The Server is the main entry point for the engine.
    It starts the engine and binds the tell() method to the engine's dispatchers.
@@ -41,13 +43,21 @@ export class Server {
     try {
       const { sessions } = this;
       const { event, to } = message;
-      Logger.trace(`Engine.tell(): tell: ${to} about`, event);
-
       // -------------------------------------------------------------------
       // ----- Address any messages to Agents
       const addressResolver = sessions.getAddressResolver();
       // seperate service addresses from participant addresses
       const { serviceAddresses, participantAddresses } = addressResolver.filterServiceAddresses(to);
+      // -------------------------------------------------------------------
+      // ----- Address all other messages to participants with a Session
+      // get a map of participantId to Sessions[] for all addressees
+      const sessionsByParticipant: StringMap<Session[]> = await sessions.getSessionsForAll(participantAddresses);
+      // warn if there are not services or participants to receive the message
+      if (!Object.keys(sessionsByParticipant).length && !serviceAddresses.length) {
+        warn(crit(`No participants or services found for address ${to} - dispatchers not called`));
+        return;
+      }
+
       // send messages to agents
       await Parallel.forEach(serviceAddresses, async (address, index) => {
         try {
@@ -55,21 +65,14 @@ export class Server {
           const nodeType = addressResolver.getNodeTypeForServiceAddress(address);
           const id = `${event.id}_agent_${index}`;
           const newMessage: Message = { id, event, to: [address] };
+          debug(h2(`Server.tell(): Message ${id} to Agent ${address}`));
           if (nodeType) await this.outboundQ.queue(newMessage, [nodeType]);
         } catch (e) {
-          Logger.error(`Engine.tell(): Error sending message to Agent service address ${address}`, e);
+          error(crit(`Engine.tell(): Error sending message to Agent service address ${address}`), e);
         }
       });
 
-      // -------------------------------------------------------------------
-      // ----- Address all other messages to participants with a Session
-      // get a map of participantId to Sessions[] for all addressees
-      const sessionsByParticipant: StringMap<Session[]> = await sessions.getSessionsForAll(participantAddresses);
-      if (!Object.keys(sessionsByParticipant).length) {
-        Logger.warn(`No participants are logged in for address ${participantAddresses} - dispatchers not called`);
-        return;
-      }
-
+      // send messages to participants
       // coallate participants by nodeId
       // map of nodeId to Set of participantIds
       // we'll publish 1 message to each node with the corresponding participants
@@ -93,13 +96,14 @@ export class Server {
           // route to specific node id if present (websocket sessions require this)
           // if there's no nodeId, assume any session service can retrieve it
           const topicString = nodeId ? `session.${nodeId}` : 'session';
+          debug(h2(`Server.tell(): Message ${id} to ${participants} via ${topicString}`));
           await this.outboundQ.queue(newMessage, [topicString]);
         } catch (e) {
-          Logger.error(`Engine.tell(): Error sending message to participants with nodeId ${nodeId}`, e);
+          error(crit(`Engine.tell(): Error sending message to participants with nodeId ${nodeId}`), e);
         }
       });
     } catch (e) {
-      Logger.error('Engine.tell(): Error', e);
+      error(crit('Engine.tell(): Error'), e);
     }
   }
 }

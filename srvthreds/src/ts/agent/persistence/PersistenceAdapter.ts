@@ -1,7 +1,7 @@
 import { Persistence } from '../../persistence/Persistence';
 import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors';
-import { Spec } from '../../thredlib/provider/Spec';
+import { Spec } from '../../thredlib/task/Spec';
 import { Adapter } from '../adapter/Adapter';
 
 export class PersistenceAdapter implements Adapter {

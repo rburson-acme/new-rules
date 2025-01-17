@@ -28,9 +28,9 @@ describe('admin system test', function () {
   test('should save a modified pattern', function () {
     const savePatternEvent = SystemEvents.getSavePatternEvent({ ...adminTestPatternModels[0], name: 'Modified System Test' }, adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-      expect((message.event.data?.content?.values as SMap).error).toBeUndefined();
+      expect(message.event.data?.content?.error).toBeUndefined();
       // should return id as result if successful
-      expect((message.event.data?.content?.values as SMap).result).contains('systemTest');
+      expect(Events.valueNamed(message.event, 'result')).contains('systemTest');
     });
     engineConnMan.eventQ.queue(savePatternEvent);
     return pr;

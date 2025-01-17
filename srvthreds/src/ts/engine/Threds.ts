@@ -1,4 +1,4 @@
-import { Event, Message, Series } from '../thredlib/index.js';
+import { Event, Logger, Message, Series } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
@@ -19,19 +19,14 @@ export class Threds {
     private readonly dispatcher: Dispatcher
   ) {}
 
-
-  async initialize(): Promise<void> {
-    await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {
-      await this.thredsStore.patternsStore.staleCheck(message.id);
-     });
-  }
+  async initialize(): Promise<void> {}
 
   // handleAttached and handleDetached are the two main entry point for Thred locking (per thredId)
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   consider(event: Event): Promise<void> {
     return event.thredId !== null && event.thredId != undefined
-      ? this.handleAttached(event.thredId, event)
-      : this.handleDetached(event);
+      ? this.handleBound(event.thredId, event)
+      : this.handleUnbound(event);
   }
 
   async dispatch(message: Message): Promise<void> {
@@ -44,7 +39,7 @@ export class Threds {
 
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
-  private async handleAttached(thredId: string, event: Event): Promise<void> {
+  private async handleBound(thredId: string, event: Event): Promise<void> {
     const { thredsStore } = this;
     await this.thredsStore.withThredStore(thredId, async (thredStore: ThredStore) => {
 
@@ -56,7 +51,7 @@ export class Threds {
     });
   }
 
-  private async handleDetached(event: Event): Promise<void> {
+  private async handleUnbound(event: Event): Promise<void> {
     const {
       eventStore,
       patternsStore: { patterns },
@@ -67,7 +62,10 @@ export class Threds {
     // if pattern is applicable, it will start the thread
     return await Series.forEach<Pattern>(patterns, async (pattern) => {
       if (await pattern.consider(event, new ThredContext())) {
+        Logger.info(Logger.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`));
         return this.startThred(pattern, event);
+      } else {
+        Logger.info(Logger.h2(`No pattern match for unbound event ${event.id} of type ${event.type}`));
       }
     });
   }

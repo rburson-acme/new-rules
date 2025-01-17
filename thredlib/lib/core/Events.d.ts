@@ -17,9 +17,33 @@ export declare class Events {
     static getResources(event: Event): EventContent['resources'] | undefined;
     static getInlineContent(event: Event): EventContent['items'] | undefined;
     static getError(event: Event): EventContent['error'] | undefined;
+    /**
+     * Asserts that the event contains a single value and returns it.
+     * This is either an array with one element or a single value.
+     *
+     * @param event - The event from which to extract the value.
+     * @returns The single value contained in the event.
+     * @throws Will throw an error if the event has no values or if it contains more than one value.
+     */
     static assertSingleValues(event: Event): Record<string, any>;
+    /**
+     * Asserts that the values of the given event are an array.
+     *
+     * @param event - The event object to extract values from.
+     * @returns An array of records containing the event values.
+     * @throws Will throw an error if the event has no values or if the values are not an array.
+     */
     static assertArrayValues(event: Event): Record<string, any>[];
+    /**
+     * Retrieves a value from an the event content by its name, at any depth.
+     * The first value found with the specified name is returned.
+     *
+     * @param event - The event object from which to retrieve the value.
+     * @param name - The name of the value to retrieve.
+     * @returns The value associated with the specified name, or `undefined` if not found.
+     */
     static valueNamed(event: Event, name: string): any;
+    private static _valueNamed;
 }
 export declare class EventHelper {
     readonly event: Event;

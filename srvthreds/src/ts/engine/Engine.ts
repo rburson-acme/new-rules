@@ -13,6 +13,10 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
 import { Dispatcher } from './Dispatcher.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
+import { PubSubFactory } from '../pubsub/PubSubFactory.js';
+import { Topics } from '../pubsub/Topics.js';
+
+const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
 export class Engine implements Dispatcher {
   dispatchers: (((message: Message) => Promise<void>) | ((message: Message) => void))[] = [];
@@ -32,12 +36,14 @@ export class Engine implements Dispatcher {
   }
 
   public async start(config?: RunConfig) {
-    if(config?.patternModels) {
-      await this.thredsStore.patternsStore.addPatterns(config.patternModels);
-    } else {
-      await this.thredsStore.patternsStore.loadPatterns();
-    }
+    // add and store patterns then load existing patterns from storage
+    if(config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
+    await this.thredsStore.patternsStore.loadPatterns();
     await this.threds.initialize();
+    // subscribe to pattern changes in storage
+    await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {
+      await this.thredsStore.patternsStore.staleCheck(message.id);
+    });
     this.run();
   }
 
@@ -54,8 +60,8 @@ export class Engine implements Dispatcher {
    * @param to
    */
   public async dispatch(message: Message): Promise<void> {
-    //Logger.debug('<< Outbound Message >>', '\n', message);
-    Logger.debug('<< Outbound Message >>', '\n', JSON.stringify(message, null, 2));
+    debug(h1(`Engine publish Message ${message.id} to ${message.to}`));
+    logObject(message);
     // NOTE: dispatch all at once - failure notification will be handled separately
     await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(message));
   }
@@ -72,8 +78,8 @@ export class Engine implements Dispatcher {
         await this.consider(message.payload);
         await this.inboundQ.delete(message);
       } catch (e) {
-        Logger.error(`Failed to consider event ${message.payload?.id}`, e as Error, (e as Error).stack);
-        await this.inboundQ.reject(message, e as Error).catch(Logger.error);
+        error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
+        await this.inboundQ.reject(message, e as Error).catch(error);
         await this.handleError(e, message.payload);
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.inboundQ.requeue(message, e).catch(Logger.error);
@@ -95,7 +101,7 @@ export class Engine implements Dispatcher {
       });
       await this.dispatch({ id: outboundEvent.id, event: outboundEvent, to: [prevEvent.source.id] });
     } catch (e) {
-      Logger.error(`Engine::Failed to publish error event for id: ${prevEvent.id}`, e as Error, (e as Error).stack);
+      error(crit(`Engine::Failed to publish error event for id: ${prevEvent.id}`), e as Error, (e as Error).stack);
     }
   }
 
@@ -105,8 +111,8 @@ export class Engine implements Dispatcher {
    * @param event
    */
   consider(event: Event): Promise<void> {
-    //Logger.debug('<< Inbound Event >>', '\n', event);
-    Logger.debug('<< Inbound Event >>', '\n', JSON.stringify(event, null, 2));
+    debug(h1(`Engine received Event ${event.id} from ${event.source.id}`));
+    logObject(event);
     return this.threds.consider(event);
   }
 

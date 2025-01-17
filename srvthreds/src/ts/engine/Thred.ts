@@ -1,9 +1,11 @@
-import { Event } from '../thredlib/index.js';
+import { Event, Logger } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
+
+const { debug, error, h2 } = Logger;
 
 export class Thred {
   /*
@@ -51,6 +53,7 @@ export class Thred {
   static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
     const expiry = thredStore?.currentReaction?.expiry;
     if (expiry) {
+      debug(h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`)) 
       const transtition = thredStore?.currentReaction?.expiry?.transition;
       await Thred.transition(thredStore, threds, transtition);
     }

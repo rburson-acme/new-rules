@@ -11,6 +11,8 @@ export class Transformer {
     if (Array.isArray(source)) {
       return await Series.map(source, (p) => Transformer.transformObject(p, expressionParams));
     }
+    // this allows for a key of '$xpr' to signal that the 'value' should be transformed and spread into the object that contains the key
+    // @todo - evaluate whether this is necessary...
     if (typeof source === 'object') {
       let target: any = {};
       await Series.forEach(Object.keys(source), async (key) => {

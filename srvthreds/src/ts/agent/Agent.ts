@@ -2,7 +2,7 @@ import { Logger, Message, Event, StringMap, Events, EventError, errorCodes, erro
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
-import { AgentConfig, Config } from './Config.js';
+import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
 
 export interface MessageHandler {
@@ -67,7 +67,7 @@ export class Agent {
         additionalArgs: this.additionalArgs,
       });
       await this.handler?.initialize();
-      Logger.trace(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
+      Logger.debug(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
       this.run();
     } catch (e) {
       Logger.error('Agent.start(): failed to start the agent', e);
@@ -77,7 +77,8 @@ export class Agent {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    Logger.trace(`Agent.processMessage()`, message);
+    Logger.debug(Logger.h1(`Agent:${this.agentConfig.nodeId} received Message ${message.id} from ${message.event.source?.id}`));
+    Logger.logObject(message);
     return this.handler?.processMessage(message);
   }
 
@@ -87,7 +88,8 @@ export class Agent {
 
   // publish Events to engine
   publishEvent = async (event: Event, sourceId?: string): Promise<void> => {
-    Logger.trace('Agent.publishEvent(): ', event.id, ` published by ${sourceId} @ ${Config.agentConfig.nodeId}`);
+    Logger.debug(Logger.h1(`Agent:${this.agentConfig.nodeId} publish Event ${event.id} from ${sourceId}`));
+    Logger.logObject(event);
     return this.eventQ.queue(event);
   };
 
@@ -96,7 +98,7 @@ export class Agent {
     */
   private async run() {
     while (true) {
-      const topics = [Config.agentConfig.nodeId, Config.agentConfig.nodeType];
+      const topics = [this.agentConfig.nodeId, this.agentConfig.nodeType];
       const qMessage: QMessage<Message> = await this.messageQ.pop(topics);
       try {
         await this.processMessage(qMessage.payload);

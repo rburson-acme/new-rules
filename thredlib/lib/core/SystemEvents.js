@@ -1,6 +1,6 @@
 import { systemEventTypes, eventTypes } from './types.js';
 import { EventBuilder } from './EventBuilder.js';
-import { Spec } from '../provider/Spec.js';
+import { Spec } from '../task/Spec.js';
 export class SystemEvents {
     /***
      *     _____ _                  _     ___            _             _

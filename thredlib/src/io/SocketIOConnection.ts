@@ -2,6 +2,7 @@
 import io, { Socket } from 'socket.io-client';
 import { Event } from '../core/Event.js';
 import { Connection } from './Connection.js';
+import { Logger } from '../lib/Logger.js';
 
 export class SocketIOConnection implements Connection{
 
@@ -19,7 +20,7 @@ export class SocketIOConnection implements Connection{
         return new Promise((resolve, reject)=>{
             this.socket = io(this.url, this.options);
             this.socket.on('connect', ()=>{
-                console.log('connected!');
+                Logger.debug('client connected!');
                 resolve();
             });
             this.socket.on('message', this.onMessage);

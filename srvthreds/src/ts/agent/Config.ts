@@ -8,7 +8,3 @@ export interface AgentConfig {
     // specific agent configuration can go here
     customConfig?: any;
 }
-
-export class Config {
-    static agentConfig: AgentConfig;
-}

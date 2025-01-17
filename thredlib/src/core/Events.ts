@@ -6,7 +6,6 @@ import { Id } from './Id.js';
 export type NewEventParams = Partial<Event> & Pick<Event, 'type' | 'source'>;
 
 export class Events {
-
   // Event construction
 
   // type and source are required. id and time can be generated, if not present
@@ -24,8 +23,6 @@ export class Events {
     };
     return event;
   }
-
-   
 
   static mergeEvent(params: Partial<Event>, event: Partial<Event>): Partial<Event> {
     return deepMerge(event, params) as Event;
@@ -54,7 +51,6 @@ export class Events {
   static mergeError(error: EventError, event: Partial<Event>): Partial<Event> {
     return deepMerge(event, { data: { content: { error } } });
   }
-
 
   // Event data accessors
 
@@ -90,31 +86,67 @@ export class Events {
     return this.getContent(event)?.error;
   }
 
-  static assertSingleValues(event: Event): Record<string,any> {
+  /**
+   * Asserts that the event contains a single value and returns it.
+   * This is either an array with one element or a single value.
+   *
+   * @param event - The event from which to extract the value.
+   * @returns The single value contained in the event.
+   * @throws Will throw an error if the event has no values or if it contains more than one value.
+   */
+  static assertSingleValues(event: Event): Record<string, any> {
     const values = this.getValues(event);
-    if(!values) throw new Error(`Event has no values`);
-    if(Array.isArray(values)) {
-      if(values.length > 1) throw new Error(`Event has more than one value`);
+    if (!values) throw new Error(`Event has no values`);
+    if (Array.isArray(values)) {
+      if (values.length > 1) throw new Error(`Event has more than one value`);
       return values[0];
     }
     return values;
   }
 
-  static assertArrayValues(event: Event): Record<string,any>[] {
+  /**
+   * Asserts that the values of the given event are an array.
+   *
+   * @param event - The event object to extract values from.
+   * @returns An array of records containing the event values.
+   * @throws Will throw an error if the event has no values or if the values are not an array.
+   */
+  static assertArrayValues(event: Event): Record<string, any>[] {
     const values = this.getValues(event);
-    if(!values) throw new Error(`Event has no values`);
-    if(!Array.isArray(values)) throw new Error(`Event values is not an array`);
+    if (!values) throw new Error(`Event has no values`);
+    if (!Array.isArray(values)) throw new Error(`Event values is not an array`);
     return values;
   }
 
-
+  /**
+   * Retrieves a value from an the event content by its name, at any depth.
+   * The first value found with the specified name is returned.
+   *
+   * @param event - The event object from which to retrieve the value.
+   * @param name - The name of the value to retrieve.
+   * @returns The value associated with the specified name, or `undefined` if not found.
+   */
   static valueNamed(event: Event, name: string) {
     const values = this.getValues(event);
-    if (Array.isArray(values)) {
-      return values.find((value) => value[name]);
+    const result = this._valueNamed(values, name);
+    if (!result) Logger.debug(Logger.h2(`Event value named ${name} not found`));
+    return result;
+  }
+
+  private static _valueNamed(value: any, name: string): any {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const result = this._valueNamed(item, name);
+        if (result) return result;
+      }
     }
-    if (!values?.[name]) Logger.info(`Event value named ${name} not found`);
-    return values?.[name];
+    if (typeof value === 'object') {
+      if (value?.[name]) return value[name];
+      for (const key in value) {
+        const result = this._valueNamed(value[key], name);
+        if(result) return result;
+      }
+    }
   }
 }
 

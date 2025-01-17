@@ -8,9 +8,13 @@ export declare enum LoggerLevel {
 }
 export declare class Logger {
     static debug: (...args: Array<any>) => void;
-    static error: (...args: Array<any>) => void;
+    static logObject: (...args: Array<any>) => void;
     static info: (...args: Array<any>) => void;
     static warn: (...args: Array<any>) => void;
+    static error: (...args: Array<any>) => void;
     static trace: (...args: Array<any>) => void;
     static setLevel(loggerLevel: LoggerLevel): void;
+    static h1(message: string): string;
+    static h2(message: string): string;
+    static crit(message: string): string;
 }

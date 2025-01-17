@@ -1,4 +1,4 @@
-import { Provider } from "../provider/Provider";
+import { TaskProvider } from "../provider/TaskProvider";
 import { Persistent } from "../thredlib/persistence/Persistent";
 
 export interface Query {
@@ -8,7 +8,7 @@ export interface Query {
     values?: Record<string, any> | any[];
 }
 
-export interface Persistence extends Provider {
+export interface Persistence extends TaskProvider {
 
     getOne<T>(query: Query, options?: any): Promise<Persistent & T>;
     

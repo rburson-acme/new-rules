@@ -44,7 +44,7 @@ export class SessionService {
     async getChannels(message: Message): Promise<string[]> {
         const { sessions, sessionChannelIds } = this;
         const { event, to } = message;
-        Logger.trace(`SessionService: getChannels for: ${to}`, event);
+        //Logger.debug(`SessionService: getChannels for: ${to}`, event);
 
         const sessionsByParticipant: StringMap<string[]> = await sessions.getSessionIdsForAll(to);
         if (!Object.keys(sessionsByParticipant).length) {

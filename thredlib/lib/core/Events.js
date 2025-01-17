@@ -66,6 +66,14 @@ export class Events {
     static getError(event) {
         return this.getContent(event)?.error;
     }
+    /**
+     * Asserts that the event contains a single value and returns it.
+     * This is either an array with one element or a single value.
+     *
+     * @param event - The event from which to extract the value.
+     * @returns The single value contained in the event.
+     * @throws Will throw an error if the event has no values or if it contains more than one value.
+     */
     static assertSingleValues(event) {
         const values = this.getValues(event);
         if (!values)
@@ -77,6 +85,13 @@ export class Events {
         }
         return values;
     }
+    /**
+     * Asserts that the values of the given event are an array.
+     *
+     * @param event - The event object to extract values from.
+     * @returns An array of records containing the event values.
+     * @throws Will throw an error if the event has no values or if the values are not an array.
+     */
     static assertArrayValues(event) {
         const values = this.getValues(event);
         if (!values)
@@ -85,14 +100,38 @@ export class Events {
             throw new Error(`Event values is not an array`);
         return values;
     }
+    /**
+     * Retrieves a value from an the event content by its name, at any depth.
+     * The first value found with the specified name is returned.
+     *
+     * @param event - The event object from which to retrieve the value.
+     * @param name - The name of the value to retrieve.
+     * @returns The value associated with the specified name, or `undefined` if not found.
+     */
     static valueNamed(event, name) {
         const values = this.getValues(event);
-        if (Array.isArray(values)) {
-            return values.find((value) => value[name]);
+        const result = this._valueNamed(values, name);
+        if (!result)
+            Logger.debug(Logger.h2(`Event value named ${name} not found`));
+        return result;
+    }
+    static _valueNamed(value, name) {
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const result = this._valueNamed(item, name);
+                if (result)
+                    return result;
+            }
         }
-        if (!values?.[name])
-            Logger.info(`Event value named ${name} not found`);
-        return values?.[name];
+        if (typeof value === 'object') {
+            if (value?.[name])
+                return value[name];
+            for (const key in value) {
+                const result = this._valueNamed(value[key], name);
+                if (result)
+                    return result;
+            }
+        }
     }
 }
 export class EventHelper {

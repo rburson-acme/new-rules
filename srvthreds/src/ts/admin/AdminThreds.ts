@@ -31,14 +31,14 @@ export class AdminThreds extends Threds {
       try {
         if (_event.type === eventTypes.control.dataControl.type) {
           // persistence operation has a top level result key
-          values = { result: await this.persistenceAdapter.execute(_event) };
+          values = { result : await this.persistenceAdapter.execute(_event) };
         } else if (_event.type === eventTypes.control.sysControl.type) {
           values = await this.adminService.handleSystemEvent({ event: _event });
         }
         const outboundEvent = Events.newEventFromEvent({
           prevEvent: _event,
           title: `System Event -> Thred: ${_event.thredId} -> Re: Event: ${_event.id}`,
-          result: { values },
+          content: { values },
         });
         const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
         // don't wait for dispatch

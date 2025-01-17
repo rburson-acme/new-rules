@@ -13,15 +13,15 @@ import { SessionStorage } from '../ts/sessions/storage/SessionStorage.js';
 import { Agent } from '../ts/agent/Agent.js';
 import { Config as EngineConfig } from '../ts/engine/Config.js';
 import { ResolverConfig } from '../ts/sessions/Config.js';
-import { Config as StaticAgentConfig, AgentConfig } from '../ts/agent/Config.js';
+import { AgentConfig } from '../ts/agent/Config.js';
 import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from '../ts/config/engine.json' with { type: 'json' };
 import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
 EngineConfig.engineConfig = engineConfig;
-StaticAgentConfig.agentConfig = agentConfig;
+const sessionAgentConfig = agentConfig as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
-StaticAgentConfig.agentConfig.agentImpl = SessionAgent;
+sessionAgentConfig.agentImpl = SessionAgent;
 
 export const events: Record<string, Event> = {
   noMatch: {
@@ -224,12 +224,12 @@ export class ServerConnectionManager {
     const sessionEventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: StaticAgentConfig.agentConfig.subscriptionName,
+      subName: sessionAgentConfig.subscriptionName,
     });
     const sessionMessageQ = new MessageQ(sessionMessageService);
     // standard (default) agent configuration file
     // this location is relative to the 'agent' directory
-    const agent = new Agent(StaticAgentConfig.agentConfig, sessionEventQ, sessionMessageQ, additionalArgs);
+    const agent = new Agent(sessionAgentConfig, sessionEventQ, sessionMessageQ, additionalArgs);
     agent.start();
 
     const instance = new ServerConnectionManager(
@@ -277,7 +277,7 @@ export class ServerConnectionManager {
 }
 
 export class AgentConnectionManager {
-  static async newAgentInstance(agentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
+  static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // this are not used for testing with this utility but currently required for the Agent
@@ -286,12 +286,12 @@ export class AgentConnectionManager {
     const agentEventQ: EventQ = new EventQ(agentEventservice);
     const agentMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: agentConfig.subscriptionName,
+      subName: sessionAgentConfig.subscriptionName,
     });
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ, additionalArgs);
+    const agent = new Agent(sessionAgentConfig, agentEventQ, agentMessageQ, additionalArgs);
     agent.start();
 
     return new AgentConnectionManager(
@@ -328,7 +328,7 @@ export class AgentConnectionManager {
 
 // Allows for testing Agents WITH both Queue connections
 export class AgentQueueConnectionManager {
-  static async newAgentInstance(agentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentQueueConnectionManager> {
+  static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentQueueConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // setup the q's so we can mock (act as) the Engine
@@ -342,12 +342,12 @@ export class AgentQueueConnectionManager {
     const agentEventQ: EventQ = new EventQ(agentEventservice);
     const agentMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: agentConfig.subscriptionName,
+      subName: sessionAgentConfig.subscriptionName,
     });
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(agentConfig, agentEventQ, agentMessageQ, additionalArgs);
+    const agent = new Agent(sessionAgentConfig, agentEventQ, agentMessageQ, additionalArgs);
     await agent.start();
 
     return new AgentQueueConnectionManager(

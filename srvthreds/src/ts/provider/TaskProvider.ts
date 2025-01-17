@@ -5,7 +5,7 @@ export interface Query {
     values?: Record<string, any> | any[];
 }
 
-export interface Provider {
+export interface TaskProvider {
 
     put(query: Query, options?: any): Promise<string | string[]>;
 

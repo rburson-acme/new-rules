@@ -5,22 +5,22 @@ export class Events {
     static newEventFromEvent({
     prevEvent,
     title,
-    result,
+    content,
     error,
   }: {
     prevEvent: Event;
-    result?: EventContent;
+    content?: EventContent;
     title?: string;
     error?: EventError['error'];
   }) {
-    const content = error ? { error } : result;
+    const _content = error ? { error } : content;
 
     return EventsLib.newEvent({
       type: eventTypes.system.type,
       re: prevEvent.id,
       data: {
         ...{ title },
-        content,
+        content: _content,
       },
       source: { ...eventTypes.system.source },
       thredId: prevEvent.thredId,

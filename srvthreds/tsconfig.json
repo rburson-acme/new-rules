@@ -14,5 +14,6 @@
         "types": [
             "vitest/globals"
         ]
-    }
+    },
+    "sourceMap": true
 }

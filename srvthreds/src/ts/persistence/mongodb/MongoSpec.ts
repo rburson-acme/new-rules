@@ -1,4 +1,4 @@
-import { Spec } from "../../thredlib/provider/Spec.js";
+import { Spec } from "../../thredlib/task/Spec.js";
 import { StringMap } from '../../thredlib/index.js';
 
 /**

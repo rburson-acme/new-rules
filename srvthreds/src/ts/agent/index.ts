@@ -7,7 +7,6 @@ import config from '../config/rascal_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../queue/remote/RemoteQBroker.js';
 import { RemoteQService } from '../queue/remote/RemoteQService.js';
 import { Agent } from './Agent.js';
-import { Config } from './Config.js';
 
 /***
  *     __                 _                     _               
@@ -26,14 +25,14 @@ class Server  {
     private agent?: Agent;
 
     async start(configFile: string) {
-        Config.agentConfig = await import(configFile);
+        const agentConfig = await import(configFile);
         // set up the remote Qs
         const qBroker = new RemoteQBroker(config);
         this.eventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
         const eventQ: EventQ = new EventQ(this.eventService);
-        const messageService = await RemoteQService.newInstance<Message>({ qBroker, subName: Config.agentConfig.subscriptionName });
+        const messageService = await RemoteQService.newInstance<Message>({ qBroker, subName: agentConfig.subscriptionName });
         const messageQ: MessageQ = new MessageQ(messageService);
-        this.agent = new Agent(Config.agentConfig, eventQ, messageQ);
+        this.agent = new Agent(agentConfig, eventQ, messageQ);
         await this.agent.start();
     }
 

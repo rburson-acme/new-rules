@@ -37,7 +37,7 @@ export interface EventData {
     advice?: {
         // the type of event that is expected
         eventType: string,
-        // the title of the event
+        // the suggested title of the expected event
         title?: string,
         // an interaction template that describes what data to collect
         template?: TemplateModel,
