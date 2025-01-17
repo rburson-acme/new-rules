@@ -35,3 +35,8 @@ After completing both of these steps, run command `npx expo prebuild --platform 
 ### Android Health Connect Toolbox
 
 Android Health Connect Toolbox is a developer tool that allows you to add data to the health connect system. Instructions for downloading this into your emulator can be found [here](https://developer.android.com/health-and-fitness/guides/health-connect/test/health-connect-toolbox), along with instructions for reading and writing health records into the android emulator.
+
+### Android Health Connect Toolbox
+
+This app uses expo-router
+[expo-router](https://docs.expo.dev/router/introduction/)
