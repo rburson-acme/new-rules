@@ -37,8 +37,8 @@ export class Engine implements Dispatcher {
 
   public async start(config?: RunConfig) {
     // add and store patterns then load existing patterns from storage
-    if(config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
     await this.thredsStore.patternsStore.loadPatterns();
+    if(config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
     await this.threds.initialize();
     // subscribe to pattern changes in storage
     await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {

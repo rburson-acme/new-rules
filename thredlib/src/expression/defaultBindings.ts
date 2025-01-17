@@ -1,4 +1,5 @@
 import { Events } from '../core/Events.js';
+import { Event } from '../core/Event.js';
 import { ExpressionParams } from './Expression.js';
 
 export const defaultBindings = (params: ExpressionParams) => {
@@ -16,7 +17,7 @@ export const defaultBindings = (params: ExpressionParams) => {
     const getAdvice = () => Events.getAdvice(event);
     const getContent = () => Events.getContent(event);
     const getValues = () => Events.getValues(event);
-    const valueNamed = (name: string) => Events.valueNamed(event, name);
+    const valueNamed = (name: string, _event?: Event) => Events.valueNamed(_event || event, name);
 
 
     // to use these in an expression:

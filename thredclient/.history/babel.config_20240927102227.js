@@ -1,0 +1,21 @@
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    plugins: [
+      ['@babel/plugin-proposal-class-properties', { loose: false }],
+      ['@babel/plugin-transform-private-methods', { loose: false }],
+      ['@babel/plugin-transform-private-property-in-object', { 'loose': false }]
+    ],
+    presets: ['babel-preset-expo'],
+  };
+};
+/*
+    ['module-resolver',
+      {
+        alias: {
+          '^react-native$': 'react-native-web',
+          './thredlib': '../threadlib/src',
+        },
+      },
+    ], 
+    */
