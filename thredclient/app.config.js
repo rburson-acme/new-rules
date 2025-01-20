@@ -21,7 +21,9 @@ export default () => ({
     android: {
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API,
+          apiKey: 'AIzaSyCnuc0oFIuDIGf0gFfAVBeDI7o3RSTMBhQ',
+          // This API Key only works for this android application.
+          // Will not work anywhere else
         },
       },
       adaptiveIcon: {

@@ -350,10 +350,16 @@
       "additionalProperties": false,
       "properties": {
         "latitude": {
-          "type": "number"
+          "type": [
+            "number",
+            "string"
+          ]
         },
         "longitude": {
-          "type": "number"
+          "type": [
+            "number",
+            "string"
+          ]
         },
         "name": {
           "type": "string"

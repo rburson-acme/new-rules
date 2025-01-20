@@ -1,5 +1,5 @@
 import { getMapCenter, Location } from '@/src/core/Map';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Libraries, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '400px',
@@ -10,11 +10,15 @@ type MapProps = {
   locations: Location[];
 };
 
+const libraries: Libraries = ['places', 'drawing', 'geometry', 'marker'];
+
 export function Map({ locations }: MapProps) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.GOOGLE_MAPS_API,
+    libraries: libraries,
   });
 
+  console.log(process.env.GOOGLE_MAPS_API);
   const { latitude, longitude } = getMapCenter(locations);
 
   if (!isLoaded) {

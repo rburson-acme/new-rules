@@ -3,8 +3,8 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { Event, Validator } from 'thredlib';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { DEFAULT_EVENT_JSON_STRING } from '@/src/constants/DefaultEventString';
-import { EventEditorLocals } from './EventEditor';
 import { Button } from '@/src/components/common/Button';
+import { EventEditorLocals } from '@/src/app/(app)/devtools/event-editor';
 
 type ButtonGroupProps = {
   localStore: EventEditorLocals;
