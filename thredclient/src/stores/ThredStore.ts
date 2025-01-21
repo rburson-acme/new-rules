@@ -7,10 +7,7 @@ import { EventsStore } from './EventsStore';
 export class ThredStore {
   eventsStore?: EventsStore = undefined;
 
-  constructor(
-    readonly thred: Thred,
-    readonly rootStore: RootStore,
-  ) {
+  constructor(readonly thred: Thred, readonly rootStore: RootStore) {
     makeObservable(this, {
       eventsStore: observable.shallow,
     });

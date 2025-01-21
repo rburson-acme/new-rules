@@ -14,7 +14,7 @@ export class TemplateStore {
     });
 
     this.template = template;
-    this.interactionStores = template?.interactions?.map(item => new InteractionStore(item.interaction)) || [];
+    this.interactionStores = template?.interactions?.map(item => new InteractionStore(item)) || [];
   }
 
   get currentInteractionStore() {

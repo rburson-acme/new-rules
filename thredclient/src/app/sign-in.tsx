@@ -16,7 +16,6 @@ function SignIn() {
     router.replace('/messenger');
   };
   const handleAdminView = async () => {
-    console.log({ authStore });
     if (!authStore.userId) return;
     authStore.setRole('admin');
     await thredsStore.connect(authStore.userId);

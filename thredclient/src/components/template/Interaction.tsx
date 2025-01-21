@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { ComponentTree } from '@/src/components/ComponentTree';
 import { typeConfig } from './typeConfig';
@@ -13,10 +13,10 @@ export const Interaction = observer(({ interactionStore, componentTypes }: Inter
   if (!interactionStore) {
     return null;
   }
-  const { name, style, content } = interactionStore.interaction;
+  const { content } = interactionStore.interaction.interaction;
 
   return (
-    <View style={{ ...styles.containerStyle, ...style }}>
+    <View style={styles.containerStyle}>
       <ComponentTree
         root={content}
         typeConfig={typeConfig}
@@ -28,7 +28,7 @@ export const Interaction = observer(({ interactionStore, componentTypes }: Inter
   );
 });
 
-const styles = {
+const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'column',
     justifyContent: 'center',
@@ -39,4 +39,4 @@ const styles = {
     fontSize: 12,
     padding: 1,
   },
-};
+});

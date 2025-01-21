@@ -13,16 +13,16 @@ type TemplateProps = {
 };
 export const Template = ({ stores }: TemplateProps) => {
   const { thredsStore } = stores;
-  const interactionStore =
-    thredsStore.currentThredStore?.eventsStore?.openEventStore?.openTemplateStore?.currentInteractionStore;
-  if (interactionStore) {
+  const interactionStores =
+    thredsStore.currentThredStore?.eventsStore?.openEventStore?.openTemplateStore?.interactionStores;
+
+  return interactionStores?.map(interactionStore => {
     return (
       <View style={[styles.containerStyle]}>
         <Interaction interactionStore={interactionStore} componentTypes={getComponentTypes()} />
       </View>
     );
-  }
-  return null;
+  });
 };
 
 const styles = StyleSheet.create({

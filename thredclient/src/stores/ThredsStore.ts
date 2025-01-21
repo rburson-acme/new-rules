@@ -45,13 +45,11 @@ export class ThredsStore {
   }
 
   consume = (event: Event) => {
-    console.log('consuming event');
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     if (!this.thredStores[thredId]) {
       this.addThred({ id: thredId, name: thredId });
     }
-    console.log('adding event to current thred');
     this.thredStores[thredId].addEvent(event);
   };
 

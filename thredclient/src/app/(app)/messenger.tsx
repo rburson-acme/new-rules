@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { RootStore } from '@/src/stores/rootStore';
-import { ThredHeader } from '@/src/components/admin/ThredHeader';
-import { EventsLayout } from '@/src/components/messenger/EventsLayout';
+import { ThredHeader } from '@/src/components/threds/ThredHeader';
+import { EventsLayout } from '@/src/components/threds/EventsLayout';
 
 export default function Messenger() {
   // @TODO - add 'ThredPanel' and determine selected thred here

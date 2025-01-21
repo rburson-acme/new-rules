@@ -1,18 +1,20 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { OpenEventHeader } from './OpenEventHeader';
-import { Event } from 'thredlib';
 import { EventDataView } from './EventDataView';
 import { Bar } from '@/src/components/common/Bar';
 import { RootStore } from '@/src/stores/rootStore';
 import { EventStore } from '@/src/stores/EventStore';
 import { Button } from '../common/Button';
+import { EventsStore } from '@/src/stores/EventsStore';
+import { observer } from 'mobx-react-lite';
 
 type OpenEventViewProps = {
   rootStore: RootStore;
   eventStore: EventStore;
+  eventsStore: EventsStore;
 };
-export const OpenEventView = ({ rootStore, eventStore }: OpenEventViewProps) => {
+export const OpenEventView = observer(({ rootStore, eventStore, eventsStore }: OpenEventViewProps) => {
   if (!eventStore.event) return null;
   const { source, data, type, time } = eventStore.event;
   const { thredsStore } = rootStore;
@@ -27,13 +29,22 @@ export const OpenEventView = ({ rootStore, eventStore }: OpenEventViewProps) => 
           content="Back To Thred"
           buttonStyle={styles.buttonStyle}
           onPress={() => {
-            // thredsStore.closeOpenEventStore();
+            eventsStore.closeOpenEventStore();
           }}
         />
+        {eventsStore.unseenEvents > 0 && (
+          <Button
+            content="Open Next Unseen"
+            buttonStyle={styles.buttonStyle}
+            onPress={() => {
+              eventsStore.openFirstUnseen();
+            }}
+          />
+        )}
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   containerStyle: {

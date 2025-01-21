@@ -3,7 +3,7 @@ import { StringMap, InteractionModel } from 'thredlib';
 
 export class InteractionStore {
   values: StringMap<any> = {};
-  interaction: any;
+  interaction: InteractionModel;
 
   constructor(interaction: InteractionModel) {
     makeObservable(this, {

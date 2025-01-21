@@ -82,13 +82,13 @@ export function Map() {
     //send the drone to the event engine
 
     const event = EventBuilder.create({
-      type: 'wt.agent.detectionEvent',
+      type: 'org.wt.sensor.detectionEvent',
       source: { id: nanoid(), name: 'Drone Detected' },
       time: Date.now(),
     })
       .mergeValues({
-        droneLattitude: drone.lat(),
-        droneLongitude: drone.lng(),
+        latitude: drone.lat(),
+        longitude: drone.lng(),
         certainty: Math.random(),
         sensorId: sensorId,
       })
