@@ -42,7 +42,7 @@ export class Reaction {
 
   // @TODO - catch failures here and notify admin and relevant participant(s)
   async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
-    //if(!this.authorize(event)) return undefined;
+    if(!this.authorize(event)) return undefined;
     const { condition } = this;
     const result = await condition.apply(event, thredStore);
     if (result) {
@@ -55,30 +55,25 @@ export class Reaction {
   }
 
   async test(event: Event, context: ThredContext): Promise<boolean> {
-    //if(!this.authorize(event)) return false;
+    if(!this.authorize(event)) return false;
     return this.condition.test(event, context);
   }
 
 
   // @TODO - need to queue exceptions and deliver to appropriate participants
   private authorize(event: Event): boolean {
+    // @TODO - allow Groups for allowedSources
     // @TODO - allow expression / regex for allowedSources
     if (this.allowedSources) {
       const source = event.source.id;
       if (Array.isArray(this.allowedSources)) {
         if (!this.allowedSources.includes(source)) {
+          Logger.debug(Logger.h2(`Event source ${source} not in allowed sources ${this.allowedSources}`));
           return false;
-          /*throw EventThrowable.get(
-            `Source ${source} not allowed to execute reaction ${this.name}`,
-            errorCodes[errorKeys.UNAUTHORIZED].code
-          );*/
         }
       } else if (this.allowedSources !== source) {
+        Logger.debug(Logger.h2(`Event source ${source} not in allowed sources ${this.allowedSources}`));
         return false;
-          /*throw EventThrowable.get(
-            `Source ${source} not allowed to execute reaction ${this.name}`,
-            errorCodes[errorKeys.UNAUTHORIZED].code
-          );*/
       }
     }
     return true;

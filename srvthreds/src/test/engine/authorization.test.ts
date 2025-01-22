@@ -1,24 +1,20 @@
 import { Logger, LoggerLevel, PatternModel } from '../../ts/thredlib/index.js';
 
-import { EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
+import { delay, EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.WARN);
 
-describe.skip('authorization tests', function () {
+describe('authorization tests', function () {
   beforeAll(async () => {
     connMan = await EngineConnectionManager.newEngineInstance(patternModels);
     await connMan.purgeAll();
   });
-  test.skip('should not allow source', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
-      const { event } = message;
-      expect(await connMan.engine.numThreds).toBe(0);
-      expect(event.type).toBe('org.wt.tell');
-      expect(event.data?.content?.values).toBeFalsy();
-      expect(event.data?.content?.error).toBeTruthy();
-    });
+  test('should not allow source', async function () {
+    const fn = vi.fn();
+    connMan.engine.dispatchers.push(fn);
     connMan.eventQ.queue({ ...events.event0, ...{ source: { id: 'unauthorized.source' } } });
-    return pr;
+    await delay(100);
+    expect(fn).not.toHaveBeenCalled();
   });
   // match the first event and start the thred
   test('match filter and transition to second reaction', function () {
@@ -31,16 +27,12 @@ describe.skip('authorization tests', function () {
     connMan.eventQ.queue(events.event0);
     return pr;
   });
-  test('second reaction should not allow source', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
-      const { event } = message;
-      expect(await connMan.engine.numThreds).toBe(1);
-      expect(event.type).toBe('org.wt.tell');
-      expect(event.data?.content?.values).toBeFalsy();
-      expect(event.data?.content?.error).toBeTruthy();
-    });
+  test('second reaction should not allow source', async function () {
+    const fn = vi.fn();
+    connMan.engine.dispatchers.push(fn);
     connMan.eventQ.queue({ ...events.event1, ...{ thredId, source: { id: 'unauthorized.source' } } });
-    return pr;
+    await delay(100);
+    expect(fn).not.toHaveBeenCalled();
   });
   test('match filter and transition to third reaction', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
