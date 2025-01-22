@@ -25,6 +25,7 @@ export class EventsStore {
       openEventStore: observable.shallow,
       setOpenEventStore: action,
       closeOpenEventStore: action,
+      openFirstUnseen: action,
     });
   }
 
@@ -41,7 +42,7 @@ export class EventsStore {
   }
 
   addEvent(event: Event): void {
-    if (this.scrollMode === ScrollMode.FREE) {
+    if (this.scrollMode === ScrollMode.FREE || this.openEventStore) {
       this.unseenEvents = this.unseenEvents + 1;
     }
     this.eventStores.push(new EventStore(event, this.rootStore));
@@ -49,6 +50,15 @@ export class EventsStore {
 
   setOpenEventStore(eventStore: EventStore) {
     this.openEventStore = eventStore;
+    eventStore.seen = true;
+  }
+
+  openFirstUnseen() {
+    const unseenEvent = this.eventStores.find(eventStore => !eventStore.seen);
+    if (unseenEvent) {
+      this.setOpenEventStore(unseenEvent);
+      this.unseenEvents = this.unseenEvents - 1;
+    }
   }
 
   closeOpenEventStore() {

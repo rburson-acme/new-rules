@@ -18,13 +18,11 @@ export function Map({ locations }: MapProps) {
     libraries: libraries,
   });
 
-  console.log(process.env.GOOGLE_MAPS_API);
   const { latitude, longitude } = getMapCenter(locations);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
-
   return (
     <GoogleMap mapContainerStyle={containerStyle} center={{ lat: latitude, lng: longitude }} zoom={10}>
       {locations.map(location => {

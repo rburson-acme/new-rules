@@ -21,7 +21,7 @@ export const EventDataView = ({ data, containerStyle, stores }: EventDataViewPro
   return (
     <View style={[styles.containerStyle, containerStyle]}>
       <Text style={styles.textDescriptionStyle}>{description}</Text>
-      <Content  stores={stores} />
+      <Content stores={stores} />
     </View>
   );
 };

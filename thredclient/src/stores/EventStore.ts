@@ -6,20 +6,19 @@ import { Id } from '../core/Id';
 
 export class EventStore {
   event?: Event = undefined;
+  seen: boolean = false;
   isPublishing: boolean = false;
   openTemplateStore?: TemplateStore = undefined;
   private disposers: StringMap<() => void> = {};
 
-  constructor(
-    event: Event,
-    private rootStore: RootStore,
-  ) {
+  constructor(event: Event, private rootStore: RootStore) {
     makeObservable<EventStore, 'setupTemplate'>(this, {
       event: observable.shallow,
       isPublishing: observable,
       close: action,
       setupTemplate: action,
       setIsPublishing: action,
+      seen: observable,
     });
 
     this.event = event;

@@ -108,7 +108,7 @@
             "name": "send_video",
             "condition": {
                 "type": "filter",
-                "xpr": "$local(video_stream_request) = true",
+                "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('video_stream_request') = true",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "UAV Video",
@@ -122,7 +122,7 @@
                                             "content": [
                                                 {
                                                     "video": {
-                                                        "uri": "https://randomVideoThatWeHostSomewhere.com"
+                                                        "uri": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
                                                     }
                                                 }
                                             ]

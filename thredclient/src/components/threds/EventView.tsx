@@ -1,15 +1,16 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { EventSourceView } from './EventSourceView';
-import { EventDataCompactView } from './EventDataCompactView';
-import { EventAttachment } from './EventAttachment';
 import { EventStore } from '@/src/stores/EventStore';
+import { EventsStore } from '@/src/stores/EventsStore';
+import { EventDataCompactView } from './EventDataCompactView';
+import { EventSourceView } from './EventSourceView';
 
 type EventViewProps = {
   eventStore: EventStore;
+  eventsStore: EventsStore;
 };
 
-export const EventView = ({ eventStore }: EventViewProps) => {
+export const EventView = ({ eventStore, eventsStore }: EventViewProps) => {
   if (!eventStore.event) return null;
   const { source, data, type, time } = eventStore.event;
 
@@ -20,10 +21,9 @@ export const EventView = ({ eventStore }: EventViewProps) => {
         data={data}
         time={time}
         onPress={() => {
-          //   eventStore.setOpenEventStore(eventStore);
+          eventsStore.setOpenEventStore(eventStore);
         }}
       />
-      <EventAttachment />
     </View>
   );
 };
