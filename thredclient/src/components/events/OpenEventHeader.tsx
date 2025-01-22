@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { EventSourceView } from './EventSourceView';
+
 import { Event } from 'thredlib';
+import { EventSourceView } from './EventSourceView';
 
 type OpenEventHeaderProps = {
   event: Event;

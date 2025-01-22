@@ -6,7 +6,7 @@ const defaultAvatarImage = require('../../../assets/default-icon.png');
 
 type EventSourceAvatarProps = {
   uri?: string;
-  eventType: string;
+  eventType?: string;
 };
 export const EventSourceAvatar = ({ uri, eventType }: EventSourceAvatarProps) => {
   const avatarImage = uri ? { uri } : eventType === eventTypes.system.type ? systemAvatarImage : defaultAvatarImage;

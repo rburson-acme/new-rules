@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { StyleSheet, Text, View } from 'react-native';
-import { EventEditorLocals } from './EventEditor';
 import { getComponentTypes } from '@/src/components/template/componentTypes';
 import { Interaction } from '@/src/components/template/Interaction';
+import { EventEditorLocals } from '@/src/app/(app)/devtools/event-editor';
 
 type EventOutputProps = {
   localStore: EventEditorLocals;
@@ -14,6 +14,7 @@ export const EventOutput = observer(({ localStore }: EventOutputProps) => {
   const completedInteractions = completedInteractionStores?.map((interactionStore, index) => {
     return <Interaction key={index} interactionStore={interactionStore} componentTypes={getComponentTypes()} />;
   });
+
   return (
     <View style={styles.eventOutput}>
       <Text style={{ fontSize: 24 }}>Event output</Text>

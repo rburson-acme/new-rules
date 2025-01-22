@@ -25,7 +25,6 @@ export class EventsStore {
       openEventStore: observable.shallow,
       setOpenEventStore: action,
       closeOpenEventStore: action,
-      openFirstUnseen: action,
     });
   }
 
@@ -53,13 +52,6 @@ export class EventsStore {
     eventStore.seen = true;
   }
 
-  openFirstUnseen() {
-    const unseenEvent = this.eventStores.find(eventStore => !eventStore.seen);
-    if (unseenEvent) {
-      this.setOpenEventStore(unseenEvent);
-      this.unseenEvents = this.unseenEvents - 1;
-    }
-  }
 
   closeOpenEventStore() {
     this.openEventStore?.close();
