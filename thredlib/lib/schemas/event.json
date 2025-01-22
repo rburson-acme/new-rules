@@ -228,6 +228,9 @@
                 "op": {
                     "type": "string"
                 },
+                "options": {
+                    "type": "object"
+                },
                 "params": {
                     "$ref": "#/definitions/EventTaskParams"
                 }
@@ -350,10 +353,16 @@
             "additionalProperties": false,
             "properties": {
                 "latitude": {
-                    "type": "number"
+                    "type": [
+                        "number",
+                        "string"
+                    ]
                 },
                 "longitude": {
-                    "type": "number"
+                    "type": [
+                        "number",
+                        "string"
+                    ]
                 },
                 "name": {
                     "type": "string"

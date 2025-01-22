@@ -16,7 +16,7 @@ export class AdminThreds extends Threds {
   constructor(thredsStore: ThredsStore, dispatcher: Dispatcher) {
     super(thredsStore, dispatcher);
     this.adminService = new AdminService(this);
-    this.persistenceAdapter = new PersistenceAdapter(PersistenceFactory.getPersistence());
+    this.persistenceAdapter = new PersistenceAdapter();
   }
 
     async initialize(): Promise<void> {

@@ -49,6 +49,7 @@ export interface EventTask {
     readonly op: string;
     readonly name?: string;
     readonly params?: EventTaskParams;
+    readonly options?: Record<string, any>;
 }
 export interface EventTaskParams {
     readonly type: string;
