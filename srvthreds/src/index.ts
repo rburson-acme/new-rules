@@ -25,7 +25,7 @@ import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json'
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
 import patternModel from './ts/config/patterns/uav_detection.pattern.json' with { type:'json' };
-// import { patternModel } from './ts/config/patterns/ts/uav_detection_pattern.js';
+//import { patternModel } from './ts/config/patterns/ts/uav_detection_pattern.js';
 //import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel] as PatternModel[];
 import engineConfig from './ts/config/engine.json' with { type: 'json' };

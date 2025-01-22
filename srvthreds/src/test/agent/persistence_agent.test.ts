@@ -163,7 +163,7 @@ describe('persistence agent test', function () {
   });
   // cleanup in case of failure
   afterAll(async () => {
-    PersistenceFactory.getPersistence().removeDatabase();
+    PersistenceFactory.getPersistence().deleteDatabase();
     await connMan.purgeAll();
     await connMan.disconnectAll();
   });

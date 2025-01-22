@@ -254,6 +254,9 @@
         "op": {
           "type": "string"
         },
+        "options": {
+          "type": "object"
+        },
         "params": {
           "$ref": "#/definitions/EventTaskParams"
         }

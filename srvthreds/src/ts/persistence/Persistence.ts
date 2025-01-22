@@ -1,4 +1,4 @@
-import { TaskProvider } from "../provider/TaskProvider";
+import { Taskable } from "../task/Taskable";
 import { Persistent } from "../thredlib/persistence/Persistent";
 
 export interface Query {
@@ -8,12 +8,12 @@ export interface Query {
     values?: Record<string, any> | any[];
 }
 
-export interface Persistence extends TaskProvider {
+export interface Persistence extends Taskable {
 
     getOne<T>(query: Query, options?: any): Promise<Persistent & T>;
     
     get<T>(query: Query, options?: any): Promise<(Persistent & T)[]>;
 
-    removeDatabase(): Promise<void>;
+    deleteDatabase(): Promise<void>;
 
 }

@@ -5,7 +5,7 @@ export interface Query {
     values?: Record<string, any> | any[];
 }
 
-export interface TaskProvider {
+export interface Taskable {
 
     put(query: Query, options?: any): Promise<string | string[]>;
 
@@ -24,9 +24,5 @@ export interface TaskProvider {
     count(query: Query, options?: any): Promise<number>;
 
     run(params: any): Promise<any>;
-
-    connect(): Promise<void>;
-
-    disconnect(): Promise<void>;
 
 }

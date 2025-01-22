@@ -1,40 +1,13 @@
-import { MongoClient, Db, MongoClientOptions } from 'mongodb';
+import { Db } from 'mongodb';
 import { Persistence, Query } from '../Persistence.js';
 import { MongoSpec } from './MongoSpec.js';
 import { Persistent } from '../../thredlib/persistence/Persistent.js';
 
-/*
-  @TODO - have database itself generate created and modfied timestamps.  may require use of aggregation pipeline
-  @TODO - add support for transactions
-  @TODO - implement selectors
-*/
 export class MongoPersistence implements Persistence {
   private static defaultHost = 'localhost:27017';
   private static defaultDb = 'nr';
 
-  private client: MongoClient;
-  private dbs: Record<string, Db> = {};
-  private db?: Db;
-
-  constructor(
-    private config?: { dbname?: string; connectOptions?: MongoClientOptions }
-  ) {
-    this.client = new MongoClient(`mongodb://${MongoPersistence.defaultHost}`);
-  }
-
-  async connect(): Promise<void> {
-
-    // @TODO secure this
-    //const username = encodeURIComponent('root');
-    //const password = encodeURIComponent('rootpass');
-    await this.client.connect();
-    this.db = this.client.db(this.config?.dbname || MongoPersistence.defaultDb);
-
-  }
-
-  async disconnect(): Promise<void> {
-    return this.client?.close();
-  }
+  constructor(private db: Db){}
 
   async put(query: Query, options?: any): Promise<string | string[]> {
     if (Array.isArray(query.values)) return this.putAll(query, options);
@@ -126,12 +99,11 @@ export class MongoPersistence implements Persistence {
     return Promise.resolve();
   }
 
-  async removeDatabase(): Promise<void> {
+  async deleteDatabase(): Promise<void> {
     await this.db?.dropDatabase();
   }
 
   private getCollection(type: string) {
-    if (!this.db) throw Error(`MongoPersistence: Db is not set`);
     return this.db.collection(type);
   }
 

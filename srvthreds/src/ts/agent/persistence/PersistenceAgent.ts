@@ -14,15 +14,14 @@ export class PersistenceAgent implements MessageHandler {
   private agentConfig: AgentConfig;
   // publish (inbound) events to the engine
   private eventPublisher: EventPublisher;
-  private persistence: Persistence;
   private adapter: Adapter;
 
   constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
     this.eventPublisher = eventPublisher;
+    const hostString = additionalArgs?.hostString || this.agentConfig.customConfig?.hostString;
     const dbname = additionalArgs?.dbname || this.agentConfig.customConfig?.dbname;
-    this.persistence = PersistenceFactory.getPersistence(dbname);
-    this.adapter = new PersistenceAdapter(this.persistence);
+    this.adapter = new PersistenceAdapter({ dbname, hostString});
   }
 
   async initialize(): Promise<void> {

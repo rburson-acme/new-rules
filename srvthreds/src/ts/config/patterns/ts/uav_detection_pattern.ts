@@ -14,7 +14,7 @@ export const patternModel: PatternModel = {
         type: 'filter',
         xpr: "$event.type = 'org.wt.sensor.detectionEvent'",
         onTrue: {
-          xpr: "$setLocal('sensorEvent', $event)",
+          xpr: "$setLocal('coords', { 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })",
         },
         transform: {
           eventDataTemplate: {
@@ -66,8 +66,8 @@ export const patternModel: PatternModel = {
                             locations: [
                               {
                                 name: 'detection_location',
-                                latitude: "$xpr( $valueNamed('latitude', $local('sensorEvent') ) )",
-                                longitude: "$xpr( $valueNamed('longitude', $local('sensorEvent') ) )",
+                                latitude: "$xpr( $local('coords').latitude )",
+                                longitude: "$xpr( $local('coords').longitude )",
                               },
                             ],
                           },

@@ -1,13 +1,15 @@
 import { Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 import { Persistence } from '../../ts/persistence/Persistence.js';
-import { MongoPersistence } from '../../ts/persistence/mongodb/MongoPersistence.js';
+import { MongoPersistenceProvider } from '../../ts/persistence/mongodb/MongoPersistenceProvider.js';
+import { PersistenceProvider } from '../../ts/provider/PersistenceProvider.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
 describe('persistence', function () {
   test('connect', async function () {
-    persistence = new MongoPersistence();
-    await persistence.connect();
+    persistenceProvider = new MongoPersistenceProvider();
+    await persistenceProvider.connect();
+    persistence = persistenceProvider.getInstance();
   });
   // objects
   test('simple save', async function () {
@@ -221,7 +223,7 @@ describe('persistence', function () {
     } catch (e) {
       Logger.error(`Cleanup Failed ${(e as Error).message}`);
     }
-    await persistence.disconnect();
+    await persistenceProvider.disconnect();
   });
 });
 
@@ -235,3 +237,4 @@ const setType = 'SET_TYPE';
 const setItems = ['setItem0', 'setItem1'];
 
 let persistence: Persistence;
+let persistenceProvider: PersistenceProvider

@@ -1,130 +1,142 @@
 {
-  "meta": {
-    "active": true
-  },
-  "name": "UAV Detection",
-  "id": "uav_detect",
-  "reactions": [
-    {
-      "name": "lookup_contact",
-      "allowedSources": ["sensor_agent1"],
-      "condition": {
-        "type": "filter",
-        "xpr": "$event.type = 'org.wt.sensor.detectionEvent'",
-        "onTrue": {
-          "xpr": "$setLocal('sensorEvent', $event)"
-        },
-        "transform": {
-          "eventDataTemplate": {
-            "title": "Contact Query",
-            "content": {
-              "tasks": [
-                {
-                  "name": "find_contact",
-                  "op": "get",
-                  "params": {
-                    "type": "ContactInfo",
-                    "matcher": {
-                      "sensorId": "$xpr( $valueNamed('sensorId') )"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "publish": {
-          "to": "org.wt.persistence"
-        }
-      }
+    "meta": {
+        "active": true
     },
-    {
-      "name": "notify_contact",
-      "allowedSources": ["persistence1"],
-      "condition": {
-        "type": "filter",
-        "xpr": "$event.type = 'org.wt.persistence'",
-        "onTrue": {
-          "xpr": "$setLocal('contactId', $valueNamed('contactId'))"
-        },
-        "transform": {
-          "eventDataTemplate": {
-            "title": "Possible UAV Detected",
-            "description": "$xpr( $local('sensorId') & ' has detected a possible UAV')",
-            "advice": {
-              "eventType": "org.wt.client.tell",
-              "template": {
-                "name": "uav_notification",
-                "interactions": [
-                  {
-                    "interaction": {
-                      "content": [
-                        {
-                          "map": {
-                            "locations": [
-                              {
-                                "name": "Detected UAV",
-                                "latitude": "$xpr( $valueNamed('latitude', $local('sensorEvent') ) )",
-                                "longitude": "$xpr( $valueNamed('longitude', $local('sensorEvent') ) )"
-                              }
+    "name": "UAV Detection",
+    "id": "uav_detect",
+    "reactions": [
+        {
+            "name": "lookup_contact",
+            "allowedSources": [
+                "sensor_agent1"
+            ],
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.sensor.detectionEvent'",
+                "onTrue": {
+                    "xpr": "$setLocal('coords', { 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
+                },
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Contact Query",
+                        "content": {
+                            "tasks": [
+                                {
+                                    "name": "find_contact",
+                                    "op": "get",
+                                    "params": {
+                                        "type": "ContactInfo",
+                                        "matcher": {
+                                            "sensorId": "$xpr( $valueNamed('sensorId') )"
+                                        }
+                                    }
+                                }
                             ]
-                          }
-                        },
-                        {
-                          "input": {
-                            "type": "boolean",
-                            "name": "video_stream_request",
-                            "display": "Would you like to see a video stream of the area?",
-                            "set": [
-                              {
-                                "display": "Yes",
-                                "value": true
-                              },
-                              {
-                                "display": "No",
-                                "value": false
-                              }
-                            ]
-                          }
                         }
-                      ]
                     }
-                  }
-                ]
-              }
+                },
+                "publish": {
+                    "to": "org.wt.persistence"
+                }
             }
-          }
         },
-        "publish": {
-          "to": "$xpr( $local('contactId') )"
-        }
-      }
-    },
-    {
-      "name": "send_video",
-      "condition": {
-        "type": "filter",
-        "xpr": "$local(video_stream_request) = true",
-        "transform": {
-          "eventDataTemplate": {
-            "title": "UAV Video",
-            "advice": {
-              "eventType": "org.wt.client.tell",
-              "template": {
-                "name": "uav_video",
-                "interactions": [
-                  {
-                    "interaction": { "content": [{ "video": { "uri": "https://randomVideoThatWeHostSomewhere.com" } }] }
-                  }
-                ]
-              }
+        {
+            "name": "notify_contact",
+            "allowedSources": [
+                "persistence1"
+            ],
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.persistence'",
+                "onTrue": {
+                    "xpr": "$setLocal('contactId', $valueNamed('contactId'))"
+                },
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Possible UAV Detected",
+                        "description": "$xpr( $local('sensorId') & ' has detected a possible UAV')",
+                        "advice": {
+                            "eventType": "org.wt.client.tell",
+                            "template": {
+                                "name": "uav_notification",
+                                "interactions": [
+                                    {
+                                        "interaction": {
+                                            "content": [
+                                                {
+                                                    "map": {
+                                                        "locations": [
+                                                            {
+                                                                "name": "Detected UAV",
+                                                                "latitude": "$xpr( $local('coords').latitude  )",
+                                                                "longitude": "$xpr( $local('coords').longitude )"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "input": {
+                                                        "type": "boolean",
+                                                        "name": "video_stream_request",
+                                                        "display": "Would you like to see a video stream of the area?",
+                                                        "set": [
+                                                            {
+                                                                "display": "Yes",
+                                                                "value": true
+                                                            },
+                                                            {
+                                                                "display": "No",
+                                                                "value": false
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "publish": {
+                    "to": "$xpr( $local('contactId') )"
+                }
             }
-          }
         },
-        "publish": {
-          "to": "$xpr( $local('contactId') )"
+        {
+            "name": "send_video",
+            "condition": {
+                "type": "filter",
+                "xpr": "$local(video_stream_request) = true",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "UAV Video",
+                        "advice": {
+                            "eventType": "org.wt.client.tell",
+                            "template": {
+                                "name": "uav_video",
+                                "interactions": [
+                                    {
+                                        "interaction": {
+                                            "content": [
+                                                {
+                                                    "video": {
+                                                        "uri": "https://randomVideoThatWeHostSomewhere.com"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "publish": {
+                    "to": "$xpr( $local('contactId') )"
+                }
+            }
         }
-      }
-    }
-  ]
+    ]
 }

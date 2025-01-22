@@ -74,7 +74,7 @@ describe('admin persistence test', function () {
     return pr;
   });
   afterAll(async () => {
-    PersistenceFactory.getPersistence().removeDatabase();
+    PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
     await engineConnMan.disconnectAll();
   });

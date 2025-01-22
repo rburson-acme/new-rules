@@ -39,8 +39,8 @@ async function loadPatternsIntoStorage() {
 
 // demo
 async function loadDemoObjects() {
-  const persistence = PersistenceFactory.getPersistence('demo');
-  await persistence.connect();
+  await PersistenceFactory.connect();
+  const persistence = PersistenceFactory.getPersistence({ dbname: 'demo'})
   await persistence.upsert({ type: 'ContactInfo', values: { id: '0', contactId: "participant0" }, matcher: { sensorId: "0"} });
   await persistence.upsert({ type: 'ContactInfo', values: { id: '1', contactId: "participant1" }, matcher: { sensorId: "1"} });
   await persistence.upsert({ type: 'ContactInfo', values: { id: '2', contactId: "participant2" }, matcher: { sensorId: "2"} });

@@ -1,14 +1,16 @@
 import { Persistence } from '../../persistence/Persistence';
+import { PersistenceFactory } from '../../persistence/PersistenceFactory';
 import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors';
 import { Spec } from '../../thredlib/task/Spec';
 import { Adapter } from '../adapter/Adapter';
 
 export class PersistenceAdapter implements Adapter {
-  constructor(private persistence: Persistence) {}
+  constructor(private config?: { hostString?: string, dbname?: string }) {
+  }
 
   async initialize(): Promise<void> {
-    await this.persistence.connect();
+    PersistenceFactory.connect(this.config?.hostString);
   }
 
   async execute(event: Event): Promise<EventValues['values']> {
@@ -33,28 +35,34 @@ export class PersistenceAdapter implements Adapter {
   }
 
   async executeTask(task: EventTask): Promise<any> {
+
+    // task options can override the adapter config with host and dbname
+    const dbname = task?.options?.dbname || this.config?.dbname;
+    const hostString = task?.options?.hostString || this.config?.hostString;
+    const persistence = PersistenceFactory.getPersistence({ hostString, dbname });
+
     const { name, op, params } = task;
     if (!params) return;
     const { type, matcher, values, selector } = params;
     switch (op) {
       case Spec.PUT_OP:
-        return this.persistence.put({ type, values });
+        return persistence.put({ type, values });
       case Spec.GET_ONE_OP:
-        return this.persistence.getOne({ type, matcher, selector });
+        return persistence.getOne({ type, matcher, selector });
       case Spec.GET_OP:
-        return this.persistence.get({ type, matcher });
+        return persistence.get({ type, matcher });
       case Spec.UPDATE_OP:
-        return this.persistence.update({ type, matcher, values });
+        return persistence.update({ type, matcher, values });
       case Spec.UPSERT_OP:
-        return this.persistence.upsert({ type, matcher, values });
+        return persistence.upsert({ type, matcher, values });
       case Spec.REPLACE_OP:
-        return this.persistence.replace({ type, matcher, values });
+        return persistence.replace({ type, matcher, values });
       case Spec.DELETE_OP:
-        return this.persistence.delete({ type, matcher });
+        return persistence.delete({ type, matcher });
       case Spec.COUNT_OP:
-        return this.persistence.count({ type, matcher });
+        return persistence.count({ type, matcher });
       case Spec.RUN_OP: 
-        return this.persistence.run(values);
+        return persistence.run(values);
       default:
         throw new Error(`Unsupported task operation: ${task.op}`);
     }

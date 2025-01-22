@@ -5,6 +5,6 @@
     "agentImpl": "./persistence/PersistenceAgent.js",
     "subscriptionName": "sub_persistence_message",
     "customConfig": {
-        "dbname": "uav_demo"
+        "dbname": "demo"
     }
 }

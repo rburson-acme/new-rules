@@ -1,4 +1,4 @@
-import { PatternModel } from "../../../thredlib";
+import { PatternModel } from '../../../thredlib';
 
 export const patternModel: PatternModel = {
   name: 'Downtime Light',
@@ -26,7 +26,7 @@ export const patternModel: PatternModel = {
                   op: 'get',
                   params: {
                     type: 'employee',
-                //    selector: '{ id, name }',
+                    //    selector: '{ id, name }',
                     matcher: {
                       available: true,
                       code: "$xpr( $local('first_event').data.content.values.errorCode )",
@@ -65,28 +65,17 @@ export const patternModel: PatternModel = {
                       content: [
                         {
                           input: {
+                            type: 'boolean',
                             name: 'technician_response',
-                            type: 'nominal',
-                            display:
-                              'Are you available to accept the work order?',
-                          },
-                        },
-                        {
-                          group: {
-                            items: [
+                            display: 'Are you available to accept the work order?',
+                            set: [
                               {
-                                value: {
-                                  forInput: 'technician_response',
-                                  display: 'Yes, I can accept',
-                                  set: [true],
-                                },
+                                display: 'Yes, I can accept',
+                                value: true,
                               },
                               {
-                                value: {
-                                  forInput: 'technician_response',
-                                  display: 'No, not right now',
-                                  set: [false],
-                                },
+                                display: 'No, not right now',
+                                value: false,
                               },
                             ],
                           },
@@ -113,8 +102,7 @@ export const patternModel: PatternModel = {
             xpr: "$event.type='wonkaInc.technician' and $content.values.technician_response",
             transform: {
               eventDataTemplate: {
-                title:
-                  "$xpr( $event.source.id & ' has now become unavailable' )",
+                title: "$xpr( $event.source.id & ' has now become unavailable' )",
                 description:
                   "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
                 advice: {
@@ -175,7 +163,7 @@ export const patternModel: PatternModel = {
                       op: 'get',
                       params: {
                         type: 'employee',
-                  //      selector: '{ id, name }',
+                        //      selector: '{ id, name }',
                         values: {
                           available: true,
                           code: "$xpr( $local('first_event').data.content.errorCode )",
@@ -233,4 +221,3 @@ export const patternModel: PatternModel = {
       },
     },
     */
-

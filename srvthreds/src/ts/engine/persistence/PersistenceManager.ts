@@ -17,11 +17,11 @@ export class PersistenceManager {
   }
 
   async connect() {
-    return this.persistence.connect();
+    return PersistenceFactory.connect();
   }
 
   async disconnect() {
-    return this.persistence.disconnect();
+    return PersistenceFactory.disconnectAll();
   }
 
   async getAllActivePatterns(): Promise<PatternModel[]> {

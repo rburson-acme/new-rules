@@ -53,7 +53,7 @@ describe('admin system test', function () {
     expect(pattern?.name).toBe('Modified System Test');
   });
   afterAll(async () => {
-    PersistenceFactory.getPersistence().removeDatabase();
+    PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
     await engineConnMan.disconnectAll();
   });

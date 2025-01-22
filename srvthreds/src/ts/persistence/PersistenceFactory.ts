@@ -1,18 +1,29 @@
+import { PersistenceProvider } from '../provider/PersistenceProvider.js';
 import { Logger } from '../thredlib/index.js';
-import { MongoPersistence } from './mongodb/MongoPersistence.js';
+import { MongoPersistenceProvider } from './mongodb/MongoPersistenceProvider.js';
 import { Persistence } from './Persistence.js';
 
 export class PersistenceFactory {
-  private static instanceMap: Record<string, Persistence> = {};
+  private static instanceMap: Record<string, PersistenceProvider> = {};
 
-  private static DEFAULT_DB_NAME = 'default';
+  private static DEFAULT_HOST_NAME = 'default';
 
-  static getPersistence(dbname?: string): Persistence {
-    const _dbname = dbname || PersistenceFactory.DEFAULT_DB_NAME;
-    if (!PersistenceFactory.instanceMap[_dbname]) {
-      PersistenceFactory.instanceMap[_dbname] = dbname ? new MongoPersistence({ dbname }) : new MongoPersistence();
+  static getPersistenceProvider(hostString?: string): PersistenceProvider {
+    const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
+    if (!PersistenceFactory.instanceMap[_hostString]) {
+      PersistenceFactory.instanceMap[_hostString] = hostString ? new MongoPersistenceProvider(hostString) : new MongoPersistenceProvider();
     }
-    return PersistenceFactory.instanceMap[_dbname];
+    return PersistenceFactory.instanceMap[_hostString];
+  }
+
+  static getPersistence(params?: { hostString?: string, dbname?: string }): Persistence {
+    const { hostString, dbname } = params || {};
+    const persistenceProvider = PersistenceFactory.getPersistenceProvider(hostString);
+    return persistenceProvider.getInstance(dbname);
+  }
+
+  static connect(hostString?: string): Promise<void> {
+    return PersistenceFactory.getPersistenceProvider(hostString).connect();
   }
 
   static async disconnectAll(): Promise<void> {
@@ -26,13 +37,11 @@ export class PersistenceFactory {
     PersistenceFactory.instanceMap = {};
   }
 
-  static async removeDatabase(dbname?: string): Promise<void> {
+  static async removeDatabase(params?: { hostString?: string, dbname?: string }): Promise<void> {
+    const { hostString, dbname } = params || {};
     try {
-      if (dbname) {
-        await (dbname
-          ? PersistenceFactory.instanceMap[dbname].removeDatabase()
-          : PersistenceFactory.instanceMap[PersistenceFactory.DEFAULT_DB_NAME].removeDatabase());
-      }
+      const persistence = PersistenceFactory.getPersistence({ hostString, dbname });
+      await persistence.deleteDatabase();
     } catch (e) {
       Logger.error(`removeDatabase: `, e);
     }

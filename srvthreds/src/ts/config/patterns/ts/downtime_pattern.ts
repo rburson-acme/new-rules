@@ -69,27 +69,17 @@ export const patternModel: PatternModel = {
                       content: [
                         {
                           input: {
+                            type: 'boolean',
                             name: 'operator_response',
-                            type: 'nominal',
                             display: 'Do you need to create a new work order?',
-                          },
-                        },
-                        {
-                          group: {
-                            items: [
+                            set: [
                               {
-                                value: {
-                                  forInput: 'operator_response',
-                                  display: 'Yes, create a work order',
-                                  set: [true],
-                                },
+                                display: 'Yes, create a work order',
+                                value: true,
                               },
                               {
-                                value: {
-                                  forInput: 'operator_response',
-                                  display: "No, don't create a work order",
-                                  set: [false],
-                                },
+                                display: "No, don't create a work order",
+                                value: false,
                               },
                             ],
                           },
@@ -243,27 +233,17 @@ export const patternModel: PatternModel = {
                       content: [
                         {
                           input: {
+                            type: 'boolean',
                             name: 'technician_response',
-                            type: 'nominal',
                             display: 'Are you available to accept the work order?',
-                          },
-                        },
-                        {
-                          group: {
-                            items: [
+                            set: [
                               {
-                                value: {
-                                  forInput: 'technician_response',
-                                  display: 'Yes, I can accept',
-                                  set: [true],
-                                },
+                                display: 'Yes, I can accept',
+                                value: true,
                               },
                               {
-                                value: {
-                                  forInput: 'technician_response',
-                                  display: 'No, not right now',
-                                  set: [false],
-                                },
+                                display: 'No, not right now',
+                                value: false,
                               },
                             ],
                           },
