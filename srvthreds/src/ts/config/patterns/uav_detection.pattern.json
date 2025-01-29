@@ -54,7 +54,7 @@
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Possible UAV Detected",
-                        "description": "$xpr( $local('sensorId') & ' has detected a possible UAV')",
+                        "description": "$xpr( 'Sensor ' & $valueNamed('sensorId') & ' has detected a possible UAV')",
                         "advice": {
                             "eventType": "org.wt.client.tell",
                             "template": {

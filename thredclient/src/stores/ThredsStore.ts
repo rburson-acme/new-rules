@@ -19,6 +19,7 @@ export class ThredsStore {
       selectThred: action,
       numThreds: computed,
       currentThredStore: computed,
+      unselectThred: action,
     });
     this.eventManager = new EventManager();
     this.eventManager.subscribe(this.consume);
@@ -26,9 +27,10 @@ export class ThredsStore {
 
   addThred(thred: Thred) {
     this.thredStores[thred.id] = new ThredStore(thred, this.rootStore);
-    // @TODO - this can should be removed once we have a thred panel on the side for user selection
-    // this will need to change later - this automatically selects a new thred
-    this.selectThred(thred.id);
+  }
+
+  unselectThred() {
+    this.currentThredId = undefined;
   }
 
   selectThred(thredId: string) {
@@ -66,7 +68,6 @@ export class ThredsStore {
     } else {
       url = 'http://10.0.2.2:3000';
     }
-
     await this.eventManager
       .connect(url, { transports: ['websocket'], jsonp: false, auth: { token: userId } })
       //this.engine.connect('http://proximl.com:3000', { transports: ['websocket'], jsonp: false, auth: { token: userId } })
