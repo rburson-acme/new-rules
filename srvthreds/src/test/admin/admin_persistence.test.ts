@@ -1,5 +1,5 @@
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
-import { Logger, LoggerLevel, Message, SystemEvents, SMap, Events } from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel, Message, SystemEvents, SMap, Events, ThredId } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
 import { adminTestPatternModels, adminTestSource } from './adminTestUtils.js';
 
@@ -71,6 +71,15 @@ describe('admin persistence test', function () {
       expect(message.event.data?.content?.error).toBeUndefined();
     });
     engineConnMan.eventQ.queue(findPatternEvent);
+    return pr;
+  });
+  test('should retrieve events for thred', function () {
+    const findEventsEvent = SystemEvents.getEventsForThredEvent(ThredId.SYSTEM, adminTestSource);
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+      expect(message.event.type).toBe('org.wt.tell');
+      expect(message.event.data?.content?.error).toBeUndefined();
+    });
+    engineConnMan.eventQ.queue(findEventsEvent);
     return pr;
   });
   afterAll(async () => {

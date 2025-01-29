@@ -1,4 +1,4 @@
-import { systemEventTypes, eventTypes } from './types.js';
+import { systemEventTypes, eventTypes, ThredId } from './types.js';
 import { EventBuilder } from './EventBuilder.js';
 import { Spec } from '../task/Spec.js';
 export class SystemEvents {
@@ -15,6 +15,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.transitionThred, thredId, transition };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -26,6 +27,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.terminateThred, thredId };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -45,6 +47,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.getThreds };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -55,6 +58,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.reloadPattern, patternId };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -66,6 +70,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.shutdown, delay };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -77,6 +82,7 @@ export class SystemEvents {
         const values = { op: systemEventTypes.operations.terminateAllThreds };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeValues(values)
@@ -94,6 +100,7 @@ export class SystemEvents {
     static getSavePatternEvent(pattern, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: 'PatternModel', values: pattern } })
@@ -103,6 +110,7 @@ export class SystemEvents {
     static getFindPatternEvent(patternId, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'findPattern', op: Spec.GET_ONE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } })
@@ -112,6 +120,7 @@ export class SystemEvents {
     static getFindAllPatternsEvent(source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'findAllPatterns', op: Spec.GET_OP, params: { type: 'PatternModel' } })
@@ -121,6 +130,7 @@ export class SystemEvents {
     static getFindPatternsEvent(matcher, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'findPatterns', op: Spec.GET_OP, params: { type: 'PatternModel', matcher } })
@@ -130,6 +140,7 @@ export class SystemEvents {
     static getUpdatePatternEvent(patternId, source, updateValues) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({
@@ -147,6 +158,7 @@ export class SystemEvents {
     static getDeletePatternEvent(patternId, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks([
@@ -158,6 +170,7 @@ export class SystemEvents {
     static getEventsForThredEvent(thredId, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher: { thredId } } })
@@ -167,6 +180,7 @@ export class SystemEvents {
     static getFindEventsEvent(matcher, source) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
             source,
         })
             .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher } })

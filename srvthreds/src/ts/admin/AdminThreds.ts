@@ -26,20 +26,25 @@ export class AdminThreds extends Threds {
 
   async consider(event: Event): Promise<void> {
     if (AdminService.isAdminEvent(event)) {
-      const _event = { ...event, thredId: Id.getNextThredId(ThredId.SYSTEM) };
+      if(event.thredId !== ThredId.SYSTEM) {
+        throw EventThrowable.get(
+          `System event must have a system thredId: ${ThredId.SYSTEM}`,
+          errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+        );
+      }
       let values: EventValues['values'] | undefined;
-        if (_event.type === eventTypes.control.dataControl.type) {
+        if (event.type === eventTypes.control.dataControl.type) {
           // persistence operation has a top level result key
-          values = { result : await this.persistenceAdapter.execute(_event) };
-        } else if (_event.type === eventTypes.control.sysControl.type) {
-          values = await this.adminService.handleSystemEvent({ event: _event });
+          values = { result : await this.persistenceAdapter.execute(event) };
+        } else if (event.type === eventTypes.control.sysControl.type) {
+          values = await this.adminService.handleSystemEvent({ event: event });
         }
         const outboundEvent = Events.newEventFromEvent({
-          prevEvent: _event,
-          title: `System Event -> Thred: ${_event.thredId} -> Re: Event: ${_event.id}`,
+          prevEvent: event,
+          title: `System Event -> Thred: ${event.thredId} -> Re: Event: ${event.id}`,
           content: { values },
         });
-        const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
+        const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
         // don't wait for dispatch
         this.dispatch(message);
     } else {
