@@ -42,6 +42,7 @@ export class MongoPersistence implements Persistence {
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const result = await this.getCollection(query.type)
       .find(mappedMatcher)
+      .sort({ timestamp: 1 })
       .toArray();
     return result ? MongoSpec.mapOutputValues(result) : null;
   }

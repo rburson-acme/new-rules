@@ -61,10 +61,11 @@ export class Engine implements Dispatcher {
    * @param to
    */
   public async dispatch(message: Message): Promise<void> {
+    const timestamp = Date.now();
     try {
     debug(h1(`Engine publish Message ${message.id} to ${message.to}`));
     logObject(message);
-    await Pm.get().saveEvent({ event: message.event, to: message.to });
+    await Pm.get().saveEvent({ event: message.event, to: message.to, timestamp });
     // NOTE: dispatch all at once - failure notification will be handled separately
     await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(message));
     } catch (e) {
@@ -80,14 +81,15 @@ export class Engine implements Dispatcher {
   private async run() {
     while (true) {
       const message: QMessage<Event> = await this.inboundQ.pop();
+      const timestamp = Date.now();
       try {
         await this.consider(message.payload);
         await this.inboundQ.delete(message);
-        await Pm.get().saveEvent({ event: message.payload });
+        await Pm.get().saveEvent({ event: message.payload, timestamp });
       } catch (e) {
         error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
         await this.inboundQ.reject(message, e as Error).catch(error);
-        await Pm.get().saveEvent({ event: message.payload, error: e });
+        await Pm.get().saveEvent({ event: message.payload, error: e, timestamp });
         await this.handleError(e, message.payload);
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.inboundQ.requeue(message, e).catch(Logger.error);
