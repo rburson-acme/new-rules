@@ -28,7 +28,6 @@ export class AdminThreds extends Threds {
     if (AdminService.isAdminEvent(event)) {
       const _event = { ...event, thredId: Id.getNextThredId(ThredId.SYSTEM) };
       let values: EventValues['values'] | undefined;
-      try {
         if (_event.type === eventTypes.control.dataControl.type) {
           // persistence operation has a top level result key
           values = { result : await this.persistenceAdapter.execute(_event) };
@@ -43,16 +42,6 @@ export class AdminThreds extends Threds {
         const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [_event.source.id] };
         // don't wait for dispatch
         this.dispatch(message);
-      } catch (e) {
-        const eventError =
-          e instanceof EventThrowable ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause: e };
-        Logger.error(`AdminAgent: failed to process event ${_event.id}::${_event.thredId}`, eventError, e);
-        const outboundEvent = Events.newEventFromEvent({
-          prevEvent: _event,
-          title: `System Event Error -> Thred: ${_event.thredId} -> Re: Event: ${_event.id}`,
-          error: eventError,
-        });
-      }
     } else {
       return super.consider(event);
     }

@@ -3,7 +3,7 @@ import { Event } from '../thredlib/index.js';
 import { Message } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
-import { EventStore } from './store/EventStore.js';
+import { EventsStore } from './store/EventsStore.js';
 import { PatternsStore } from './store/PatternsStore.js';
 import { EventQ } from '../queue/EventQ.js';
 import { StorageFactory } from '../storage/StorageFactory.js';
@@ -15,6 +15,7 @@ import { Dispatcher } from './Dispatcher.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
+import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
@@ -29,7 +30,7 @@ export class Engine implements Dispatcher {
     readonly PROC?: { shutdown: (delay: number) => Promise<void> },
   ) {
     const storage = StorageFactory.getStorage();
-    this.thredsStore = new ThredsStore(new EventStore(), new PatternsStore(storage), storage);
+    this.thredsStore = new ThredsStore(new PatternsStore(storage), storage);
     // this can be determined by config so that we can run 'Admin' nodes seperately
     // this.threds = new Threds(this.thredsStore, this);
     this.threds = new AdminThreds(this.thredsStore, this);
@@ -60,10 +61,15 @@ export class Engine implements Dispatcher {
    * @param to
    */
   public async dispatch(message: Message): Promise<void> {
+    try {
     debug(h1(`Engine publish Message ${message.id} to ${message.to}`));
     logObject(message);
+    await Pm.get().saveEvent({ event: message.event, to: message.to });
     // NOTE: dispatch all at once - failure notification will be handled separately
     await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(message));
+    } catch (e) {
+      error(crit(`Engine::Failed dispatch message id: ${message.id}`), e as Error, (e as Error).stack);
+    }
   }
 
   /*
@@ -77,9 +83,11 @@ export class Engine implements Dispatcher {
       try {
         await this.consider(message.payload);
         await this.inboundQ.delete(message);
+        await Pm.get().saveEvent({ event: message.payload });
       } catch (e) {
         error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
         await this.inboundQ.reject(message, e as Error).catch(error);
+        await Pm.get().saveEvent({ event: message.payload, error: e });
         await this.handleError(e, message.payload);
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.inboundQ.requeue(message, e).catch(Logger.error);
@@ -90,18 +98,18 @@ export class Engine implements Dispatcher {
   /*
     Respond to the source of the event with an error event
   */
-  private async handleError(e: any, prevEvent: Event): Promise<void> {
+  private async handleError(e: any, inboundEvent: Event): Promise<void> {
     try {
       const eventError =
         e instanceof EventThrowable ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause: e };
       const outboundEvent = Events.newEventFromEvent({
-        prevEvent,
-        title: `Failure processing Event ${prevEvent.id}`,
+        prevEvent: inboundEvent,
+        title: `Failure processing Event ${inboundEvent.id} : ${eventError?.message}`,
         error: eventError,
       });
-      await this.dispatch({ id: outboundEvent.id, event: outboundEvent, to: [prevEvent.source.id] });
+      await this.dispatch({ id: outboundEvent.id, event: outboundEvent, to: [inboundEvent.source.id] });
     } catch (e) {
-      error(crit(`Engine::Failed to publish error event for id: ${prevEvent.id}`), e as Error, (e as Error).stack);
+      error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
     }
   }
 

@@ -3,7 +3,8 @@ import {
   eventTypes,
   Events,
   StringMap,
-  systemEventTypes, SystemEventInputValues,
+  systemEventTypes,
+  SystemEventInputValues,
   errorKeys,
   errorCodes,
   EventValues,
@@ -13,7 +14,7 @@ import {
   TransitionThredArgs,
   TerminateAllThredsArgs,
   ShutdownArgs,
-  ReloadPatternArgs
+  ReloadPatternArgs,
 } from '../thredlib/index.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
@@ -23,17 +24,14 @@ import { PersistenceManager } from '../engine/persistence/PersistenceManager.js'
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 
-
-
 /***
- *       _       _           _           ___                      _   _                 
- *      /_\   __| |_ __ ___ (_)_ __     /___\_ __   ___ _ __ __ _| |_(_) ___  _ __  ___ 
+ *       _       _           _           ___                      _   _
+ *      /_\   __| |_ __ ___ (_)_ __     /___\_ __   ___ _ __ __ _| |_(_) ___  _ __  ___
  *     //_\\ / _` | '_ ` _ \| | '_ \   //  // '_ \ / _ \ '__/ _` | __| |/ _ \| '_ \/ __|
  *    /  _  \ (_| | | | | | | | | | | / \_//| |_) |  __/ | | (_| | |_| | (_) | | | \__ \
  *    \_/ \_/\__,_|_| |_| |_|_|_| |_| \___/ | .__/ \___|_|  \__,_|\__|_|\___/|_| |_|___/
- *                                          |_|                                         
+ *                                          |_|
  */
-
 
 export interface AdminServiceArgs {
   readonly event: Event;
@@ -81,16 +79,14 @@ export class AdminService {
     }
   }
 
-
-
-/***
- *     _____ _                  _     ___            _             _ 
- *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
- *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
- *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
- *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
- *                                                                   
- */
+  /***
+   *     _____ _                  _     ___            _             _
+   *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
+   *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
+   *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
+   *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
+   *
+   */
 
   /*
         Move the thred to the given state
@@ -101,6 +97,12 @@ export class AdminService {
       args: { thredId, op, transition },
     } = this.getThredArgs<TransitionThredArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
+      if (!thredStore) {
+        throw EventThrowable.get(
+          `Thred ${thredId} does not, or no longer exists`,
+          errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+        );
+      }
       await Thred.transition(thredStore, this.threds, new Transition(transition));
     });
     return { status: systemEventTypes.successfulStatus, op, thredId };
@@ -115,21 +117,25 @@ export class AdminService {
       args: { thredId, op },
     } = this.getThredArgs<TerminateThreadArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
+      if (!thredStore) {
+        throw EventThrowable.get(
+          `Thred ${thredId} does not, or no longer exists`,
+          errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+        );
+      }
       thredStore.finish();
     });
     return { status: systemEventTypes.successfulStatus, op, thredId };
   };
 
-
-
-/***
- *     __               ___            _             _ 
- *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
- *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
- *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
- *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
- *        |___/                                        
- */
+  /***
+   *     __               ___            _             _
+   *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
+   *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
+   *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
+   *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
+   *        |___/
+   */
 
   /*
     Get all current threds or a specific set of threds
@@ -142,7 +148,11 @@ export class AdminService {
     const thredStores = await (thredIds?.length
       ? this.threds.thredsStore.getThredStores(thredIds!)
       : this.threds.thredsStore.getAllThredStores());
-    return { status: systemEventTypes.successfulStatus, op, threds: thredStores.map((thredStore) => thredStore.toJSON()) };
+    return {
+      status: systemEventTypes.successfulStatus,
+      op,
+      threds: thredStores.map((thredStore) => thredStore.toJSON()),
+    };
   };
 
   reloadPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
@@ -150,7 +160,7 @@ export class AdminService {
       event,
       args: { op, patternId },
     } = this.getArgs<ReloadPatternArgs>(args);
-    if(!patternId) {
+    if (!patternId) {
       throw EventThrowable.get(
         `No patternId supplied for reloadPattern operation on System`,
         errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
@@ -177,7 +187,7 @@ export class AdminService {
     await this.threds.thredsStore.terminateAllThreds();
     return { status: systemEventTypes.successfulStatus, op };
   };
-  
+
   shutdown = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
@@ -186,7 +196,6 @@ export class AdminService {
     await this.threds.shutdown(delay);
     return { status: systemEventTypes.successfulStatus, op };
   };
-
 
   private getArgs<T extends SystemEventInputValues>(args: AdminServiceArgs): { event: Event; args: T } {
     const { event } = args;

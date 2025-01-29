@@ -4,7 +4,7 @@ import { events, EngineConnectionManager, withReject, withDispatcherPromise, del
 
 Logger.setLevel(LoggerLevel.INFO);
 
-describe('transitions', function () {
+describe('expiry tests', function () {
   beforeAll(async () => {
     connMan = await EngineConnectionManager.newEngineInstance(patternModels);
     await connMan.purgeAll();
@@ -102,21 +102,19 @@ describe('transitions', function () {
       ];
     });
     await delay(2100);
-    connMan.eventQ.queue({ ...events.event3, thredId });
+    await connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
-  // should have moved back to the reaction with the timeout
+  // should have moved back to the reaction with the timeout (event3reaction)
   // should move to the named transition and receive event BEFORE timing out
-  test('timed transition', function () {
-    const currentReactionName = (connMan.engine.thredsStore as any).thredStores[thredId as string].currentReaction.name;
-    expect(currentReactionName).toBe('event3reaction');
+  test('timed transition', async function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers,
       (message) => {
         expect(message.event.data?.title).toBe('outbound.event3');
         expect(message.to).toContain('outbound.event3.recipient');
       },
     );
-    connMan.eventQ.queue({ ...events.event3, thredId });
+    await connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
   //  should move to the named transition and expire

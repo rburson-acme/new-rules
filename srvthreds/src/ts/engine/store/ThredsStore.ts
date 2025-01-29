@@ -1,16 +1,15 @@
 import { Pattern } from '../Pattern.js';
 import { ThredStore, ThredStoreState } from './ThredStore.js';
-import { EventStore } from './EventStore.js';
 import { PatternsStore } from './PatternsStore.js';
-import { Lock, Storage, Types, indexId } from '../../storage/Storage.js';
-import { errorCodes, errorKeys, Logger, Parallel, Series } from '../../thredlib/index.js';
+import { Storage, Types, indexId } from '../../storage/Storage.js';
+import { errorCodes, errorKeys, Logger, Parallel } from '../../thredlib/index.js';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
+import { EventsStore } from './EventsStore.js';
 
 // Thred locking is handled here, and should be contained to this class
 
 export class ThredsStore {
   constructor(
-    readonly eventStore: EventStore,
     readonly patternsStore: PatternsStore,
     readonly storage: Storage,
     private thredStores: { [thredId: string]: ThredStore } = {},
@@ -22,7 +21,7 @@ export class ThredsStore {
       This method adds the thredStore to thredStores map and removes it after the operation 
   */
   async withNewThredStore(pattern: Pattern, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
-    const thredStore = ThredStore.newInstance(pattern, this.eventStore);
+    const thredStore = ThredStore.newInstance(pattern);
     const results = await this.storage.aquire(
       [{ type: Types.Thred, id: thredStore.id }],
       [
@@ -45,17 +44,12 @@ export class ThredsStore {
       lock is released at the end of the operation
       This method adds the thredStore to thredStores map and removes it after the operation 
   */
-  async withThredStore(thredId: string, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
+  async withThredStore(thredId: string, op: (thredStore?: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
     const results = await this.storage.aquire(
       [{ type: Types.Thred, id: thredId }],
       [
         async () => {
           const thredStore = await this.getThreadStore(thredId);
-          if (!thredStore)
-            throw EventThrowable.get(
-              `Thred ${thredId} does not, or no longer exists`,
-              errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
-            );
           const result = await op(thredStore);
           if (thredStore) await this.saveThredStore(thredStore);
           delete this.thredStores[thredId];
@@ -121,7 +115,7 @@ export class ThredsStore {
 
   // requires lock
   private fromThredState(state: ThredStoreState): ThredStore {
-    const thredStore = ThredStore.fromState(state, this.eventStore, this.patternsStore);
+    const thredStore = ThredStore.fromState(state, this.patternsStore);
     this.thredStores[state.id] = thredStore;
     return thredStore;
   }

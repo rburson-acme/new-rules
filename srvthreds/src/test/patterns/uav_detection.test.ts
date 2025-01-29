@@ -1,6 +1,6 @@
 import { PatternModel, Logger, LoggerLevel, Event, EventBuilder, Events, EventTask } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
-import { patternModel } from '../../ts/config/patterns/ts/uav_detection_pattern.js';
+import patternModel from '../../ts/config/patterns/uav_detection.pattern.json';
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 
 Logger.setLevel(LoggerLevel.DEBUG);
@@ -55,9 +55,9 @@ const sensorId = '1000000001';
 // create a base builder with the common parameters
 const sensorEvent = EventBuilder.create({
   type: 'org.wt.sensor.detectionEvent',
-  source: { id: 'sensor_agent1', name: 'Sensor Agent 1' },
+  source: { id: 'participant0', name: 'Sensor Agent 1' },
 })
-  .mergeValues({ lattitude: 34.0522, longitude: -118.2437, sensorId, certainty: 0.9 })
+  .mergeValues({ latitude: 34.0522, longitude: -118.2437, sensorId, certainty: 0.9 })
   .mergeData({ title: 'Aerial Activity Detected' })
   .build();
 

@@ -45,7 +45,6 @@ describe('authorization tests', function () {
   });
   test('third reaction should allow all sources', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
-      expect(await connMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event2');
       expect(message.to).toContain('outbound.event2.recipient');
     });

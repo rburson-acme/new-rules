@@ -1,5 +1,5 @@
 import { ExpressionContext } from '../thredlib/index.js';
-import { EventStore } from './store/EventStore.js';
+import { EventsStore } from './store/EventsStore.js';
 
 export class ThredContext implements ExpressionContext {
 
@@ -27,7 +27,7 @@ export class ThredContext implements ExpressionContext {
         }
     }
 
-    static fromState(state: any, eventStore: EventStore): ThredContext {
+    static fromState(state: any): ThredContext {
         const { thredId, scope } = state;
         return new ThredContext({ thredId, scope, })
     }

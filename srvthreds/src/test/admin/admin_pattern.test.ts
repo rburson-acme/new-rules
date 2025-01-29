@@ -14,7 +14,7 @@ import { adminTestPatternModels, adminTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);
 
-describe('admin system test', function () {
+describe('admin pattern management test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
     await engineConnMan.purgeAll();

@@ -4,8 +4,14 @@ import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
+import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
+import { MATCH, NO_MATCH } from './persistence/ThredLogRecord.js';
 
 const { debug, error, h2 } = Logger;
+
+
+// where to pick up
+// test the thredlog methods
 
 export class Thred {
   /*
@@ -14,24 +20,28 @@ export class Thred {
       before returning.  The caller may rely on that.
     */
   static async consider(event: Event, thredStore: ThredStore, threds: Threds): Promise<void> {
-    const { thredContext } = thredStore;
     let inputEvent: Event | undefined = event;
 
     // synchronize thred state - chance to run handlers to fix up state (expirations, etc)
     // note, this can advance the state to a new reaction
     await Thred.synchronizeThredState(thredStore, threds);
 
+    const fromReactionName = thredStore.currentReaction?.name;
     // loop wil continue as long as there is a currentReaction and an inputEvent
     transitionLoop: do {
       // apply the event to the current state. There will be a result if the event triggers a state change
-      const reactionResult: ReactionResult | undefined = await thredStore.currentReaction?.apply(
-        inputEvent,
-        thredStore,
-      );
+      const reactionResult: ReactionResult | undefined = await thredStore.currentReaction?.apply(inputEvent, thredStore);
       //if there's not a match, end the loop
-      if (!reactionResult) break transitionLoop;
+      if (!reactionResult) {
+        await Thred.logNoTransition(thredStore, event, fromReactionName);
+        break transitionLoop;
+      }
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult?.transition, inputEvent);
+
+      // note thredStore may be updated with a new reaction
+      await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
+
       // send any message - NOTE: don't wait for dispatch
       reactionResult?.message && threds.dispatch(reactionResult?.message);
     } while (inputEvent);
@@ -47,13 +57,15 @@ export class Thred {
     thredStore.finish();
   }
 
-  // time out the current reaction and move to the reaction 
+  // time out the current reaction and move to the reaction
   // specified by the transition (or the default if transition is undefined)
   // Note the Reaction must have an expiry property set
   static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
     const expiry = thredStore?.currentReaction?.expiry;
     if (expiry) {
-      debug(h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`)) 
+      debug(
+        h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`),
+      );
       const transtition = thredStore?.currentReaction?.expiry?.transition;
       await Thred.transition(thredStore, threds, transtition);
     }
@@ -71,25 +83,28 @@ export class Thred {
     // get the next input event if any
     return !thredStore.isFinished ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
   }
-  
 
   private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
     // check for an expired reaction
     if (thredStore.reactionTimedOut) await Thred.expireReaction(thredStore, threds);
   }
 
-  // give private Thred access to helpers
-  private static createCompanion(): ThredCompanion {
-    return {
-      expireReaction: Thred.expireReaction,
-      transition: Thred.transition,
-      terminateThred: Thred.terminateThred,
-    };
+  private static async logNoTransition(thredStore: ThredStore, event: Event, fromReaction?: string) {
+    Pm.get().saveThredLogRecord({
+      thredId: thredStore.id,
+      eventId: event.id,
+      type: NO_MATCH,
+      fromReaction,
+    });
   }
-}
 
-export interface ThredCompanion {
-  expireReaction(thredStore: ThredStore, threds: Threds): Promise<void>;
-  transition(thredStore: ThredStore, threds: Threds, transition: Transition): Promise<void>;
-  terminateThred(thredStore: ThredStore): Promise<void>;
+  private static async logTransition(thredStore: ThredStore, event: Event, fromReaction?: string, toReaction?: string) {
+    await Pm.get().saveThredLogRecord({
+      thredId: thredStore.id,
+      eventId: event.id,
+      type: MATCH,
+      fromReaction,
+      toReaction,
+    });
+  }
 }

@@ -109,6 +109,24 @@ export class SystemEvents {
             .mergeData({ title: 'Find Pattern' })
             .build();
     }
+    static getFindAllPatternsEvent(source) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            source,
+        })
+            .mergeTasks({ name: 'findAllPatterns', op: Spec.GET_OP, params: { type: 'PatternModel' } })
+            .mergeData({ title: 'Find All Patterns' })
+            .build();
+    }
+    static getFindPatternsEvent(matcher, source) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            source,
+        })
+            .mergeTasks({ name: 'findPatterns', op: Spec.GET_OP, params: { type: 'PatternModel', matcher } })
+            .mergeData({ title: 'Find Patterns' })
+            .build();
+    }
     static getUpdatePatternEvent(patternId, source, updateValues) {
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,

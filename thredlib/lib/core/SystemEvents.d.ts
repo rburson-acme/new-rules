@@ -59,6 +59,8 @@ export declare class SystemEvents {
      */
     static getSavePatternEvent(pattern: PatternModel, source: Event['source']): Event;
     static getFindPatternEvent(patternId: string, source: Event['source']): Event;
+    static getFindAllPatternsEvent(source: Event['source']): Event;
+    static getFindPatternsEvent(matcher: EventTaskParams['matcher'], source: Event['source']): Event;
     static getUpdatePatternEvent(patternId: string, source: Event['source'], updateValues: EventTaskParams['values']): Event;
     static getDeletePatternEvent(patternId: string, source: Event['source']): Event;
 }
