@@ -205,5 +205,25 @@ export class SystemEvents {
       .mergeData({ title: 'Delete Pattern' })
       .build();
   }
+  
+  static getEventsForThredEvent(thredId: string, source: Event['source']) {
+    return EventBuilder.create({
+      type: eventTypes.control.dataControl.type,
+      source,
+    })
+      .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher: { thredId } } })
+      .mergeData({ title: 'Find Events' })
+      .build();
+  }
+
+  static getFindEventsEvent(matcher: EventTaskParams['matcher'], source: Event['source']) {
+    return EventBuilder.create({
+      type: eventTypes.control.dataControl.type,
+      source,
+    })
+      .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher } })
+      .mergeData({ title: 'Find Events' })
+      .build();
+  }
 
 }

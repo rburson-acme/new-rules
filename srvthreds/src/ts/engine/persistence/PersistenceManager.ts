@@ -1,6 +1,6 @@
 import { Persistence } from '../../persistence/Persistence.js';
 import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
-import { PatternModel, Event, errorCodes, errorKeys } from '../../thredlib';
+import { PatternModel, Event, errorCodes, errorKeys, Logger } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
 import { EventRecord } from './EventRecord';
 import { ThredLogRecord } from './ThredLogRecord.js';
@@ -40,14 +40,13 @@ export class PersistenceManager {
   }
 
   async saveEvent(record: EventRecord): Promise<void> {
-    if (!record.event.id)
-      throw EventThrowable.get(
-        'Cannot save Event: Event has no id',
-        errorCodes[errorKeys.ARGUMENT_VALIDATION_ERROR].code,
-      );
+    try {
     record.id = record.event.id;
     record.thredId = record.event.thredId;
     await this.persistence.replace({ type: Types.EventRecord, values: record, matcher: { id: record.id } });
+    } catch(err) {
+      Logger.error(Logger.crit(`Error saving event record: ${record.id} for thred ${record.thredId}`), err);
+    }
   }
 
   async getEventsForThred(thredId: string): Promise<EventRecord[]> {
@@ -55,8 +54,12 @@ export class PersistenceManager {
   }
 
   async saveThredLogRecord(entry: ThredLogRecord): Promise<void> {
+    try {
     const timestamp = Date.now();
     await this.persistence.put({ type: Types.ThredLogEntry, values: { timestamp, ...entry } });
+    } catch(err) {
+      Logger.error(Logger.crit(`Error saving thred log record: ${entry.type} for thred ${entry.thredId}`), err);
+    }
   }
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[]> {
