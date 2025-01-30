@@ -55,7 +55,16 @@ export interface EventTaskParams {
     readonly type: string;
     readonly values?: Record<string, any> | any[];
     readonly matcher?: Record<string, any>;
+    readonly transform?: TaskTransformParams;
     readonly selector?: Record<string, any>;
+}
+export interface TaskTransformParams {
+    sort?: {
+        field: string;
+        desc?: boolean;
+    }[];
+    limit?: number;
+    skip?: number;
 }
 export interface Resource {
     readonly contentType: string;

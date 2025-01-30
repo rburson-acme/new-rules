@@ -78,8 +78,21 @@ describe('admin persistence test', function () {
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.data?.content?.error).toBeUndefined();
+      expect(Events.valueNamed(message.event, 'result')).toBeTruthy();
+      expect(Events.valueNamed(message.event, 'result')[0].length).toBe(12);
+      expect(Events.valueNamed(message.event, 'result')[0][0].event.data.title).toBe('Store Pattern System Test');
     });
     engineConnMan.eventQ.queue(findEventsEvent);
+    return pr;
+  });
+  test('should retrieve thredlog for thred', function () {
+    const getThredLogEvent = SystemEvents.getThredLogForThredEvent(ThredId.SYSTEM, adminTestSource);
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+      expect(message.event.type).toBe('org.wt.tell');
+      expect(message.event.data?.content?.error).toBeUndefined();
+      expect(Events.valueNamed(message.event, 'result')).toBeTruthy();
+    });
+    engineConnMan.eventQ.queue(getThredLogEvent);
     return pr;
   });
   afterAll(async () => {

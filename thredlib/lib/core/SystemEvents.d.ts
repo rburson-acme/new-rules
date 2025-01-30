@@ -65,4 +65,5 @@ export declare class SystemEvents {
     static getDeletePatternEvent(patternId: string, source: Event['source']): Event;
     static getEventsForThredEvent(thredId: string, source: Event['source']): Event;
     static getFindEventsEvent(matcher: EventTaskParams['matcher'], source: Event['source']): Event;
+    static getThredLogForThredEvent(thredId: string, source: Event['source']): Event;
 }

@@ -1,6 +1,6 @@
 
-import { Event } from '../../thredlib/core/Event.js';
-import { Address, Persistent } from '../../thredlib/index.js';
+import { Event } from '../core/Event.js';
+import { Address, Persistent } from '../index.js';
 export interface EventRecord extends Persistent{
     event: Event;
     timestamp: number;

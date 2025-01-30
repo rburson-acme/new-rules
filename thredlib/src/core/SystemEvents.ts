@@ -158,11 +158,15 @@ export class SystemEvents {
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'findPattern', op: Spec.GET_ONE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } })
+      .mergeTasks({
+        name: 'findPattern',
+        op: Spec.GET_ONE_OP,
+        params: { type: 'PatternModel', matcher: { id: patternId } },
+      })
       .mergeData({ title: 'Find Pattern' })
       .build();
   }
-  
+
   static getFindAllPatternsEvent(source: Event['source']) {
     return EventBuilder.create({
       type: eventTypes.control.dataControl.type,
@@ -173,7 +177,6 @@ export class SystemEvents {
       .mergeData({ title: 'Find All Patterns' })
       .build();
   }
-
 
   static getFindPatternsEvent(matcher: EventTaskParams['matcher'], source: Event['source']) {
     return EventBuilder.create({
@@ -217,14 +220,18 @@ export class SystemEvents {
       .mergeData({ title: 'Delete Pattern' })
       .build();
   }
-  
+
   static getEventsForThredEvent(thredId: string, source: Event['source']) {
     return EventBuilder.create({
       type: eventTypes.control.dataControl.type,
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher: { thredId } } })
+      .mergeTasks({
+        name: 'findEvents',
+        op: Spec.GET_OP,
+        params: { type: 'EventRecord', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+      })
       .mergeData({ title: 'Find Events' })
       .build();
   }
@@ -240,4 +247,18 @@ export class SystemEvents {
       .build();
   }
 
+  static getThredLogForThredEvent(thredId: string, source: Event['source']) {
+    return EventBuilder.create({
+      type: eventTypes.control.dataControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeTasks({
+        name: 'getThredLog',
+        op: Spec.GET_OP,
+        params: { type: 'ThredLogEntry', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+      })
+      .mergeData({ title: 'Get ThredLog' })
+      .build();
+  }
 }

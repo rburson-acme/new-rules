@@ -5,7 +5,7 @@ import { ReactionResult } from './Reaction.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
-import { MATCH, NO_MATCH } from './persistence/ThredLogRecord.js';
+import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
 
 const { debug, error, h2 } = Logger;
 
@@ -95,6 +95,7 @@ export class Thred {
       eventId: event.id,
       type: NO_MATCH,
       fromReaction,
+      timestamp: Date.now(),
     });
   }
 
@@ -105,6 +106,7 @@ export class Thred {
       type: MATCH,
       fromReaction,
       toReaction,
+      timestamp: Date.now(),
     });
   }
 }

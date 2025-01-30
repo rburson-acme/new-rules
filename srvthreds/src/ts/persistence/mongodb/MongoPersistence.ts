@@ -39,10 +39,12 @@ export class MongoPersistence implements Persistence {
 
   async get<T>(query: Query, options?: any): Promise<(Persistent & T)[]> {
     if (!query.matcher) query.matcher = {};
+    const sort = query.transform?.sort || [];
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
+    const mappedSort = MongoSpec.mapSortValues(sort);
     const result = await this.getCollection(query.type)
       .find(mappedMatcher)
-      .sort({ timestamp: 1 })
+      .sort(mappedSort)
       .toArray();
     return result ? MongoSpec.mapOutputValues(result) : null;
   }

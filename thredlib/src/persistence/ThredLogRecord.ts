@@ -1,4 +1,4 @@
-import { Persistent } from "../../thredlib";
+import { Persistent } from "./Persistent.js";
 
 export const MATCH = 'm';
 export const NO_MATCH = 'nm';
@@ -8,7 +8,7 @@ export interface ThredLogRecord extends Persistent {
     eventId: string;
     thredId?: string;
     type: 'm' | 'nm' | 'nt' | 'npm';
-    timestamp?: number;
+    timestamp: number;
     fromReaction?: string;
     toReaction?: string;
 }

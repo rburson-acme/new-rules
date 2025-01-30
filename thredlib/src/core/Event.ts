@@ -92,7 +92,14 @@ export interface EventTaskParams {
     readonly type: string;
     readonly values?: Record<string, any> | any[];
     readonly matcher?: Record<string, any>; // filter for the query
+    readonly transform?: TaskTransformParams; // allows for sorting, limiting, skipping
     readonly selector?: Record<string, any>;  // allows for specifying a subset of the return values
+}
+
+export interface TaskTransformParams {
+    sort?: { field: string, desc?: boolean }[];
+    limit?: number;
+    skip?: number;
 }
 export interface Resource {
     // mimetype/mediatype of the content field

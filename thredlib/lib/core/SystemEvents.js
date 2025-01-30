@@ -113,7 +113,11 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'findPattern', op: Spec.GET_ONE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } })
+            .mergeTasks({
+            name: 'findPattern',
+            op: Spec.GET_ONE_OP,
+            params: { type: 'PatternModel', matcher: { id: patternId } },
+        })
             .mergeData({ title: 'Find Pattern' })
             .build();
     }
@@ -173,7 +177,11 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher: { thredId } } })
+            .mergeTasks({
+            name: 'findEvents',
+            op: Spec.GET_OP,
+            params: { type: 'EventRecord', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+        })
             .mergeData({ title: 'Find Events' })
             .build();
     }
@@ -185,6 +193,20 @@ export class SystemEvents {
         })
             .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher } })
             .mergeData({ title: 'Find Events' })
+            .build();
+    }
+    static getThredLogForThredEvent(thredId, source) {
+        return EventBuilder.create({
+            type: eventTypes.control.dataControl.type,
+            thredId: ThredId.SYSTEM,
+            source,
+        })
+            .mergeTasks({
+            name: 'getThredLog',
+            op: Spec.GET_OP,
+            params: { type: 'ThredLogEntry', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+        })
+            .mergeData({ title: 'Get ThredLog' })
             .build();
     }
 }

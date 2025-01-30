@@ -8,7 +8,7 @@ import { ThredContext } from './ThredContext.js';
 import { Dispatcher } from './Dispatcher.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { NO_PATTERN_MATCH, NO_THRED } from './persistence/ThredLogRecord.js';
+import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
@@ -46,7 +46,7 @@ export class Threds {
       // await this.dispatch({id: event.id, event, to: []});
       // -------------------------------------------
       if (!thredStore) {
-        await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED });
+        await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED, timestamp: Date.now() });
         throw EventThrowable.get(
           `Thred ${thredId} does not, or no longer exists`,
           errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
@@ -77,7 +77,7 @@ export class Threds {
     });
     if (matches === 0) {
       // orphan event
-      Pm.get().saveThredLogRecord({ eventId: event.id, type: NO_PATTERN_MATCH });
+      Pm.get().saveThredLogRecord({ eventId: event.id, type: NO_PATTERN_MATCH, timestamp: Date.now() });
       L.info(L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`));
     }
   }

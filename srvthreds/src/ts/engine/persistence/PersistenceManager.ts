@@ -1,9 +1,8 @@
 import { Persistence } from '../../persistence/Persistence.js';
 import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
 import { PatternModel, Event, errorCodes, errorKeys, Logger } from '../../thredlib';
-import { EventThrowable } from '../../thredlib/core/Errors.js';
-import { EventRecord } from './EventRecord';
-import { ThredLogRecord } from './ThredLogRecord.js';
+import { EventRecord } from '../../thredlib/persistence/EventRecord.js';
+import { ThredLogRecord } from '../../thredlib/persistence/ThredLogRecord.js';
 
 export class PersistenceManager {
   private static instance: PersistenceManager;
@@ -55,20 +54,19 @@ export class PersistenceManager {
 
   async saveThredLogRecord(entry: ThredLogRecord): Promise<void> {
     try {
-    const timestamp = Date.now();
-    await this.persistence.put({ type: Types.ThredLogEntry, values: { timestamp, ...entry } });
+    await this.persistence.put({ type: Types.ThredLogRecord, values: entry });
     } catch(err) {
       Logger.error(Logger.crit(`Error saving thred log record: ${entry.type} for thred ${entry.thredId}`), err);
     }
   }
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[]> {
-    return this.persistence.get({ type: Types.ThredLogEntry, matcher: { thredId } });
+    return this.persistence.get({ type: Types.ThredLogRecord, matcher: { thredId } });
   }
 }
 
 export const Types = {
   PatternModel: 'PatternModel',
   EventRecord: 'EventRecord',
-  ThredLogEntry: 'ThredLogEntry',
+  ThredLogRecord: 'ThredLogRecord',
 };
