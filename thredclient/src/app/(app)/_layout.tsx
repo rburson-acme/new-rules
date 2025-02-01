@@ -65,12 +65,12 @@ function AppLayout() {
           }}
         />
         <Drawer.Screen
-          name="devtools"
+          name="admin-tools"
           options={{
             headerRight: () => <Button onPress={logOut} content={'Log out'} />,
             headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Devtools',
-            title: 'Devtools',
+            drawerLabel: 'Admin Tools',
+            title: 'Admin Tools',
           }}
         />
       </Drawer>
@@ -104,12 +104,14 @@ function AppLayout() {
           }}
         />
         <Drawer.Screen
-          name="devtools"
+          name="admin-tools"
+          redirect={true}
           options={{
             headerRight: () => <Button onPress={logOut} content={'Log out'} />,
             headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Devtools',
-            title: 'Devtools',
+            drawerLabel: 'Admin Tools',
+            title: 'Admin Tools',
+            drawerItemStyle: { display: 'none' },
           }}
         />
       </Drawer>

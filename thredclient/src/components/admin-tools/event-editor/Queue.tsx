@@ -1,6 +1,6 @@
+import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
 import { observer } from 'mobx-react-lite';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { EventEditorLocals } from './EventEditor';
 
 type QueueProps = { localStore: EventEditorLocals; shakeAnim: Animated.Value };
 

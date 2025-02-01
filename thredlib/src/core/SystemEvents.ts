@@ -81,7 +81,6 @@ export class SystemEvents {
    *        |___/
    */
 
-  // request to reset the number of pattern instances to 0 for a particular pattern
   static getGetThredsEvent(source: Event['source']) {
     const values: GetThredsArgs = { op: systemEventTypes.operations.getThreds };
     return EventBuilder.create({
@@ -92,7 +91,7 @@ export class SystemEvents {
       .mergeValues(values)
       .mergeData({ title: 'Run Get Threds' })
       .build();
-  }
+  } // build this out in client
 
   static getReloadPatternEvent(patternId: string, source: Event['source']) {
     const values: ReloadPatternArgs = { op: systemEventTypes.operations.reloadPattern, patternId };
@@ -117,7 +116,7 @@ export class SystemEvents {
       .mergeValues(values)
       .mergeData({ title: 'Run Shutdown' })
       .build();
-  }
+  } // build this out in client
 
   // request to terminate all threds
   static getTerminateAllThredsEvent(source: Event['source']) {

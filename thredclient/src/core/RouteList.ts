@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 
 export type ModuleNames = 'Health Information' | 'Geolocation' | 'Fall/Injury Detection';
-export type DevtoolNames = 'Event Editor' | 'Thred Manager' | 'System Event GUI';
+export type AdminToolNames = 'Event Editor' | 'Thred Manager' | 'Pattern Manager';
 
 export type RouteListItemType<Names> = {
   name: Names;

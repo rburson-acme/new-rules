@@ -1,0 +1,41 @@
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button } from '../../common/Button';
+import { observer } from 'mobx-react-lite';
+import { AdminThredStore } from '@/src/stores/AdminThredStore';
+import { AdminThredsStore } from '@/src/stores/AdminThredsStore';
+import { Address } from 'thredlib';
+import { ThredEvent } from './ThredEvent';
+
+type OpenAdminThredProps = {
+  thredStore: AdminThredStore;
+  thredsStore: AdminThredsStore;
+};
+
+export const OpenAdminThred = observer(({ thredStore, thredsStore }: OpenAdminThredProps) => {
+  const { thred, pattern, events } = thredStore;
+
+  // TODO:
+  // Clicking on an event shows the interaction in that step.
+  // Create a pattern section that shows details about the pattern.
+  // Create a button that allows the user to see where the thred is in the pattern.
+  // Clean up this code. Put it all where it belongs.
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ display: 'flex', gap: 8 }}>
+        {events.map(event => {
+          return <ThredEvent event={event} />;
+        })}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 4 }}>
+          <Button content="Terminate Thred" onPress={() => thredStore.terminateThred()} />
+          <Button
+            content={'Return to Threds'}
+            onPress={() => {
+              thredsStore.unselectThred();
+            }}
+          />
+        </View>
+      </ScrollView>
+    </View>
+  );
+});

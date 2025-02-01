@@ -5,10 +5,10 @@ import { Event, TemplateModel } from 'thredlib';
 import { DEFAULT_EVENT_JSON_STRING } from '@/src/constants/DefaultEventString';
 import { RootStore } from '@/src/stores/rootStore';
 import { TemplateStore } from '@/src/stores/TemplateStore';
-import { EventInput } from '@/src/components/devtools/EventInput';
-import { EventOutput } from '@/src/components/devtools/EventOutput';
-import { ButtonGroup } from '@/src/components/devtools/ButtonGroup';
-import { Queue } from '@/src/components/devtools/Queue';
+import { EventInput } from '@/src/components/admin-tools/event-editor/EventInput';
+import { EventOutput } from '@/src/components/admin-tools/event-editor/EventOutput';
+import { ButtonGroup } from '@/src/components/admin-tools/event-editor/ButtonGroup';
+import { Queue } from '@/src/components/admin-tools/event-editor/Queue';
 import { useNavigation } from 'expo-router';
 
 export type EventEditorLocals = {
