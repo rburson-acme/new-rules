@@ -9,9 +9,11 @@ type ThredsViewProps = {
   thredsStore: ThredsStore;
 };
 
+// Used both for ThredManager and in ThredsLayout.
+// Should remain composable as just a 'list' of threds
 export const ThredsView = observer(({ thredsStore }: ThredsViewProps) => {
   const flatList = useRef<FlatList<[string, ThredStore]>>(null);
-  ({ thredsStore });
+  
   return (
     <FlatList
       ref={flatList}

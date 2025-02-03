@@ -2,7 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { StyleSheet, Text, View } from 'react-native';
 import { getComponentTypes } from '@/src/components/template/componentTypes';
 import { Interaction } from '@/src/components/template/Interaction';
-import { EventEditorLocals } from '@/src/app/(app)/devtools/event-editor';
+import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
+
 
 type EventOutputProps = {
   localStore: EventEditorLocals;
