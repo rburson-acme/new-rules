@@ -7,18 +7,18 @@ import { router } from 'expo-router';
 
 const logo = require('../../assets/workthreds_logo.png');
 function SignIn() {
-  const { authStore, thredsStore } = RootStore.get();
+  const { authStore, connectionStore } = RootStore.get();
 
   const handleMessengerView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('user');
-    await thredsStore.connect(authStore.userId);
+    await connectionStore.connect(authStore.userId);
     router.replace('/messenger');
   };
   const handleAdminView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
-    await thredsStore.connect(authStore.userId);
+    await connectionStore.connect(authStore.userId);
     router.replace('/admin');
   };
 

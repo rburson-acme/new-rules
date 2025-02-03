@@ -1,32 +1,32 @@
 import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
-import { DevtoolNames, RouteListItemType } from '@/src/core/RouteList';
+import { AdminToolNames, RouteListItemType } from '@/src/core/RouteList';
 import { RouteListItem } from '@/src/components/common/RouteListItem';
 import { RootStore } from '@/src/stores/rootStore';
 import { router, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 
-const devtools: RouteListItemType<DevtoolNames>[] = [
+const adminTools: RouteListItemType<AdminToolNames>[] = [
   {
     name: 'Event Editor',
     description: 'edit events',
     iconName: 'golf-course',
-    navigateFn: () => router.push({ pathname: '/devtools/event-editor' }),
+    navigateFn: () => router.push({ pathname: '/admin-tools/event-editor' }),
   },
   {
     name: 'Thred Manager',
     description: 'manage threds',
     iconName: 'golf-course',
-    navigateFn: () => router.push({ pathname: '/devtools/thred-manager' }),
+    navigateFn: () => router.push({ pathname: '/admin-tools/thred-manager' }),
   },
   {
-    name: 'System Event GUI',
-    description: 'gui for system events',
+    name: 'Pattern Manager',
+    description: 'manage patterns',
     iconName: 'golf-course',
-    navigateFn: () => router.push({ pathname: '/devtools/system-event' }),
+    navigateFn: () => router.push({ pathname: '/admin-tools/pattern-manager' }),
   },
 ];
 
-export default function DevtoolList() {
+export default function AdminToolsList() {
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function DevtoolList() {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={devtools}
-        renderItem={item => <RouteListItem<DevtoolNames> listItem={item} rootStore={RootStore.get()} />}
+        data={adminTools}
+        renderItem={item => <RouteListItem<AdminToolNames> listItem={item} rootStore={RootStore.get()} />}
         contentContainerStyle={styles.list}
       />
     </SafeAreaView>

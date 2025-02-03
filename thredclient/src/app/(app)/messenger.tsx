@@ -4,8 +4,6 @@ import { RootStore } from '@/src/stores/rootStore';
 import { ThredsLayout } from '@/src/components/threds/ThredsLayout';
 
 export default function Messenger() {
-  // @TODO - add 'ThredPanel' and determine selected thred here
-  // For now use the first ThredStore
   const rootStore = RootStore.get();
   return (
     <View style={styles.container}>

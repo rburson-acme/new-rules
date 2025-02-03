@@ -4,7 +4,7 @@ import { Event, Validator } from 'thredlib';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { DEFAULT_EVENT_JSON_STRING } from '@/src/constants/DefaultEventString';
 import { Button } from '@/src/components/common/Button';
-import { EventEditorLocals } from '@/src/app/(app)/devtools/event-editor';
+import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
 
 type ButtonGroupProps = {
   localStore: EventEditorLocals;

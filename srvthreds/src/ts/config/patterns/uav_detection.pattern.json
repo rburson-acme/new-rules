@@ -8,7 +8,7 @@
         {
             "name": "lookup_contact",
             "allowedSources": [
-                "participant0"
+                "sensor_agent0"
             ],
             "condition": {
                 "type": "filter",

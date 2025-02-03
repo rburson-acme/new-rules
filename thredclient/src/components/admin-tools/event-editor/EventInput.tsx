@@ -1,6 +1,6 @@
+import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
 import { observer } from 'mobx-react-lite';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { EventEditorLocals } from './EventEditor';
 
 type EventInputProps = {
   localStore: EventEditorLocals;
