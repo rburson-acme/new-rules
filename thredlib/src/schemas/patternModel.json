@@ -68,12 +68,15 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A description of the condition.",
           "type": "string"
         },
         "onTrue": {
-          "$ref": "#/definitions/ConsequentModel"
+          "$ref": "#/definitions/ConsequentModel",
+          "description": "A handler to be run if the condition is true.a"
         },
         "operands": {
+          "description": "The composite conditions to be used for And/Or conditions.",
           "items": {
             "anyOf": [
               {
@@ -87,15 +90,19 @@
           "type": "array"
         },
         "publish": {
-          "$ref": "#/definitions/PublishModel"
+          "$ref": "#/definitions/PublishModel",
+          "description": "Specifies which participants should receive the the new Event if the condition is true. Describes 'who' should receive the new Event."
         },
         "transform": {
-          "$ref": "#/definitions/TransformModel"
+          "$ref": "#/definitions/TransformModel",
+          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new Event."
         },
         "transition": {
-          "$ref": "#/definitions/TransitionModel"
+          "$ref": "#/definitions/TransitionModel",
+          "description": "The state (Reaction) transition that should occur if the condition is true."
         },
         "type": {
+          "description": "The type of the condition.",
           "type": "string"
         }
       },
@@ -108,6 +115,7 @@
       "additionalProperties": false,
       "properties": {
         "xpr": {
+          "description": "A jsonata expression to be run when a condition is true. This is a 'side effect' of the condition.  {@link  https://jsonata.org/ }",
           "type": "string"
         }
       },
@@ -266,17 +274,62 @@
       ],
       "type": "object"
     },
+    "EventTaskCollectorParams": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "number"
+        },
+        "skip": {
+          "type": "number"
+        },
+        "sort": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "desc": {
+                "type": "boolean"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "EventTaskParams": {
       "additionalProperties": false,
       "properties": {
+        "collector": {
+          "$ref": "#/definitions/EventTaskCollectorParams"
+        },
         "matcher": {
           "type": "object"
         },
         "selector": {
+          "additionalProperties": false,
+          "properties": {
+            "exclude": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "include": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
           "type": "object"
-        },
-        "transform": {
-          "$ref": "#/definitions/TaskTransformParams"
         },
         "type": {
           "type": "string"
@@ -302,12 +355,15 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A description of the condition.",
           "type": "string"
         },
         "onTrue": {
-          "$ref": "#/definitions/ConsequentModel"
+          "$ref": "#/definitions/ConsequentModel",
+          "description": "A handler to be run if the condition is true.a"
         },
         "operands": {
+          "description": "The composite conditions to be used for And/Or conditions.",
           "items": {
             "anyOf": [
               {
@@ -321,18 +377,23 @@
           "type": "array"
         },
         "publish": {
-          "$ref": "#/definitions/PublishModel"
+          "$ref": "#/definitions/PublishModel",
+          "description": "Specifies which participants should receive the the new Event if the condition is true. Describes 'who' should receive the new Event."
         },
         "transform": {
-          "$ref": "#/definitions/TransformModel"
+          "$ref": "#/definitions/TransformModel",
+          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new Event."
         },
         "transition": {
-          "$ref": "#/definitions/TransitionModel"
+          "$ref": "#/definitions/TransitionModel",
+          "description": "The state (Reaction) transition that should occur if the condition is true."
         },
         "type": {
+          "description": "The type of the condition.",
           "type": "string"
         },
         "xpr": {
+          "description": "A jsonata expression that will be evaluated to determine if the filter is true. Describes 'when' and event should be created and sent.  {@link  https://jsonata.org/ }",
           "type": "string"
         }
       },
@@ -535,15 +596,19 @@
           "type": "string"
         },
         "description": {
+          "description": "A description of the pattern",
           "type": "string"
         },
         "id": {
+          "description": "A unique identifier for the pattern. This will be derived from the name if not provided.",
           "type": "string"
         },
         "instanceInterval": {
+          "description": "The time required between creation of new threads 0 for none required",
           "type": "number"
         },
         "maxInstances": {
+          "description": "The maximum number of thred instances that may be running at the same time",
           "type": "number"
         },
         "modified": {
@@ -551,9 +616,11 @@
           "type": "string"
         },
         "name": {
+          "description": "A unique name for the pattern",
           "type": "string"
         },
         "reactions": {
+          "description": "Reactions represent thred states",
           "items": {
             "$ref": "#/definitions/ReactionModel"
           },
@@ -629,7 +696,8 @@
             {
               "type": "string"
             }
-          ]
+          ],
+          "description": "The optional list of sources that are allowed to activate the reaction."
         },
         "condition": {
           "anyOf": [
@@ -639,19 +707,24 @@
             {
               "$ref": "#/definitions/FilterModel"
             }
-          ]
+          ],
+          "description": "The condition that must be met for the reaction to be activated."
         },
         "description": {
+          "description": "The optional description of the reaction.",
           "type": "string"
         },
         "expiry": {
           "additionalProperties": false,
+          "description": "The optional expiration policy of the reaction.",
           "properties": {
             "interval": {
+              "description": "The interval after which the reaction expires in millis.",
               "type": "number"
             },
             "transition": {
-              "$ref": "#/definitions/TransitionModel"
+              "$ref": "#/definitions/TransitionModel",
+              "description": "The optional transition that occurs when the reaction expires. Default will move to the next reaction"
             }
           },
           "required": [
@@ -660,10 +733,12 @@
           "type": "object"
         },
         "name": {
+          "description": "The optional name of the reaction. This makes it easier to refer to in patterns.",
           "type": "string"
         },
         "permissions": {
-          "$ref": "#/definitions/PermissionModel"
+          "$ref": "#/definitions/PermissionModel",
+          "description": "The set of permissions required to activate the reaction."
         }
       },
       "required": [
@@ -685,36 +760,6 @@
         "contentType",
         "uri"
       ],
-      "type": "object"
-    },
-    "TaskTransformParams": {
-      "additionalProperties": false,
-      "properties": {
-        "limit": {
-          "type": "number"
-        },
-        "skip": {
-          "type": "number"
-        },
-        "sort": {
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "desc": {
-                "type": "boolean"
-              },
-              "field": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "field"
-            ],
-            "type": "object"
-          },
-          "type": "array"
-        }
-      },
       "type": "object"
     },
     "TemplateModel": {
@@ -776,15 +821,19 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "An optional description of the transform.",
           "type": "string"
         },
         "eventDataTemplate": {
-          "$ref": "#/definitions/EventData"
+          "$ref": "#/definitions/EventData",
+          "description": "Allows for defining The Event Data portion of the outbound event."
         },
         "meta": {
           "additionalProperties": false,
+          "description": "Meta data for the transform.",
           "properties": {
             "reXpr": {
+              "description": "An optional jsonata expression that allows for setting the 're' property of the outbound event.",
               "type": "string"
             }
           },
