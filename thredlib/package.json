@@ -9,8 +9,8 @@
     "build": "tsc",
     "build-all": "npm-run-all clean build",
     "clean": "rimraf lib",
-    "generate-event": "npx ts-json-schema-generator --path 'src/core/Event.ts' --type 'Event' -o src/schemas/event.json",
-    "generate-pattern": "npx ts-json-schema-generator --path 'src/model/PatternModel.ts' --type 'PatternModel' -o src/schemas/patternModel.json"
+    "generate-event": "npx ts-json-schema-generator -j 'extended' --path 'src/core/Event.ts' --type 'Event' -o src/schemas/event.json",
+    "generate-pattern": "npx ts-json-schema-generator -j 'extended' --path 'src/model/PatternModel.ts' --type 'PatternModel' -o src/schemas/patternModel.json"
   },
   "peerDependencies": {
     "ajv": "^8.17.1",

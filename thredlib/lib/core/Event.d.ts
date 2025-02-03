@@ -1,4 +1,7 @@
 import { TemplateModel } from "../model/TemplateModel.js";
+/**
+ * @interface Event
+ */
 export interface Event {
     readonly id: string;
     readonly thredId?: string;
@@ -55,16 +58,19 @@ export interface EventTaskParams {
     readonly type: string;
     readonly values?: Record<string, any> | any[];
     readonly matcher?: Record<string, any>;
-    readonly transform?: TaskTransformParams;
-    readonly selector?: Record<string, any>;
+    readonly selector?: {
+        include?: string[];
+        exclude?: string[];
+    };
+    readonly collector?: EventTaskCollectorParams;
 }
-export interface TaskTransformParams {
-    sort?: {
-        field: string;
-        desc?: boolean;
+export interface EventTaskCollectorParams {
+    readonly sort?: {
+        readonly field: string;
+        readonly desc?: boolean;
     }[];
-    limit?: number;
-    skip?: number;
+    readonly limit?: number;
+    readonly skip?: number;
 }
 export interface Resource {
     readonly contentType: string;

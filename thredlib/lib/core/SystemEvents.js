@@ -180,7 +180,7 @@ export class SystemEvents {
             .mergeTasks({
             name: 'findEvents',
             op: Spec.GET_OP,
-            params: { type: 'EventRecord', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+            params: { type: 'EventRecord', matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
         })
             .mergeData({ title: 'Find Events' })
             .build();
@@ -204,7 +204,7 @@ export class SystemEvents {
             .mergeTasks({
             name: 'getThredLog',
             op: Spec.GET_OP,
-            params: { type: 'ThredLogEntry', matcher: { thredId }, transform: { sort: [{ field: 'timestamp' }] } },
+            params: { type: 'ThredLogEntry', matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
         })
             .mergeData({ title: 'Get ThredLog' })
             .build();

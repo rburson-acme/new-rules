@@ -7,7 +7,7 @@ export class MongoPersistence implements Persistence {
   private static defaultHost = 'localhost:27017';
   private static defaultDb = 'nr';
 
-  constructor(private db: Db){}
+  constructor(private db: Db) {}
 
   async put(query: Query, options?: any): Promise<string | string[]> {
     if (Array.isArray(query.values)) return this.putAll(query, options);
@@ -18,13 +18,11 @@ export class MongoPersistence implements Persistence {
   }
 
   private async putAll(query: Query, options?: any): Promise<string[]> {
-    const inputArray = Array.isArray(query.values)
-      ? query.values
-      : [query.values];
+    const inputArray = Array.isArray(query.values) ? query.values : [query.values];
     const mappedValues = MongoSpec.mapInputValues(inputArray);
     const result = await this.getCollection(query.type).insertMany(mappedValues);
     let ids = [];
-    for(let i = 0; i < Object.keys(result.insertedIds).length; i++) {
+    for (let i = 0; i < Object.keys(result.insertedIds).length; i++) {
       ids.push(result.insertedIds[i].toString());
     }
     return ids;
@@ -33,19 +31,23 @@ export class MongoPersistence implements Persistence {
   async getOne<T>(query: Query, options?: any): Promise<Persistent & T> {
     if (!query.matcher) query.matcher = {};
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
-    const result = await this.getCollection(query.type).findOne(mappedMatcher);
+    const mappedSelector = MongoSpec.mapSelectorValues(query.selector);
+    const findOptions = { projection: mappedSelector };
+    const result = await this.getCollection(query.type).findOne(mappedMatcher, findOptions);
     return result ? MongoSpec.mapOutputValues(result) : null;
   }
 
   async get<T>(query: Query, options?: any): Promise<(Persistent & T)[]> {
     if (!query.matcher) query.matcher = {};
-    const sort = query.transform?.sort || [];
+    const sort = query.collector?.sort || [];
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
-    const mappedSort = MongoSpec.mapSortValues(sort);
-    const result = await this.getCollection(query.type)
-      .find(mappedMatcher)
-      .sort(mappedSort)
-      .toArray();
+    const findOptions = {
+      projection: MongoSpec.mapSelectorValues(query.selector),
+      sort: MongoSpec.mapSortValues(sort),
+      skip: query.collector?.skip,
+      limit: query.collector?.limit,
+    };
+    const result = await this.getCollection(query.type).find(mappedMatcher, findOptions).toArray();
     return result ? MongoSpec.mapOutputValues(result) : null;
   }
 
@@ -54,10 +56,7 @@ export class MongoPersistence implements Persistence {
     if (!query.values) throw Error(`No values specified for query`);
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const mappedValues = MongoSpec.mapUpdateValues(query.values);
-    await this.getCollection(query.type).updateMany(
-      mappedMatcher,
-      mappedValues
-    );
+    await this.getCollection(query.type).updateMany(mappedMatcher, mappedValues);
   }
 
   async upsert(query: Query, options?: any): Promise<void> {
@@ -65,11 +64,7 @@ export class MongoPersistence implements Persistence {
     if (!query.values) throw Error(`No values specified for query`);
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const mappedValues = MongoSpec.mapUpdateValues(query.values);
-    await this.getCollection(query.type).updateMany(
-      mappedMatcher,
-      mappedValues,
-      { upsert: true }
-    );
+    await this.getCollection(query.type).updateMany(mappedMatcher, mappedValues, { upsert: true });
   }
 
   async replace(query: Query, options?: any): Promise<void> {
@@ -78,11 +73,7 @@ export class MongoPersistence implements Persistence {
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const mappedValues = MongoSpec.mapInputValues(query.values);
     const mongoOptions = { upsert: true };
-    await this.getCollection(query.type).replaceOne(
-      mappedMatcher,
-      mappedValues,
-      mongoOptions
-    );
+    await this.getCollection(query.type).replaceOne(mappedMatcher, mappedValues, mongoOptions);
   }
 
   async delete(query: Query, options?: any): Promise<void> {
@@ -109,5 +100,4 @@ export class MongoPersistence implements Persistence {
   private getCollection(type: string) {
     return this.db.collection(type);
   }
-
 }

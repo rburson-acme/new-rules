@@ -1,8 +1,8 @@
-import { aw } from 'vitest/dist/chunks/reporters.WnPwkmgA.js';
+import { Id } from '../../ts/thredlib/core/Id.js';
 import { PatternModel, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 import { events, EngineConnectionManager, withReject, withDispatcherPromise, delay } from '../testUtils.js';
 
-Logger.setLevel(LoggerLevel.INFO);
+Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('expiry tests', function () {
   beforeAll(async () => {
@@ -11,25 +11,21 @@ describe('expiry tests', function () {
   });
   // match the first event and start the thred
   test('match first event', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      async (message) => {
-        expect(await connMan.engine.numThreds).toBe(1);
-        expect(message.event.data?.title).toBe('outbound.event0');
-        expect(message.to).toContain('outbound.event0.recipient');
-        thredId = message.event.thredId;
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
+      expect(await connMan.engine.numThreds).toBe(1);
+      expect(message.event.data?.title).toBe('outbound.event0');
+      expect(message.to).toContain('outbound.event0.recipient');
+      thredId = message.event.thredId;
+    });
     connMan.eventQ.queue(events.event0);
     return pr;
   });
   // should move to the next reaction when no transition name is specified
   test('no transition specified', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event1');
-        expect(message.to).toContain('outbound.event1.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event1');
+      expect(message.to).toContain('outbound.event1.recipient');
+    });
     connMan.eventQ.queue({ ...events.event1, thredId });
     return pr;
   });
@@ -39,22 +35,18 @@ describe('expiry tests', function () {
     return;
   });
   test('should still be expired and move back to specified transition', async function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event1');
-        expect(message.to).toContain('outbound.event1.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event1');
+      expect(message.to).toContain('outbound.event1.recipient');
+    });
     connMan.eventQ.queue({ ...events.event1, thredId });
     return pr;
   });
   test('should have moved to next transition which is not yet expired', async function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event1a');
-        expect(message.to).toContain('outbound.event1a.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event1a');
+      expect(message.to).toContain('outbound.event1a.recipient');
+    });
     connMan.eventQ.queue({ ...events.event1a, thredId });
     return pr;
   });
@@ -83,8 +75,15 @@ describe('expiry tests', function () {
     await connMan.eventQ.queue({ ...events.noMatch, thredId });
     expect(await connMan.engine.numThreds).toBe(1);
   });
-  //  after wait, should be timed out, ignore the current condition and move to previous reaction and replay input
-  // current condition is ignored, but the event is necessary to force the expiration of the current reaction
+
+  /* 
+  This one is complicated - here's what happens:
+  1) The current state event3reaction is allowed to expire
+  2) event3 is sent to the thred
+  3) the event triggers the expiry handler to run for event3reaction which moves the state to event2reaction replays event2
+  4) event2 is forwarded to event2areaction which then moves to event3reaction
+  5) event3 is then processed and the thred is terminated
+  */
   test('timed transition', async function () {
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
@@ -95,25 +94,19 @@ describe('expiry tests', function () {
             withReject((message) => {
               expect(message.event.data?.title).toBe('outbound.event2a');
               expect(message.to).toContain('outbound.event2a.recipient');
-              resolve();
+              connMan.engine.dispatchers = [
+                withReject((message) => {
+                  expect(message.event.data?.title).toBe('outbound.event3');
+                  expect(message.to).toContain('outbound.event3.recipient');
+                  resolve();
+                }, reject),
+              ];
             }, reject),
           ];
         }, reject),
       ];
     });
     await delay(2100);
-    await connMan.eventQ.queue({ ...events.event3, thredId });
-    return pr;
-  });
-  // should have moved back to the reaction with the timeout (event3reaction)
-  // should move to the named transition and receive event BEFORE timing out
-  test('timed transition', async function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event3');
-        expect(message.to).toContain('outbound.event3.recipient');
-      },
-    );
     await connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
@@ -154,7 +147,7 @@ const patternModels: PatternModel[] = [
         },
       },
       {
-        name: "event1reaction",
+        name: 'event1reaction',
         condition: {
           type: 'filter',
           xpr: "$event.type = 'inbound.event1'",

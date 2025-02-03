@@ -1,13 +1,13 @@
 import { Taskable } from "../task/Taskable";
-import { TaskTransformParams } from "../thredlib";
+import { EventTaskParams } from "../thredlib";
 import { Persistent } from "../thredlib/persistence/Persistent";
 
 export interface Query {
     type: string;
-    matcher?: Record<string, any>;
-    selector?: Record<string, any>;
-    transform?: TaskTransformParams;
-    values?: Record<string, any> | any[];
+    matcher?: EventTaskParams['matcher'];
+    selector?: EventTaskParams['selector'];
+    collector?: EventTaskParams['collector'];
+    values?: EventTaskParams['values'];
 }
 
 export interface Persistence extends Taskable {

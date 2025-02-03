@@ -2,6 +2,7 @@ import { Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 import { Persistence } from '../../ts/persistence/Persistence.js';
 import { MongoPersistenceProvider } from '../../ts/persistence/mongodb/MongoPersistenceProvider.js';
 import { PersistenceProvider } from '../../ts/provider/PersistenceProvider.js';
+import { MongoPersistence } from '../../ts/persistence/mongodb/MongoPersistence.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
@@ -184,20 +185,43 @@ describe('persistence', function () {
     const obj = await persistence.get({
       type: testObjType,
       matcher: {
-        $or: [
-          { testArray: { $in: ['testarrayitem70'] } },
-          { testArray: { $in: ['testarrayitem10'] } },
-        ],
+        $or: [{ testArray: { $in: ['testarrayitem70'] } }, { testArray: { $in: ['testarrayitem10'] } }],
       },
     });
     expect(Array.isArray(obj)).toBe(true);
     expect(obj.length).toBe(2);
-    expect([...obj[0].testArray, ...obj[1].testArray]).toContain(
-      'testarrayitem70'
-    );
-    expect([...obj[0].testArray, ...obj[1].testArray]).toContain(
-      'testarrayitem10'
-    );
+    expect([...obj[0].testArray, ...obj[1].testArray]).toContain('testarrayitem70');
+    expect([...obj[0].testArray, ...obj[1].testArray]).toContain('testarrayitem10');
+  });
+  test('sort results', async function () {
+    const obj = await persistence.get({
+      type: testObjType,
+      matcher: {},
+      collector: { sort: [{ field: 'testNumeric', desc: true }] },
+    });
+    expect(obj.length).toBe(100);
+    expect(obj[0].testNumeric).toBe(99);
+  });
+  test('page results', async function () {
+    const obj = await persistence.get({
+      type: testObjType,
+      matcher: {},
+      collector: { sort: [{ field: 'testNumeric', desc: true }], limit: 10, skip: 90 },
+    });
+    expect(obj.length).toBe(10);
+    expect(obj[0].testNumeric).toBe(9);
+  });
+  test('query with selectors', async function () {
+    const obj = await persistence.get({
+      type: testObjType,
+      matcher: {},
+      collector: { sort: [{ field: 'testNumeric' }], limit: 10},
+      selector: { include: ['testNumeric'] },
+    });
+    expect(obj.length).toBe(10);
+    expect(Object.keys(obj[0]).length).toBe(2);
+    expect(obj[0].testNumeric).toBeDefined();
+    expect(obj[0].id).toBeDefined();
   });
   test('update many', async function () {
     const obj = await persistence.update({
@@ -219,7 +243,7 @@ describe('persistence', function () {
   // cleanup in case of failure
   afterAll(async () => {
     try {
-      //await (persistence as MongoPersistence).removeDatabase();
+      await persistence.deleteDatabase();
     } catch (e) {
       Logger.error(`Cleanup Failed ${(e as Error).message}`);
     }
@@ -237,4 +261,4 @@ const setType = 'SET_TYPE';
 const setItems = ['setItem0', 'setItem1'];
 
 let persistence: Persistence;
-let persistenceProvider: PersistenceProvider
+let persistenceProvider: PersistenceProvider;

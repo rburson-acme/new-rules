@@ -1,5 +1,8 @@
 import { TemplateModel } from "../model/TemplateModel.js";
 
+/**
+ * @interface Event
+ */
 export interface Event {
     // unique identifier for the event
     readonly id: string;
@@ -92,14 +95,14 @@ export interface EventTaskParams {
     readonly type: string;
     readonly values?: Record<string, any> | any[];
     readonly matcher?: Record<string, any>; // filter for the query
-    readonly transform?: TaskTransformParams; // allows for sorting, limiting, skipping
-    readonly selector?: Record<string, any>;  // allows for specifying a subset of the return values
+    readonly selector?: { include?: string[], exclude?: string[] }; // allows for specifying a subset of the return values
+    readonly collector?: EventTaskCollectorParams; // allows for sorting, limiting, skipping
 }
 
-export interface TaskTransformParams {
-    sort?: { field: string, desc?: boolean }[];
-    limit?: number;
-    skip?: number;
+export interface EventTaskCollectorParams {
+    readonly sort?: { readonly field: string, readonly desc?: boolean }[];
+    readonly limit?: number;
+    readonly skip?: number;
 }
 export interface Resource {
     // mimetype/mediatype of the content field

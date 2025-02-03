@@ -275,6 +275,9 @@
         "selector": {
           "type": "object"
         },
+        "transform": {
+          "$ref": "#/definitions/TaskTransformParams"
+        },
         "type": {
           "type": "string"
         },
@@ -682,6 +685,36 @@
         "contentType",
         "uri"
       ],
+      "type": "object"
+    },
+    "TaskTransformParams": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "number"
+        },
+        "skip": {
+          "type": "number"
+        },
+        "sort": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "desc": {
+                "type": "boolean"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
       "type": "object"
     },
     "TemplateModel": {

@@ -48,7 +48,7 @@ export class Threds {
       if (!thredStore) {
         await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED, timestamp: Date.now() });
         throw EventThrowable.get(
-          `Thred ${thredId} does not, or no longer exists`,
+          `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
           errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
         );
       }

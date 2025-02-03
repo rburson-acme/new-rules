@@ -43,14 +43,14 @@ export class PersistenceAdapter implements Adapter {
 
     const { name, op, params } = task;
     if (!params) return;
-    const { type, matcher, values, selector, transform } = params;
+    const { type, matcher, values, selector, collector } = params;
     switch (op) {
       case Spec.PUT_OP:
         return persistence.put({ type, values });
       case Spec.GET_ONE_OP:
-        return persistence.getOne({ type, matcher, selector });
+        return persistence.getOne({ type, matcher, selector, collector});
       case Spec.GET_OP:
-        return persistence.get({ type, matcher, transform });
+        return persistence.get({ type, matcher, selector, collector });
       case Spec.UPDATE_OP:
         return persistence.update({ type, matcher, values });
       case Spec.UPSERT_OP:

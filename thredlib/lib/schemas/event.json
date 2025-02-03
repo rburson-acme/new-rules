@@ -66,11 +66,13 @@
         },
         "Event": {
             "additionalProperties": false,
+            "description": "Represents an event with a unique identifier, type, source, and optional metadata.",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/EventData"
                 },
                 "id": {
+                    "description": "Unique identifier for the event.",
                     "type": "string"
                 },
                 "re": {
@@ -248,6 +250,9 @@
                 },
                 "selector": {
                     "type": "object"
+                },
+                "transform": {
+                    "$ref": "#/definitions/TaskTransformParams"
                 },
                 "type": {
                     "type": "string"
@@ -469,6 +474,36 @@
                 "contentType",
                 "uri"
             ],
+            "type": "object"
+        },
+        "TaskTransformParams": {
+            "additionalProperties": false,
+            "properties": {
+                "limit": {
+                    "type": "number"
+                },
+                "skip": {
+                    "type": "number"
+                },
+                "sort": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "desc": {
+                                "type": "boolean"
+                            },
+                            "field": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "field"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
             "type": "object"
         },
         "TemplateModel": {

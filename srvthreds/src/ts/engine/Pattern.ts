@@ -50,7 +50,7 @@ export class Pattern {
     get initialReaction(): Reaction | undefined {
         const reactionModel = this.patternModel.reactions?.[0];
         if(reactionModel) {
-            const name = reactionModel.name || String(0);
+            const name = reactionModel.name || `${this.name}_0`;
             return new Reaction(reactionModel, name);
         }
     }
@@ -83,7 +83,7 @@ export class Pattern {
         const currentIndex = this.patternModel.reactions.indexOf(currentReactionModel);
         const nextReactionModel = this.patternModel.reactions?.[currentIndex + 1];
         if (nextReactionModel) {
-            const name = nextReactionModel.name || String(currentIndex + 1);
+            const name = nextReactionModel.name || `${this.name}_${currentIndex + 1}`;
             return new Reaction(nextReactionModel, name);
         }
         return undefined;

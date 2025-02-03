@@ -1,5 +1,5 @@
 import { Spec } from '../../thredlib/task/Spec.js';
-import { StringMap } from '../../thredlib/index.js';
+import { EventTask, EventTaskParams, StringMap } from '../../thredlib/index.js';
 
 /**
  * For the 'translation' of WT persistence language to Mongodb querys
@@ -94,6 +94,17 @@ export class MongoSpec {
       accum[field] = item.desc ? -1 : 1;
       return accum;
     }, {});
+  }
+
+  static mapSelectorValues(selector: EventTaskParams['selector']) {
+    const result: StringMap<any> = {};
+    selector?.include?.forEach((fieldName) => {
+      result[fieldName] = 1;
+    });
+    selector?.exclude?.forEach((fieldName) => {
+      result[fieldName] = 0;
+    });
+    return result;
   }
 
   // @TODO - use mongo operator $currentDate for setting these dates

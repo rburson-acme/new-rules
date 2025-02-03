@@ -1,4 +1,4 @@
-import { Event, Logger } from '../thredlib/index.js';
+import { Event, Logger as L } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
@@ -6,9 +6,6 @@ import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
-
-const { debug, error, h2 } = Logger;
-
 
 // where to pick up
 // test the thredlog methods
@@ -34,6 +31,7 @@ export class Thred {
       //if there's not a match, end the loop
       if (!reactionResult) {
         await Thred.logNoTransition(thredStore, event, fromReactionName);
+        L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`));
         break transitionLoop;
       }
       // attempt state change and retrieve next input
@@ -41,6 +39,7 @@ export class Thred {
 
       // note thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
+      L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
 
       // send any message - NOTE: don't wait for dispatch
       reactionResult?.message && threds.dispatch(reactionResult?.message);
@@ -63,8 +62,8 @@ export class Thred {
   static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
     const expiry = thredStore?.currentReaction?.expiry;
     if (expiry) {
-      debug(
-        h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`),
+      L.debug(
+        L.h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`),
       );
       const transtition = thredStore?.currentReaction?.expiry?.transition;
       await Thred.transition(thredStore, threds, transtition);
