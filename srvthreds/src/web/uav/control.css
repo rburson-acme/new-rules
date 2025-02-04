@@ -1,0 +1,142 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box
+}
+
+html {
+    width: 100%;
+    height: 100%
+}
+
+body {
+    background: #fff;
+    font: 13px Helvetica, Arial;
+    height: 100%;
+}
+
+h4 {
+    color: #aaa;
+    font-size: larger;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+}
+
+.input_container {
+    height: 100%
+}
+
+.img_icon {
+    width: 200px;
+    margin-top: 10px
+}
+
+form {
+    padding: 3px;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+form>div {
+    width: 100%;
+    margin: auto;
+    padding: 0px;
+}
+
+form div {
+    padding: 10px;
+}
+
+form textarea {
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 5px;
+    width: 100%;
+    height: 80%
+}
+
+button.link {
+    background: none;
+    border: none;
+    color: #aaa;
+    padding: 0px
+}
+
+form button {
+    background: rgb(150, 150, 150);
+    border: none;
+    padding: 10px;
+    color: #fff
+}
+
+form input {
+    border: 1px solid #333;
+    padding: 10px;
+}
+
+#messages {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#messages li {
+    padding: 5px 10px;
+}
+
+#messages li:nth-child(odd) {
+    background: #eee;
+}
+
+.spinner {
+    position: absolute;
+    right: -40px;
+    top: -2px;
+    display: none;
+}
+
+#send_button {
+    width: 200px;
+}
+
+button:hover {
+    background: #777777;
+    color: #ffffff;
+}
+
+.popup {
+    position: absolute;
+    background: #eeeeee;
+    border: 1px solid #999999;
+    border-radius: 5px;
+    opacity: .95;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 10%;
+    text-align: center;
+    display: none;
+}
+
+.popup-container {
+    margin-top: 30x;
+    padding: 10px;
+}
+
+.popup-container p, .popup-container h2, .popup-container button {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.popup-container p {
+    font-size: 14px;
+}
+
+.popup-container img {
+    width: 89px;
+}
