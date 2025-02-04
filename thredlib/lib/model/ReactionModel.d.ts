@@ -35,11 +35,12 @@ export interface ReactionModel {
     readonly expiry?: {
         /**
          * The interval after which the reaction expires in millis.
+         * Upon expiration the Reaction will use the default transition or the one specified in the expiry object.
          *  @property {number} interval
          */
         interval: number;
         /**
-         * The optional transition that occurs when the reaction expires. Default will move to the next reaction
+         * The optional transition that occurs when the reaction expires.
          *  @property {TransitionModel} [transition]
          */
         transition?: TransitionModel;

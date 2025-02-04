@@ -26,7 +26,7 @@ export interface TransformModel {
   readonly eventDataTemplate?: EventData;
 
   /**
-
+   * A jsonata expression to be run to generate the entire Event Data portion of the outbound event.
    */
   readonly templateXpr?: string;
 }

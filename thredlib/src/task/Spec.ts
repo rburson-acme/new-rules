@@ -41,6 +41,7 @@ export class Spec {
     static readonly LTE_OP = Spec.OPERATOR_PREFIX + 'lte';
     static readonly LT_OP = Spec.OPERATOR_PREFIX + 'lt';
     static readonly NE_OP = Spec.OPERATOR_PREFIX + 'ne';
+    static readonly MATCH_OP = Spec.OPERATOR_PREFIX + 're';
 
     /*
       Query options 

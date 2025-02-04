@@ -143,6 +143,13 @@ describe('persistence', function () {
     expect(Array.isArray(obj)).toBe(true);
     expect(obj.length).toBe(50);
   });
+  test('find regex', async function () {
+    const obj = await persistence.get({
+      type: testObjType,
+      matcher: { testkey: { $re: '.*estvalue5.*' } },
+    });
+    expect(obj.length).toBe(11);
+  });
   test('find many no match', async function () {
     const obj = await persistence.get({
       type: testObjType,

@@ -6,10 +6,10 @@ import { ConsequentModel } from './ConsequentModel.js';
 
 export interface ConditionModel {
   /**
-   * The type of the condition.
+   * The type of the condition. May be 'and', 'or', or 'filter'.
    *  @property {string} type
    */
-  readonly type: string;
+  readonly type: 'and' | 'or' | 'filter';
 
   /**
    * A description of the condition.
@@ -18,13 +18,13 @@ export interface ConditionModel {
   readonly description?: string;
 
   /**
-   * The composite conditions to be used for And/Or conditions.
+   * The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.
    *  @property {(ConditionModel | FilterModel)[]} [operands]
    */
   readonly operands?: (ConditionModel | FilterModel)[];
 
   /**
-   * A handler to be run if the condition is true.a
+   * A handler to be run if the condition is true.
    *  @property {ConsequentModel} [
    */
   readonly onTrue?: ConsequentModel;
@@ -43,6 +43,7 @@ export interface ConditionModel {
 
   /**
    * The state (Reaction) transition that should occur if the condition is true.
+   * The default (if not specified) is to transition to the next Reaction (or terminate if none).
    */
   readonly transition?: TransitionModel;
 }

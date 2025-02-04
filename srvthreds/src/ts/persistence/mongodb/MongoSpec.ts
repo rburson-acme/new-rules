@@ -24,6 +24,7 @@ export class MongoSpec {
     [Spec.GT_OP]: '$gt',
     [Spec.NE_OP]: '$ne',
     [Spec.NOT_OP]: '$not',
+    [Spec.MATCH_OP]: '$regex',
 
     //array operators
     [Spec.OR_OP]: '$or',
@@ -166,6 +167,8 @@ export class MongoSpec {
         if (!blacklist.includes(key)) {
           const resultValue = MongoSpec.mapKeysRecursive({ ...params, values: values[key] });
           if (key in map) {
+            // add case insensitive option if this is a regex
+            if(key === Spec.MATCH_OP) accum['$options'] = 'i';
             accum[map[key]] = resultValue;
           } else {
             accum[key] = resultValue;

@@ -28,6 +28,7 @@ export declare class Spec {
     static readonly LTE_OP: string;
     static readonly LT_OP: string;
     static readonly NE_OP: string;
+    static readonly MATCH_OP: string;
     static readonly SKIP = "skip";
     static readonly LIMIT = "limit";
     static readonly MULTI = "multi";

@@ -37,6 +37,7 @@ export class Spec {
     static LTE_OP = Spec.OPERATOR_PREFIX + 'lte';
     static LT_OP = Spec.OPERATOR_PREFIX + 'lt';
     static NE_OP = Spec.OPERATOR_PREFIX + 'ne';
+    static MATCH_OP = Spec.OPERATOR_PREFIX + 're';
     /*
       Query options
     */
