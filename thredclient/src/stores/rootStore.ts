@@ -6,6 +6,7 @@ import { GeoModuleStore } from './GeoModuleStore';
 import { ConnectionStore } from './ConnectionStore';
 import { AdminThredsStore } from './AdminThredsStore';
 import { PatternsStore } from './PatternsStore';
+import { ThemeStore } from './ThemeStore';
 
 export class RootStore {
   private static instance: RootStore;
@@ -13,6 +14,7 @@ export class RootStore {
   readonly authStore: AuthStore = new AuthStore();
   readonly applicationStore: ApplicationStore = new ApplicationStore();
   readonly connectionStore: ConnectionStore = new ConnectionStore(this);
+  readonly themeStore: ThemeStore = new ThemeStore(this);
   readonly thredsStore: ThredsStore = new ThredsStore(this);
   readonly adminThredsStore: AdminThredsStore = new AdminThredsStore(this);
   readonly healthModuleStore: HealthModuleStore = new HealthModuleStore();

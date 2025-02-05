@@ -1,5 +1,7 @@
 import { Button } from '@/src/components/common/Button';
+import { ThemeProvider } from '@/src/contexts/ThemeContext';
 import { RootStore } from '@/src/stores/RootStore';
+import { ThemeContext } from '@react-navigation/native';
 import { Redirect, Stack } from 'expo-router';
 import Drawer from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,7 +30,7 @@ function AppLayout() {
   //   return <Text>Loading...</Text>;
   // }
 
-  const { authStore } = RootStore.get();
+  const { authStore, themeStore } = RootStore.get();
 
   function logOut() {
     authStore.logOut();
@@ -36,85 +38,93 @@ function AppLayout() {
 
   if (authStore.role === 'admin') {
     return (
-      <Drawer initialRouteName="admin">
-        <Drawer.Screen
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Home',
-            title: 'Home',
-          }}
-          name="admin"
-        />
-        <Drawer.Screen
-          options={{
-            drawerItemStyle: { display: 'none' },
-          }}
-          name="messenger"
-        />
-        <Drawer.Screen
-          name="modules"
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Modules',
-            title: 'Modules',
-          }}
-        />
-        <Drawer.Screen
-          name="admin-tools"
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Admin Tools',
-            title: 'Admin Tools',
-          }}
-        />
-      </Drawer>
+      <ThemeProvider themeStore={themeStore}>
+        <Drawer initialRouteName="admin">
+          <Drawer.Screen
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Home',
+              title: 'Home',
+            }}
+            name="admin"
+          />
+          <Drawer.Screen
+            options={{
+              drawerItemStyle: { display: 'none' },
+            }}
+            name="messenger"
+          />
+          <Drawer.Screen
+            name="modules"
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Modules',
+              title: 'Modules',
+            }}
+          />
+          <Drawer.Screen
+            name="admin-tools"
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Admin Tools',
+              title: 'Admin Tools',
+            }}
+          />
+        </Drawer>
+      </ThemeProvider>
     );
   }
   if (authStore.role === 'user') {
     return (
-      <Drawer initialRouteName="messenger">
-        <Drawer.Screen
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Home',
-            title: 'Home',
-          }}
-          name="messenger"
-        />
-        <Drawer.Screen
-          options={{
-            drawerItemStyle: { display: 'none' },
-          }}
-          name="admin"
-        />
-        <Drawer.Screen
-          name="modules"
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Modules',
-            title: 'Modules',
-          }}
-        />
-        <Drawer.Screen
-          name="admin-tools"
-          redirect={true}
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-            drawerLabel: 'Admin Tools',
-            title: 'Admin Tools',
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-      </Drawer>
+      <ThemeProvider themeStore={themeStore}>
+        <Drawer initialRouteName="messenger">
+          <Drawer.Screen
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Home',
+              title: 'Home',
+            }}
+            name="messenger"
+          />
+          <Drawer.Screen
+            options={{
+              drawerItemStyle: { display: 'none' },
+            }}
+            name="admin"
+          />
+          <Drawer.Screen
+            name="modules"
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Modules',
+              title: 'Modules',
+            }}
+          />
+          <Drawer.Screen
+            name="admin-tools"
+            redirect={true}
+            options={{
+              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+              drawerLabel: 'Admin Tools',
+              title: 'Admin Tools',
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+        </Drawer>
+      </ThemeProvider>
     );
   } else {
-    return <Redirect href="/sign-in" />;
+    return (
+      <ThemeProvider themeStore={themeStore}>
+        <Redirect href="/sign-in" />;
+      </ThemeProvider>
+    );
   }
 }
 
