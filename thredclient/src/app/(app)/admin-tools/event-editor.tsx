@@ -3,7 +3,7 @@ import { StyleSheet, View, Animated, ScrollView, Dimensions } from 'react-native
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { Event, TemplateModel } from 'thredlib';
 import { DEFAULT_EVENT_JSON_STRING } from '@/src/constants/DefaultEventString';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { TemplateStore } from '@/src/stores/TemplateStore';
 import { EventInput } from '@/src/components/admin-tools/event-editor/EventInput';
 import { EventOutput } from '@/src/components/admin-tools/event-editor/EventOutput';

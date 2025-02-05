@@ -1,6 +1,6 @@
 import { ListRenderItemInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { RouteListItemType } from '@/src/core/RouteList';
 
 type ModuleListItemProps<Names> = {

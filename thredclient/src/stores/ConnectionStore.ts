@@ -1,6 +1,6 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import { StringMap, Logger, EventManager, Event, SystemEvents } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { Platform } from 'react-native';
 
 export class ConnectionStore {

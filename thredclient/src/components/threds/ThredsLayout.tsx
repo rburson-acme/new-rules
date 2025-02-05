@@ -1,4 +1,4 @@
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { observer } from 'mobx-react-lite';
 import { View } from 'react-native';
 import { ThredsView } from './ThredsView';

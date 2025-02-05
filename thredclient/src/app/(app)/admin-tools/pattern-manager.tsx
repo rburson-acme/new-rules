@@ -1,6 +1,6 @@
 import { PatternsList } from '@/src/components/admin-tools/pattern-manager/PatternsList';
 import { OpenPattern } from '@/src/components/admin-tools/pattern-manager/OpenPattern';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';

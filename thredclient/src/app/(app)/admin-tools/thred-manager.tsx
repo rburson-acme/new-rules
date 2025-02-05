@@ -2,7 +2,7 @@ import { AdminThredsView } from '@/src/components/admin-tools/thred-manager/Admi
 import { OpenAdminThred } from '@/src/components/admin-tools/thred-manager/OpenAdminThred';
 import { Button } from '@/src/components/common/Button';
 import { useRunOnInterval } from '@/src/hooks/useRunOnInterval';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';

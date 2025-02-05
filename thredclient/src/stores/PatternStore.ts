@@ -1,5 +1,5 @@
 import { PatternModel, SystemEvents } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { action, makeObservable, observable, runInAction, toJS } from 'mobx';
 import { set } from 'lodash';
 

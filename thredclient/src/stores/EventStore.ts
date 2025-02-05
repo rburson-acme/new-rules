@@ -1,7 +1,7 @@
 import { observable, action, autorun, makeObservable } from 'mobx';
 import { TemplateStore } from './TemplateStore';
 import { StringMap, Events, Event, eventTypes } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { Id } from '../core/Id';
 
 export class EventStore {

@@ -1,5 +1,5 @@
 import { Button } from '@/src/components/common/Button';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { Redirect, Stack } from 'expo-router';
 import Drawer from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';

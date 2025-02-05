@@ -1,5 +1,5 @@
 import { Button } from '@/src/components/common/Button';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';

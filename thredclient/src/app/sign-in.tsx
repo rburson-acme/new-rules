@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, Text, Image, StyleSheet } from 'react-native';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { Button } from '@/src/components/common/Button';
 import { observer } from 'mobx-react-lite';
 import { router } from 'expo-router';

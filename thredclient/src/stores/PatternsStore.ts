@@ -1,5 +1,5 @@
 import { EventHelper, PatternModel, SystemEvents } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { PatternStore } from './PatternStore';
 
