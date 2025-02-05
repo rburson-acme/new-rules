@@ -34,9 +34,6 @@ function AppLayout() {
     authStore.logOut();
   }
 
-  //TODO: add protections on messenger and admin to make sure they cannot access those pages
-
-  // This layout can be deferred because it's not the root layout.
   if (authStore.role === 'admin') {
     return (
       <Drawer initialRouteName="admin">

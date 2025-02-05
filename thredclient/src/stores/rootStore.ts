@@ -5,6 +5,7 @@ import { HealthModuleStore } from './HealthModuleStore';
 import { GeoModuleStore } from './GeoModuleStore';
 import { ConnectionStore } from './ConnectionStore';
 import { AdminThredsStore } from './AdminThredsStore';
+import { PatternsStore } from './PatternsStore';
 
 export class RootStore {
   private static instance: RootStore;
@@ -16,12 +17,10 @@ export class RootStore {
   readonly adminThredsStore: AdminThredsStore = new AdminThredsStore(this);
   readonly healthModuleStore: HealthModuleStore = new HealthModuleStore();
   readonly geoModuleStore: GeoModuleStore = new GeoModuleStore();
+  readonly patternsStore: PatternsStore = new PatternsStore(this);
 
   static get() {
     if (!this.instance) this.instance = new RootStore();
     return this.instance;
   }
 }
-
-// TODO
-// make static get method for rootStore

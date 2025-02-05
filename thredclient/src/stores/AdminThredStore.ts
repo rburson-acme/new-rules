@@ -15,6 +15,7 @@ export class AdminThredStore {
       terminateThred: action,
       pattern: observable,
       events: observable,
+      thred: observable,
     });
   }
 

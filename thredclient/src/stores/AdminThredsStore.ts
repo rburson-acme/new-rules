@@ -66,13 +66,13 @@ export class AdminThredsStore {
       name: userId,
     });
 
-    const event = await new Promise<any>((resolve, reject) => {
+    const thredsEvent = await new Promise<any>((resolve, reject) => {
       this.rootStore.connectionStore.exchange(getAllThredsEvent, event => {
         resolve(event);
       });
     });
 
-    const eventHelper = new EventHelper(event);
+    const eventHelper = new EventHelper(thredsEvent);
     const threds = eventHelper.valueNamed('threds') as AdminThred[];
 
     const newThreds = await Promise.all(

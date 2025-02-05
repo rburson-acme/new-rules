@@ -10,6 +10,7 @@ type AdminThredCardProps = {
 export const AdminThredCard = observer(({ thredStore }: AdminThredCardProps) => {
   const { thred, pattern, events } = thredStore;
   //find the patternReaction with the name of the thred.currentReaction
+  
   const currentReaction = pattern?.reactions.find(reaction => reaction.name === thred.currentReaction.reactionName);
   const originalSource = pattern?.reactions[0].allowedSources;
 
