@@ -38,24 +38,28 @@
 
         <div id='json_container' style="height: 50%; display: none;">
           <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
-              {
-                "id": "100",
-                "type": "wonkaInc.downtime",
-                "time": 1584887617722,
-                "data": {
-                    "title": "Gobstopper Assembly Widget Jam",
-                    "description": "Widget Jam has occured on the Gobstopper Assembly",
-                    "content": {
-                      "values": {
-                        "errorCode": "EC_1034"
-                      }
-                    }
-                },
-                "source": {
-                    "id": "assembly-10",
-                    "name": "Gobstopper Assembly 339"
+            {
+              id: '117388469638211',
+              type: 'org.wt.videoStream',
+              data: {
+                title: 'Video Stream Lookup Result',
+                content: {
+                  values: {
+                    result: [
+                      [
+                        {
+                          streamUri: "https://ia801203.us.archive.org/1/items/77044USNavyRobotAircraft/77044%20US%20Navy%20Robot%20Aircraft.mp4"
+                        }
+                      ]
+                    ]
+                  }
                 }
+              },
+              source: { id: 'streamService1', name: 'Video Stream Service' },
+              thredId: '',
+              time: 1738846963821
             }
+
             </textarea>
         </div>
       </div>
@@ -64,7 +68,7 @@
   </div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script>const id = 'assembly-10';</script>
+  <script>const id = 'streamService1';</script>
   <script src="control.js"></script>
 </body>
 
