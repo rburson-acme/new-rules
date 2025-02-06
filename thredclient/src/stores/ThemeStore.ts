@@ -8,10 +8,10 @@ export class ThemeStore {
   }
 
   getTheme() {
-    //When we start developing themes for different tenants, we will need to:
+    // When we start developing themes for different tenants, we will need to:
     // find the tenant,
     // then return the theme for that tenant.
-    //For now, just return the default theme
+    // For now, just return the default theme
     return DEFAULT_THEME;
   }
 }

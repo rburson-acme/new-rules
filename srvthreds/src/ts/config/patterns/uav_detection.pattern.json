@@ -55,6 +55,7 @@
                     "eventDataTemplate": {
                         "title": "Possible UAV Detected",
                         "description": "$xpr( 'Sensor ' & $valueNamed('sensorId') & ' has detected a possible UAV')",
+                        "display": {"uri": "https://www.svgrepo.com/show/489126/sensor.svg"},
                         "advice": {
                             "eventType": "org.wt.client.tell",
                             "template": {

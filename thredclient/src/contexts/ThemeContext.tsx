@@ -2,9 +2,6 @@ import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { ThemeStore } from '../stores/ThemeStore';
 import { DEFAULT_THEME } from '../constants/DefaultTheme';
 
-// DEFAULT THEME
-
-// Create a context
 const ThemeContext = createContext(DEFAULT_THEME);
 
 type ThemeProviderProps = {

@@ -64,6 +64,12 @@ export default () => ({
       ],
       'expo-router',
       'react-native-health-connect',
+      [
+        'expo-font',
+        {
+          fonts: ['./assets/fonts/Nexa-ExtraLight.ttf', './assets/fonts/Nexa-Heavy.ttf'],
+        },
+      ],
     ],
   },
 });

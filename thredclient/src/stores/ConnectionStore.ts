@@ -1,5 +1,4 @@
-import { observable, action, computed, makeObservable } from 'mobx';
-import { StringMap, Logger, EventManager, Event, SystemEvents } from 'thredlib';
+import { Logger, EventManager, Event } from 'thredlib';
 import { RootStore } from './RootStore';
 import { Platform } from 'react-native';
 
@@ -18,10 +17,13 @@ export class ConnectionStore {
   consume = (event: Event) => {
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);
-    if (!this.rootStore.thredsStore.thredStores[thredId]) {
-      this.rootStore.thredsStore.addThred({ id: thredId, name: thredId });
+    const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
+    if (!thredStore) {
+      const thredStore = this.rootStore.thredsStore.addThred({ id: thredId, name: thredId });
+      thredStore.addEvent(event);
+    } else {
+      thredStore.addEvent(event);
     }
-    this.rootStore.thredsStore.thredStores[thredId].addEvent(event);
   };
 
   publish(event: Event) {
