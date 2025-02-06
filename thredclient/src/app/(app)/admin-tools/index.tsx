@@ -1,7 +1,7 @@
 import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
 import { AdminToolNames, RouteListItemType } from '@/src/core/RouteList';
 import { RouteListItem } from '@/src/components/common/RouteListItem';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { router, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 

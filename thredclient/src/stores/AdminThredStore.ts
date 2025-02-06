@@ -1,6 +1,6 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { PatternModel, SystemEvents } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { AdminThred } from '../core/AdminThred';
 import { EventRecord } from '../core/EventRecord';
 
@@ -15,6 +15,7 @@ export class AdminThredStore {
       terminateThred: action,
       pattern: observable,
       events: observable,
+      thred: observable,
     });
   }
 

@@ -2,7 +2,7 @@ import { StyleProp, ViewStyle, TextInput as RNTextInput, InputModeOptions } from
 
 type TextInputProps = {
   onChangeText: (text: string) => void;
-  value: string;
+  value?: string;
   style: StyleProp<ViewStyle>;
   multiline?: boolean;
   inputMode?: InputModeOptions;

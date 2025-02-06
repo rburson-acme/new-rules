@@ -1,6 +1,6 @@
 import { observable, makeObservable } from 'mobx';
 import { Event, SystemEvents } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { Thred } from '../core/Thred';
 import { EventsStore } from './EventsStore';
 

@@ -14,12 +14,6 @@ type OpenAdminThredProps = {
 export const OpenAdminThred = observer(({ thredStore, thredsStore }: OpenAdminThredProps) => {
   const { thred, pattern, events } = thredStore;
 
-  // TODO:
-  // Clicking on an event shows the interaction in that step.
-  // Create a pattern section that shows details about the pattern.
-  // Create a button that allows the user to see where the thred is in the pattern.
-  // Clean up this code. Put it all where it belongs.
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ display: 'flex', gap: 8 }}>

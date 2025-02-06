@@ -1,7 +1,7 @@
 import { Event, eventTypes } from 'thredlib';
 import { observable, action, computed, makeObservable } from 'mobx';
 import { EventStore } from './EventStore';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 
 export enum ScrollMode {
   FREE,
@@ -51,7 +51,6 @@ export class EventsStore {
     this.openEventStore = eventStore;
     eventStore.seen = true;
   }
-
 
   closeOpenEventStore() {
     this.openEventStore?.close();

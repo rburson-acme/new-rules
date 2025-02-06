@@ -1,5 +1,5 @@
 import { SystemEvents, EventHelper, PatternModel } from 'thredlib';
-import { RootStore } from './rootStore';
+import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { AdminThred } from '../core/AdminThred';
 import { AdminThredStore } from './AdminThredStore';
@@ -66,13 +66,13 @@ export class AdminThredsStore {
       name: userId,
     });
 
-    const event = await new Promise<any>((resolve, reject) => {
+    const thredsEvent = await new Promise<any>((resolve, reject) => {
       this.rootStore.connectionStore.exchange(getAllThredsEvent, event => {
         resolve(event);
       });
     });
 
-    const eventHelper = new EventHelper(event);
+    const eventHelper = new EventHelper(thredsEvent);
     const threds = eventHelper.valueNamed('threds') as AdminThred[];
 
     const newThreds = await Promise.all(

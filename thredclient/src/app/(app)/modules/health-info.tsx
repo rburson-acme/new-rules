@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { ReadRecordsResult } from 'react-native-health-connect';
 import { Button } from '@/src/components/common/Button';
 import { BodyTemperature } from '@/src/components/modules/BodyTemperature';
-import { RootStore } from '@/src/stores/rootStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 
 function HealthModule() {
