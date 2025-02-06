@@ -11,6 +11,7 @@ type ThredsViewProps = {
 
 export const AdminThredsView = observer(({ adminThredsStore }: ThredsViewProps) => {
   const flatList = useRef<FlatList<AdminThredStore>>(null);
+  
   return (
     <FlatList
       ref={flatList}

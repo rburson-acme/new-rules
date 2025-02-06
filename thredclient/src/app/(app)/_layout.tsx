@@ -1,131 +1,116 @@
 import { Button } from '@/src/components/common/Button';
 import { ThemeProvider } from '@/src/contexts/ThemeContext';
 import { RootStore } from '@/src/stores/RootStore';
-import { ThemeContext } from '@react-navigation/native';
-import { Redirect, Stack } from 'expo-router';
 import Drawer from 'expo-router/drawer';
-import * as SplashScreen from 'expo-splash-screen';
 import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
+import { Image, StyleSheet, Text } from 'react-native';
+import React from 'react';
 import 'react-native-reanimated';
+import { View } from 'react-native-animatable';
+import Feather from '@expo/vector-icons/Feather';
+import { Redirect } from 'expo-router';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-// SplashScreen.preventAutoHideAsync();
-
-// TODO: fix splashScreen on android
 function AppLayout() {
-  const loaded = true;
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  // // You can keep the splash screen open, or render a loading screen like we do here.
-  // if (isLoading) {
-  //   return <Text>Loading...</Text>;
-  // }
-
   const { authStore, themeStore } = RootStore.get();
 
   function logOut() {
     authStore.logOut();
   }
 
-  if (authStore.role === 'admin') {
-    return (
-      <ThemeProvider themeStore={themeStore}>
-        <Drawer initialRouteName="admin">
-          <Drawer.Screen
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Home',
-              title: 'Home',
-            }}
-            name="admin"
-          />
-          <Drawer.Screen
-            options={{
-              drawerItemStyle: { display: 'none' },
-            }}
-            name="messenger"
-          />
-          <Drawer.Screen
-            name="modules"
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Modules',
-              title: 'Modules',
-            }}
-          />
-          <Drawer.Screen
-            name="admin-tools"
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Admin Tools',
-              title: 'Admin Tools',
-            }}
-          />
-        </Drawer>
-      </ThemeProvider>
-    );
+  const { theme } = themeStore;
+  const isAdmin = authStore.role === 'admin';
+
+  if (!authStore.userId) {
+    return <Redirect href={'/sign-in'} />;
   }
-  if (authStore.role === 'user') {
-    return (
-      <ThemeProvider themeStore={themeStore}>
-        <Drawer initialRouteName="messenger">
-          <Drawer.Screen
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Home',
-              title: 'Home',
-            }}
-            name="messenger"
-          />
-          <Drawer.Screen
-            options={{
-              drawerItemStyle: { display: 'none' },
-            }}
-            name="admin"
-          />
-          <Drawer.Screen
-            name="modules"
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Modules',
-              title: 'Modules',
-            }}
-          />
-          <Drawer.Screen
-            name="admin-tools"
-            redirect={true}
-            options={{
-              headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-              headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
-              drawerLabel: 'Admin Tools',
-              title: 'Admin Tools',
-              drawerItemStyle: { display: 'none' },
-            }}
-          />
-        </Drawer>
-      </ThemeProvider>
-    );
-  } else {
-    return (
-      <ThemeProvider themeStore={themeStore}>
-        <Redirect href="/sign-in" />;
-      </ThemeProvider>
-    );
-  }
+  return (
+    <ThemeProvider themeStore={themeStore}>
+      <Drawer
+        initialRouteName="admin"
+        screenOptions={({ navigation }) => ({
+          title: 'New Rules',
+          headerLeft: () => (
+            <Feather
+              name="menu"
+              size={24}
+              color={theme.colors.icon}
+              style={[{ borderColor: theme.colors.border }, styles.iconStyles]}
+              onPress={navigation.openDrawer}
+            />
+          ),
+        })}>
+        {/* ADMIN SCREENS */}
+        <Drawer.Screen
+          options={{
+            headerRight: () => <Button onPress={logOut} content={'Log out'} />, // TODO: Add Avatar here with logout functionality
+            headerTitle: () => <HeaderTitle />,
+            headerTitleAlign: 'center',
+            headerRightContainerStyle: styles.headerRightContainerStyle,
+            drawerLabel: 'Home',
+            title: 'Home',
+            drawerItemStyle: !isAdmin ? { display: 'none' } : undefined,
+          }}
+          name="admin"
+        />
+        <Drawer.Screen
+          name="admin-tools"
+          options={{
+            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+            headerRightContainerStyle: styles.headerRightContainerStyle,
+            drawerLabel: 'Admin Tools',
+            title: 'Admin Tools',
+            drawerItemStyle: !isAdmin ? { display: 'none' } : undefined,
+          }}
+        />
+        {/* USER SCREENS */}
+        <Drawer.Screen
+          options={{
+            headerRight: () => <Button onPress={logOut} content={'Log out'} />, // TODO: Add Avatar here with logout functionality
+            headerTitle: () => <HeaderTitle />,
+            headerTitleAlign: 'center',
+            headerRightContainerStyle: styles.headerRightContainerStyle,
+            drawerLabel: 'Home',
+            title: 'Home',
+            drawerItemStyle: isAdmin ? { display: 'none' } : undefined,
+          }}
+          name="messenger"
+        />
+
+        {/* SCREENS  FOR ALL USERS */}
+        <Drawer.Screen
+          name="modules"
+          options={{
+            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
+            headerRightContainerStyle: styles.headerRightContainerStyle,
+            drawerLabel: 'Modules',
+            title: 'Modules',
+          }}
+        />
+      </Drawer>
+    </ThemeProvider>
+  );
 }
 
+const styles = StyleSheet.create({
+  iconStyles: {
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 4,
+    marginLeft: 16,
+    marginVertical: 8,
+  },
+  headerRightContainerStyle: { flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 10 },
+});
+
+const HeaderTitle = () => {
+  const newRulesLogo = require('../../../assets/new-rules-logo.png');
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Image source={newRulesLogo} style={{ width: 48, height: 48 }} />
+      <Text style={{ fontFamily: 'Nexa-Heavy', fontSize: 18 }}>New</Text>
+      <Text style={{ fontFamily: 'Nexa-ExtraLight', fontSize: 18 }}>Rules</Text>
+    </View>
+  );
+};
 export default observer(AppLayout);

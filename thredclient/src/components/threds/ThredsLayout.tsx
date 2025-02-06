@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { View } from 'react-native';
 import { ThredsView } from './ThredsView';
 import { OpenThredView } from './OpenThredView';
+import SearchBar from '../common/SearchBar';
 
 type ThredsLayoutProps = {
   rootStore: RootStore;
@@ -15,11 +16,17 @@ export const ThredsLayout = observer(({ rootStore }: ThredsLayoutProps) => {
 
   if (!currentThredStore) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
+        <SearchBar
+          value={thredsStore.searchText}
+          onChange={value => {
+            thredsStore.setSearchText(value);
+          }}
+        />
         <ThredsView thredsStore={thredsStore} />
       </View>
     );
   } else {
-    return <OpenThredView thredStore={currentThredStore} thredsStore={thredsStore} />;
+    // return <OpenThredView thredStore={currentThredStore} thredsStore={thredsStore} />;
   }
 });

@@ -55,6 +55,11 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
+    <key>UIAppFonts</key>
+    <array>
+      <string>Nexa-ExtraLight.ttf</string>
+      <string>Nexa-Heavy.ttf</string>
+    </array>
     <key>UIBackgroundModes</key>
     <array>
       <string>audio</string>

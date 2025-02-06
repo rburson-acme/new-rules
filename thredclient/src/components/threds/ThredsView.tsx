@@ -9,18 +9,18 @@ type ThredsViewProps = {
   thredsStore: ThredsStore;
 };
 
-// Used both for ThredManager and in ThredsLayout.
-// Should remain composable as just a 'list' of threds
 export const ThredsView = observer(({ thredsStore }: ThredsViewProps) => {
-  const flatList = useRef<FlatList<[string, ThredStore]>>(null);
-  
+  const flatList = useRef<FlatList<ThredStore>>(null);
+
   return (
     <FlatList
       ref={flatList}
       onEndReachedThreshold={0.1}
-      data={Object.entries(thredsStore.thredStores)}
-      renderItem={({ item: [id, thredStore], index }) => {
-        return <ThredView thredId={id} thredStore={thredStore} thredsStore={thredsStore} />;
+      data={thredsStore.filteredThreds}
+      contentContainerStyle={{ flex: 1, gap: 16 }}
+      style={{ flex: 1 }}
+      renderItem={({ item: thredStore }) => {
+        return <ThredView thredId={thredStore.thred.id} thredStore={thredStore} thredsStore={thredsStore} />;
       }}
       ListEmptyComponent={emptyList()}
     />

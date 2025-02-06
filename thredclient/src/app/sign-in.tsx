@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, TextInput, Text, Image, StyleSheet } from 'react-native';
+import { View, TextInput, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { RootStore } from '@/src/stores/RootStore';
 import { Button } from '@/src/components/common/Button';
 import { observer } from 'mobx-react-lite';
 import { router } from 'expo-router';
 
-const logo = require('../../assets/workthreds_logo.png');
+const logo = require('../../assets/new-rules-logo.png');
 function SignIn() {
   const { authStore, connectionStore } = RootStore.get();
 
@@ -24,18 +24,30 @@ function SignIn() {
 
   return (
     <View style={styles.container}>
-      <Image source={logo} style={styles.logoStyle} />
+      <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }}>
+        <Image source={logo} style={[styles.logoStyle]} />
+        <View style={styles.logoContainer}>
+          <Text style={{ fontFamily: 'Nexa-Heavy', fontSize: 32 }}>New</Text>
+          <Text style={{ fontFamily: 'Nexa-ExtraLight', fontSize: 32 }}>Rules</Text>
+        </View>
+      </View>
       <View style={styles.fieldContainer}>
-        <Text style={styles.textLabelStyle}>userId: </Text>
         <TextInput
+          placeholder="User ID"
+          placeholderTextColor={'grey'}
           style={styles.textInputStyle}
           value={authStore.userId || ''}
           onChangeText={text => authStore.setUserId(text)}
         />
       </View>
       <View style={styles.fieldContainer}>
-        <Text style={styles.textLabelStyle}>password: </Text>
-        <TextInput secureTextEntry={true} style={styles.textInputStyle} defaultValue="" />
+        <TextInput
+          secureTextEntry={true}
+          style={styles.textInputStyle}
+          defaultValue=""
+          placeholder="Password"
+          placeholderTextColor={'grey'}
+        />
       </View>
       <Button
         content="Messenger View"
@@ -64,6 +76,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     padding: 5,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   fieldContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -79,6 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     width: 200,
     height: 40,
+    paddingLeft: 4,
   },
   buttonTextStyle: {
     color: '#fff',
@@ -93,8 +110,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#4DB9CC',
   },
   logoStyle: {
-    width: '50%',
     resizeMode: 'contain',
+    width: Dimensions.get('screen').width * 0.5,
+    height: Dimensions.get('screen').height * 0.25,
     margin: 0,
     padding: 0,
   },
