@@ -7,7 +7,6 @@ import { AdminThredStore } from './AdminThredStore';
 export class AdminThredsStore {
   threds: AdminThredStore[] = [];
   searchText: string = '';
-  currentThredId?: string = undefined;
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -15,10 +14,6 @@ export class AdminThredsStore {
       threds: observable.shallow,
       terminateAllThreds: action,
       removeThred: action,
-      unselectThred: action,
-      selectThred: action,
-      currentThredId: observable,
-      currentThredStore: computed,
       searchText: observable,
       setSearchText: action,
       filteredThreds: computed,
@@ -27,20 +22,6 @@ export class AdminThredsStore {
 
   removeThred(thredId: string) {
     this.threds = this.threds.filter(thred => thred.thred.id !== thredId);
-  }
-
-  unselectThred() {
-    this.currentThredId = undefined;
-  }
-
-  selectThred(thredId: string) {
-    this.currentThredId = thredId;
-  }
-
-  get currentThredStore(): AdminThredStore | undefined {
-    const { threds, currentThredId } = this;
-
-    return currentThredId ? threds.find(thred => thred.thred.id === currentThredId) : undefined;
   }
 
   terminateAllThreds() {

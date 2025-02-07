@@ -2,7 +2,6 @@ import { ThredEventViewer } from '@/src/components/threds/ThredEventViewer';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router/build/hooks';
-import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 
 export default function OpenThredView() {

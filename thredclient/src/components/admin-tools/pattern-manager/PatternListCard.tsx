@@ -1,5 +1,6 @@
 import { PatternsStore } from '@/src/stores/PatternsStore';
 import { PatternStore } from '@/src/stores/PatternStore';
+import { Link } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -9,9 +10,11 @@ export const PatternListCard = observer(({ patternStore, patternsStore }: Patter
   if (!patternId) return null;
 
   return (
-    <Pressable style={styles.container} onPress={() => patternsStore.selectPattern(patternId)}>
-      <Text>{patternStore.pattern.name}</Text>
-    </Pressable>
+    <Link href={`admin-tools/pattern-manager/${patternId}`}>
+      <View style={styles.container}>
+        <Text>{patternStore.pattern.name}</Text>
+      </View>
+    </Link>
   );
 });
 

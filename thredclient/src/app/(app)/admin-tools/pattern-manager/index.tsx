@@ -1,5 +1,4 @@
 import { PatternsList } from '@/src/components/admin-tools/pattern-manager/PatternsList';
-import { OpenPattern } from '@/src/components/admin-tools/pattern-manager/OpenPattern';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
@@ -21,9 +20,7 @@ function PatternManager() {
     getPatterns();
   }, []);
 
-  if (!patternsStore.currentPatternStore) {
-    return <PatternsList patternsStore={patternsStore} />;
-  } else return <OpenPattern patternStore={patternsStore.currentPatternStore} />;
+  return <PatternsList patternsStore={patternsStore} />;
 }
 
 export default observer(PatternManager);
