@@ -1,6 +1,7 @@
 import { getMapCenter, Location } from '@/src/core/Map';
 import { View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Bubble } from '../../common/Bubble';
 
 type MapProps = {
   locations: Location[];
@@ -9,7 +10,7 @@ type MapProps = {
 export const Map = ({ locations }: MapProps) => {
   const { latitude, longitude, latitudeDelta, longitudeDelta } = getMapCenter(locations);
   return (
-    <View>
+    <Bubble>
       <MapView
         initialRegion={{
           latitude,
@@ -19,7 +20,7 @@ export const Map = ({ locations }: MapProps) => {
         }}
         provider={PROVIDER_GOOGLE}
         style={{
-          width: 350,
+          width: 280,
           height: 275,
         }}>
         {locations.map(location => {
@@ -35,6 +36,6 @@ export const Map = ({ locations }: MapProps) => {
           );
         })}
       </MapView>
-    </View>
+    </Bubble>
   );
 };

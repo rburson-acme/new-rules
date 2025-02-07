@@ -1,13 +1,12 @@
-import { SystemEvents, EventHelper, PatternModel } from 'thredlib';
+import { SystemEvents, EventHelper, PatternModel, EventRecord, ThredLogRecord } from 'thredlib';
 import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { AdminThred } from '../core/AdminThred';
 import { AdminThredStore } from './AdminThredStore';
-import { ThredLogRecord } from '../core/ThredLogRecord';
-import { EventRecord } from '../core/EventRecord';
 
 export class AdminThredsStore {
   threds: AdminThredStore[] = [];
+  searchText: string = '';
   currentThredId?: string = undefined;
 
   constructor(readonly rootStore: RootStore) {
@@ -20,6 +19,9 @@ export class AdminThredsStore {
       selectThred: action,
       currentThredId: observable,
       currentThredStore: computed,
+      searchText: observable,
+      setSearchText: action,
+      filteredThreds: computed,
     });
   }
 
@@ -52,8 +54,19 @@ export class AdminThredsStore {
 
     this.rootStore.connectionStore.exchange(terminateAllThredsEvent, event => {
       // For now, we just remove all threds from the thredStore and AdminThredsStore
-      this.rootStore.thredsStore.thredStores = {};
+      this.rootStore.thredsStore.thredStores = [];
       this.threds = [];
+    });
+  }
+
+  setSearchText(text: string) {
+    this.searchText = text;
+  }
+
+  get filteredThreds() {
+    if (!this.searchText) return this.threds;
+    return this.threds.filter(thredStore => {
+      return thredStore.thred.id.includes(this.searchText);
     });
   }
 

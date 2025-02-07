@@ -26,7 +26,7 @@ function AppLayout() {
   return (
     <ThemeProvider themeStore={themeStore}>
       <Drawer
-        initialRouteName="admin"
+        initialRouteName="threds"
         screenOptions={({ navigation }) => ({
           title: 'New Rules',
           headerLeft: () => (
@@ -38,52 +38,40 @@ function AppLayout() {
               onPress={navigation.openDrawer}
             />
           ),
+          headerRight: () => <Button onPress={logOut} content={'Log out'} />, // TODO: Add Avatar here with logout functionality
+          headerTitle: () => <HeaderTitle />,
+          headerTitleAlign: 'center',
+          headerRightContainerStyle: styles.headerRightContainerStyle,
         })}>
-        {/* ADMIN SCREENS */}
+        {/* SCREENS  FOR ALL USERS */}
         <Drawer.Screen
           options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />, // TODO: Add Avatar here with logout functionality
-            headerTitle: () => <HeaderTitle />,
-            headerTitleAlign: 'center',
-            headerRightContainerStyle: styles.headerRightContainerStyle,
             drawerLabel: 'Home',
             title: 'Home',
-            drawerItemStyle: !isAdmin ? { display: 'none' } : undefined,
           }}
-          name="admin"
-        />
-        <Drawer.Screen
-          name="admin-tools"
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: styles.headerRightContainerStyle,
-            drawerLabel: 'Admin Tools',
-            title: 'Admin Tools',
-            drawerItemStyle: !isAdmin ? { display: 'none' } : undefined,
-          }}
-        />
-        {/* USER SCREENS */}
-        <Drawer.Screen
-          options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />, // TODO: Add Avatar here with logout functionality
-            headerTitle: () => <HeaderTitle />,
-            headerTitleAlign: 'center',
-            headerRightContainerStyle: styles.headerRightContainerStyle,
-            drawerLabel: 'Home',
-            title: 'Home',
-            drawerItemStyle: isAdmin ? { display: 'none' } : undefined,
-          }}
-          name="messenger"
+          name="threds"
         />
 
-        {/* SCREENS  FOR ALL USERS */}
         <Drawer.Screen
           name="modules"
           options={{
-            headerRight: () => <Button onPress={logOut} content={'Log out'} />,
-            headerRightContainerStyle: styles.headerRightContainerStyle,
             drawerLabel: 'Modules',
             title: 'Modules',
+          }}
+        />
+        <Drawer.Screen
+          name="threds/[thredId]"
+          options={{
+            drawerItemStyle: { display: 'none' },
+          }}
+        />
+        {/* SCREENS FOR ADMIN */}
+        <Drawer.Screen
+          name="admin-tools"
+          options={{
+            drawerLabel: 'Admin Tools',
+            title: 'Admin Tools',
+            drawerItemStyle: !isAdmin ? { display: 'none' } : undefined,
           }}
         />
       </Drawer>

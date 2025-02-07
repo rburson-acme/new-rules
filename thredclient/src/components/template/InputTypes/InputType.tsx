@@ -4,6 +4,9 @@ import { TextInput } from './TextInput';
 import { TextBubble } from '../../common/TextBubble';
 import { observer } from 'mobx-react-lite';
 import { NominalInput } from './NominalInput';
+import { useTheme } from '@/src/contexts/ThemeContext';
+import { View } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 
 export type BooleanInputSetItem = { display: string; value: boolean };
 export type SetItem = { display: string; value: any };
@@ -18,6 +21,8 @@ type InputProps = {
 };
 export const InputType = observer(({ name, type, interactionStore, set, multiple }: InputProps) => {
   const value = interactionStore.getValue(name);
+
+  const { colors, fonts } = useTheme();
 
   if (value) {
     const isValueString = typeof value === 'string';
@@ -35,12 +40,15 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
       } else return 'Invalid String';
     }
     return (
-      <TextBubble
-        text={getText()}
-        leftOrRight="right"
-        bubbleStyle={{ backgroundColor: '#79CC4D' }}
-        textStyle={{ color: '#fff' }}
-      />
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+        <TextBubble
+          text={getText()}
+          leftOrRight="right"
+          bubbleStyle={{ backgroundColor: colors.blue }}
+          textStyle={{ color: '#fff' }}
+        />
+        <FontAwesome name="user-circle" size={40} color={colors.blue} />
+      </View>
     );
   } else {
     switch (type) {

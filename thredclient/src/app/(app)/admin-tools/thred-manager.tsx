@@ -1,6 +1,7 @@
 import { AdminThredsView } from '@/src/components/admin-tools/thred-manager/AdminThredsView';
 import { OpenAdminThred } from '@/src/components/admin-tools/thred-manager/OpenAdminThred';
 import { Button } from '@/src/components/common/Button';
+import SearchBar from '@/src/components/common/SearchBar';
 import { useRunOnInterval } from '@/src/hooks/useRunOnInterval';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
@@ -27,22 +28,30 @@ function ThredManager() {
 
   if (!currentThredStore) {
     return (
-      <View>
-        <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
+          <SearchBar
+            value={adminThredsStore.searchText}
+            onChange={value => {
+              adminThredsStore.setSearchText(value);
+            }}
+          />
           <AdminThredsView adminThredsStore={adminThredsStore} />
         </View>
-        <Button
-          content={'Terminate All Threds'}
-          onPress={() => {
-            adminThredsStore.terminateAllThreds();
-          }}
-        />
-        <Button
-          content={'Reload Threds'}
-          onPress={() => {
-            adminThredsStore.getAllThreds();
-          }}
-        />
+        <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 16, width: '100%', gap: 8 }}>
+          <Button
+            content={'Terminate All Threds'}
+            onPress={() => {
+              adminThredsStore.terminateAllThreds();
+            }}
+          />
+          <Button
+            content={'Reload Threds'}
+            onPress={() => {
+              adminThredsStore.getAllThreds();
+            }}
+          />
+        </View>
       </View>
     );
   } else {

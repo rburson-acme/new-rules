@@ -7,7 +7,7 @@ import { getComponentTypes } from '../template/componentTypes';
 
 type EventDataViewProps = {
   data?: EventData;
-  containerStyle: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
   eventStore: EventStore;
 };
 export const EventDataView = ({ data, containerStyle, eventStore }: EventDataViewProps) => {
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'stretch',
-    padding: 5,
+    flex: 1,
   },
   textDescriptionStyle: {
     padding: 5,

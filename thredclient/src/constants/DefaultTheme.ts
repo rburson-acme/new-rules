@@ -10,6 +10,9 @@ export const DEFAULT_THEME = {
     icon: '#676D79',
     border: '#C4C7CF',
     invertedText: '#FFFFFF',
+    blue: '#0084FF',
+    green: '#1AC9C9',
+    infoBlue: '#002B8E',
   },
   fonts: {
     regular: { fontFamily: 'SourceSans3_400Regular', fontSize: 14 },

@@ -1,54 +1,80 @@
-import { AdminThredStore } from '@/src/stores/AdminThredStore';
 import { observer } from 'mobx-react-lite';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { useTheme } from '@/src/contexts/ThemeContext';
+import { ThredIcon } from './ThredIcon';
+import { AdminThredStore } from '@/src/stores/AdminThredStore';
+import { AdminThredsStore } from '@/src/stores/AdminThredsStore';
 
-type AdminThredCardProps = {
+type ThredViewProps = {
   thredStore: AdminThredStore;
+  thredsStore: AdminThredsStore;
 };
+export const AdminThredCard = observer(({ thredStore, thredsStore }: ThredViewProps) => {
+  const {
+    colors,
+    fonts: { medium, regular },
+  } = useTheme();
 
-export const AdminThredCard = observer(({ thredStore }: AdminThredCardProps) => {
-  const { thred, pattern, events } = thredStore;
-  //find the patternReaction with the name of the thred.currentReaction
-  
-  const currentReaction = pattern?.reactions.find(reaction => reaction.name === thred.currentReaction.reactionName);
-  const originalSource = pattern?.reactions[0].allowedSources;
+  function getLatestEvent() {
+    const eventStores = thredStore.events;
+    if (!eventStores) return undefined;
+    const latestEvent = eventStores[eventStores?.length - 1].event;
 
-  function getLatestEventTime() {
-    const timestamps = events.map(event => event.timestamp);
-    const latestEventTime = Math.max(...timestamps);
-    const formattedTime = new Date(latestEventTime).toLocaleString();
+    return latestEvent;
+  }
 
-    return formattedTime;
+  const latestEvent = getLatestEvent();
+  if (!latestEvent) return null;
+
+  const { source, data, type, time } = latestEvent;
+
+  function formatDateAndTime() {
+    if (!time) return '';
+    const date = new Date(time);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+
+    const formattedTime = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${amPm}`;
+    //month, day, year
+    const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')} / ${String(date.getDate()).padStart(
+      2,
+      '0',
+    )} / ${String(date.getFullYear()).slice(-2)}`;
+
+    return `${formattedTime} | ${formattedDate}`;
   }
 
   return (
-    <Pressable style={styles.container} onPress={() => thredStore.rootStore.adminThredsStore.selectThred(thred.id)}>
-      <View>
-        <Text>{thred.id}</Text>
-        <Text>Source: {originalSource}</Text>
-        <View>
-          <Text>Current State: {currentReaction?.name}</Text>
-        </View>
+    <View style={[styles.containerStyle, { backgroundColor: colors.secondaryBackground, borderColor: colors.border }]}>
+      <ThredIcon uri={data?.display?.uri} />
+      <View style={styles.textView}>
+        <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime()}</Text>
+        <Text style={[styles.textStyle, medium, { color: colors.text }]}>
+          {latestEvent.data?.title} -- {latestEvent.data?.description}
+        </Text>
       </View>
-      <View>
-        <Text>{getLatestEventTime()}</Text>
-      </View>
-    </Pressable>
+      {/* <ThredTag thredStore={thredStore} /> */}
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 8,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    borderColor: 'black',
-    borderWidth: 1,
-    justifyContent: 'space-between',
-    display: 'flex',
+  containerStyle: {
     flexDirection: 'row',
-    marginHorizontal: 8,
-    marginTop: 8,
+    flexGrow: 1,
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
   },
+  textView: {
+    flexWrap: 'wrap',
+    flex: 1,
+  },
+  textStyle: { flexWrap: 'wrap' },
+  dateStyle: {},
 });

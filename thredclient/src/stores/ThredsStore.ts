@@ -7,17 +7,13 @@ import { Thred } from '../core/Thred';
 // TODO: Change StringMap to just an array of ThredStore
 export class ThredsStore {
   thredStores: ThredStore[] = [];
-  currentThredId?: string = undefined;
   searchText: string = '';
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
       thredStores: observable,
-      currentThredId: observable,
       addThred: action,
-      selectThred: action,
       numThreds: computed,
-      currentThredStore: computed,
       unselectThred: action,
       removeThred: action,
       searchText: observable,
@@ -39,13 +35,7 @@ export class ThredsStore {
     this.thredStores = this.thredStores.filter(thredStore => thredStore.thred.id !== thredId);
   }
 
-  unselectThred() {
-    this.currentThredId = undefined;
-  }
-
-  selectThred(thredId: string) {
-    this.currentThredId = thredId;
-  }
+  unselectThred() {}
 
   setSearchText(text: string) {
     this.searchText = text;
@@ -56,12 +46,6 @@ export class ThredsStore {
     return this.thredStores.filter(thredStore => {
       return thredStore.thred.name.includes(this.searchText);
     });
-  }
-
-  get currentThredStore(): ThredStore | undefined {
-    const { thredStores, currentThredId } = this;
-
-    return thredStores.find(thredStore => thredStore.thred.id === currentThredId);
   }
 
   get numThreds(): number {

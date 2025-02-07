@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { TouchableOpacity, Text, View, StyleProp, ViewStyle, StyleSheet, TextStyle } from 'react-native';
+import { TouchableOpacity, Text, View, StyleProp, ViewStyle, StyleSheet, TextStyle, Pressable } from 'react-native';
 import { Icon } from './Icon';
 
 type ButtonProps = {
@@ -20,10 +20,11 @@ export const Button = ({ content, onPress, buttonStyle, textStyle, iconName, ico
       {iconRight && iconName && <Icon name={iconName} style={[styles.iconStyle, iconStyle, { paddingLeft: 3 }]} />}
     </Fragment>
   );
+
   return (
-    <TouchableOpacity style={[styles.button, buttonStyle]} onPress={onPress}>
+    <Pressable style={[styles.button, buttonStyle]} onPress={onPress}>
       {buttonContent}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -34,8 +35,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   text: {
     color: '#777',

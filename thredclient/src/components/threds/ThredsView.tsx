@@ -17,10 +17,10 @@ export const ThredsView = observer(({ thredsStore }: ThredsViewProps) => {
       ref={flatList}
       onEndReachedThreshold={0.1}
       data={thredsStore.filteredThreds}
-      contentContainerStyle={{ flex: 1, gap: 16 }}
+      contentContainerStyle={{ flex: 1 }}
       style={{ flex: 1 }}
       renderItem={({ item: thredStore }) => {
-        return <ThredView thredId={thredStore.thred.id} thredStore={thredStore} thredsStore={thredsStore} />;
+        return <ThredView thredsStore={thredsStore} thredStore={thredStore} />;
       }}
       ListEmptyComponent={emptyList()}
     />
