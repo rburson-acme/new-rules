@@ -116,6 +116,7 @@ export const withPromise = (op: (...args: any[]) => void): Promise<void> => {
 
 export const withDispatcherPromise = (dispatchers: any[], op: (...args: any[]) => void): Promise<void> => {
   return new Promise((resolve, reject) => {
+    dispatchers.length = 0;
     dispatchers.push(withPromiseHandlers(op, resolve, reject));
   });
 };

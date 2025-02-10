@@ -5,6 +5,7 @@ import { Storage, Types, indexId } from '../../storage/Storage.js';
 import { errorCodes, errorKeys, Logger, Parallel } from '../../thredlib/index.js';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
 import { EventsStore } from './EventsStore.js';
+import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
 
 // Thred locking is handled here, and should be contained to this class
 
@@ -64,15 +65,15 @@ export class ThredsStore {
   get numThreds(): Promise<number> {
     return this.storage.setCount(Types.Thred, indexId);
   }
-  
+
   // no need to lock - read only
   async getAllThredStores(): Promise<ThredStore[]> {
     return this.getThredStores(await this.getAllThredIds());
   }
- 
+
   // no need to lock - read only
   async getThredStores(thredIds: string[]): Promise<ThredStore[]> {
-    if(thredIds.length === 0) return [];
+    if (thredIds.length === 0) return [];
     const states = await this.storage.retrieveAll(Types.Thred, thredIds);
     return states.map((state) => this.fromThredState(state));
   }
@@ -143,13 +144,9 @@ export class ThredsStore {
     } catch (e) {
       Logger.warn(Logger.crit(`releaseAndTerminateThred::Failed to delete Thred ${thredId}`));
     }
-    return this.terminateThred(thredId);
-  }
-
-  // requires lock
-  private async terminateThred(thredId: string): Promise<void> {
     // @todo archive the context so that the thred could be replayed
     const thredStore = this.thredStores[thredId];
     delete this.thredStores[thredId];
+    await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });
   }
 }

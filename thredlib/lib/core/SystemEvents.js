@@ -42,8 +42,8 @@ export class SystemEvents {
      *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
      *        |___/
      */
-    static getGetThredsEvent(source) {
-        const values = { op: systemEventTypes.operations.getThreds };
+    static getGetThredsEvent(source, status, completedMatcher) {
+        const values = { op: systemEventTypes.operations.getThreds, status, completedMatcher };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             thredId: ThredId.SYSTEM,

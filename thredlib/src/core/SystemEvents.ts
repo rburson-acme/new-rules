@@ -14,6 +14,9 @@ export interface SystemEventThredInputValues extends SystemEventInputValues {
 
 export interface GetThredsArgs extends SystemEventInputValues {
   readonly thredIds?: string[] | undefined;
+  // defaults to active
+  readonly status?: 'active' | 'completed' | 'all';
+  readonly completedMatcher?: EventTaskParams['matcher'];
 }
 
 export interface ReloadPatternArgs extends SystemEventInputValues {
@@ -81,8 +84,12 @@ export class SystemEvents {
    *        |___/
    */
 
-  static getGetThredsEvent(source: Event['source']) {
-    const values: GetThredsArgs = { op: systemEventTypes.operations.getThreds };
+  static getGetThredsEvent(
+    source: Event['source'],
+    status?: GetThredsArgs['status'],
+    completedMatcher?: EventTaskParams['matcher'],
+  ) {
+    const values: GetThredsArgs = { op: systemEventTypes.operations.getThreds, status, completedMatcher };
     return EventBuilder.create({
       type: eventTypes.control.sysControl.type,
       thredId: ThredId.SYSTEM,

@@ -129,8 +129,6 @@ class ServiceManager {
     // connect to persistence
     await PersistenceManager.get().connect();
 
-    // @TODO separate library
-    // setup the Sessions service
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
 
     // @TODO separate service

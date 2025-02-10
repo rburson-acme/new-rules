@@ -16,6 +16,7 @@ Logger.setLevel(LoggerLevel.ERROR);
 describe('admin system test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
+    await PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
   });
   test('should start a new thred', function () {
@@ -24,13 +25,13 @@ describe('admin system test', function () {
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
-      thredId = message.event.thredId;
+      thredId0 = message.event.thredId;
     });
     engineConnMan.eventQ.queue(events.event0);
     return pr;
   });
   test('terminate Thred', async function () {
-    const terminateThredEvent = SystemEvents.getTerminateThredEvent(thredId as string, adminTestSource);
+    const terminateThredEvent = SystemEvents.getTerminateThredEvent(thredId0 as string, adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(terminateThredEvent.id);
@@ -48,7 +49,7 @@ describe('admin system test', function () {
       expect(event.re).toBe(events.event1.id);
       expect(Events.getError(event)).toBeDefined();
     });
-    engineConnMan.eventQ.queue({ ...events.event1, thredId });
+    engineConnMan.eventQ.queue({ ...events.event1, thredId: thredId0 });
     return pr;
   });
   test('should start a new thred', function () {
@@ -57,7 +58,7 @@ describe('admin system test', function () {
       expect(message.event.data?.title).toBe('outbound.event0');
       expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
-      thredId = message.event.thredId;
+      thredId1 = message.event.thredId;
     });
     engineConnMan.eventQ.queue(events.event0);
     return pr;
@@ -65,7 +66,7 @@ describe('admin system test', function () {
   // move the thred to event2Reaction
   test('transition Thred', async function () {
     const transitionThredEvent = SystemEvents.getTransitionThredEvent(
-      thredId as string,
+      thredId1 as string,
       { name: 'event2Reaction' },
       adminTestSource,
     );
@@ -85,13 +86,13 @@ describe('admin system test', function () {
       expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(to).toContain('outbound.event2.recipient');
     });
-    engineConnMan.eventQ.queue({ ...events.event2, thredId });
+    engineConnMan.eventQ.queue({ ...events.event2, thredId: thredId1 });
     return pr;
   });
   // move the thred to event0Reaction and replay local event0 (set in event0Reaction)
   test('transition Thred', async function () {
     const transitionThredEvent = SystemEvents.getTransitionThredEvent(
-      thredId as string,
+      thredId1 as string,
       { name: 'event0Reaction', input: 'local', localName: 'event0' },
       adminTestSource,
     );
@@ -125,7 +126,7 @@ describe('admin system test', function () {
       expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(to).toContain('outbound.event1.recipient');
     });
-    engineConnMan.eventQ.queue({ ...events.event1, thredId });
+    engineConnMan.eventQ.queue({ ...events.event1, thredId: thredId1 });
     return pr;
   });
   test('should start an additional Thred', function () {
@@ -139,7 +140,7 @@ describe('admin system test', function () {
     engineConnMan.eventQ.queue(events.event0);
     return pr;
   });
-  test('get All Threds', async function () {
+  test('get All Active Threds', async function () {
     const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
 
@@ -149,10 +150,41 @@ describe('admin system test', function () {
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
       const threds = Events.valueNamed(message.event, 'threds');
       expect(threds).length(2);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId);
+      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
       expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
       expect(threds.map((thred: { currentReaction: { reactionName: string}; }) => thred.currentReaction.reactionName)).toContain('event2Reaction');
       expect(threds.map((thred: { currentReaction: { reactionName: string}; }) => thred.currentReaction.reactionName)).toContain('event1Reaction');
+    });
+    engineConnMan.eventQ.queue(getThredsEvent);
+    return pr;
+  });
+  test('get All Completed Threds', async function () {
+    const lastHour = new Date().getTime() - (60 * 60 * 1000);
+    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'completed', { "thred.endTime": { $gte: lastHour } });
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+      expect(message.event.type).toBe('org.wt.tell');
+      expect(message.event.re).toBe(getThredsEvent.id);
+      expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
+      expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
+      const threds = Events.valueNamed(message.event, 'threds');
+      expect(threds).length(1);
+      expect(threds[0].id).toBe(thredId0);
+    });
+    engineConnMan.eventQ.queue(getThredsEvent);
+    return pr;
+  });
+  test('get All Threds', async function () {
+    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'all', {});
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+      expect(message.event.type).toBe('org.wt.tell');
+      expect(message.event.re).toBe(getThredsEvent.id);
+      expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
+      expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
+      const threds = Events.valueNamed(message.event, 'threds');
+      expect(threds).length(3);
+      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId0);
+      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
+      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -181,13 +213,14 @@ describe('admin system test', function () {
     return pr;
   });
   afterAll(async () => {
-    PersistenceFactory.getPersistence().deleteDatabase();
+    await PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
     await engineConnMan.disconnectAll();
   });
 });
 
 let engineConnMan: EngineConnectionManager;
-let thredId: string | undefined;
+let thredId0: string | undefined;
+let thredId1: string | undefined;
 let thredId2: string | undefined;
 

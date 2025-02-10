@@ -1,8 +1,16 @@
 import { Persistence } from '../../persistence/Persistence.js';
 import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
-import { PatternModel, Event, errorCodes, errorKeys, Logger } from '../../thredlib';
-import { EventRecord } from '../../thredlib/persistence/EventRecord.js';
-import { ThredLogRecord } from '../../thredlib/persistence/ThredLogRecord.js';
+import { Query } from '../../task/Taskable.js';
+import {
+  PatternModel,
+  Event,
+  errorCodes,
+  errorKeys,
+  Logger,
+  ThredLogRecord,
+  EventRecord,
+  ThredRecord,
+} from '../../thredlib';
 
 export class PersistenceManager {
   private static instance: PersistenceManager;
@@ -40,11 +48,11 @@ export class PersistenceManager {
 
   async saveEvent(record: EventRecord): Promise<void> {
     try {
-    record.id = record.event.id;
-    record.thredId = record.event.thredId;
-    await this.persistence.replace({ type: Types.EventRecord, values: record, matcher: { id: record.id } });
-    } catch(err) {
-      Logger.error(Logger.crit(`Error saving event record: ${record.id} for thred ${record.thredId}`), err);
+      record.id = record.event.id;
+      record.thredId = record.event.thredId;
+      await this.persistence.replace({ type: Types.EventRecord, values: record, matcher: { id: record.id } });
+    } catch (err) {
+      Logger.error(Logger.crit(`Error saving event record: ${record.id} for thred: ${record.thredId}`), err);
     }
   }
 
@@ -52,16 +60,32 @@ export class PersistenceManager {
     return this.persistence.get({ type: Types.EventRecord, matcher: { thredId } });
   }
 
-  async saveThredLogRecord(entry: ThredLogRecord): Promise<void> {
+  async saveThredLogRecord(record: ThredLogRecord): Promise<void> {
     try {
-    await this.persistence.put({ type: Types.ThredLogRecord, values: entry });
-    } catch(err) {
-      Logger.error(Logger.crit(`Error saving thred log record: ${entry.type} for thred ${entry.thredId}`), err);
+      await this.persistence.put({ type: Types.ThredLogRecord, values: record });
+    } catch (err) {
+      Logger.error(Logger.crit(`Error saving thred log record: ${record.type} for thred: ${record.thredId}`), err);
     }
   }
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[]> {
     return this.persistence.get({ type: Types.ThredLogRecord, matcher: { thredId } });
+  }
+
+  async saveThredRecord(record: ThredRecord): Promise<void> {
+    try {
+      await this.persistence.put({ type: Types.ThredRecord, values: record });
+    } catch (err) {
+      Logger.error(Logger.crit(`Error saving thred record for thred: ${record.id} pattern: ${record.thred.patternName}`), err);
+    }
+  }
+  
+  async getThreds(matcher: Query['matcher']): Promise<ThredRecord[]> {
+    return this.persistence.get({ type: Types.ThredRecord, matcher });
+  }
+
+  async getThred(thredId: string): Promise<ThredRecord> {
+    return this.persistence.getOne({ type: Types.ThredRecord, matcher: { id: thredId } });
   }
 }
 
@@ -69,4 +93,5 @@ export const Types = {
   PatternModel: 'PatternModel',
   EventRecord: 'EventRecord',
   ThredLogRecord: 'ThredLogRecord',
+  ThredRecord: 'ThredRecord',
 };
