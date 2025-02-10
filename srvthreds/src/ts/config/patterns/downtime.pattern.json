@@ -200,7 +200,7 @@
                                     "op": "get",
                                     "params": {
                                         "type": "employee",
-                                        "selector": "{ id, name }",
+                                        "selector": { "include": ["id", "name"] },
                                         "values": {
                                             "available": true,
                                             "code": "$xpr( $local('first_event').data.content.values.errorCode )",
@@ -338,7 +338,7 @@
                                             "op": "get",
                                             "params": {
                                                 "type": "employee",
-                                                "selector": "{ id, name }",
+                                                "selector": { "include": [ "id", "name" ] },
                                                 "values": {
                                                     "available": true,
                                                     "code": "$xpr( $local('first_event').data.content.values.errorCode )",

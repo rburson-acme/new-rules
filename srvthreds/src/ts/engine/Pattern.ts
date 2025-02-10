@@ -27,7 +27,7 @@ export class Pattern {
         this.maxInstances = patternModel.maxInstances;
         this.reactionModelByName = patternModel.reactions.reduce(
             (accum: StringMap<ReactionModel>, reaction, index) => {
-                const name = reaction.name ?? String(index);
+                const name = reaction.name ?? this.getReactionNameForIndex(index);
                 if(accum[name]) throw Error('Reactions must have unique names (check for duplicates)');
                 accum[name] = reaction;
                 return accum;
@@ -50,14 +50,14 @@ export class Pattern {
     get initialReaction(): Reaction | undefined {
         const reactionModel = this.patternModel.reactions?.[0];
         if(reactionModel) {
-            const name = reactionModel.name || `${this.name}_0`;
+            const name = reactionModel.name || this.getReactionNameForIndex(0);
             return new Reaction(reactionModel, name);
         }
     }
 
     get initialReactionName(): string {
         const reactionModel = this.patternModel.reactions?.[0];
-        return reactionModel?.name || String(0);
+        return reactionModel?.name || this.getReactionNameForIndex(0);
     }
 
     /*
@@ -83,7 +83,7 @@ export class Pattern {
         const currentIndex = this.patternModel.reactions.indexOf(currentReactionModel);
         const nextReactionModel = this.patternModel.reactions?.[currentIndex + 1];
         if (nextReactionModel) {
-            const name = nextReactionModel.name || `${this.name}_${currentIndex + 1}`;
+            const name = nextReactionModel.name || this.getReactionNameForIndex(currentIndex + 1);
             return new Reaction(nextReactionModel, name);
         }
         return undefined;
@@ -93,5 +93,9 @@ export class Pattern {
         const nextReactionModel = this.reactionModelByName[name];
         if(!nextReactionModel) throw Error(`nextReaction(): Reaction ${name} not found.`)
         return new Reaction(nextReactionModel, name);
+    }
+
+    private getReactionNameForIndex(index : number) {
+        return `${this.name}_${index}`;
     }
 }
