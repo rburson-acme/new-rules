@@ -1,7 +1,6 @@
-import { EventRecord } from '@/src/core/EventRecord';
 import { observer } from 'mobx-react-lite';
 import { StyleSheet, Text, View } from 'react-native';
-import { Address } from 'thredlib';
+import { Address, EventRecord } from 'thredlib';
 
 type ThredEventsProps = {
   event: EventRecord;

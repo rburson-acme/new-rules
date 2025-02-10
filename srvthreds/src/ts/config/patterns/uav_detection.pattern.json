@@ -112,6 +112,7 @@
                 "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('video_stream_request') = true",
                 "transform": {
                     "eventDataTemplate": {
+                        "display": {"uri": "https://www.svgrepo.com/show/535721/video-camera.svg"},
                         "title": "UAV Video",
                         "advice": {
                             "eventType": "org.wt.client.tell",

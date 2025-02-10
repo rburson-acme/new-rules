@@ -7,7 +7,7 @@ export class ThemeStore {
     this.theme = this.getTheme();
   }
 
-  getTheme() {
+  private getTheme() {
     // When we start developing themes for different tenants, we will need to:
     // find the tenant,
     // then return the theme for that tenant.

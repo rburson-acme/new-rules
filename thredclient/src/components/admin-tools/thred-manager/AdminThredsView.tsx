@@ -11,14 +11,14 @@ type ThredsViewProps = {
 
 export const AdminThredsView = observer(({ adminThredsStore }: ThredsViewProps) => {
   const flatList = useRef<FlatList<AdminThredStore>>(null);
-  
+
   return (
     <FlatList
       ref={flatList}
-      onEndReachedThreshold={0.1}
       data={adminThredsStore.threds}
+      contentContainerStyle={{ flexGrow: 1, gap: 16 }}
       renderItem={({ item, index }) => {
-        return <AdminThredCard thredStore={item} />;
+        return <AdminThredCard  thredsStore={adminThredsStore} thredStore={item} />;
       }}
       ListEmptyComponent={emptyList()}
     />

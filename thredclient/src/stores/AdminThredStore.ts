@@ -1,8 +1,7 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
-import { PatternModel, SystemEvents } from 'thredlib';
-import { RootStore } from './RootStore';
+import { EventRecord, PatternModel, SystemEvents } from 'thredlib';
 import { AdminThred } from '../core/AdminThred';
-import { EventRecord } from '../core/EventRecord';
+import { RootStore } from './RootStore';
 
 export class AdminThredStore {
   constructor(

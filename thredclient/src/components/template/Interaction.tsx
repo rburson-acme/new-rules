@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { ComponentTree } from '@/src/components/ComponentTree';
 import { typeConfig } from './typeConfig';
@@ -8,6 +8,7 @@ import { InteractionStore } from '@/src/stores/InteractionStore';
 type InteractionProps = {
   interactionStore: InteractionStore;
   componentTypes: Record<string, React.ComponentType<any>>;
+  style?: ViewStyle;
 };
 export const Interaction = observer(({ interactionStore, componentTypes }: InteractionProps) => {
   if (!interactionStore) {

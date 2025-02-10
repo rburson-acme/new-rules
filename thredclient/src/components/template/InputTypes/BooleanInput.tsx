@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { BooleanInputSetItem } from './InputType';
 import { Button } from '../../common/Button';
+import { useTheme } from '@/src/contexts/ThemeContext';
 
 type BooleanInputProps = {
   name: string;
@@ -28,11 +29,21 @@ type BooleanButtonProps = {
 const BooleanButton = observer(({ setItem, interactionStore, name }: BooleanButtonProps) => {
   const value = interactionStore.getValue(name);
   const hasBeenClicked = setItem.value === value;
+  const { colors } = useTheme();
 
   return (
     <Button
       content={setItem.display || ''}
-      buttonStyle={[styles.buttonStyle, hasBeenClicked ? styles.buttonClicked : styles.buttonNotClicked]}
+      buttonStyle={[
+        styles.buttonStyle,
+        hasBeenClicked
+          ? {
+              backgroundColor: colors.green,
+            }
+          : {
+              backgroundColor: colors.blue,
+            },
+      ]}
       textStyle={styles.textStyle}
       iconStyle={styles.iconStyle}
       onPress={() => {
@@ -41,20 +52,12 @@ const BooleanButton = observer(({ setItem, interactionStore, name }: BooleanButt
     />
   );
 });
+
 const styles = StyleSheet.create({
   buttonStyle: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderRadius: 8,
+    padding: 16,
     alignSelf: 'flex-end',
-  },
-  buttonNotClicked: {
-    backgroundColor: '#4DB9CC',
-  },
-  buttonClicked: {
-    backgroundColor: '#79CC4D',
-    borderBottomRightRadius: 0,
   },
   textStyle: {
     color: '#fff',
@@ -67,6 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   containerStyle: {
+    transform: [{ translateX: -50 }],
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,

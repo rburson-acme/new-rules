@@ -1,19 +1,17 @@
-import { ThredStore } from '@/src/stores/ThredStore';
 import { observer } from 'mobx-react-lite';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { ThredsStore } from '@/src/stores/ThredsStore';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
-import { ThredTag } from './ThredTag';
-import { ThredIcon } from './ThredIcon';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { toJS } from 'mobx';
+import { ThredIcon } from '../admin-tools/thred-manager/ThredIcon';
+import { ThredStore } from '@/src/stores/ThredStore';
+import { ThredsStore } from '@/src/stores/ThredsStore';
+import { Link } from 'expo-router';
 
 type ThredViewProps = {
   thredStore: ThredStore;
   thredsStore: ThredsStore;
-  thredId: string;
 };
-export const ThredView = observer(({ thredStore, thredsStore, thredId }: ThredViewProps) => {
+export const ThredView = observer(({ thredStore, thredsStore }: ThredViewProps) => {
   const {
     colors,
     fonts: { medium, regular },
@@ -40,7 +38,7 @@ export const ThredView = observer(({ thredStore, thredsStore, thredId }: ThredVi
     const amPm = hours >= 12 ? 'PM' : 'AM';
 
     const formattedTime = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${amPm}`;
-    //month, day, year
+
     const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')} / ${String(date.getDate()).padStart(
       2,
       '0',
@@ -50,16 +48,19 @@ export const ThredView = observer(({ thredStore, thredsStore, thredId }: ThredVi
   }
 
   return (
-    <View style={[styles.containerStyle, { backgroundColor: colors.secondaryBackground, borderColor: colors.border }]}>
-      <ThredIcon uri={data?.display?.uri} />
-      <View style={styles.textView}>
-        <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime()}</Text>
-        <Text style={[styles.textStyle, medium, { color: colors.text }]}>
-          {latestEvent.data?.title} -- {latestEvent.data?.description}
-        </Text>
+    <Link href={`/threds/${thredStore.thred.id}`}>
+      <View style={[styles.containerStyle]}>
+        <ThredIcon uri={data?.display?.uri} />
+        <View style={styles.textView}>
+          <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime()}</Text>
+          <Text style={[styles.textStyle, medium, { color: colors.text }]}>
+            {latestEvent.data?.title} {latestEvent.data?.description ? `-- ${latestEvent.data?.description}` : ''}
+          </Text>
+        </View>
+        {/* Develop some sort of thumbnail to display here when  */}
+        {/* <ThredTag thredStore={thredStore} /> */}
       </View>
-      <ThredTag thredStore={thredStore} />
-    </View>
+    </Link>
   );
 });
 
@@ -67,8 +68,6 @@ const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'row',
     flexGrow: 1,
-    borderWidth: 1,
-    borderRadius: 4,
     padding: 8,
     justifyContent: 'space-between',
     alignItems: 'center',

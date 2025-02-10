@@ -1,14 +1,12 @@
-import { SystemEvents, EventHelper, PatternModel } from 'thredlib';
+import { SystemEvents, EventHelper, PatternModel, EventRecord, ThredLogRecord } from 'thredlib';
 import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { AdminThred } from '../core/AdminThred';
 import { AdminThredStore } from './AdminThredStore';
-import { ThredLogRecord } from '../core/ThredLogRecord';
-import { EventRecord } from '../core/EventRecord';
 
 export class AdminThredsStore {
   threds: AdminThredStore[] = [];
-  currentThredId?: string = undefined;
+  searchText: string = '';
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -16,29 +14,14 @@ export class AdminThredsStore {
       threds: observable.shallow,
       terminateAllThreds: action,
       removeThred: action,
-      unselectThred: action,
-      selectThred: action,
-      currentThredId: observable,
-      currentThredStore: computed,
+      searchText: observable,
+      setSearchText: action,
+      filteredThreds: computed,
     });
   }
 
   removeThred(thredId: string) {
     this.threds = this.threds.filter(thred => thred.thred.id !== thredId);
-  }
-
-  unselectThred() {
-    this.currentThredId = undefined;
-  }
-
-  selectThred(thredId: string) {
-    this.currentThredId = thredId;
-  }
-
-  get currentThredStore(): AdminThredStore | undefined {
-    const { threds, currentThredId } = this;
-
-    return currentThredId ? threds.find(thred => thred.thred.id === currentThredId) : undefined;
   }
 
   terminateAllThreds() {
@@ -52,8 +35,19 @@ export class AdminThredsStore {
 
     this.rootStore.connectionStore.exchange(terminateAllThredsEvent, event => {
       // For now, we just remove all threds from the thredStore and AdminThredsStore
-      this.rootStore.thredsStore.thredStores = {};
+      this.rootStore.thredsStore.thredStores = [];
       this.threds = [];
+    });
+  }
+
+  setSearchText(text: string) {
+    this.searchText = text;
+  }
+
+  get filteredThreds() {
+    if (!this.searchText) return this.threds;
+    return this.threds.filter(thredStore => {
+      return thredStore.thred.id.includes(this.searchText);
     });
   }
 

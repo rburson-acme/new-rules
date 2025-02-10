@@ -13,13 +13,13 @@ function SignIn() {
     if (!authStore.userId) return;
     authStore.setRole('user');
     await connectionStore.connect(authStore.userId);
-    router.replace('/messenger');
+    router.replace('/threds/');
   };
   const handleAdminView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
     await connectionStore.connect(authStore.userId);
-    router.replace('/admin');
+    router.replace('/threds/');
   };
 
   return (
