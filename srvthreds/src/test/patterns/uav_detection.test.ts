@@ -55,7 +55,7 @@ const sensorId = '1000000001';
 // create a base builder with the common parameters
 const sensorEvent = EventBuilder.create({
   type: 'org.wt.sensor.detectionEvent',
-  source: { id: 'participant0', name: 'Sensor Agent 1' },
+  source: { id: 'sensor_agent0', name: 'Sensor Agent 1' },
 })
   .mergeValues({ latitude: 34.0522, longitude: -118.2437, sensorId, certainty: 0.9 })
   .mergeData({ title: 'Aerial Activity Detected' })
