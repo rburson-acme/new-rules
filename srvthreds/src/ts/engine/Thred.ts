@@ -52,10 +52,6 @@ export class Thred {
     if (inputEvent) await Thred.consider(inputEvent, thredStore, threds);
   }
 
-  static async terminateThred(thredStore: ThredStore): Promise<void> {
-    thredStore.finish();
-  }
-
   // time out the current reaction and move to the reaction
   // specified by the transition (or the default if transition is undefined)
   // Note the Reaction must have an expiry property set

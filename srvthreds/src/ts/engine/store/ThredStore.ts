@@ -33,6 +33,7 @@ export class ThredStore {
   }
 
   transitionTo(reaction?: Reaction): void {
+    if(!reaction) this.endTime = Date.now();
     this._currentReaction = reaction;
     this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
   }
@@ -42,10 +43,10 @@ export class ThredStore {
   }
 
   // This is the proper way to terminate a thred
-  // IMPORTANT: This method must be called from within a lock i.e. the ThredsStore.withThredStore()
+  // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
+  // this will ensure that it actually gets cleaned up
   finish(): void {
     this.transitionTo(undefined);
-    this.endTime = Date.now();
   }
 
   get isFinished() {

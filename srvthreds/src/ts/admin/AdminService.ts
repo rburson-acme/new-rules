@@ -143,7 +143,7 @@ export class AdminService {
   getThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
-      args: { op, thredIds, status, completedMatcher},
+      args: { op, thredIds, status, completedMatcher },
     } = this.getArgs<GetThredsArgs>(args);
     // status defaults to active
     let threds: any[] = [];
@@ -153,14 +153,16 @@ export class AdminService {
         : this.threds.thredsStore.getAllThredStores());
       threds = thredStores.map((thredStore) => thredStore.toJSON());
     }
-    if(status === 'completed' || status === 'all') {
-      threds.push(...(await PersistenceManager.get().getThreds(completedMatcher || {})).map((thredRecord) => thredRecord.thred));
+    if (status === 'completed' || status === 'all') {
+      threds.push(
+        ...(await PersistenceManager.get().getThreds(completedMatcher || {})).map((thredRecord) => thredRecord.thred),
+      );
     }
 
     return {
       status: systemEventTypes.successfulStatus,
       op,
-      threds
+      threds,
     };
   };
 
