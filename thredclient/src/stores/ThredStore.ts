@@ -31,7 +31,6 @@ export class ThredStore {
     this.rootStore.connectionStore.exchange(terminateThredEvent, event => {
       // For now, we just remove the thred from the thredStore and unselect it
       this.rootStore.adminThredsStore.removeThred(this.thred.id);
-      this.rootStore.adminThredsStore.unselectThred();
 
       this.rootStore.thredsStore.removeThred(this.thred.id);
       this.rootStore.thredsStore.unselectThred();

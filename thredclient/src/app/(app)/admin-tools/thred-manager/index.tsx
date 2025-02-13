@@ -1,12 +1,13 @@
 import { AdminThredsView } from '@/src/components/admin-tools/thred-manager/AdminThredsView';
 import { Button } from '@/src/components/common/Button';
 import SearchBar from '@/src/components/common/SearchBar';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { useRunOnInterval } from '@/src/hooks/useRunOnInterval';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 function ThredManager() {
   const navigation = useNavigation();
@@ -23,8 +24,9 @@ function ThredManager() {
 
   startInterval();
 
+  const { colors } = useTheme();
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
         <SearchBar
           value={adminThredsStore.searchText}
@@ -32,7 +34,7 @@ function ThredManager() {
             adminThredsStore.setSearchText(value);
           }}
         />
-        <AdminThredsView adminThredsStore={adminThredsStore} />
+        {adminThredsStore.isComplete ? <AdminThredsView adminThredsStore={adminThredsStore} /> : <ActivityIndicator />}
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 16, width: '100%', gap: 8 }}>
         <Button

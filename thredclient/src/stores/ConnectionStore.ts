@@ -18,6 +18,7 @@ export class ConnectionStore {
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
+    if (event.data?.title?.includes('System Event')) return;
     if (!thredStore) {
       const thredStore = this.rootStore.thredsStore.addThred({ id: thredId, name: thredId });
       thredStore.addEvent(event);

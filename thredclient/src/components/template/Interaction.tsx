@@ -23,7 +23,7 @@ export const Interaction = observer(({ interactionStore, componentTypes }: Inter
         typeConfig={typeConfig}
         componentTypes={componentTypes}
         props={{ interactionStore }}
-        style={{ gap: 8 }}
+        style={{ gap: 16 }}
       />
     </View>
   );

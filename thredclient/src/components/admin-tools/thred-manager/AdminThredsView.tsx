@@ -18,7 +18,7 @@ export const AdminThredsView = observer(({ adminThredsStore }: ThredsViewProps) 
       data={adminThredsStore.threds}
       contentContainerStyle={{ flexGrow: 1, gap: 16 }}
       renderItem={({ item, index }) => {
-        return <AdminThredCard  thredsStore={adminThredsStore} thredStore={item} />;
+        return <AdminThredCard thredsStore={adminThredsStore} thredStore={item} />;
       }}
       ListEmptyComponent={emptyList()}
     />

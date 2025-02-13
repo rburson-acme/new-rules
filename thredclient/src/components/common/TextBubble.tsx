@@ -6,14 +6,11 @@ type TextBubbleProps = {
   text: string | boolean;
   bubbleStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  leftOrRight?: 'left' | 'right';
 };
 
-export const TextBubble = ({ text, bubbleStyle, textStyle, leftOrRight = 'left' }: TextBubbleProps) => {
+export const TextBubble = ({ text, bubbleStyle, textStyle }: TextBubbleProps) => {
   return (
-    <Bubble style={bubbleStyle} leftOrRight={leftOrRight}>
-      {text && <Text style={[styles.defaultTextStyle, textStyle]}>{text}</Text>}
-    </Bubble>
+    <Bubble style={bubbleStyle}>{text && <Text style={[styles.defaultTextStyle, textStyle]}>{text}</Text>}</Bubble>
   );
 };
 const styles = StyleSheet.create({

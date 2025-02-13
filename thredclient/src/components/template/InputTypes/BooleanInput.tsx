@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { BooleanInputSetItem } from './InputType';
 import { Button } from '../../common/Button';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { useState } from 'react';
 
 type BooleanInputProps = {
   name: string;
@@ -27,22 +28,15 @@ type BooleanButtonProps = {
   name: string;
 };
 const BooleanButton = observer(({ setItem, interactionStore, name }: BooleanButtonProps) => {
-  const value = interactionStore.getValue(name);
-  const hasBeenClicked = setItem.value === value;
   const { colors } = useTheme();
-
   return (
     <Button
       content={setItem.display || ''}
       buttonStyle={[
         styles.buttonStyle,
-        hasBeenClicked
-          ? {
-              backgroundColor: colors.green,
-            }
-          : {
-              backgroundColor: colors.blue,
-            },
+        {
+          backgroundColor: colors.lightBlue,
+        },
       ]}
       textStyle={styles.textStyle}
       iconStyle={styles.iconStyle}
@@ -56,7 +50,7 @@ const BooleanButton = observer(({ setItem, interactionStore, name }: BooleanButt
 const styles = StyleSheet.create({
   buttonStyle: {
     borderRadius: 8,
-    padding: 16,
+    padding: 8,
     alignSelf: 'flex-end',
   },
   textStyle: {
@@ -70,9 +64,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   containerStyle: {
-    transform: [{ translateX: -50 }],
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     gap: 8,
   },
 });

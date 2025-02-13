@@ -1,16 +1,11 @@
-import { useTheme } from '@/src/contexts/ThemeContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Image } from 'react-native';
+import { Image } from 'expo-image';
 
 type ThredIconProps = {
   uri?: string;
   tintColor?: string;
 };
 
+const systemIcon = require('../../../../assets/system.png');
 export const ThredIcon = ({ uri, tintColor }: ThredIconProps) => {
-  const { colors } = useTheme();
-
-  if (uri) {
-    return <Image source={{ uri }} style={{ width: 40, height: 40, tintColor: tintColor ? tintColor : colors.blue }} />;
-  } else return <MaterialCommunityIcons name="bell" size={40} color={colors.blue} />;
+  return <Image source={systemIcon} style={{ width: 40, height: 40 }} />;
 };

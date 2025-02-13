@@ -58,7 +58,10 @@ export class EventStore {
         const content = this.openTemplateStore.getEventContent();
         const sourceId = authStore.userId || '$unauth';
         const sourceName = authStore.name || '$anon';
-        const resolvedTitle = advice!.title ? `${sourceId} responded to '${advice!.title}` : undefined;
+
+        const resolvedTitle = advice!.title
+          ? `${sourceId} responded to '${advice!.title}`
+          : `${sourceId} response to an event`;
         const event = Events.newEvent({
           id: Id.nextEventId(sourceId),
           type: advice!.eventType,

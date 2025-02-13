@@ -4,7 +4,6 @@ import { getComponentTypes } from '@/src/components/template/componentTypes';
 import { Interaction } from '@/src/components/template/Interaction';
 import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
 
-
 type EventOutputProps = {
   localStore: EventEditorLocals;
 };
