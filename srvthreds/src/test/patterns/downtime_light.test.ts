@@ -53,9 +53,9 @@ describe('engine', function () {
   });
   // cleanup in case of failure
   afterAll(async () => {
-    //await connMan.stopAllThreds();
-    //await connMan.purgeAll();
-    //await connMan.disconnectAll();
+    await connMan.stopAllThreds();
+    await connMan.purgeAll();
+    await connMan.disconnectAll();
   });
 });
 

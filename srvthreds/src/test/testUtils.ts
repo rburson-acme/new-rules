@@ -18,6 +18,8 @@ import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from '../ts/config/engine.json' with { type: 'json' };
 import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
+import { PersistenceManager } from '../ts/engine/persistence/PersistenceManager.js';
+import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 EngineConfig.engineConfig = engineConfig;
 const sessionAgentConfig = agentConfig as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -112,7 +114,7 @@ export const withPromise = (op: (...args: any[]) => void): Promise<void> => {
   return new Promise((resolve, reject) => {
     withPromiseHandlers(op, resolve, reject);
   });
-}
+};
 
 export const withDispatcherPromise = (dispatchers: any[], op: (...args: any[]) => void): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -136,10 +138,7 @@ export const withPromiseHandlers = (
   };
 };
 
-export const withReject = (
-  op: (...args: any[]) => any,
-  reject: (reason?: any) => void,
-): ((...args: any[]) => void) => {
+export const withReject = (op: (...args: any[]) => any, reject: (reason?: any) => void): ((...args: any[]) => void) => {
   return async (...args: any[]) => {
     try {
       await op(...args);
@@ -183,6 +182,7 @@ export class EngineConnectionManager {
   async purgeAll() {
     await this.eventService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
+    await PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -195,7 +195,6 @@ export class EngineConnectionManager {
     /*const pr = getDispatcherPromise(this.engine);
     await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent({ id: 'admin1', name: 'Admin User' }));
     await pr.catch(Logger.error); */
-
   }
 }
 
@@ -255,6 +254,7 @@ export class ServerConnectionManager {
     await this.engineEventQService.deleteAll().catch(Logger.error);
     await this.sessionMessageQService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
+    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -295,13 +295,7 @@ export class AgentConnectionManager {
     const agent = new Agent(sessionAgentConfig, agentEventQ, agentMessageQ, additionalArgs);
     agent.start();
 
-    return new AgentConnectionManager(
-      agentEventservice,
-      agentMessageService,
-      agentEventQ,
-      agentMessageQ,
-      agent,
-    );
+    return new AgentConnectionManager(agentEventservice, agentMessageService, agentEventQ, agentMessageQ, agent);
   }
 
   constructor(
@@ -316,6 +310,7 @@ export class AgentConnectionManager {
     await this.agentEventService.deleteAll().catch(Logger.error);
     await this.agentMessageService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
+    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -326,10 +321,12 @@ export class AgentConnectionManager {
   }
 }
 
-
 // Allows for testing Agents WITH both Queue connections
 export class AgentQueueConnectionManager {
-  static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentQueueConnectionManager> {
+  static async newAgentInstance(
+    sessionAgentConfig: AgentConfig,
+    additionalArgs?: {},
+  ): Promise<AgentQueueConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // setup the q's so we can mock (act as) the Engine
@@ -382,6 +379,7 @@ export class AgentQueueConnectionManager {
     await this.agentEventService.deleteAll().catch(Logger.error);
     await this.agentMessageService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
+    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -391,4 +389,3 @@ export class AgentQueueConnectionManager {
     await this.agent.shutdown();
   }
 }
-

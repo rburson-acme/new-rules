@@ -16,7 +16,6 @@ Logger.setLevel(LoggerLevel.ERROR);
 describe('admin system test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
-    await PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
   });
   test('should start a new thred', function () {
@@ -213,7 +212,6 @@ describe('admin system test', function () {
     return pr;
   });
   afterAll(async () => {
-    await PersistenceFactory.getPersistence().deleteDatabase();
     await engineConnMan.purgeAll();
     await engineConnMan.disconnectAll();
   });
