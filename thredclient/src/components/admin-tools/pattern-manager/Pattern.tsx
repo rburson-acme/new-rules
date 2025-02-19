@@ -1,12 +1,12 @@
 import { PatternStore } from '@/src/stores/PatternStore';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { Reaction } from './Reaction';
 import { PatternInput } from './PatternInput';
 import { observer } from 'mobx-react-lite';
 import { MediumText } from '../../common/MediumText';
 
-type OpenPatternProps = { patternStore: PatternStore };
-export const OpenPattern = observer(({ patternStore }: OpenPatternProps) => {
+type PatternProps = { patternStore: PatternStore };
+export const Pattern = observer(({ patternStore }: PatternProps) => {
   const { pattern } = patternStore;
 
   return (

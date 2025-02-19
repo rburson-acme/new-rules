@@ -10,11 +10,11 @@ import { formatDateAndTime } from '@/src/utils/formatDateAndTime';
 import { RegularText } from '../../common/RegularText';
 import { MediumText } from '../../common/MediumText';
 
-type ThredViewProps = {
+type AdminThredListCardProps = {
   thredStore: AdminThredStore;
   thredsStore: AdminThredsStore;
 };
-export const AdminThredCard = observer(({ thredStore, thredsStore }: ThredViewProps) => {
+export const AdminThredListCard = observer(({ thredStore, thredsStore }: AdminThredListCardProps) => {
   const {
     colors,
     fonts: { medium, regular },

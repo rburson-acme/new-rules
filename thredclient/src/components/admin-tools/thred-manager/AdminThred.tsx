@@ -6,12 +6,12 @@ import { AdminThredsStore } from '@/src/stores/AdminThredsStore';
 import { ThredEvent } from './ThredEvent';
 import { useTheme } from '@/src/contexts/ThemeContext';
 
-type OpenAdminThredProps = {
+type AdminThredProps = {
   thredStore: AdminThredStore;
   thredsStore: AdminThredsStore;
 };
 
-export const OpenAdminThred = observer(({ thredStore, thredsStore }: OpenAdminThredProps) => {
+export const AdminThred = observer(({ thredStore, thredsStore }: AdminThredProps) => {
   const { pattern, events } = thredStore;
   const { colors } = useTheme();
 

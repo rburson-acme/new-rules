@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { RootStore } from '@/src/stores/RootStore';
-import { ThredsLayout } from '@/src/components/threds/ThredsLayout';
 import { useNavigation } from 'expo-router';
+import { ThredsView } from '@/src/components/threds/ThredsView';
 
 export default function Messenger() {
   const rootStore = RootStore.get();
@@ -12,19 +11,5 @@ export default function Messenger() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  return (
-    <View style={styles.container}>
-      <ThredsLayout rootStore={rootStore} />
-    </View>
-  );
+  return <ThredsView rootStore={rootStore} />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'column',
-    flex: 1,
-    backgroundColor: '#ffffff',
-    alignItems: 'stretch',
-    justifyContent: 'flex-start',
-  },
-});

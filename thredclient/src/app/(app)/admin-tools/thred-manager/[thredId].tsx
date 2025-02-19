@@ -2,7 +2,7 @@ import { RootStore } from '@/src/stores/RootStore';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import { OpenAdminThred } from '@/src/components/admin-tools/thred-manager/OpenAdminThred';
+import { AdminThred } from '@/src/components/admin-tools/thred-manager/AdminThred';
 import { Spinner } from '@/src/components/common/Spinner';
 
 function ThredManager() {
@@ -23,7 +23,7 @@ function ThredManager() {
 
   if (!thredStore) return null;
   if (!thredStore.isFullThred) return <Spinner />;
-  return <OpenAdminThred thredStore={thredStore} thredsStore={adminThredsStore} />;
+  return <AdminThred thredStore={thredStore} thredsStore={adminThredsStore} />;
 }
 
 export default observer(ThredManager);

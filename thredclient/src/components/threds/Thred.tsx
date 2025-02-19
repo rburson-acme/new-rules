@@ -1,24 +1,23 @@
 import { ThredStore } from '@/src/stores/ThredStore';
 import { observer } from 'mobx-react-lite';
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { EventDataView } from '../events/EventDataView';
+import { Event } from '../events/Event';
 import { ThredsStore } from '@/src/stores/ThredsStore';
-import { ThredIcon } from '../admin-tools/thred-manager/ThredIcon';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import React from 'react';
 import { DateStamp } from './DateStamp';
 
-type OpenThredViewProps = {
+type ThredProps = {
   thredStore: ThredStore;
   thredsStore: ThredsStore;
 };
 
-export const ThredEventViewer = observer(({ thredStore, thredsStore }: OpenThredViewProps) => {
+export const Thred = observer(({ thredStore, thredsStore }: ThredProps) => {
   const { eventsStore } = thredStore;
   const firstEventStore = eventsStore?.eventStores[0];
   const { colors } = useTheme();
   const firstEvent = firstEventStore?.event;
-  
+
   if (!firstEvent || !eventsStore) return null;
   return (
     <FlatList
@@ -27,7 +26,7 @@ export const ThredEventViewer = observer(({ thredStore, thredsStore }: OpenThred
       contentContainerStyle={[styles.containerStyle, { backgroundColor: colors.background }]}
       style={{ backgroundColor: colors.background }}
       ListHeaderComponent={<DateStamp time={firstEvent.time} />}
-      renderItem={({ item: eventStore }) => <EventDataView data={eventStore.event?.data} eventStore={eventStore} />}
+      renderItem={({ item: eventStore }) => <Event data={eventStore.event?.data} eventStore={eventStore} />}
     />
   );
 });

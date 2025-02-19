@@ -1,4 +1,4 @@
-import { EventDataView } from '@/src/components/events/EventDataView';
+import { Event } from '@/src/components/events/Event';
 import { DateStamp } from '@/src/components/threds/DateStamp';
 import { useModal } from '@/src/contexts/ModalContext';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -24,7 +24,7 @@ export default function ThredManagerModal() {
   return (
     <View style={[styles.containerStyle, { backgroundColor: colors.background }]}>
       <DateStamp time={modalData.event.time} />
-      <EventDataView data={modalData.event.data} eventStore={eventStore} />
+      <Event data={modalData.event.data} eventStore={eventStore} />
     </View>
   );
 }

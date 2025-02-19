@@ -5,17 +5,30 @@ import { PatternStore } from './PatternStore';
 
 export class PatternsStore {
   patterns: PatternStore[] = [];
-
+  searchText: string = '';
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
       patterns: observable.shallow,
       getAllPatterns: action,
       removePattern: action,
+      searchText: observable,
+      setSearchText: action,
     });
   }
 
   removePattern(patternId: string) {
     this.patterns = this.patterns.filter(pattern => pattern.pattern.id !== patternId);
+  }
+
+  get filteredPatterns() {
+    if (!this.searchText) return this.patterns;
+    return this.patterns.filter(pattern => {
+      return pattern.pattern.name.toLowerCase().includes(this.searchText);
+    });
+  }
+
+  setSearchText(text: string) {
+    this.searchText = text;
   }
 
   async getAllPatterns() {

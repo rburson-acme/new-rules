@@ -14,7 +14,6 @@ export class ThredsStore {
       thredStores: observable,
       addThred: action,
       numThreds: computed,
-      unselectThred: action,
       removeThred: action,
       searchText: observable,
       setSearchText: action,
@@ -31,11 +30,11 @@ export class ThredsStore {
   publish(event: Event) {
     this.rootStore.connectionStore.publish(event);
   }
+  
   removeThred(thredId: string) {
     this.thredStores = this.thredStores.filter(thredStore => thredStore.thred.id !== thredId);
   }
 
-  unselectThred() {}
 
   setSearchText(text: string) {
     this.searchText = text;

@@ -29,7 +29,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     display: 'flex',
     flexDirection: 'row',
-    marginHorizontal: 8,
-    marginTop: 8,
   },
 });

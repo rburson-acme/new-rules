@@ -8,11 +8,11 @@ import { ThredIcon } from '../admin-tools/thred-manager/ThredIcon';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { RegularText } from '../common/RegularText';
 
-type EventDataViewProps = {
+type EventProps = {
   eventStore: EventStore;
   data?: EventData;
 };
-export const EventDataView = ({ data, eventStore }: EventDataViewProps) => {
+export const Event = ({ data, eventStore }: EventProps) => {
   const { colors, fonts } = useTheme();
 
   const templateStore = eventStore.openTemplateStore;
