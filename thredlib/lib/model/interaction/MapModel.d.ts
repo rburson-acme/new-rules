@@ -1,7 +1,7 @@
 export interface MapLocation {
     name: string;
-    latitude: number | string;
-    longitude: number | string;
+    latitude: string;
+    longitude: string;
 }
 export interface MapModel {
     locations: MapLocation[];
