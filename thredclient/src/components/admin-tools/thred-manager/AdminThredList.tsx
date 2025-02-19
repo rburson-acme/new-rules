@@ -9,9 +9,10 @@ type AdminThredListProps = {
 };
 
 export const AdminThredList = observer(({ adminThredsStore }: AdminThredListProps) => {
+  const { filteredThreds } = adminThredsStore;
   return (
     <FlatList
-      data={adminThredsStore.threds}
+      data={filteredThreds}
       contentContainerStyle={{ flexGrow: 1, gap: 16 }}
       renderItem={({ item, index }) => {
         return <AdminThredListCard thredsStore={adminThredsStore} thredStore={item} />;

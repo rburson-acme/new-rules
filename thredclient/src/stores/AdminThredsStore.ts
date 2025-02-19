@@ -3,10 +3,12 @@ import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { AdminThredStore } from './AdminThredStore';
 
+type ValidTabs = 'all' | 'active' | 'inactive';
 export class AdminThredsStore {
   threds: AdminThredStore[] = [];
   searchText: string = '';
   isComplete: boolean = false;
+  tab: ValidTabs = 'active';
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -18,6 +20,8 @@ export class AdminThredsStore {
       setSearchText: action,
       filteredThreds: computed,
       isComplete: observable,
+      tab: observable,
+      setTab: action,
     });
   }
 
@@ -41,15 +45,30 @@ export class AdminThredsStore {
     });
   }
 
+  setTab(tab: ValidTabs) {
+    this.tab = tab;
+  }
+
   setSearchText(text: string) {
     this.searchText = text;
   }
 
   get filteredThreds() {
-    if (!this.searchText) return this.threds;
-    return this.threds.filter(thredStore => {
-      return thredStore.thred.id.includes(this.searchText);
-    });
+    //change based on the tab
+    switch (this.tab) {
+      case 'all':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText);
+        });
+      case 'active':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText) && thred.thred.endTime === undefined;
+        });
+      case 'inactive':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText) && thred.thred.endTime;
+        });
+    }
   }
 
   async getAllThreds() {

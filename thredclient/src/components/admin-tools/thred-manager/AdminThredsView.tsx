@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 import { View } from 'react-native';
 import { Button } from '@/src/components/common/Button';
 import SearchBar from '@/src/components/common/SearchBar';
-import { MediumText } from '../../common/MediumText';
 import { AdminThredList } from './AdminThredList';
+import { AdminListTabs } from './AdminListTabs';
 
 type AdminThredsView = {
   adminThredsStore: AdminThredsStore;
@@ -14,6 +14,7 @@ export const AdminThredsView = observer(({ adminThredsStore }: AdminThredsView) 
   return (
     <>
       <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
+        <AdminListTabs adminThredsStore={adminThredsStore} />
         <SearchBar
           value={adminThredsStore.searchText}
           onChange={value => {
@@ -39,9 +40,3 @@ export const AdminThredsView = observer(({ adminThredsStore }: AdminThredsView) 
     </>
   );
 });
-
-const emptyList = () => (
-  <View style={{ padding: 50, flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <MediumText style={{ fontSize: 20 }}>No Messages Yet</MediumText>
-  </View>
-);
