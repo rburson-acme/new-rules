@@ -4,6 +4,7 @@ import { ReactionModel } from 'thredlib';
 
 import { PatternInput } from './PatternInput';
 import { PatternStore } from '@/src/stores/PatternStore';
+import { MediumText } from '../../common/MediumText';
 
 type ReactionProps = { index: number; reaction: ReactionModel; patternStore: PatternStore };
 export const Reaction = observer(({ index, reaction, patternStore }: ReactionProps) => {
@@ -48,7 +49,7 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
         updatePath={`reactions.${index}.allowedSources`}
         patternStore={patternStore}
       />
-      <Text>Condition:</Text>
+      <MediumText>Condition:</MediumText>
       <View style={styles.conditionContainer}>
         <PatternInput
           name="Type"

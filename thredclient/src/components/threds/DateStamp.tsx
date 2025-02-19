@@ -1,5 +1,5 @@
-import { useTheme } from '@/src/contexts/ThemeContext';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { RegularText } from '../common/RegularText';
 
 type DateStampProps = { time?: number };
 export const DateStamp = ({ time }: DateStampProps) => {
@@ -7,10 +7,9 @@ export const DateStamp = ({ time }: DateStampProps) => {
     return time ? new Date(time).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : '';
   }
 
-  const { colors, fonts } = useTheme();
   return (
     <View style={[styles.dateStampStyle]}>
-      <Text style={[fonts.regular, { color: colors.text }]}>{getDate()}</Text>
+      <RegularText>{getDate()}</RegularText>
     </View>
   );
 };

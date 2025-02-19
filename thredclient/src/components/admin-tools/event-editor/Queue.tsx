@@ -1,13 +1,15 @@
 import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
 import { observer } from 'mobx-react-lite';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { MediumText } from '../../common/MediumText';
+import { RegularText } from '../../common/RegularText';
 
 type QueueProps = { localStore: EventEditorLocals; shakeAnim: Animated.Value };
 
 export const Queue = observer(({ localStore, shakeAnim }: QueueProps) => {
   return (
     <View style={styles.queue}>
-      <Text style={{ fontSize: 24 }}>Queue</Text>
+      <MediumText style={{ fontSize: 24 }}>Queue</MediumText>
       {localStore.queue.length === 0 && (
         <Animated.Text
           style={{
@@ -20,8 +22,8 @@ export const Queue = observer(({ localStore, shakeAnim }: QueueProps) => {
       <View style={styles.queueContent}>
         {localStore.queue.map((item, index) => (
           <View key={index} style={{ gap: 4, flexDirection: 'row' }}>
-            <Text>{index + 1}.</Text>
-            <Text>{JSON.stringify(item, null, 2)}</Text>
+            <RegularText>{index + 1}.</RegularText>
+            <RegularText>{JSON.stringify(item, null, 2)}</RegularText>
           </View>
         ))}
       </View>

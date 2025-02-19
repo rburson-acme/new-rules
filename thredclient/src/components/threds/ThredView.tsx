@@ -7,6 +7,8 @@ import { ThredStore } from '@/src/stores/ThredStore';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { Link } from 'expo-router';
 import { formatDateAndTime } from '@/src/utils/formatDateAndTime';
+import { RegularText } from '../common/RegularText';
+import { MediumText } from '../common/MediumText';
 
 type ThredViewProps = {
   thredStore: ThredStore;
@@ -36,10 +38,10 @@ export const ThredView = observer(({ thredStore, thredsStore }: ThredViewProps) 
       <View style={[styles.containerStyle]}>
         <ThredIcon uri={data?.display?.uri} />
         <View style={styles.textView}>
-          <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{time ? formatDateAndTime(time) : ''}</Text>
-          <Text style={[styles.textStyle, medium, { color: colors.text }]}>
+          <RegularText style={[styles.dateStyle]}>{time ? formatDateAndTime(time) : ''}</RegularText>
+          <MediumText style={[styles.textStyle]}>
             {latestEvent.data?.title} {latestEvent.data?.description ? `-- ${latestEvent.data?.description}` : ''}
-          </Text>
+          </MediumText>
         </View>
         {/* Develop some sort of thumbnail to display here when  */}
       </View>

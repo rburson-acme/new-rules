@@ -1,6 +1,6 @@
+import { RegularText } from '@/src/components/common/RegularText';
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
-import { Text } from 'react-native';
 
 export default function InjuryModule() {
   const navigation = useNavigation();
@@ -9,5 +9,5 @@ export default function InjuryModule() {
     navigation.setOptions({ title: 'Injury' });
   }, [navigation]);
 
-  return <Text>Not Yet Defined</Text>;
+  return <RegularText>Not Yet Defined</RegularText>;
 }

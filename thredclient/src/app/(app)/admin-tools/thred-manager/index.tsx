@@ -1,28 +1,34 @@
 import { AdminThredsView } from '@/src/components/admin-tools/thred-manager/AdminThredsView';
 import { Button } from '@/src/components/common/Button';
 import SearchBar from '@/src/components/common/SearchBar';
+import { Spinner } from '@/src/components/common/Spinner';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useRunOnInterval } from '@/src/hooks/useRunOnInterval';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 
 function ThredManager() {
   const navigation = useNavigation();
 
   const { adminThredsStore } = RootStore.get();
 
-  useEffect(() => {
-    navigation.setOptions({ title: 'Thred Manager' });
-  }, [navigation]);
-
-  const { startInterval } = useRunOnInterval(() => {
+  const { startInterval, stopInterval } = useRunOnInterval(() => {
     adminThredsStore.getAllThreds();
   }, 30000);
 
-  startInterval();
+  useEffect(() => {
+    navigation.setOptions({ title: 'Thred Manager' });
+    adminThredsStore.getAllThreds();
+    startInterval();
+    return () => {
+      stopInterval();
+    };
+  }, [navigation]);
+
+  // Figure out when to stop this properly so it doesn't always run
 
   const { colors } = useTheme();
   return (
@@ -34,7 +40,7 @@ function ThredManager() {
             adminThredsStore.setSearchText(value);
           }}
         />
-        {adminThredsStore.isComplete ? <AdminThredsView adminThredsStore={adminThredsStore} /> : <ActivityIndicator />}
+        {adminThredsStore.isComplete ? <AdminThredsView adminThredsStore={adminThredsStore} /> : <Spinner />}
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 16, width: '100%', gap: 8 }}>
         <Button

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { EventSourceAvatar } from '@/src/components/common/EventSourceAvatar';
 import { Event } from 'thredlib';
+import { RegularText } from '../common/RegularText';
 
 type EventSourceViewProps = {
   source: Event['source'];
@@ -12,9 +13,9 @@ export const EventSourceView = ({ source, display, eventType }: EventSourceViewP
   return (
     <View style={styles.containerStyle}>
       <EventSourceAvatar uri={display?.uri || source?.uri} eventType={eventType} />
-      <Text style={styles.textStyle} numberOfLines={1}>
+      <RegularText style={styles.textStyle} textProps={{ numberOfLines: 1 }}>
         {source.name}
-      </Text>
+      </RegularText>
     </View>
   );
 };

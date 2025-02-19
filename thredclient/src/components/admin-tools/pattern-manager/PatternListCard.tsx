@@ -3,6 +3,7 @@ import { PatternStore } from '@/src/stores/PatternStore';
 import { Link } from 'expo-router';
 import { observer } from 'mobx-react-lite';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RegularText } from '../../common/RegularText';
 
 type PatternListCardProps = { patternStore: PatternStore; patternsStore: PatternsStore };
 export const PatternListCard = observer(({ patternStore, patternsStore }: PatternListCardProps) => {
@@ -12,7 +13,7 @@ export const PatternListCard = observer(({ patternStore, patternsStore }: Patter
   return (
     <Link href={`admin-tools/pattern-manager/${patternId}`}>
       <View style={styles.container}>
-        <Text>{patternStore.pattern.name}</Text>
+        <RegularText>{patternStore.pattern.name}</RegularText>
       </View>
     </Link>
   );

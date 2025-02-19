@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { AdminEvent } from '@/src/core/AdminEvent';
 import { useRouter } from 'expo-router';
 import { useModal } from '@/src/contexts/ModalContext';
+import { RegularText } from '../../common/RegularText';
+import { MediumText } from '../../common/MediumText';
 
 type ThredEventsProps = {
   event: AdminEvent;
@@ -27,9 +29,9 @@ export const ThredEvent = observer(({ event, pattern }: ThredEventsProps) => {
       <View style={styles.innerContainer}>
         <ThredIcon uri={event.event.data?.display?.uri} tintColor={colors.green} />
         <View style={{ flexWrap: 'wrap', flex: 1 }}>
-          <Text style={[fonts.regular]}>{event.timestamp ? formatDateAndTime(event.timestamp) : ''}</Text>
+          <RegularText style={[fonts.regular]}>{event.timestamp ? formatDateAndTime(event.timestamp) : ''}</RegularText>
           <View style={{ flex: 1, flexWrap: 'wrap' }}>
-            <Text style={[fonts.medium]}>{event.event.data?.title}</Text>
+            <MediumText>{event.event.data?.title}</MediumText>
           </View>
         </View>
       </View>
@@ -38,7 +40,7 @@ export const ThredEvent = observer(({ event, pattern }: ThredEventsProps) => {
           style={[styles.button, { borderColor: colors.border }]}
           onPress={() => console.log(setShowJSON(!showJSON))}>
           <MaterialCommunityIcons name="eye" size={20} style={{ color: colors.icon }} />
-          <Text style={{ color: colors.icon }}>{!showJSON ? 'Show JSON' : 'Hide JSON'}</Text>
+          <MediumText style={{ color: colors.icon }}>{!showJSON ? 'Show JSON' : 'Hide JSON'}</MediumText>
         </Pressable>
         <Pressable
           style={[styles.button, { borderColor: colors.border }]}
@@ -47,12 +49,14 @@ export const ThredEvent = observer(({ event, pattern }: ThredEventsProps) => {
             router.push('admin-tools/thred-manager/modal');
           }}>
           <MaterialIcons name="event" size={20} style={{ color: colors.icon }} />
-          <Text style={{ color: colors.icon }}>View Event</Text>
+          <MediumText style={{ color: colors.icon }}>View Event</MediumText>
         </Pressable>
         {showJSON && (
           <View style={{ maxHeight: 300 }}>
             <ScrollView>
-              <Text style={{ fontFamily: 'monospace', color: colors.text }}>{JSON.stringify(event, null, 2)}</Text>
+              <MediumText style={{ fontFamily: 'monospace', color: colors.text }}>
+                {JSON.stringify(event, null, 2)}
+              </MediumText>
             </ScrollView>
           </View>
         )}

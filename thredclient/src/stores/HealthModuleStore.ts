@@ -69,18 +69,18 @@ export class HealthModuleStore {
 
   //TODO: Figure this one out...
   async initialize() {
-    // const isModuleActive = await initialize();
-    // runInAction(() => {
-    //   this.isModuleActive = isModuleActive;
-    // });
-    // const grantedPermissions = await getGrantedPermissions();
-    // runInAction(() => {
-    //   this.grantedPermissions = grantedPermissions;
-    // });
+    const isModuleActive = await initialize();
+    runInAction(() => {
+      this.isModuleActive = isModuleActive;
+    });
+    const grantedPermissions = await getGrantedPermissions();
+    runInAction(() => {
+      this.grantedPermissions = grantedPermissions;
+    });
 
-    // await this.fetchRecordsForGrantedPermissions(grantedPermissions);
-    // runInAction(() => {
-    //   this.hasInitialized = true;
-    // });
+    await this.fetchRecordsForGrantedPermissions(grantedPermissions);
+    runInAction(() => {
+      this.hasInitialized = true;
+    });
   }
 }

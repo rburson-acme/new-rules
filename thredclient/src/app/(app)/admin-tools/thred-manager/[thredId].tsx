@@ -3,7 +3,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { OpenAdminThred } from '@/src/components/admin-tools/thred-manager/OpenAdminThred';
-import { ActivityIndicator } from 'react-native';
+import { Spinner } from '@/src/components/common/Spinner';
 
 function ThredManager() {
   const navigation = useNavigation();
@@ -22,7 +22,7 @@ function ThredManager() {
   }, [navigation, thredStore]);
 
   if (!thredStore) return null;
-  if (!thredStore.isFullThred) return <ActivityIndicator />;
+  if (!thredStore.isFullThred) return <Spinner />;
   return <OpenAdminThred thredStore={thredStore} thredsStore={adminThredsStore} />;
 }
 

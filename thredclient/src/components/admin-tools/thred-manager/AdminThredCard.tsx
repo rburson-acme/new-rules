@@ -7,6 +7,8 @@ import { AdminThredStore } from '@/src/stores/AdminThredStore';
 import { AdminThredsStore } from '@/src/stores/AdminThredsStore';
 import { Link } from 'expo-router';
 import { formatDateAndTime } from '@/src/utils/formatDateAndTime';
+import { RegularText } from '../../common/RegularText';
+import { MediumText } from '../../common/MediumText';
 
 type ThredViewProps = {
   thredStore: AdminThredStore;
@@ -28,12 +30,10 @@ export const AdminThredCard = observer(({ thredStore, thredsStore }: ThredViewPr
         <ThredIcon />
         <View style={styles.textView}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime(time)}</Text>
-            {endTime ? (
-              <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime(endTime)}</Text>
-            ) : null}
+            <RegularText style={[styles.dateStyle]}>{formatDateAndTime(time)}</RegularText>
+            {endTime ? <RegularText style={[styles.dateStyle]}>{formatDateAndTime(endTime)}</RegularText> : null}
           </View>
-          <Text style={[styles.textStyle, medium, { color: colors.text }]}>{thredStore.thred.patternName}</Text>
+          <MediumText style={[styles.textStyle]}>{thredStore.thred.patternName}</MediumText>
         </View>
       </View>
     </Link>

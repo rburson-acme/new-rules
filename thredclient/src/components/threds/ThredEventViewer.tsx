@@ -16,9 +16,9 @@ type OpenThredViewProps = {
 export const ThredEventViewer = observer(({ thredStore, thredsStore }: OpenThredViewProps) => {
   const { eventsStore } = thredStore;
   const firstEventStore = eventsStore?.eventStores[0];
-  const { colors, fonts } = useTheme();
+  const { colors } = useTheme();
   const firstEvent = firstEventStore?.event;
-  const time = firstEvent?.time;
+  
   if (!firstEvent || !eventsStore) return null;
   return (
     <FlatList

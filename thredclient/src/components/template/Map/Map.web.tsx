@@ -30,12 +30,10 @@ export function Map({ locations }: MapProps) {
       center={{ lat: latitude, lng: longitude }}
       zoom={10}
       options={{
-        zoomControl: false,
         scaleControl: false,
         cameraControl: false,
         mapTypeControl: false,
         streetViewControl: false,
-        gestureHandling: 'none',
       }}>
       {locations.map(location => {
         return (

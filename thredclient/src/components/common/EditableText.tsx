@@ -1,9 +1,9 @@
-import { observer } from 'mobx-react-lite';
 import { TextInput } from './TextInput';
 import { Pressable, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { Button } from './Button';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { RegularText } from './RegularText';
 
 type EditableTextProps = {
   onTextChange: (text: string) => void;
@@ -39,7 +39,7 @@ export const EditableText = ({ text, style, textStyle, onEditPress, onSubmit, on
   } else {
     return (
       <View style={styles.container}>
-        <Text style={textStyle}>{text}</Text>
+        <RegularText style={textStyle}>{text}</RegularText>
         <Pressable
           onPress={() => {
             setIsEditing(true);

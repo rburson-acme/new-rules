@@ -11,10 +11,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { Redirect } from 'expo-router';
 
 function AppLayout() {
-  const { authStore, themeStore } = RootStore.get();
+  const { authStore, themeStore, connectionStore } = RootStore.get();
 
   function logOut() {
     authStore.logOut();
+
+    connectionStore.disconnect();
   }
 
   const { theme } = themeStore;

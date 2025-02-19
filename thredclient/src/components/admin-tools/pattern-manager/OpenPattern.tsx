@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Reaction } from './Reaction';
 import { PatternInput } from './PatternInput';
 import { observer } from 'mobx-react-lite';
+import { MediumText } from '../../common/MediumText';
 
 type OpenPatternProps = { patternStore: PatternStore };
 export const OpenPattern = observer(({ patternStore }: OpenPatternProps) => {
@@ -10,7 +11,7 @@ export const OpenPattern = observer(({ patternStore }: OpenPatternProps) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text>Pattern:</Text>
+      <MediumText>Pattern:</MediumText>
       <PatternInput value={pattern.name} name="Name" updatePath="name" patternStore={patternStore} />
       <PatternInput
         name="Description"
@@ -18,7 +19,7 @@ export const OpenPattern = observer(({ patternStore }: OpenPatternProps) => {
         patternStore={patternStore}
         value={pattern.description || ''}
       />
-      <Text>Reactions:</Text>
+      <MediumText>Reactions:</MediumText>
       {pattern.reactions.map((reaction, index) => {
         return <Reaction patternStore={patternStore} key={index} index={index} reaction={reaction} />;
       })}

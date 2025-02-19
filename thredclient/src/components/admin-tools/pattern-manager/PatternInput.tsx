@@ -1,7 +1,7 @@
 import { PatternStore } from '@/src/stores/PatternStore';
 import { EditableText } from '../../common/EditableText';
 import { StyleSheet, Text, View } from 'react-native';
-import { observer } from 'mobx-react-lite';
+import { RegularText } from '../../common/RegularText';
 
 type PatternInputProps = {
   name: string;
@@ -13,7 +13,7 @@ type PatternInputProps = {
 export const PatternInput = ({ name, value, patternStore, updatePath }: PatternInputProps) => {
   return (
     <View style={styles.container}>
-      <Text>{name}: </Text>
+      <RegularText>{name}: </RegularText>
       <EditableText
         text={value}
         onSubmit={text => {

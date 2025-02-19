@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react';
 import { TouchableOpacity, Text, View, StyleProp, ViewStyle, StyleSheet, TextStyle, Pressable } from 'react-native';
 import { Icon } from './Icon';
+import { MediumText } from './MediumText';
 
 type ButtonProps = {
   content: string | JSX.Element;
@@ -12,7 +13,7 @@ type ButtonProps = {
   iconRight?: boolean;
 };
 export const Button = ({ content, onPress, buttonStyle, textStyle, iconName, iconStyle, iconRight }: ButtonProps) => {
-  const contentElem = typeof content === 'string' ? <Text style={[styles.text, textStyle]}>{content}</Text> : content;
+  const contentElem = typeof content === 'string' ? <MediumText style={[styles.text, textStyle]}>{content}</MediumText> : content;
   const buttonContent = (
     <Fragment>
       {!iconRight && iconName && <Icon name={iconName} style={[styles.iconStyle, iconStyle, { paddingLeft: 3 }]} />}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { Bubble } from './Bubble';
+import { RegularText } from './RegularText';
 
 type TextBubbleProps = {
   text: string | boolean;
@@ -9,17 +10,5 @@ type TextBubbleProps = {
 };
 
 export const TextBubble = ({ text, bubbleStyle, textStyle }: TextBubbleProps) => {
-  return (
-    <Bubble style={bubbleStyle}>{text && <Text style={[styles.defaultTextStyle, textStyle]}>{text}</Text>}</Bubble>
-  );
+  return <Bubble style={bubbleStyle}>{text && <RegularText style={[textStyle]}>{text}</RegularText>}</Bubble>;
 };
-const styles = StyleSheet.create({
-  defaultTitleTextStyle: {
-    fontSize: 13,
-    color: 'black',
-  },
-  defaultTextStyle: {
-    fontSize: 13,
-    color: 'black',
-  },
-});

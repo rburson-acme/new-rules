@@ -6,6 +6,7 @@ import { Interaction } from '../template/Interaction';
 import { getComponentTypes } from '../template/componentTypes';
 import { ThredIcon } from '../admin-tools/thred-manager/ThredIcon';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { RegularText } from '../common/RegularText';
 
 type EventDataViewProps = {
   eventStore: EventStore;
@@ -24,28 +25,15 @@ export const EventDataView = ({ data, eventStore }: EventDataViewProps) => {
       <View>
         <ThredIcon uri={data?.display?.uri} tintColor={colors.border} />
         {eventStore.event?.time && (
-          <Text style={[fonts.regular, { color: colors.text, fontSize: 10 }]}>
-            {new Date(eventStore.event?.time).toLocaleTimeString()}
-          </Text>
+          <RegularText style={[{ fontSize: 10 }]}>{new Date(eventStore.event?.time).toLocaleTimeString()}</RegularText>
         )}
       </View>
       <View style={[styles.eventDataContainer]}>
         {templateStore?.completedInteractionStores.map((interactionStore, index) => {
-          return (
-            <Interaction
-              key={index}
-              interactionStore={interactionStore}
-              componentTypes={getComponentTypes()}
-              eventStore={eventStore}
-            />
-          );
+          return <Interaction key={index} interactionStore={interactionStore} componentTypes={getComponentTypes()} />;
         })}
         {templateStore?.currentInteractionStore && (
-          <Interaction
-            componentTypes={getComponentTypes()}
-            interactionStore={templateStore.currentInteractionStore}
-            eventStore={eventStore}
-          />
+          <Interaction componentTypes={getComponentTypes()} interactionStore={templateStore.currentInteractionStore} />
         )}
       </View>
     </View>
