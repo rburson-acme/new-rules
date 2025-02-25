@@ -30,5 +30,6 @@ export const Pattern = observer(({ patternStore }: PatternProps) => {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    gap: 8,
   },
 });

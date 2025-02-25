@@ -1,25 +1,28 @@
 import { observer } from 'mobx-react-lite';
 import { StyleSheet, Text, View } from 'react-native';
 import { ReactionModel } from 'thredlib';
-
 import { PatternInput } from './PatternInput';
 import { PatternStore } from '@/src/stores/PatternStore';
 import { MediumText } from '../../common/MediumText';
+import { PatternDropdown } from './PatternDropdown';
+import { PatternMultiInput } from './PatternMultiInput';
 
 type ReactionProps = { index: number; reaction: ReactionModel; patternStore: PatternStore };
 export const Reaction = observer(({ index, reaction, patternStore }: ReactionProps) => {
   function getAllowedSources() {
     if (!reaction.allowedSources) return '';
-    if (Array.isArray(reaction.allowedSources)) return reaction.allowedSources.join(', ');
     return reaction.allowedSources;
   }
 
   function getPublishTo() {
     if (!reaction.condition.publish) return '';
-    if (typeof reaction.condition.publish.to === 'object') {
-      return 'TODO: This needs implemented.';
+    //if it is a string or an array, return it
+    if (typeof reaction.condition.publish.to === 'string' || Array.isArray(reaction.condition.publish.to)) {
+      return reaction.condition.publish.to;
     }
-    return reaction.condition.publish.to;
+    //if it is an object, return string "not implemented. TODO. Fix this", return the to property
+
+    return 'Not implemented. TODO. Fix this';
   }
 
   function getXPR() {
@@ -28,6 +31,12 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
     }
     return '';
   }
+
+  const reactionItems = [
+    { display: 'Filter', value: 'filter' },
+    { display: 'And', value: 'and' },
+    { display: 'Or', value: 'or' },
+  ];
 
   return (
     <View style={styles.reactionContainer} key={index}>
@@ -43,29 +52,30 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
         updatePath={`reactions.${index}.description`}
         patternStore={patternStore}
       />
-      <PatternInput
+      <PatternMultiInput
         name="Allowed Sources"
-        value={getAllowedSources()}
+        values={getAllowedSources()}
         updatePath={`reactions.${index}.allowedSources`}
         patternStore={patternStore}
       />
       <MediumText>Condition:</MediumText>
       <View style={styles.conditionContainer}>
-        <PatternInput
+        <PatternDropdown
           name="Type"
+          items={reactionItems}
           value={reaction.condition.type}
-          updatePath={`reactions.${index}.type`}
+          updatePath={`reactions.${index}.condition.type`}
           patternStore={patternStore}
         />
         <PatternInput
           name="Expression"
           value={getXPR()}
-          updatePath={`reactions.${index}.xpr`}
+          updatePath={`reactions.${index}.condition.xpr`}
           patternStore={patternStore}
         />
-        <PatternInput
+        <PatternMultiInput
           name="Publish to"
-          value={getPublishTo()}
+          values={getPublishTo()}
           updatePath={`reactions.${index}.condition.publish.to`}
           patternStore={patternStore}
         />
@@ -78,9 +88,11 @@ const styles = StyleSheet.create({
   reactionContainer: {
     marginLeft: 16,
     paddingTop: 8,
+    gap: 8,
   },
   conditionContainer: {
     marginLeft: 16,
     paddingTop: 8,
+    gap: 8,
   },
 });

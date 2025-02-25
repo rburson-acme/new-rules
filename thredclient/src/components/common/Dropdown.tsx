@@ -1,23 +1,24 @@
-import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { Dropdown as RNEDDropdown } from 'react-native-element-dropdown';
 import { SelectItem } from './SelectItem';
 
-type Data = { display: string; value: any };
+export type DropdownData = { display: string; value: any };
 type DropdownProps = {
-  data: Data[];
-  onChange: ({ display, value }: Data) => void;
+  data: DropdownData[];
+  onChange: ({ display, value }: DropdownData) => void;
   style?: StyleProp<ViewStyle>;
-  placeholderStyle?: StyleProp<ViewStyle>;
+  placeholderStyle?: StyleProp<TextStyle>;
+  defaultItem?: DropdownData;
 };
 
-export const Dropdown = ({ data, onChange, style, placeholderStyle }: DropdownProps) => {
+export const Dropdown = ({ data, onChange, style, placeholderStyle, defaultItem }: DropdownProps) => {
   return (
     <RNEDDropdown
       data={data}
       onChange={onChange}
       style={[styles.dropdownContainer, style]}
       placeholderStyle={[{ paddingLeft: 4 }, placeholderStyle]}
-      placeholder="Select item..."
+      placeholder={defaultItem?.display || 'Select item...'}
       labelField="display"
       valueField="value"
       renderItem={item => <SelectItem item={item} />}
@@ -27,7 +28,6 @@ export const Dropdown = ({ data, onChange, style, placeholderStyle }: DropdownPr
 
 const styles = StyleSheet.create({
   dropdownContainer: {
-    height: 48,
     backgroundColor: 'white',
     borderBottomColor: 'gray',
   },

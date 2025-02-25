@@ -39,7 +39,6 @@ export class PatternStore {
     this.rootStore.connectionStore.exchange(deletePatternEvent, () => {
       runInAction(() => {
         this.rootStore.patternsStore.removePattern(patternId);
-        this.rootStore.patternsStore.unselectPattern();
       });
     });
   }

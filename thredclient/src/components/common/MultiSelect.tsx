@@ -3,11 +3,11 @@ import { RefObject } from 'react';
 import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { IMultiSelectRef, MultiSelect as RNEDMultiSelect } from 'react-native-element-dropdown';
 import { SelectItem } from './SelectItem';
-import { RegularText } from './RegularText';
 import { MediumText } from './MediumText';
+import { DropdownData } from './Dropdown';
 
 type MultiSelectProps = {
-  data: { display: string; value: any }[];
+  data: DropdownData[];
   onChange: (value: string[]) => void;
   value: string[];
   ref?: RefObject<IMultiSelectRef>;

@@ -3,7 +3,6 @@ import SearchBar from '../../common/SearchBar';
 import { observer } from 'mobx-react-lite';
 import { PatternsStore } from '@/src/stores/PatternsStore';
 import { PatternsList } from './PatternsList';
-import { useTheme } from '@/src/contexts/ThemeContext';
 
 type PatternsViewProps = {
   patternsStore: PatternsStore;
