@@ -1,11 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ReactionModel } from 'thredlib';
 import { PatternInput } from './PatternInput';
 import { PatternStore } from '@/src/stores/PatternStore';
 import { MediumText } from '../../common/MediumText';
 import { PatternDropdown } from './PatternDropdown';
 import { PatternMultiInput } from './PatternMultiInput';
+import { Transform } from './Transform';
+import { Button } from '../../common/Button';
+import { Transition } from './Transition';
 
 type ReactionProps = { index: number; reaction: ReactionModel; patternStore: PatternStore };
 export const Reaction = observer(({ index, reaction, patternStore }: ReactionProps) => {
@@ -16,11 +19,9 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
 
   function getPublishTo() {
     if (!reaction.condition.publish) return '';
-    //if it is a string or an array, return it
     if (typeof reaction.condition.publish.to === 'string' || Array.isArray(reaction.condition.publish.to)) {
       return reaction.condition.publish.to;
     }
-    //if it is an object, return string "not implemented. TODO. Fix this", return the to property
 
     return 'Not implemented. TODO. Fix this';
   }
@@ -34,8 +35,9 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
 
   const reactionItems = [
     { display: 'Filter', value: 'filter' },
-    { display: 'And', value: 'and' },
-    { display: 'Or', value: 'or' },
+    // { display: 'And', value: 'and' },
+    // { display: 'Or', value: 'or' },
+    // Only allow filter for now
   ];
 
   return (
@@ -59,12 +61,24 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
         patternStore={patternStore}
       />
       <MediumText>Condition:</MediumText>
-      <View style={styles.conditionContainer}>
+      <View style={styles.subContainer}>
         <PatternDropdown
           name="Type"
           items={reactionItems}
           value={reaction.condition.type}
           updatePath={`reactions.${index}.condition.type`}
+          patternStore={patternStore}
+        />
+        <PatternInput
+          value={reaction.condition.description || ''}
+          name={'Description'}
+          updatePath={`reactions.${index}.condition.description`}
+          patternStore={patternStore}
+        />
+        <PatternInput
+          value={reaction.condition.onTrue?.xpr || ''}
+          name={'On True Expression'}
+          updatePath={`reactions.${index}.condition.onTrue.xpr`}
           patternStore={patternStore}
         />
         <PatternInput
@@ -79,6 +93,32 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
           updatePath={`reactions.${index}.condition.publish.to`}
           patternStore={patternStore}
         />
+        {reaction.condition.transform ? (
+          <>
+            <MediumText>Transform:</MediumText>
+            <Transform index={index} patternStore={patternStore} transform={reaction.condition.transform} />
+          </>
+        ) : (
+          <Button
+            content={'Add Transform'}
+            onPress={() => {
+              patternStore.addTransform(index);
+            }}
+          />
+        )}
+        {reaction.condition.transition ? (
+          <>
+            <MediumText>Transition:</MediumText>
+            <Transition index={index} patternStore={patternStore} transition={reaction.condition.transition} />
+          </>
+        ) : (
+          <Button
+            content="Add Transition"
+            onPress={() => {
+              patternStore.addTransition(index);
+            }}
+          />
+        )}
       </View>
     </View>
   );
@@ -90,7 +130,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     gap: 8,
   },
-  conditionContainer: {
+  subContainer: {
     marginLeft: 16,
     paddingTop: 8,
     gap: 8,

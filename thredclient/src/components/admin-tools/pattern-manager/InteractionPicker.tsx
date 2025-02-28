@@ -1,0 +1,55 @@
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { View } from 'react-native';
+import { Button } from '../../common/Button';
+import { ContentType, PatternStore } from '@/src/stores/PatternStore';
+import { Dropdown } from '../../common/Dropdown';
+
+type LocalState = {
+  selectedNewContent: DropdownData;
+};
+type DropdownData = {
+  display: string;
+  value: ContentType;
+};
+
+const dropdownData: DropdownData[] = [
+  { display: 'Boolean Input', value: 'booleanInput' },
+  { display: 'Number Input', value: 'numericInput' },
+  { display: 'Text Input', value: 'textInput' },
+  { display: 'Nominal Input', value: 'nominalInput' },
+  { display: 'Image Input', value: 'image' },
+  { display: 'Map Input', value: 'map' },
+  { display: 'Video Input', value: 'video' },
+  { display: 'Group Input', value: 'group' },
+];
+
+type InteractionPickerProps = {
+  reactionIndex: number;
+  interactionIndex: number;
+  patternStore: PatternStore;
+};
+export const InteractionPicker = observer(
+  ({ interactionIndex, reactionIndex, patternStore }: InteractionPickerProps) => {
+    const locals = useLocalObservable<LocalState>(() => ({
+      selectedNewContent: { display: 'Text Input', value: 'textInput' },
+    }));
+
+    return (
+      <View>
+        <Dropdown
+          data={dropdownData}
+          onChange={data => {
+            locals.selectedNewContent = data;
+          }}
+          defaultItem={locals.selectedNewContent}
+        />
+        <Button
+          content={'Add selected content'}
+          onPress={() => {
+            patternStore.addInteractionContent(locals.selectedNewContent.value, interactionIndex, reactionIndex);
+          }}
+        />
+      </View>
+    );
+  },
+);

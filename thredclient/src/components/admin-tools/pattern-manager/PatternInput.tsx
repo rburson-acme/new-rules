@@ -5,12 +5,13 @@ import { RegularText } from '../../common/RegularText';
 
 type PatternInputProps = {
   name: string;
-  updatePath: string;
-  patternStore: PatternStore;
   value: string;
+  patternStore: PatternStore;
+  updatePath: string;
+  numeric?: boolean;
 };
 
-export const PatternInput = ({ name, value, patternStore, updatePath }: PatternInputProps) => {
+export const PatternInput = ({ name, value, patternStore, updatePath, numeric = false }: PatternInputProps) => {
   return (
     <View style={styles.container}>
       <RegularText>{name}: </RegularText>
@@ -18,6 +19,9 @@ export const PatternInput = ({ name, value, patternStore, updatePath }: PatternI
         type="text"
         text={value}
         onSubmit={text => {
+          if (numeric) {
+            patternStore.updatePattern({ [updatePath]: Number(text) });
+          }
           patternStore.updatePattern({ [updatePath]: text });
         }}
         onChangeText={text => {
