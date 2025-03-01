@@ -113,6 +113,7 @@ export const Reaction = observer(({ index, reaction, patternStore }: ReactionPro
           </>
         ) : (
           <Button
+            buttonStyle={{ marginVertical: 8 }}
             content="Add Transition"
             onPress={() => {
               patternStore.addTransition(index);

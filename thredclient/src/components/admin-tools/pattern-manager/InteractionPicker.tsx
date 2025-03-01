@@ -35,9 +35,10 @@ export const InteractionPicker = observer(
     }));
 
     return (
-      <View>
+      <View style={{ gap: 16 }}>
         <Dropdown
           data={dropdownData}
+          style={{ width: 200, alignSelf: 'center' }}
           onChange={data => {
             locals.selectedNewContent = data;
           }}

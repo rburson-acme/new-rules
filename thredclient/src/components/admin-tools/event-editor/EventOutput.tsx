@@ -16,6 +16,7 @@ export const EventOutput = observer(({ localStore }: EventOutputProps) => {
     return <Interaction key={index} interactionStore={interactionStore} componentTypes={getComponentTypes()} />;
   });
 
+  
   return (
     <View style={styles.eventOutput}>
       <MediumText style={{ fontSize: 24 }}>Event output</MediumText>

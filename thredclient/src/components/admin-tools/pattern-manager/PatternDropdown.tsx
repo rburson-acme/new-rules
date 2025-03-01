@@ -1,6 +1,6 @@
 import { PatternStore } from '@/src/stores/PatternStore';
 import { EditableInput } from '../../common/EditableInput';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { RegularText } from '../../common/RegularText';
 import { DropdownData } from '../../common/Dropdown';
 import { observer } from 'mobx-react-lite';

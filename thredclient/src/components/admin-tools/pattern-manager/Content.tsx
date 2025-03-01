@@ -1,4 +1,4 @@
-import { ContentType, PatternStore } from '@/src/stores/PatternStore';
+import {  PatternStore } from '@/src/stores/PatternStore';
 import { observer } from 'mobx-react-lite';
 import { StyleSheet, Text, View } from 'react-native';
 import { ElementModel } from 'thredlib';

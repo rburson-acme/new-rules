@@ -15,7 +15,7 @@ export default function ThredManagerModal() {
 
   const rootStore = RootStore.get();
   const eventStore = new EventStore(modalData.event, rootStore);
-  const { colors, fonts } = useTheme();
+  const { colors } = useTheme();
 
   useEffect(() => {
     navigation.setOptions({ title: modalData.event.data?.title });

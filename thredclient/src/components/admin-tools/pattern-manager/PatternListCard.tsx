@@ -2,7 +2,7 @@ import { PatternsStore } from '@/src/stores/PatternsStore';
 import { PatternStore } from '@/src/stores/PatternStore';
 import { Link } from 'expo-router';
 import { observer } from 'mobx-react-lite';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { RegularText } from '../../common/RegularText';
 
 type PatternListCardProps = { patternStore: PatternStore; patternsStore: PatternsStore };

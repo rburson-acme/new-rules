@@ -1,6 +1,6 @@
 import { PatternStore } from '@/src/stores/PatternStore';
 import { observer } from 'mobx-react-lite';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { InputModel } from 'thredlib';
 import { PatternInput } from './PatternInput';
 
