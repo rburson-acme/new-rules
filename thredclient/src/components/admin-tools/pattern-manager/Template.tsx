@@ -24,7 +24,7 @@ export const Template = observer(({ index, template, patternStore }: TemplatePro
         patternStore={patternStore}
       />
       <MediumText>Interactions:</MediumText>
-      {template?.interactions.map((interaction, interactionIndex) => {
+      {template?.interactions?.map((interaction, interactionIndex) => {
         return (
           <Interaction
             key={index}

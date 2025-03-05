@@ -26,7 +26,7 @@ export const Interaction = observer(
                 key={index}
                 content={content}
                 index={index}
-                pathSoFar={`${pathSoFar}.content.${index}`}
+                pathSoFar={`${pathSoFar}.interaction.content.${index}`}
                 patternStore={patternStore}
               />
             );
