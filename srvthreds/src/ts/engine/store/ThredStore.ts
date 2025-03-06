@@ -5,7 +5,7 @@ import { ReactionStore } from './ReactionStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Id } from '../Id.js';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
-import { errorCodes, errorKeys, Thred } from '../../thredlib/index.js';
+import { Address, errorCodes, errorKeys, Thred } from '../../thredlib/index.js';
 
 export class ThredStore {
   // @TODO thredContext should become a pointer to a events in a master log (persisted externally)
@@ -40,6 +40,10 @@ export class ThredStore {
 
   get currentReaction(): Reaction | undefined {
     return this._currentReaction;
+  }
+
+  addParticipant(address?: string | string[] | Address): void {
+    if(address) this.thredContext.addParticipantAddress(address);
   }
 
   // This is the proper way to terminate a thred

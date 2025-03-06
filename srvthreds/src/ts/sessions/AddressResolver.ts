@@ -8,6 +8,10 @@ import { SessionStorage } from './storage/SessionStorage.js';
 
 const { forEach } = Parallel;
 
+/*
+  Groups and aliases start with a '$' and are resolved to participantIds
+*/
+
 export class AddressResolver {
   public static ALL_ALIAS: string = '$all';
 
@@ -72,8 +76,8 @@ export class AddressResolver {
   }
 
   /*
-    * Translate addresses (aliases, groups, and ids) to participantIds
-  */
+   * Translate addresses (aliases, groups, and ids) to participantIds
+   */
   async getParticipantIdsFor(address: Address | string[]): Promise<string[]> {
     const { groups, aliasMap } = this;
 

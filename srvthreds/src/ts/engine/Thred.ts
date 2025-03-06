@@ -34,15 +34,19 @@ export class Thred {
         L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`));
         break transitionLoop;
       }
+      // add the source of the event to the participants list
+      thredStore.addParticipant(inputEvent.source.id);
       // attempt state change and retrieve next input
-      inputEvent = await Thred.nextReaction(thredStore, reactionResult?.transition, inputEvent);
+      inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
       // note thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
 
+      // add the receipients to thte participants list
+      thredStore.addParticipant(reactionResult.message?.to);
       // send any message - NOTE: don't wait for dispatch
-      reactionResult?.message && threds.dispatch(reactionResult?.message);
+      reactionResult?.message && threds.dispatch(reactionResult.message);
     } while (inputEvent);
   }
 
