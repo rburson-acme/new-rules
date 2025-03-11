@@ -5,6 +5,7 @@ import { Parallel } from '../thredlib/index.js';
 import { Group } from './Group.js';
 import { ResolverConfig } from './Config.js';
 import { SessionStorage } from './storage/SessionStorage.js';
+import { ThredContext } from '../engine/ThredContext.js';
 
 const { forEach } = Parallel;
 
@@ -13,12 +14,15 @@ const { forEach } = Parallel;
 */
 
 export class AddressResolver {
+  // all logged in users
   public static ALL_ALIAS: string = '$all';
+  // all current users on the thred
+  public static THRED_ALIAS: string = '$thred';
 
   private groups: StringMap<Group> | undefined;
   private serviceAddressMap: StringMap<string> | undefined;
 
-  private aliasMap: StringMap<() => Promise<string[]>> = {
+  private aliasMap: StringMap<(thredContext?: ThredContext) => Promise<string[]>> = {
     [AddressResolver.ALL_ALIAS]: this.getAllParticipantIds,
   };
 
@@ -116,7 +120,13 @@ export class AddressResolver {
     return [...resultSet];
   }
 
-  getAllParticipantIds(): Promise<string[]> {
+  /*getCurrentThredParticipantIds(context: ThredContext): string[] {
+    const addresses = context.getParticipantAddresses();
+    // filter out service addresses
+    const { participantAddresses } = this.filterServiceAddresses(addresses);
+  }*/
+
+  getAllParticipantIds(context?: ThredContext): Promise<string[]> {
     return this.storage.getAllParticipantIds();
   }
 }

@@ -28,7 +28,7 @@ function loadPatterns(directory: string): any[] {
 
 async function persistPatterns(patterns: any[]): Promise<void> {
   await Series.forEach(patterns, async (pattern) => {
-    return PersistenceManager.get().upsertPattern(pattern);
+    await PersistenceManager.get().upsertPattern(pattern);
   });
 }
 

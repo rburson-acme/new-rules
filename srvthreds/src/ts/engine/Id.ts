@@ -1,11 +1,9 @@
-// @TODO get real (fast) ids
+import { Id as ThredlibId} from '../thredlib/core/Id';
+
 export class Id {
-  private static thredId = 0;
-  private static eventId = 0;
-  private static sessionId = 0;
 
   static getNextThredId(patternName: string): string {
-    return `${patternName}${Date.now()}${Id.thredId++}`;
+    return `${patternName}${ThredlibId.generate()}`;
   }
 
 }

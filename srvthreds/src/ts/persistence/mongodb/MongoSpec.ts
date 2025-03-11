@@ -1,5 +1,5 @@
 import { Spec } from '../../thredlib/task/Spec.js';
-import { EventTask, EventTaskParams, StringMap } from '../../thredlib/index.js';
+import { EventTask, EventTaskParams, Id, StringMap } from '../../thredlib/index.js';
 
 /**
  * For the 'translation' of WT persistence language to Mongodb querys
@@ -49,15 +49,15 @@ export class MongoSpec {
   };
 
   static readonly INBOUND_FIELD_BLACKLIST = [MongoSpec._ID, Spec.CREATED, Spec.MODIFIED];
-  static readonly UPDATE_FIELD_BLACKLIST = [...MongoSpec.INBOUND_FIELD_BLACKLIST];
+  static readonly UPDATE_FIELD_BLACKLIST = [...MongoSpec.INBOUND_FIELD_BLACKLIST, Spec.ID];
   static readonly MATCHER_FIELD_BLACKLIST = [];
   static readonly OUTBOUND_FIELD_BLACKLIST = [];
 
-  static mapInputValues(values: StringMap<any> | Array<StringMap<any>>): any {
+  static mapInputValues(values: StringMap<any> | Array<StringMap<any>>, replace?: boolean): any {
     if (Array.isArray(values)) {
-      return values.map(MongoSpec.mapInputValue);
+      return values.map((value) => MongoSpec.mapInputValue(value, replace));
     }
-    return MongoSpec.mapInputValue(values);
+    return MongoSpec.mapInputValue(values, replace);
   }
 
   static mapOutputValues(values: StringMap<any> | Array<StringMap<any>>): any {
@@ -109,14 +109,15 @@ export class MongoSpec {
   }
 
   // @TODO - use mongo operator $currentDate for setting these dates
-  private static mapInputValue(value: StringMap<any>) {
+  private static mapInputValue(value: StringMap<any>, replace?: boolean) {
     const mappedValues = MongoSpec.mapKeys({
       values: value,
       map: MongoSpec.INBOUND_FIELD_MAP,
       blacklist: MongoSpec.INBOUND_FIELD_BLACKLIST,
     });
+    if (!replace && !mappedValues[MongoSpec._ID]) mappedValues[MongoSpec._ID] = Id.generate();
     const now = new Date();
-    mappedValues[Spec.CREATED] = now;
+    if(!replace) mappedValues[Spec.CREATED] = now;
     mappedValues[Spec.MODIFIED] = now;
     return mappedValues;
   }
@@ -168,7 +169,7 @@ export class MongoSpec {
           const resultValue = MongoSpec.mapKeysRecursive({ ...params, values: values[key] });
           if (key in map) {
             // add case insensitive option if this is a regex
-            if(key === Spec.MATCH_OP) accum['$options'] = 'i';
+            if (key === Spec.MATCH_OP) accum['$options'] = 'i';
             accum[map[key]] = resultValue;
           } else {
             accum[key] = resultValue;

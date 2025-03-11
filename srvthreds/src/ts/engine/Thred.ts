@@ -12,7 +12,7 @@ import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
 
 export class Thred {
   /*
-      consider should be the only external way to induce a state change (i.e. all calls go through here)
+      'consider' should be the only external way to induce a state change (i.e. all calls go through here)
       Note this method should remain synchronous. Any specified consective reactions (via transition forward/local) will run and complete
       before returning.  The caller may rely on that.
     */
@@ -43,8 +43,6 @@ export class Thred {
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
 
-      // add the receipients to thte participants list
-      thredStore.addParticipant(reactionResult.message?.to);
       // send any message - NOTE: don't wait for dispatch
       reactionResult?.message && threds.dispatch(reactionResult.message);
     } while (inputEvent);

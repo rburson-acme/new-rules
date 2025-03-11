@@ -15,7 +15,7 @@ export interface Taskable {
 
     update(query: Query, options?: any): Promise<void>;
 
-    upsert(query: Query, options?: any): Promise<void>;
+    upsert(query: Query, options?: any): Promise<string | string[] | void>;
     
     replace(query: Query, options?: any): Promise<void>;
 

@@ -20,7 +20,7 @@ export class ThredContext implements ExpressionContext {
   }
 
   getParticipantAddresses() {
-    return this.uniqueParticipants;
+    return [...this.uniqueParticipants];
   }
 
   addParticipantAddress(addresses: string | string[] | Address) {

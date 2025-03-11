@@ -116,6 +116,40 @@ describe('persistence', function () {
   test('delete replace value', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
   });
+  test('simple save with assigned id', async function () {
+    assignedId = await persistence.put({ type: testObjType, values: testObjNoId });
+  });
+  test('find assigned Id', async function () {
+    const obj = await persistence.getOne({
+      type: testObjType,
+      matcher: { id: assignedId },
+    });
+    expect(obj.testkeyNoId).toBe('testvalueNoId');
+  });
+  test('simple update for assigned Id', async function () {
+    await persistence.update({
+      type: testObjType,
+      matcher: { id: assignedId },
+      values: { testkeyNoId: 'updated_testvalue' },
+    });
+  });
+  test('find updated value for assigned Id', async function () {
+    const obj = await persistence.getOne({
+      type: testObjType,
+      matcher: { id: assignedId },
+    });
+    expect(obj.testkeyNoId).toBe('updated_testvalue');
+  });
+  test('simple delete for assigned value', async function () {
+    await persistence.delete({ type: testObjType, matcher: { id: assignedId } });
+  });
+  test('shouldnt find deleted assigned value', async function () {
+    const obj = await persistence.getOne({
+      type: testObjType,
+      matcher: { id: assignedId },
+    });
+    expect(obj).toBeNull();
+  });
   test('save multiple', async function () {
     const docs = [];
     for (let i = 0; i < 100; i++) {
@@ -263,9 +297,11 @@ const testObjId2 = 'TEST_ID_2';
 const testObjType = 'TestType';
 const testObj1 = { id: testObjId, testkey: 'testvalue' };
 const testObj2 = { id: testObjId2, testkey2: 'testvalue2' };
+const testObjNoId = { testkeyNoId: 'testvalueNoId' };
 const setId = 'TEST_SET_ID';
 const setType = 'SET_TYPE';
 const setItems = ['setItem0', 'setItem1'];
 
 let persistence: Persistence;
 let persistenceProvider: PersistenceProvider;
+let assignedId: string | string[];

@@ -1,12 +1,17 @@
+import { nanoid } from "nanoid";
+
 // @TODO get real (fast) ids
 export class Id {
-  private static id = 0;
 
   static get nextEventId(): string {
-    return `evt${Date.now()}${Id.id++}`;
+    return `evt${this.generate()}`;
   }
 
   static getNextId(prefix: string): string {
-    return `${prefix}${Date.now()}${Id.id++}`;
+    return `${prefix}${this.generate()}`;
+  }
+
+  static generate(): string {
+    return nanoid();
   }
 }

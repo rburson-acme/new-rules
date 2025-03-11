@@ -21,6 +21,7 @@ export class Publish {
     const context = thredStore.thredContext;
     const expressionParams = { event, context };
     try {
+      // evaluate any expressions in the 'to' field
       const transformedTo = await Transformer.transformObject(to, expressionParams);
       // if an array, flattening allows for multiple array matches to be nested in the 'to' field
       // if a string we'll need to return an array of one
