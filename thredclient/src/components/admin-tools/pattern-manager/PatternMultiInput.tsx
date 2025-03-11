@@ -18,7 +18,12 @@ export const PatternMultiInput = ({ name, values, patternStore, updatePath }: Pa
         type="multipleText"
         inputValues={values}
         addInputValue={() => {
-          patternStore.updatePatternValue(updatePath, [...values, '']);
+          if (typeof values === 'string') {
+            patternStore.updatePatternValue(updatePath, [values, '']);
+            return;
+          } else {
+            patternStore.updatePatternValue(updatePath, [...values, '']);
+          }
         }}
         removeInputValue={() => {
           patternStore.updatePatternValue(updatePath, values.slice(0, values.length - 1));

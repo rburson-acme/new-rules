@@ -196,6 +196,7 @@ export class SystemEvents {
   }
 
   static getUpdatePatternEvent(patternId: string, source: Event['source'], updateValues: EventTaskParams['values']) {
+    console.log({ updateValues });
     return EventBuilder.create({
       type: eventTypes.control.dataControl.type,
       thredId: ThredId.SYSTEM,

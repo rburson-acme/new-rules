@@ -5,6 +5,8 @@ import { InteractionModel } from 'thredlib';
 import { MediumText } from '../../common/MediumText';
 import { Content } from './Content';
 import { InteractionPicker } from './InteractionPicker';
+import { Button } from '../../common/Button';
+import { toJS } from 'mobx';
 
 type InteractionProps = {
   interaction: InteractionModel;
@@ -21,14 +23,23 @@ export const Interaction = observer(
         <MediumText>Content:</MediumText>
         <View style={styles.interactionContainer}>
           {interaction.interaction.content.map((content, index) => {
+            const path = `${pathSoFar}.interaction.content`;
             return (
-              <Content
-                key={index}
-                content={content}
-                index={index}
-                pathSoFar={`${pathSoFar}.interaction.content.${index}`}
-                patternStore={patternStore}
-              />
+              <View style={{ justifyContent: 'space-between', flexDirection: 'row' }} key={index}>
+                <Content
+                  key={index}
+                  content={content}
+                  index={index}
+                  pathSoFar={`${path}.${index}`}
+                  patternStore={patternStore}
+                />
+                <Button
+                  content={'Remove Content'}
+                  onPress={() => {
+                    patternStore.removeContent(interactionIndex, reactionIndex, index, path);
+                  }}
+                />
+              </View>
             );
           })}
         </View>

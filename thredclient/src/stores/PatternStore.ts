@@ -34,6 +34,9 @@ export class PatternStore {
       addReaction: action,
       addTransform: action,
       addTransition: action,
+      removeContent: action,
+      removeInteraction: action,
+      updatePattern: action,
     });
   }
 
@@ -46,8 +49,8 @@ export class PatternStore {
       { id: userId, name: userId },
       updateValues,
     );
-
     this.rootStore.connectionStore.exchange(updatePatternEvent, event => {});
+
   }
 
   updatePatternValue(updatePath: string, value: any) {
@@ -69,7 +72,7 @@ export class PatternStore {
     });
   }
 
-  addInteraction(reactionIndex: number) {
+  addInteraction(reactionIndex: number, path: string) {
     const currentInteractions =
       this.pattern.reactions[reactionIndex]?.condition.transform?.eventDataTemplate?.advice?.template?.interactions;
     const newInteraction: InteractionModel = {
@@ -91,6 +94,10 @@ export class PatternStore {
           reactionIndex
         ]?.condition.transform?.eventDataTemplate?.advice?.template?.interactions.push(newInteraction);
       }
+    });
+
+    this.updatePattern({
+      [path]: [newInteraction],
     });
   }
 
@@ -191,7 +198,7 @@ export class PatternStore {
 
   addInteractionContent(type: ContentType, interactionIndex: number, reactionIndex: number) {
     const advice = this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice;
-    const content = advice?.template?.interactions?.[interactionIndex].interaction.content;
+    const content = advice?.template?.interactions.at(interactionIndex)?.interaction.content;
     switch (type) {
       case 'booleanInput':
         content?.push({
@@ -276,7 +283,7 @@ export class PatternStore {
   }
 
   addReaction() {
-    const reactions = toJS(this.pattern.reactions);
+    const reactions = this.pattern.reactions;
     const newReaction: ReactionModel = {
       name: '',
       description: '',
@@ -293,11 +300,44 @@ export class PatternStore {
       this.pattern.reactions = [...reactions, newReaction];
     });
 
-    this.updatePattern({ ['reactions']: [...reactions, newReaction] });
+    if (reactions.length > 0) {
+      this.updatePattern({ ['reactions']: [...reactions, newReaction] });
+    } else {
+      this.updatePattern({ ['reactions']: [newReaction] });
+    }
+  }
+
+  removeInteraction(interactionIndex: number, reactionIndex: number, path: string) {
+    const interactions = toJS(
+      this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions,
+    );
+
+    runInAction(() => {
+      const interaction = interactions?.splice(interactionIndex, 1);
+      this.pattern.reactions[
+        reactionIndex
+      ].condition.transform?.eventDataTemplate?.advice?.template?.interactions.splice(interactionIndex, 1);
+    });
+    this.updatePattern({ [path]: interactions });
+  }
+
+  removeContent(interactionIndex: number, reactionIndex: number, contentIndex: number, path: string) {
+    const content = toJS(
+      this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions.at(
+        interactionIndex,
+      )?.interaction.content,
+    );
+    runInAction(() => {
+      this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions
+        .at(interactionIndex)
+        ?.interaction.content.splice(contentIndex, 1);
+    });
+
+    this.updatePattern({ [path]: content });
   }
 
   removeReaction(id: number) {
-    const reactions = toJS(this.pattern.reactions);
+    const reactions = this.pattern.reactions;
     runInAction(() => {
       this.pattern.reactions.splice(id, 1);
     });

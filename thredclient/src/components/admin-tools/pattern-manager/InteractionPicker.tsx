@@ -17,10 +17,11 @@ const dropdownData: DropdownData[] = [
   { display: 'Number Input', value: 'numericInput' },
   { display: 'Text Input', value: 'textInput' },
   { display: 'Nominal Input', value: 'nominalInput' },
-  { display: 'Image Input', value: 'image' },
-  { display: 'Map Input', value: 'map' },
-  { display: 'Video Input', value: 'video' },
-  { display: 'Group Input', value: 'group' },
+  { display: 'Text', value: 'text' },
+  { display: 'Image', value: 'image' },
+  { display: 'Map', value: 'map' },
+  { display: 'Video', value: 'video' },
+  { display: 'Group', value: 'group' },
 ];
 
 type InteractionPickerProps = {
@@ -44,6 +45,7 @@ export const InteractionPicker = observer(
           }}
           defaultItem={locals.selectedNewContent}
         />
+
         <Button
           content={'Add selected content'}
           onPress={() => {

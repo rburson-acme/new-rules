@@ -32,7 +32,7 @@ export class AdminThredStore {
     events.map(event => {
       event.thredLogs = thredLogs.filter(thredLog => thredLog.eventId === event.id);
     });
-    
+
     this.pattern = pattern;
     this.events = events;
     this.isFullThred = true;
@@ -50,7 +50,6 @@ export class AdminThredStore {
       runInAction(() => {
         this.rootStore.adminThredsStore.removeThred(this.thred.id);
         this.rootStore.thredsStore.removeThred(this.thred.id);
-        this.rootStore.thredsStore.unselectThred();
         // TODO: Reroute user to thred list
       });
     });

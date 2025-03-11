@@ -44,7 +44,6 @@ export const Content = observer(({ content, index, pathSoFar, patternStore }: Co
       );
     case 'input':
       if (!content.input) return;
-
       return (
         <View style={styles.interactionContainer}>
           <PatternInput
@@ -144,8 +143,9 @@ export const Content = observer(({ content, index, pathSoFar, patternStore }: Co
       if (!content.text) return;
       return (
         <View style={styles.interactionContainer}>
+          <MediumText>Text</MediumText>
           <PatternInput
-            name="Width"
+            name="Text"
             patternStore={patternStore}
             updatePath={`${pathSoFar}.text.value`}
             value={content.text.value}

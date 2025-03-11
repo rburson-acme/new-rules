@@ -6,6 +6,7 @@ import { PatternStore } from '@/src/stores/PatternStore';
 import { MediumText } from '../../common/MediumText';
 import { Interaction } from './Interaction';
 import { Button } from '../../common/Button';
+import { Fragment } from 'react';
 
 type TemplateProps = { index: number; template: TemplateModel; patternStore: PatternStore };
 export const Template = observer(({ index, template, patternStore }: TemplateProps) => {
@@ -25,21 +26,32 @@ export const Template = observer(({ index, template, patternStore }: TemplatePro
       />
       <MediumText>Interactions:</MediumText>
       {template?.interactions?.map((interaction, interactionIndex) => {
+        const pathSoFar = `reactions.${index}.condition.transform.eventDataTemplate.advice.template.interactions`;
         return (
-          <Interaction
-            key={index}
-            pathSoFar={`reactions.${index}.condition.transform.eventDataTemplate.advice.template.interactions.${interactionIndex}`}
-            interactionIndex={interactionIndex}
-            reactionIndex={index}
-            interaction={interaction}
-            patternStore={patternStore}
-          />
+          <Fragment key={index}>
+            <Interaction
+              pathSoFar={`${pathSoFar}.${interactionIndex}`}
+              interactionIndex={interactionIndex}
+              reactionIndex={index}
+              interaction={interaction}
+              patternStore={patternStore}
+            />
+            <Button
+              content={'Remove Interaction'}
+              onPress={() => {
+                patternStore.removeInteraction(interactionIndex, index, pathSoFar);
+              }}
+            />
+          </Fragment>
         );
       })}
       <Button
         content={'Add Interaction'}
         onPress={() => {
-          patternStore.addInteraction(index);
+          patternStore.addInteraction(
+            index,
+            `reactions.${index}.condition.transform.eventDataTemplate.advice.template.interactions`,
+          );
         }}
       />
     </View>

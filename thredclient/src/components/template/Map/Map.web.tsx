@@ -12,7 +12,6 @@ type MapProps = {
 };
 
 const libraries: Libraries = ['places', 'drawing', 'geometry', 'marker'];
-
 export function Map({ locations }: MapProps) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.GOOGLE_MAPS_API,
