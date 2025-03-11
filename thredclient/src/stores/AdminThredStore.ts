@@ -1,21 +1,41 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
-import { EventRecord, PatternModel, SystemEvents } from 'thredlib';
-import { AdminThred } from '../core/AdminThred';
+import { EventHelper, EventRecord, PatternModel, SystemEvents, Thred, ThredLogRecord, ThredRecord } from 'thredlib';
 import { RootStore } from './RootStore';
+import { AdminEvent } from '../core/AdminEvent';
 
 export class AdminThredStore {
-  constructor(
-    readonly thred: AdminThred,
-    readonly rootStore: RootStore,
-    readonly pattern: PatternModel,
-    readonly events: EventRecord[],
-  ) {
+  pattern: PatternModel | undefined = undefined;
+  events: AdminEvent[] = [];
+  isFullThred: boolean = false;
+  constructor(readonly thred: Thred, readonly rootStore: RootStore) {
     makeObservable(this, {
       terminateThred: action,
       pattern: observable,
       events: observable,
       thred: observable,
+      isFullThred: observable,
+      completeThred: action,
     });
+  }
+
+  async completeThred() {
+    const userId = this.getUserId();
+    const [pattern, events, thredLogs] = await Promise.all([
+      this.fetchPattern(userId, this.thred.patternId),
+      this.fetchEvents(userId, this.thred.id),
+      this.fetchThredLogs(userId, this.thred.id),
+      // TODO: GET THIS FASTER...
+      // TODO: Fetch these when clicking into a thred, not on the scree
+    ]);
+
+    //attach thredLogs to events
+    events.map(event => {
+      event.thredLogs = thredLogs.filter(thredLog => thredLog.eventId === event.id);
+    });
+    
+    this.pattern = pattern;
+    this.events = events;
+    this.isFullThred = true;
   }
 
   terminateThred = () => {
@@ -29,12 +49,45 @@ export class AdminThredStore {
     this.rootStore.connectionStore.exchange(terminateThredEvent, () => {
       runInAction(() => {
         this.rootStore.adminThredsStore.removeThred(this.thred.id);
-        this.rootStore.adminThredsStore.unselectThred();
         this.rootStore.thredsStore.removeThred(this.thred.id);
         this.rootStore.thredsStore.unselectThred();
+        // TODO: Reroute user to thred list
       });
     });
   };
+
+  private async fetchThredLogs(userId: string, thredId: string): Promise<ThredLogRecord[]> {
+    return new Promise(resolve => {
+      const findEventDetailsEvent = SystemEvents.getThredLogForThredEvent(thredId, { id: userId, name: userId });
+
+      return this.rootStore.connectionStore.exchange(findEventDetailsEvent, event => {
+        const eventHelper = new EventHelper(event);
+        resolve(eventHelper.valueNamed('result')[0] as ThredLogRecord[]);
+      });
+    });
+  }
+
+  private fetchEvents(userId: string, thredId: string): Promise<AdminEvent[]> {
+    return new Promise(resolve => {
+      const findEventsEvent = SystemEvents.getEventsForThredEvent(thredId, { id: userId, name: userId });
+
+      this.rootStore.connectionStore.exchange(findEventsEvent, event => {
+        const eventHelper = new EventHelper(event);
+        resolve(eventHelper.valueNamed('result')[0] as AdminEvent[]);
+      });
+    });
+  }
+
+  private fetchPattern(userId: string, patternId: string): Promise<PatternModel> {
+    return new Promise(resolve => {
+      const findPatternEvent = SystemEvents.getFindPatternEvent(patternId, { id: userId, name: userId });
+
+      this.rootStore.connectionStore.exchange(findPatternEvent, event => {
+        const eventHelper = new EventHelper(event);
+        resolve(eventHelper.valueNamed('result')[0] as PatternModel);
+      });
+    });
+  }
 
   private getUserId(): string {
     const userId = this.rootStore.authStore.userId;

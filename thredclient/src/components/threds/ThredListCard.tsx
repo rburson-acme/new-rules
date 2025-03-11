@@ -6,12 +6,15 @@ import { ThredIcon } from '../admin-tools/thred-manager/ThredIcon';
 import { ThredStore } from '@/src/stores/ThredStore';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { Link } from 'expo-router';
+import { formatDateAndTime } from '@/src/utils/formatDateAndTime';
+import { RegularText } from '../common/RegularText';
+import { MediumText } from '../common/MediumText';
 
-type ThredViewProps = {
+type ThredListCardProps = {
   thredStore: ThredStore;
   thredsStore: ThredsStore;
 };
-export const ThredView = observer(({ thredStore, thredsStore }: ThredViewProps) => {
+export const ThredListCard = observer(({ thredStore, thredsStore }: ThredListCardProps) => {
   const {
     colors,
     fonts: { medium, regular },
@@ -20,7 +23,7 @@ export const ThredView = observer(({ thredStore, thredsStore }: ThredViewProps) 
   function getLatestEvent() {
     const eventStores = thredStore.eventsStore?.eventStores;
     if (!eventStores) return undefined;
-    const latestEvent = eventStores[eventStores?.length - 1].event;
+    const latestEvent = eventStores[eventStores?.length - 1]?.event;
 
     return latestEvent;
   }
@@ -30,35 +33,17 @@ export const ThredView = observer(({ thredStore, thredsStore }: ThredViewProps) 
 
   const { source, data, type, time } = latestEvent;
 
-  function formatDateAndTime() {
-    if (!time) return '';
-    const date = new Date(time);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
-
-    const formattedTime = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${amPm}`;
-
-    const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')} / ${String(date.getDate()).padStart(
-      2,
-      '0',
-    )} / ${String(date.getFullYear()).slice(-2)}`;
-
-    return `${formattedTime} | ${formattedDate}`;
-  }
-
   return (
     <Link href={`/threds/${thredStore.thred.id}`}>
       <View style={[styles.containerStyle]}>
         <ThredIcon uri={data?.display?.uri} />
         <View style={styles.textView}>
-          <Text style={[styles.dateStyle, regular, { color: colors.text }]}>{formatDateAndTime()}</Text>
-          <Text style={[styles.textStyle, medium, { color: colors.text }]}>
+          <RegularText style={[styles.dateStyle]}>{time ? formatDateAndTime(time) : ''}</RegularText>
+          <MediumText style={[styles.textStyle]}>
             {latestEvent.data?.title} {latestEvent.data?.description ? `-- ${latestEvent.data?.description}` : ''}
-          </Text>
+          </MediumText>
         </View>
         {/* Develop some sort of thumbnail to display here when  */}
-        {/* <ThredTag thredStore={thredStore} /> */}
       </View>
     </Link>
   );

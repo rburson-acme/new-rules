@@ -1,34 +1,36 @@
-import { ThredsStore } from '@/src/stores/ThredsStore';
-import { ThredStore } from '@/src/stores/ThredStore';
+import { RootStore } from '@/src/stores/RootStore';
 import { observer } from 'mobx-react-lite';
-import { useRef } from 'react';
-import { FlatList, Text, View } from 'react-native';
-import { ThredView } from './ThredView';
+import { StyleSheet, View } from 'react-native';
+import SearchBar from '../common/SearchBar';
+import { ThredList } from './ThredList';
+import { useTheme } from '@/src/contexts/ThemeContext';
 
-type ThredsViewProps = {
-  thredsStore: ThredsStore;
+type ThredsLayoutProps = {
+  rootStore: RootStore;
 };
 
-export const ThredsView = observer(({ thredsStore }: ThredsViewProps) => {
-  const flatList = useRef<FlatList<ThredStore>>(null);
+export const ThredsView = observer(({ rootStore }: ThredsLayoutProps) => {
+  const { thredsStore } = rootStore;
+  const { colors } = useTheme();
 
   return (
-    <FlatList
-      ref={flatList}
-      onEndReachedThreshold={0.1}
-      data={thredsStore.filteredThreds}
-      contentContainerStyle={{ flex: 1 }}
-      style={{ flex: 1 }}
-      renderItem={({ item: thredStore }) => {
-        return <ThredView thredsStore={thredsStore} thredStore={thredStore} />;
-      }}
-      ListEmptyComponent={emptyList()}
-    />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <SearchBar
+        value={thredsStore.searchText}
+        onChange={value => {
+          thredsStore.setSearchText(value);
+        }}
+      />
+      <ThredList thredsStore={thredsStore} />
+    </View>
   );
 });
 
-const emptyList = () => (
-  <View style={{ padding: 50, flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 20 }}>No Messages Yet</Text>
-  </View>
-);
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 16,
+  },
+});

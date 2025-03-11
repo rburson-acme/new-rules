@@ -57,6 +57,7 @@
                         "description": "$xpr( 'Sensor ' & $valueNamed('sensorId') & ' has detected a possible UAV')",
                         "display": {"uri": "https://www.svgrepo.com/show/489126/sensor.svg"},
                         "advice": {
+                            "title": "UAV Notification",
                             "eventType": "org.wt.client.tell",
                             "template": {
                                 "name": "uav_notification",
@@ -124,7 +125,7 @@
                                             "content": [
                                                 {
                                                     "video": {
-                                                        "uri": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                                                        "uri": "https://videos.pexels.com/video-files/3764259/3764259-hd_1280_720_60fps.mp4"
                                                     }
                                                 }
                                             ]

@@ -1,6 +1,5 @@
-import { Text, View } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Bubble } from '../common/Bubble';
+import { View } from 'react-native';
 
 type VideoProps = {
   uri: string;
@@ -11,15 +10,18 @@ export const Video = ({ uri }: VideoProps) => {
   });
 
   return (
-    <Bubble style={{ flex: 1 }}>
+    <View>
       <VideoView
         style={{
-          width: 280,
+          width: 210,
+          height: 120,
+          borderRadius: 8,
         }}
+        contentFit="contain"
         player={player}
         allowsFullscreen
         allowsPictureInPicture
       />
-    </Bubble>
+    </View>
   );
 };

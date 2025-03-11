@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { MediumText } from './MediumText';
 
 type SelectItemProps = {
   item: { display: string; value: string };
@@ -6,7 +7,7 @@ type SelectItemProps = {
 export const SelectItem = ({ item }: SelectItemProps) => {
   return (
     <View style={styles.item}>
-      <Text style={styles.textItem}>{item.display}</Text>
+      <MediumText style={styles.textItem}>{item.display}</MediumText>
     </View>
   );
 };

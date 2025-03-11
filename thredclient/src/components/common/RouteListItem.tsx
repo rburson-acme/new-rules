@@ -1,7 +1,9 @@
 import { ListRenderItemInfo, Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { RootStore } from '@/src/stores/RootStore';
 import { RouteListItemType } from '@/src/core/RouteList';
+import { RegularText } from './RegularText';
+import { MediumText } from './MediumText';
 
 type ModuleListItemProps<Names> = {
   listItem: ListRenderItemInfo<RouteListItemType<Names>>;
@@ -10,10 +12,10 @@ type ModuleListItemProps<Names> = {
 export function RouteListItem<Names extends string>({ listItem, rootStore }: ModuleListItemProps<Names>) {
   return (
     <Pressable style={styles.container} onPress={listItem.item.navigateFn}>
-      <MaterialIcons size={32} name={listItem.item.iconName} />
+      <FontAwesome size={32} name={listItem.item.iconName} />
       <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{listItem.item.name}</Text>
-        <Text>{listItem.item.description}</Text>
+        <MediumText style={styles.title}>{listItem.item.name}</MediumText>
+        <RegularText>{listItem.item.description}</RegularText>
       </View>
     </Pressable>
   );

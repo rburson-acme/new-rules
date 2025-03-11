@@ -90,7 +90,7 @@ export function Map() {
         latitude: drone.lat(),
         longitude: drone.lng(),
         certainty: Math.random(),
-        sensorId: sensorId,
+        sensorId: sensorId.toString(),
       })
       .build();
 

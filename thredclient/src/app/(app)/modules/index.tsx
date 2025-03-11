@@ -10,19 +10,19 @@ const modules: RouteListItemType<ModuleNames>[] = [
     description:
       'Allows for NewRules to read health information (body temperature, heartrate, sleep data, etc.) and send data to connected services. ',
     name: 'Health Information',
-    iconName: 'monitor-heart',
+    iconName: 'heartbeat',
     navigateFn: () => router.push({ pathname: '/modules/health-info' }),
   },
   {
     description: 'Allows for NewRules to determine your geolocation and send data to connected services. ',
     name: 'Geolocation',
-    iconName: 'location-on',
+    iconName: 'globe',
     navigateFn: () => router.push({ pathname: '/modules/geolocation' }),
   },
   {
     description: 'Allows for NewRules to detect falls and injuries and send data to connected services. ',
     name: 'Fall/Injury Detection',
-    iconName: 'medical-services',
+    iconName: 'exclamation-triangle',
     navigateFn: () => router.push({ pathname: '/modules/injury' }),
   },
 ];

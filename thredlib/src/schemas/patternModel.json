@@ -4,6 +4,7 @@
   "definitions": {
     "AddressModel": {
       "additionalProperties": false,
+      "description": "Include and/or exclude participants or groups from the publish spec",
       "properties": {
         "exclude": {
           "items": {
@@ -73,10 +74,10 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A handler to be run if the condition is true.a"
+          "description": "A handler to be run if the condition is true."
         },
         "operands": {
-          "description": "The composite conditions to be used for And/Or conditions.",
+          "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
           "items": {
             "anyOf": [
               {
@@ -99,10 +100,15 @@
         },
         "transition": {
           "$ref": "#/definitions/TransitionModel",
-          "description": "The state (Reaction) transition that should occur if the condition is true."
+          "description": "The state (Reaction) transition that should occur if the condition is true. The default (if not specified) is to transition to the next Reaction (or terminate if none)."
         },
         "type": {
-          "description": "The type of the condition.",
+          "description": "The type of the condition. May be 'and', 'or', or 'filter'.",
+          "enum": [
+            "and",
+            "or",
+            "filter"
+          ],
           "type": "string"
         }
       },
@@ -115,7 +121,7 @@
       "additionalProperties": false,
       "properties": {
         "xpr": {
-          "description": "A jsonata expression to be run when a condition is true. This is a 'side effect' of the condition.  {@link  https://jsonata.org/ }",
+          "description": "A jsonata expression to be run when a condition is true. This is a 'side effect' of the condition. Generally used to store values in scope for later use  {@link  https://jsonata.org/ }",
           "type": "string"
         }
       },
@@ -127,6 +133,9 @@
     "ElementModel": {
       "additionalProperties": false,
       "properties": {
+        "group": {
+          "$ref": "#/definitions/GroupModel"
+        },
         "image": {
           "$ref": "#/definitions/ImageModel"
         },
@@ -360,10 +369,10 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A handler to be run if the condition is true.a"
+          "description": "A handler to be run if the condition is true."
         },
         "operands": {
-          "description": "The composite conditions to be used for And/Or conditions.",
+          "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
           "items": {
             "anyOf": [
               {
@@ -386,10 +395,15 @@
         },
         "transition": {
           "$ref": "#/definitions/TransitionModel",
-          "description": "The state (Reaction) transition that should occur if the condition is true."
+          "description": "The state (Reaction) transition that should occur if the condition is true. The default (if not specified) is to transition to the next Reaction (or terminate if none)."
         },
         "type": {
-          "description": "The type of the condition.",
+          "description": "The type of the condition. May be 'and', 'or', or 'filter'.",
+          "enum": [
+            "and",
+            "or",
+            "filter"
+          ],
           "type": "string"
         },
         "xpr": {
@@ -400,6 +414,21 @@
       "required": [
         "type",
         "xpr"
+      ],
+      "type": "object"
+    },
+    "GroupModel": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/definitions/ElementModel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
       ],
       "type": "object"
     },
@@ -461,6 +490,7 @@
     },
     "InteractionModel": {
       "additionalProperties": false,
+      "description": "A model for facilitating user or machine interaction",
       "properties": {
         "interaction": {
           "additionalProperties": false,
@@ -487,16 +517,10 @@
       "additionalProperties": false,
       "properties": {
         "latitude": {
-          "type": [
-            "number",
-            "string"
-          ]
+          "type": "string"
         },
         "longitude": {
-          "type": [
-            "number",
-            "string"
-          ]
+          "type": "string"
         },
         "name": {
           "type": "string"
@@ -658,6 +682,7 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A human-readable description of the publish spec",
           "type": "string"
         },
         "to": {
@@ -674,7 +699,8 @@
             {
               "type": "string"
             }
-          ]
+          ],
+          "description": "The address(es) to send the outbound Event to. These may be participants or groups. May be a single string, an array of strings, or an object with include/exclude arrays"
         }
       },
       "required": [
@@ -719,12 +745,12 @@
           "description": "The optional expiration policy of the reaction.",
           "properties": {
             "interval": {
-              "description": "The interval after which the reaction expires in millis.",
+              "description": "The interval after which the reaction expires in millis. Upon expiration the Reaction will use the default transition or the one specified in the expiry object.",
               "type": "number"
             },
             "transition": {
               "$ref": "#/definitions/TransitionModel",
-              "description": "The optional transition that occurs when the reaction expires. Default will move to the next reaction"
+              "description": "The optional transition that occurs when the reaction expires."
             }
           },
           "required": [
@@ -766,15 +792,18 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A description of the template",
           "type": "string"
         },
         "interactions": {
+          "description": "The interactions that make up the template",
           "items": {
             "$ref": "#/definitions/InteractionModel"
           },
           "type": "array"
         },
         "name": {
+          "description": "The name of the template",
           "type": "string"
         }
       },
@@ -840,6 +869,7 @@
           "type": "object"
         },
         "templateXpr": {
+          "description": "A jsonata expression to be run to generate the entire Event Data portion of the outbound event.",
           "type": "string"
         }
       },
@@ -857,12 +887,15 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A description of the transition.",
           "type": "string"
         },
         "input": {
-          "$ref": "#/definitions/TransitionInput"
+          "$ref": "#/definitions/TransitionInput",
+          "description": "Specifies how the transition should supply the input to the next state (Reaction).\n- 'default' - wait for input from the next matching Event\n- 'forward' - use the Event that triggered the current (this) Reaction\n- 'local' - use a locally stored value"
         },
         "localName": {
+          "description": "The name of the locally stored value to be used as input to the next state (Reaction) if input is 'local'.",
           "type": "string"
         },
         "name": {

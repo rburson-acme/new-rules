@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { getComponentTypes } from '@/src/components/template/componentTypes';
 import { Interaction } from '@/src/components/template/Interaction';
 import { EventEditorLocals } from '@/src/app/(app)/admin-tools/event-editor';
-
+import { MediumText } from '../../common/MediumText';
 
 type EventOutputProps = {
   localStore: EventEditorLocals;
@@ -16,9 +16,10 @@ export const EventOutput = observer(({ localStore }: EventOutputProps) => {
     return <Interaction key={index} interactionStore={interactionStore} componentTypes={getComponentTypes()} />;
   });
 
+  
   return (
     <View style={styles.eventOutput}>
-      <Text style={{ fontSize: 24 }}>Event output</Text>
+      <MediumText style={{ fontSize: 24 }}>Event output</MediumText>
       {localStore.templateStore?.template ? (
         <View style={{ justifyContent: 'center', gap: 16 }}>
           {completedInteractions}

@@ -11,10 +11,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { Redirect } from 'expo-router';
 
 function AppLayout() {
-  const { authStore, themeStore } = RootStore.get();
+  const { authStore, themeStore, connectionStore } = RootStore.get();
 
   function logOut() {
     authStore.logOut();
+
+    connectionStore.disconnect();
   }
 
   const { theme } = themeStore;
@@ -95,7 +97,7 @@ const HeaderTitle = () => {
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Image source={newRulesLogo} style={{ width: 48, height: 48 }} />
+      <Image source={newRulesLogo} style={{ width: 48, height: 48, resizeMode: 'contain' }} />
       <Text style={{ fontFamily: 'Nexa-Heavy', fontSize: 18 }}>New</Text>
       <Text style={{ fontFamily: 'Nexa-ExtraLight', fontSize: 18 }}>Rules</Text>
     </View>

@@ -9,19 +9,19 @@ const adminTools: RouteListItemType<AdminToolNames>[] = [
   {
     name: 'Event Editor',
     description: 'edit events',
-    iconName: 'golf-course',
+    iconName: 'edit',
     navigateFn: () => router.push({ pathname: '/admin-tools/event-editor' }),
   },
   {
     name: 'Thred Manager',
     description: 'manage threds',
-    iconName: 'golf-course',
+    iconName: 'gear',
     navigateFn: () => router.push({ pathname: '/admin-tools/thred-manager' }),
   },
   {
     name: 'Pattern Manager',
     description: 'manage patterns',
-    iconName: 'golf-course',
+    iconName: 'edit',
     navigateFn: () => router.push({ pathname: '/admin-tools/pattern-manager' }),
   },
 ];

@@ -1,17 +1,21 @@
 import { ALL_HEALTH_PERMISSIONS } from '@/src/stores/HealthModuleStore';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { ReadRecordsResult } from 'react-native-health-connect';
 import { Button } from '@/src/components/common/Button';
 import { BodyTemperature } from '@/src/components/modules/BodyTemperature';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
+import { Spinner } from '@/src/components/common/Spinner';
+import { RegularText } from '@/src/components/common/RegularText';
 
 function HealthModule() {
   const { healthModuleStore } = RootStore.get();
   useEffect(() => {
-    healthModuleStore.initialize();
+    if (Platform.OS !== 'web') {
+      healthModuleStore.initialize();
+    }
   }, []);
 
   const navigation = useNavigation();
@@ -20,11 +24,13 @@ function HealthModule() {
     navigation.setOptions({ title: 'Health Information' });
   }, [navigation]);
 
-  // TODO: Check why its spinning.
   const areTherePermissions = healthModuleStore.grantedPermissions.length > 0;
 
+  if (Platform.OS === 'web') {
+    return <RegularText>Health data is not supported on the web.</RegularText>;
+  }
   if (!healthModuleStore.hasInitialized) {
-    return <ActivityIndicator />;
+    return <Spinner />;
   }
   return (
     <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>

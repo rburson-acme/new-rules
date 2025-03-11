@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Text } from 'react-native';
 import React from 'react';
 import { SourceSans3_400Regular, SourceSans3_500Medium } from '@expo-google-fonts/source-sans-3';
+import { MediumText } from '../components/common/MediumText';
 
 SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
@@ -21,7 +22,7 @@ export default function RootLayout() {
   }, [loaded, error]);
 
   if (!loaded && !error) {
-    return <Text>Loading...</Text>;
+    return <MediumText>Loading...</MediumText>;
   }
 
   return <Slot />;

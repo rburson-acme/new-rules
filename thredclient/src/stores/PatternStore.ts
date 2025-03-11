@@ -1,13 +1,39 @@
-import { PatternModel, SystemEvents } from 'thredlib';
+import {
+  EventData,
+  InteractionModel,
+  PatternModel,
+  ReactionModel,
+  SystemEvents,
+  TemplateModel,
+  TransformModel,
+  TransitionModel,
+} from 'thredlib';
 import { RootStore } from './RootStore';
 import { action, makeObservable, observable, runInAction, toJS } from 'mobx';
 import { set } from 'lodash';
+
+export type ContentType =
+  | 'booleanInput'
+  | 'numericInput'
+  | 'textInput'
+  | 'nominalInput'
+  | 'image'
+  | 'text'
+  | 'map'
+  | 'video'
+  | 'group';
 
 export class PatternStore {
   constructor(public pattern: PatternModel, readonly rootStore: RootStore) {
     makeObservable(this, {
       pattern: observable,
       updatePatternValue: action,
+      removeReaction: action,
+      addInteraction: action,
+      addInteractionContent: action,
+      addReaction: action,
+      addTransform: action,
+      addTransition: action,
     });
   }
 
@@ -39,11 +65,245 @@ export class PatternStore {
     this.rootStore.connectionStore.exchange(deletePatternEvent, () => {
       runInAction(() => {
         this.rootStore.patternsStore.removePattern(patternId);
-        this.rootStore.patternsStore.unselectPattern();
       });
     });
   }
 
+  addInteraction(reactionIndex: number) {
+    const currentInteractions =
+      this.pattern.reactions[reactionIndex]?.condition.transform?.eventDataTemplate?.advice?.template?.interactions;
+    const newInteraction: InteractionModel = {
+      interaction: {
+        content: [],
+      },
+    };
+
+    runInAction(() => {
+      if (
+        !currentInteractions &&
+        this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template
+      ) {
+        this.pattern.reactions[reactionIndex].condition.transform.eventDataTemplate.advice.template.interactions = [
+          newInteraction,
+        ];
+      } else {
+        this.pattern.reactions[
+          reactionIndex
+        ]?.condition.transform?.eventDataTemplate?.advice?.template?.interactions.push(newInteraction);
+      }
+    });
+  }
+
+  addTransform(index: number) {
+    const newTransform: TransformModel = {
+      description: '',
+      templateXpr: '',
+    };
+
+    const reaction = this.pattern.reactions[index];
+    runInAction(() => {
+      this.pattern.reactions[index] = {
+        ...reaction,
+        condition: {
+          ...reaction.condition,
+          transform: newTransform,
+        },
+      };
+    });
+  }
+
+  addTransition(index: number) {
+    const newTransition: TransitionModel = {
+      name: '',
+      description: '',
+      input: 'default',
+      localName: '',
+    };
+    const reaction = this.pattern.reactions[index];
+
+    runInAction(() => {
+      this.pattern.reactions[index] = {
+        ...reaction,
+        condition: {
+          ...reaction.condition,
+          transition: newTransition,
+        },
+      };
+    });
+  }
+
+  addEventDataTemplate(index: number) {
+    const newEventDataTemplate: EventData = {
+      title: '',
+      description: '',
+      advice: {
+        eventType: '',
+        title: '',
+      },
+    };
+    const reaction = this.pattern.reactions[index];
+
+    runInAction(() => {
+      this.pattern.reactions[index] = {
+        ...reaction,
+        condition: {
+          ...reaction.condition,
+          transform: {
+            ...reaction.condition.transform,
+            eventDataTemplate: newEventDataTemplate,
+          },
+        },
+      };
+    });
+  }
+
+  addTemplate(index: number) {
+    const newTemplate: TemplateModel = {
+      interactions: [],
+      name: '',
+      description: '',
+    };
+    const reaction = this.pattern.reactions[index];
+
+    runInAction(() => {
+      this.pattern.reactions[index] = {
+        ...reaction,
+        condition: {
+          ...reaction.condition,
+          transform: {
+            ...reaction.condition.transform,
+            eventDataTemplate: {
+              advice: {
+                ...reaction.condition.transform?.eventDataTemplate?.advice,
+                eventType: reaction.condition.transform?.eventDataTemplate?.advice?.eventType || '',
+                template: newTemplate,
+              },
+            },
+          },
+          transition: {
+            ...reaction.condition.transition,
+            name: reaction.condition.transition?.name || '',
+          },
+        },
+      };
+    });
+  }
+
+  addInteractionContent(type: ContentType, interactionIndex: number, reactionIndex: number) {
+    const advice = this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice;
+    const content = advice?.template?.interactions?.[interactionIndex].interaction.content;
+    switch (type) {
+      case 'booleanInput':
+        content?.push({
+          input: {
+            type: 'boolean',
+            display: '',
+            name: '',
+            set: [
+              { display: '', value: true },
+              { display: '', value: false },
+            ],
+          },
+        });
+        break;
+      case 'numericInput':
+        content?.push({
+          input: {
+            type: 'numeric',
+            display: '',
+            name: '',
+          },
+        });
+        break;
+      case 'textInput':
+        content?.push({
+          input: {
+            type: 'text',
+            display: '',
+            name: '',
+          },
+        });
+        break;
+      case 'nominalInput':
+        content?.push({
+          input: {
+            type: 'nominal',
+            display: '',
+            name: '',
+            multiple: false,
+            set: [],
+          },
+        });
+        break;
+      case 'image':
+        content?.push({
+          image: {
+            height: 0,
+            width: 0,
+            uri: '',
+          },
+        });
+        break;
+      case 'text':
+        content?.push({
+          text: {
+            value: '',
+          },
+        });
+        break;
+      case 'map':
+        content?.push({
+          map: {
+            locations: [{ latitude: '', longitude: '', name: '' }],
+          },
+        });
+        break;
+      case 'video':
+        content?.push({
+          video: {
+            uri: '',
+          },
+        });
+        break;
+      case 'group':
+        content?.push({
+          group: {
+            items: [],
+          },
+        });
+        break;
+    }
+  }
+
+  addReaction() {
+    const reactions = toJS(this.pattern.reactions);
+    const newReaction: ReactionModel = {
+      name: '',
+      description: '',
+      condition: {
+        publish: {
+          to: [],
+        },
+        type: 'filter',
+        xpr: '',
+      },
+    };
+
+    runInAction(() => {
+      this.pattern.reactions = [...reactions, newReaction];
+    });
+
+    this.updatePattern({ ['reactions']: [...reactions, newReaction] });
+  }
+
+  removeReaction(id: number) {
+    const reactions = toJS(this.pattern.reactions);
+    runInAction(() => {
+      this.pattern.reactions.splice(id, 1);
+    });
+
+    this.updatePattern({ ['reactions']: reactions });
+  }
   private getUserId(): string {
     const userId = this.rootStore.authStore.userId;
     if (!userId) throw new Error('User ID not found');

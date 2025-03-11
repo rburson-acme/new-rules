@@ -1,9 +1,9 @@
-import { OpenPattern } from '@/src/components/admin-tools/pattern-manager/OpenPattern';
 import { RootStore } from '@/src/stores/RootStore';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import { OpenAdminThred } from '@/src/components/admin-tools/thred-manager/OpenAdminThred';
+import { AdminThred } from '@/src/components/admin-tools/thred-manager/AdminThred';
+import { Spinner } from '@/src/components/common/Spinner';
 
 function ThredManager() {
   const navigation = useNavigation();
@@ -12,12 +12,18 @@ function ThredManager() {
   const { adminThredsStore } = RootStore.get();
 
   const thredStore = adminThredsStore.threds.find(thred => thred.thred.id === local.thredId);
+
   useEffect(() => {
-    navigation.setOptions({ title: 'Pattern' });
-  }, [navigation]);
+    async function completeThred() {
+      await thredStore?.completeThred();
+    }
+    navigation.setOptions({ title: 'Admin Thred' });
+    completeThred();
+  }, [navigation, thredStore]);
 
   if (!thredStore) return null;
-  return <OpenAdminThred thredStore={thredStore} thredsStore={adminThredsStore} />;
+  if (!thredStore.isFullThred) return <Spinner />;
+  return <AdminThred thredStore={thredStore} thredsStore={adminThredsStore} />;
 }
 
 export default observer(ThredManager);

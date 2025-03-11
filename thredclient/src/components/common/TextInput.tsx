@@ -1,9 +1,9 @@
-import { StyleProp, ViewStyle, TextInput as RNTextInput, InputModeOptions } from 'react-native';
+import { StyleProp, ViewStyle, TextInput as RNTextInput, InputModeOptions, TextStyle } from 'react-native';
 
 type TextInputProps = {
   onChangeText: (text: string) => void;
   value?: string;
-  style: StyleProp<ViewStyle>;
+  style?: StyleProp<TextStyle>;
   multiline?: boolean;
   inputMode?: InputModeOptions;
 };

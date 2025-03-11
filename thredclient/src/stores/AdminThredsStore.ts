@@ -1,12 +1,14 @@
-import { SystemEvents, EventHelper, PatternModel, EventRecord, ThredLogRecord } from 'thredlib';
+import { SystemEvents, EventHelper, Thred } from 'thredlib';
 import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
-import { AdminThred } from '../core/AdminThred';
 import { AdminThredStore } from './AdminThredStore';
 
+type ValidTabs = 'all' | 'active' | 'inactive';
 export class AdminThredsStore {
   threds: AdminThredStore[] = [];
   searchText: string = '';
+  isComplete: boolean = false;
+  tab: ValidTabs = 'active';
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -17,6 +19,9 @@ export class AdminThredsStore {
       searchText: observable,
       setSearchText: action,
       filteredThreds: computed,
+      isComplete: observable,
+      tab: observable,
+      setTab: action,
     });
   }
 
@@ -40,25 +45,43 @@ export class AdminThredsStore {
     });
   }
 
+  setTab(tab: ValidTabs) {
+    this.tab = tab;
+  }
+
   setSearchText(text: string) {
     this.searchText = text;
   }
 
   get filteredThreds() {
-    if (!this.searchText) return this.threds;
-    return this.threds.filter(thredStore => {
-      return thredStore.thred.id.includes(this.searchText);
-    });
+    //change based on the tab
+    switch (this.tab) {
+      case 'all':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText);
+        });
+      case 'active':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText) && thred.thred.endTime === undefined;
+        });
+      case 'inactive':
+        return this.threds.filter(thred => {
+          return thred.thred.id.includes(this.searchText) && thred.thred.endTime;
+        });
+    }
   }
 
   async getAllThreds() {
     const userId = this.rootStore.authStore.userId;
     if (!userId) throw Error('userId not found');
 
-    const getAllThredsEvent = SystemEvents.getGetThredsEvent({
-      id: userId,
-      name: userId,
-    });
+    const getAllThredsEvent = SystemEvents.getGetThredsEvent(
+      {
+        id: userId,
+        name: userId,
+      },
+      'all',
+    );
 
     const thredsEvent = await new Promise<any>((resolve, reject) => {
       this.rootStore.connectionStore.exchange(getAllThredsEvent, event => {
@@ -67,60 +90,17 @@ export class AdminThredsStore {
     });
 
     const eventHelper = new EventHelper(thredsEvent);
-    const threds = eventHelper.valueNamed('threds') as AdminThred[];
+    const threds = eventHelper.valueNamed('threds') as Thred[];
 
     const newThreds = await Promise.all(
       threds.map(async thred => {
-        const [pattern, events, thredLogs] = await Promise.all([
-          this.fetchPattern(userId, thred.patternId),
-          this.fetchEvents(userId, thred.id),
-          this.fetchThredLogs(userId, thred.id),
-        ]);
-
-        //attach thredLogs to events
-        events.map(event => {
-          event.thredLogs = thredLogs.filter(thredLog => thredLog.eventId === event.id);
-        });
-
-        return new AdminThredStore(thred, this.rootStore, pattern, events);
+        return new AdminThredStore(thred, this.rootStore);
       }),
     );
 
     runInAction(() => {
       this.threds = newThreds;
-    });
-  }
-
-  private async fetchThredLogs(userId: string, thredId: string): Promise<ThredLogRecord[]> {
-    return new Promise(resolve => {
-      const findEventDetailsEvent = SystemEvents.getThredLogForThredEvent(thredId, { id: userId, name: userId });
-
-      return this.rootStore.connectionStore.exchange(findEventDetailsEvent, event => {
-        const eventHelper = new EventHelper(event);
-        resolve(eventHelper.valueNamed('result')[0] as ThredLogRecord[]);
-      });
-    });
-  }
-
-  private fetchEvents(userId: string, thredId: string): Promise<EventRecord[]> {
-    return new Promise(resolve => {
-      const findEventsEvent = SystemEvents.getEventsForThredEvent(thredId, { id: userId, name: userId });
-
-      this.rootStore.connectionStore.exchange(findEventsEvent, event => {
-        const eventHelper = new EventHelper(event);
-        resolve(eventHelper.valueNamed('result')[0] as EventRecord[]);
-      });
-    });
-  }
-
-  private fetchPattern(userId: string, patternId: string): Promise<PatternModel> {
-    return new Promise(resolve => {
-      const findPatternEvent = SystemEvents.getFindPatternEvent(patternId, { id: userId, name: userId });
-
-      this.rootStore.connectionStore.exchange(findPatternEvent, event => {
-        const eventHelper = new EventHelper(event);
-        resolve(eventHelper.valueNamed('result')[0] as PatternModel);
-      });
+      this.isComplete = true;
     });
   }
 }

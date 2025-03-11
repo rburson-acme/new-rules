@@ -7,17 +7,8 @@ type BubbleProps = {
   children: ReactNode;
 };
 
-export const Bubble = ({ style, leftOrRight = 'left', children }: BubbleProps) => {
-  return (
-    <View
-      style={[
-        styles.defaultBubbleStyle,
-        style,
-        leftOrRight === 'left' ? { alignSelf: 'flex-start' } : { alignSelf: 'flex-end' },
-      ]}>
-      {children}
-    </View>
-  );
+export const Bubble = ({ style, children }: BubbleProps) => {
+  return <View style={[styles.defaultBubbleStyle, style]}>{children}</View>;
 };
 
 const styles = StyleSheet.create({
@@ -25,7 +16,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    padding: 16,
+    padding: 8,
     borderRadius: 8,
   },
 });

@@ -37,6 +37,6 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   containerStyle: {
-    gap: 8,
+    gap: 36,
   },
 });

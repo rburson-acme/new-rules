@@ -1,10 +1,10 @@
-import { ThredEventViewer } from '@/src/components/threds/ThredEventViewer';
+import { Thred } from '@/src/components/threds/Thred';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { useEffect } from 'react';
 
-export default function OpenThredView() {
+export default function ThredView() {
   const local = useLocalSearchParams();
 
   const navigation = useNavigation();
@@ -25,5 +25,5 @@ export default function OpenThredView() {
 
   if (!thredStore) return null;
 
-  return <ThredEventViewer thredStore={thredStore} thredsStore={thredsStore} />;
+  return <Thred thredStore={thredStore} thredsStore={thredsStore} />;
 }

@@ -7,6 +7,10 @@ import { NominalInput } from './NominalInput';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { turnValueToText } from '@/src/utils/turnValueToText';
+
+const avatar = require('../../../../assets/avatar.png');
 
 export type BooleanInputSetItem = { display: string; value: boolean };
 export type SetItem = { display: string; value: any };
@@ -25,29 +29,15 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
   const { colors, fonts } = useTheme();
 
   if (value) {
-    const isValueString = typeof value === 'string';
-    const isValueBoolean = typeof value === 'boolean';
-    const isValueStringArray = Array.isArray(value) && value.every(item => typeof item === 'string');
-    function getText() {
-      if (isValueString) {
-        return value;
-      }
-      if (isValueStringArray) {
-        return value.join(', ');
-      }
-      if (isValueBoolean) {
-        return value ? 'Yes' : 'No';
-      } else return 'Invalid String';
-    }
     return (
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
         <TextBubble
-          text={getText()}
-          leftOrRight="right"
-          bubbleStyle={{ backgroundColor: colors.blue }}
+          text={turnValueToText(value)}
+          bubbleStyle={{ backgroundColor: colors.green, alignSelf: 'center' }}
           textStyle={{ color: '#fff' }}
         />
-        <FontAwesome name="user-circle" size={40} color={colors.blue} />
+        {/* <FontAwesome name="user-circle" size={40} color={colors.lightGrey} /> */}
+        <Image source={avatar} style={{ width: 40, height: 40, borderRadius: 100 }} />
       </View>
     );
   } else {

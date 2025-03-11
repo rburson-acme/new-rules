@@ -1,25 +1,30 @@
 import { PatternStore } from '@/src/stores/PatternStore';
-import { EditableText } from '../../common/EditableText';
-import { StyleSheet, Text, View } from 'react-native';
-import { observer } from 'mobx-react-lite';
+import { EditableInput } from '../../common/EditableInput';
+import { StyleSheet, View } from 'react-native';
+import { RegularText } from '../../common/RegularText';
 
 type PatternInputProps = {
   name: string;
-  updatePath: string;
-  patternStore: PatternStore;
   value: string;
+  patternStore: PatternStore;
+  updatePath: string;
+  numeric?: boolean;
 };
 
-export const PatternInput = ({ name, value, patternStore, updatePath }: PatternInputProps) => {
+export const PatternInput = ({ name, value, patternStore, updatePath, numeric = false }: PatternInputProps) => {
   return (
     <View style={styles.container}>
-      <Text>{name}: </Text>
-      <EditableText
+      <RegularText>{name}: </RegularText>
+      <EditableInput
+        type="text"
         text={value}
         onSubmit={text => {
+          if (numeric) {
+            patternStore.updatePattern({ [updatePath]: Number(text) });
+          }
           patternStore.updatePattern({ [updatePath]: text });
         }}
-        onTextChange={text => {
+        onChangeText={text => {
           patternStore.updatePatternValue(updatePath, text);
         }}
       />

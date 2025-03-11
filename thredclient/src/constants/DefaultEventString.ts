@@ -116,11 +116,11 @@ export const DEFAULT_EVENT_JSON_STRING = JSON.stringify(
                   {
                     map: {
                       locations: [
-                        { name: 'Salem, OH', latitude: 40.901382086654635, longitude: -80.8565825442029 },
+                        { name: 'Salem, OH', latitude: '40.901382086654635', longitude: '-80.8565825442029' },
                         {
                           name: 'Salem School District',
-                          latitude: 40.90765006218226,
-                          longitude: -80.84298043062863,
+                          latitude: '40.90765006218226',
+                          longitude: '-80.84298043062863',
                         },
                       ],
                     },

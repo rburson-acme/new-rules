@@ -1,14 +1,15 @@
-import { ImageModel } from "./ImageModel.js";
-import { InputModel } from "./InputModel.js";
-import { MapModel } from "./MapModel.js";
-import { TextModel } from "./TextModel.js";
-import { VideoModel } from "./VideoModel.js";
+import { GroupModel } from './GroupModel.js';
+import { ImageModel } from './ImageModel.js';
+import { InputModel } from './InputModel.js';
+import { MapModel } from './MapModel.js';
+import { TextModel } from './TextModel.js';
+import { VideoModel } from './VideoModel.js';
 
 export interface ElementModel {
-    input?: InputModel;
-    image?: ImageModel;
-    text?: TextModel;
-    map?: MapModel;
-    video?: VideoModel;
+  input?: InputModel;
+  image?: ImageModel;
+  text?: TextModel;
+  map?: MapModel;
+  video?: VideoModel;
+  group?: GroupModel;
 }
-  

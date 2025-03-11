@@ -1,18 +1,20 @@
 import { AntDesign } from '@expo/vector-icons';
 import { RefObject } from 'react';
-import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { IMultiSelectRef, MultiSelect as RNEDMultiSelect } from 'react-native-element-dropdown';
 import { SelectItem } from './SelectItem';
+import { MediumText } from './MediumText';
+import { DropdownData } from './Dropdown';
 
 type MultiSelectProps = {
-  data: { display: string; value: any }[];
+  data: DropdownData[];
   onChange: (value: string[]) => void;
   value: string[];
   ref?: RefObject<IMultiSelectRef>;
   style?: StyleProp<ViewStyle>;
-  placeholderStyle?: StyleProp<ViewStyle>;
+  placeholderStyle?: StyleProp<TextStyle>;
   selectedStyle?: StyleProp<ViewStyle>;
-  textSelectedStyle?: StyleProp<ViewStyle>;
+  textSelectedStyle?: StyleProp<TextStyle>;
 };
 export const MultiSelect = ({
   data,
@@ -39,7 +41,7 @@ export const MultiSelect = ({
       renderSelectedItem={(item, unSelect) => (
         <Pressable onPress={() => unSelect && unSelect(item)}>
           <View style={[styles.selectedStyle, selectedStyle]}>
-            <Text style={[styles.textSelectedStyle, textSelectedStyle]}>{item.display}</Text>
+            <MediumText style={[styles.textSelectedStyle, textSelectedStyle]}>{item.display}</MediumText>
             <AntDesign name="close" size={16} color="black" />
           </View>
         </Pressable>

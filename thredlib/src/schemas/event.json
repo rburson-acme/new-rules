@@ -46,6 +46,9 @@
     "ElementModel": {
       "additionalProperties": false,
       "properties": {
+        "group": {
+          "$ref": "#/definitions/GroupModel"
+        },
         "image": {
           "$ref": "#/definitions/ImageModel"
         },
@@ -317,6 +320,21 @@
       ],
       "type": "object"
     },
+    "GroupModel": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/definitions/ElementModel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
     "ImageModel": {
       "additionalProperties": false,
       "properties": {
@@ -375,6 +393,7 @@
     },
     "InteractionModel": {
       "additionalProperties": false,
+      "description": "A model for facilitating user or machine interaction",
       "properties": {
         "interaction": {
           "additionalProperties": false,
@@ -401,16 +420,10 @@
       "additionalProperties": false,
       "properties": {
         "latitude": {
-          "type": [
-            "number",
-            "string"
-          ]
+          "type": "string"
         },
         "longitude": {
-          "type": [
-            "number",
-            "string"
-          ]
+          "type": "string"
         },
         "name": {
           "type": "string"
@@ -523,15 +536,18 @@
       "additionalProperties": false,
       "properties": {
         "description": {
+          "description": "A description of the template",
           "type": "string"
         },
         "interactions": {
+          "description": "The interactions that make up the template",
           "items": {
             "$ref": "#/definitions/InteractionModel"
           },
           "type": "array"
         },
         "name": {
+          "description": "The name of the template",
           "type": "string"
         }
       },

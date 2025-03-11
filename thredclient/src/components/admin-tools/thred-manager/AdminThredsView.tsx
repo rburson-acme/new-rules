@@ -1,32 +1,42 @@
 import { AdminThredsStore } from '@/src/stores/AdminThredsStore';
-import { AdminThredStore } from '@/src/stores/AdminThredStore';
 import { observer } from 'mobx-react-lite';
-import { useRef } from 'react';
-import { FlatList, Text, View } from 'react-native';
-import { AdminThredCard } from './AdminThredCard';
+import { View } from 'react-native';
+import { Button } from '@/src/components/common/Button';
+import SearchBar from '@/src/components/common/SearchBar';
+import { AdminThredList } from './AdminThredList';
+import { AdminListTabs } from './AdminListTabs';
 
-type ThredsViewProps = {
+type AdminThredsView = {
   adminThredsStore: AdminThredsStore;
 };
 
-export const AdminThredsView = observer(({ adminThredsStore }: ThredsViewProps) => {
-  const flatList = useRef<FlatList<AdminThredStore>>(null);
-
+export const AdminThredsView = observer(({ adminThredsStore }: AdminThredsView) => {
   return (
-    <FlatList
-      ref={flatList}
-      data={adminThredsStore.threds}
-      contentContainerStyle={{ flexGrow: 1, gap: 16 }}
-      renderItem={({ item, index }) => {
-        return <AdminThredCard  thredsStore={adminThredsStore} thredStore={item} />;
-      }}
-      ListEmptyComponent={emptyList()}
-    />
+    <>
+      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
+        <AdminListTabs adminThredsStore={adminThredsStore} />
+        <SearchBar
+          value={adminThredsStore.searchText}
+          onChange={value => {
+            adminThredsStore.setSearchText(value);
+          }}
+        />
+        <AdminThredList adminThredsStore={adminThredsStore} />
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 16, width: '100%', gap: 8 }}>
+        <Button
+          content={'Terminate All Threds'}
+          onPress={() => {
+            adminThredsStore.terminateAllThreds();
+          }}
+        />
+        <Button
+          content={'Reload Threds'}
+          onPress={() => {
+            adminThredsStore.getAllThreds();
+          }}
+        />
+      </View>
+    </>
   );
 });
-
-const emptyList = () => (
-  <View style={{ padding: 50, flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 20 }}>No Messages Yet</Text>
-  </View>
-);

@@ -1,19 +1,17 @@
 import { PatternsStore } from '@/src/stores/PatternsStore';
-import { PatternStore } from '@/src/stores/PatternStore';
 import { observer } from 'mobx-react-lite';
-import { useRef } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { PatternListCard } from './PatternListCard';
+import { MediumText } from '../../common/MediumText';
 
 type PatternsListProps = { patternsStore: PatternsStore };
 export const PatternsList = observer(({ patternsStore }: PatternsListProps) => {
-  const flatList = useRef<FlatList<PatternStore>>(null);
   return (
     <FlatList
-      ref={flatList}
       onEndReachedThreshold={0.1}
-      data={patternsStore.patterns}
-      renderItem={({ item, index }) => {
+      data={patternsStore.filteredPatterns}
+      contentContainerStyle={{ gap: 16 }}
+      renderItem={({ item }) => {
         return <PatternListCard patternStore={item} patternsStore={patternsStore} />;
       }}
       ListEmptyComponent={emptyList()}
@@ -23,6 +21,6 @@ export const PatternsList = observer(({ patternsStore }: PatternsListProps) => {
 
 const emptyList = () => (
   <View style={{ padding: 50, flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 20 }}>No Messages Yet</Text>
+    <MediumText style={{ fontSize: 20 }}>No Messages Yet</MediumText>
   </View>
 );
