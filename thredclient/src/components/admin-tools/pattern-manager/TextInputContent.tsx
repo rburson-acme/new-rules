@@ -24,7 +24,7 @@ export const TextInputContent = observer(({ textInput, pathSoFar, patternStore }
           <PatternInput
             name="False Display"
             patternStore={patternStore}
-            updatePath={`${pathSoFar}.set[0].display`}
+            updatePath={`${pathSoFar}.set[1].display`}
             value={textInput.set[1].display || ''}
           />
         </>

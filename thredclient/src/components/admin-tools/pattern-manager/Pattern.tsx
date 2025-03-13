@@ -16,7 +16,6 @@ export const Pattern = observer(({ patternStore }: PatternProps) => {
   const { colors } = useTheme();
   const router = useRouter();
   const { setModalData } = useModal<PatternModel>();
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Button

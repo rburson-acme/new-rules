@@ -10,6 +10,7 @@ export const PatternsList = observer(({ patternsStore }: PatternsListProps) => {
     <FlatList
       onEndReachedThreshold={0.1}
       data={patternsStore.filteredPatterns}
+      extraData={patternsStore.filteredPatterns}
       contentContainerStyle={{ gap: 16 }}
       renderItem={({ item }) => {
         return <PatternListCard patternStore={item} patternsStore={patternsStore} />;

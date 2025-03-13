@@ -6,7 +6,6 @@ import { observer } from 'mobx-react-lite';
 import { NominalInput } from './NominalInput';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { View } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { turnValueToText } from '@/src/utils/turnValueToText';
 
