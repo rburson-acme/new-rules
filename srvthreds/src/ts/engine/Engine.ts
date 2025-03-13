@@ -16,11 +16,17 @@ import { AdminThreds } from '../admin/AdminThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
+import { ThredContext } from './ThredContext.js';
+import { ReactionResult } from './Reaction.js';
+import { MessageTemplate } from './MessageTemplate.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
 export class Engine implements Dispatcher {
-  dispatchers: (((message: Message) => Promise<void>) | ((message: Message) => void))[] = [];
+  dispatchers: (
+    | ((message: MessageTemplate, thredContext?: ThredContext) => Promise<void>)
+    | ((messageTemplate: MessageTemplate, thredContext?: ThredContext) => void)
+  )[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
 
@@ -39,7 +45,7 @@ export class Engine implements Dispatcher {
   public async start(config?: RunConfig) {
     // add and store patterns then load existing patterns from storage
     await this.thredsStore.patternsStore.loadPatterns();
-    if(config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
+    if (config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
     await this.threds.initialize();
     // subscribe to pattern changes in storage
     await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {
@@ -60,16 +66,16 @@ export class Engine implements Dispatcher {
    * @param event
    * @param to
    */
-  public async dispatch(message: Message): Promise<void> {
+  public async dispatch(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
     const timestamp = Date.now();
     try {
-    debug(h1(`Engine publish Message ${message.id} to ${message.to}`));
-    logObject(message);
-    await Pm.get().saveEvent({ event: message.event, to: message.to, timestamp });
-    // NOTE: dispatch all at once - failure notification will be handled separately
-    await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(message));
+      debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
+      logObject(messageTemplate);
+      await Pm.get().saveEvent({ event: messageTemplate.event, to: messageTemplate.to, timestamp });
+      // NOTE: dispatch all at once - failure notification will be handled separately
+      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate, thredContext));
     } catch (e) {
-      error(crit(`Engine::Failed dispatch message id: ${message.id}`), e as Error, (e as Error).stack);
+      error(crit(`Engine::Failed dispatch message : ${messageTemplate}`), e as Error, (e as Error).stack);
     }
   }
 
@@ -109,7 +115,7 @@ export class Engine implements Dispatcher {
         title: `Failure processing Event ${inboundEvent.id} : ${eventError?.message}`,
         error: eventError,
       });
-      await this.dispatch({ id: outboundEvent.id, event: outboundEvent, to: [inboundEvent.source.id] });
+      await this.dispatch({ event: outboundEvent, to: [inboundEvent.source.id] });
     } catch (e) {
       error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
     }

@@ -5,6 +5,8 @@ import { Sessions } from '../sessions/Sessions.js';
 import { Message, Logger, StringMap, Parallel } from '../thredlib/index.js';
 import { Session } from '../sessions/Session.js';
 import { RunConfig } from './Config.js';
+import { ThredContext } from './ThredContext.js';
+import { MessageTemplate } from './MessageTemplate.js';
 
 const { debug, error, warn, crit, h1, h2 } = Logger;
 
@@ -15,6 +17,11 @@ const { debug, error, warn, crit, h1, h2 } = Logger;
    Other internal services must subscribe to these messages and handle them.
    i.e. The 'Agent' framework pull messages from the messageQ and determines how to handle them.
  */
+
+   /*
+     Note - the tell method current waits for message queing to be complete before resolving.
+     In the future, we should experiment with finishing those ops asyncronously for performance tuning.
+   */
 export class Server {
   // @TODO seperate service
   private engine: Engine;
@@ -25,24 +32,29 @@ export class Server {
     inboundQ: EventQ,
     private outboundQ: MessageQ,
     private sessions: Sessions,
-    PROC?: {shutdown: () => Promise<void>},
+    PROC?: { shutdown: () => Promise<void> },
   ) {
     this.engine = new Engine(inboundQ, PROC);
     this.engine.dispatchers.push(this.tell.bind(this));
   }
 
-  async start(config?: RunConfig):Promise<void> {
+  async start(config?: RunConfig): Promise<void> {
     return this.engine.start(config);
   }
 
   // outbound
   // @TODO need better failure handling for all the possible async failures
   // @TODO - implement Engine notification upon failure, so that Engine can notify appropriate participants
-  async tell(message: Message): Promise<void> {
+  async tell(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
+    const { sessions } = this;
+    const event = messageTemplate.event;
     // don't propagate failures here as this is called in the event loop
     try {
-      const { sessions } = this;
-      const { event, to } = message;
+      // translate 'directives' in the 'to' field to actual participantIds
+      const to = await this.sessions.getParticipantIdsFor(messageTemplate.to);
+      // update the thredContext with the expanded participants
+      thredContext?.addParticipantAddress(to);
+
       // -------------------------------------------------------------------
       // ----- Address any messages to Agents
       const addressResolver = sessions.getAddressResolver();
@@ -51,7 +63,8 @@ export class Server {
       // -------------------------------------------------------------------
       // ----- Address all other messages to participants with a Session
       // get a map of participantId to Sessions[] for all addressees
-      const sessionsByParticipant: StringMap<Session[]> = await sessions.getSessionsForAll(participantAddresses);
+      const sessionsByParticipant: StringMap<Session[]> =
+        await sessions.getSessionsForParticipantIds(participantAddresses);
       // warn if there are not services or participants to receive the message
       if (!Object.keys(sessionsByParticipant).length && !serviceAddresses.length) {
         warn(crit(`No participants or services found for address ${to} - dispatchers not called`));

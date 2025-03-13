@@ -45,8 +45,7 @@ export class AdminThreds extends Threds {
           content: { values },
         });
         const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
-        // don't wait for dispatch
-        this.dispatch(message);
+        await this.dispatch(message);
     } else {
       return super.consider(event);
     }

@@ -35,7 +35,7 @@ export class Thred {
         break transitionLoop;
       }
       // add the source of the event to the participants list
-      thredStore.addParticipant(inputEvent.source.id);
+      thredStore.thredContext.addParticipantAddress(inputEvent.source.id);
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
@@ -43,8 +43,7 @@ export class Thred {
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
 
-      // send any message - NOTE: don't wait for dispatch
-      reactionResult?.message && threds.dispatch(reactionResult.message);
+      reactionResult?.messageTemplate && await threds.dispatch(reactionResult.messageTemplate, thredStore.thredContext);
     } while (inputEvent);
   }
 

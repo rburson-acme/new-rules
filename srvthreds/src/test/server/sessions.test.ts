@@ -51,7 +51,7 @@ describe('sessions', function () {
     expect(participantIds.length).toBe(4);
   });
   it('get all sessions for address', async function () {
-    const sessionsByParticipant = await sessions.getSessionIdsForAll(['cBucket', 'vSalt']);
+    const sessionsByParticipant = await sessions.getSessionIdsForParticipantIds(['cBucket', 'vSalt']);
     expect(Object.keys(sessionsByParticipant)).toContain('cBucket');
     expect(Object.keys(sessionsByParticipant)).toContain('vSalt');
     expect(sessionsByParticipant['cBucket']).toContain('session2');
@@ -60,7 +60,8 @@ describe('sessions', function () {
     expect(Object.keys(sessionsByParticipant).length).toBe(2);
   });
   it('get all sessions for address inlcuding group', async function () {
-    const sessionsByParticipant = await sessions.getSessionIdsForAll(['$operators', 'vSalt']);
+    const operators = await sessions.getParticipantIdsFor(['$operators']);
+    const sessionsByParticipant = await sessions.getSessionIdsForParticipantIds([...operators, 'vSalt']);
     expect(Object.keys(sessionsByParticipant)).toContain('cBucket');
     expect(Object.keys(sessionsByParticipant)).toContain('vSalt');
     expect(Object.keys(sessionsByParticipant)).toContain('bOompa');
@@ -71,7 +72,7 @@ describe('sessions', function () {
     expect(Object.keys(sessionsByParticipant).length).toBe(3);
   });
   it('get sessions for unknown users', async function () {
-    const sessionsByParticipant = await sessions.getSessionIdsForAll(['nobody', 'nope']);
+    const sessionsByParticipant = await sessions.getSessionIdsForParticipantIds(['nobody', 'nope']);
     expect(sessionsByParticipant['nobody']).toBeUndefined;
     expect(sessionsByParticipant['nope']).toBeUndefined;
     expect(Object.keys(sessionsByParticipant).length).toBe(0);
@@ -139,25 +140,23 @@ describe('sessions', function () {
     expect(participantIds.length).toBe(0);
   });
   it('test filtering service addresses and participants', function () {
-    const { serviceAddresses, participantAddresses } = sessions.getAddressResolver().filterServiceAddresses({
-      include: ['org.wt.test_agent', 'org.wt.test_agent_2', 'bOompa'],
-      exclude: ['some_test_participant'],
-    });
+    const { serviceAddresses, participantAddresses } = sessions
+      .getAddressResolver()
+      .filterServiceAddresses(['org.wt.test_agent', 'org.wt.test_agent_2', 'bOompa']);
     expect(serviceAddresses.length).toBe(2);
     expect(serviceAddresses).toContain('org.wt.test_agent');
     expect(serviceAddresses).toContain('org.wt.test_agent_2');
-    expect((participantAddresses as Address).include.length).toBe(1);
-    expect((participantAddresses as Address).include).toContain('bOompa');
-    expect((participantAddresses as Address).exclude?.length).toBe(1);
-    expect((participantAddresses as Address).exclude).toContain('some_test_participant');
+    expect(participantAddresses.length).toBe(1);
+    expect(participantAddresses).toContain('bOompa');
+    expect(participantAddresses.length).toBe(1);
   });
   it('test no service addresses', function () {
     const { serviceAddresses, participantAddresses } = sessions
       .getAddressResolver()
-      .filterServiceAddresses({ include: ['bOompa'] });
+      .filterServiceAddresses(['bOompa']);
     expect(serviceAddresses.length).toBe(0);
-    expect((participantAddresses as Address).include.length).toBe(1);
-    expect((participantAddresses as Address).include).toContain('bOompa');
+    expect(participantAddresses.length).toBe(1);
+    expect(participantAddresses).toContain('bOompa');
   });
   it('get node type from service address', function () {
     const nodeType = sessions.getAddressResolver().getNodeTypeForServiceAddress('org.wt.test_agent');
@@ -205,5 +204,5 @@ const resolverConfig: ResolverConfig = {
     },
   ],
 };
-let storage :Storage;
+let storage: Storage;
 let sessions: Sessions;

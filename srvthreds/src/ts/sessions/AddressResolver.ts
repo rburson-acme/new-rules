@@ -49,11 +49,10 @@ export class AddressResolver {
     }, {} as StringMap<string>);
   }
 
-  filterServiceAddresses(address: Address | string[]): {
+  filterServiceAddresses(addresses: string[]): {
     serviceAddresses: string[];
-    participantAddresses: string[] | Address;
+    participantAddresses: string[];
   } {
-    const addresses = Array.isArray(address) ? address : address.include;
     const serviceAddresses: string[] = [];
     let participantAddresses: string[] | Address = [];
     addresses.forEach((address) => {
@@ -63,10 +62,6 @@ export class AddressResolver {
         (participantAddresses as string[]).push(address);
       }
     });
-    if (!Array.isArray(address)) {
-      //if it was an 'Address' object, put it back...
-      participantAddresses = { include: participantAddresses, exclude: address.exclude };
-    }
 
     return { serviceAddresses, participantAddresses };
   }

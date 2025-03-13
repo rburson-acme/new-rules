@@ -70,13 +70,11 @@ export class Sessions {
         return addressResolver.getParticipantIdsFor(address);
     }
 
-    async getSessionIdsForAll(address: Address | string[]): Promise<StringMap<string[]>>{
-        const participantIds = await this.getParticipantIdsFor(address);
+    async getSessionIdsForParticipantIds(participantIds:string[]): Promise<StringMap<string[]>>{
         return this.storage.getSessionIdsForAll(participantIds);
     }
 
-    async getSessionsForAll(address: Address | string[]): Promise<StringMap<Session[]>>{
-        const participantIds = await this.getParticipantIdsFor(address);
+    async getSessionsForParticipantIds(participantIds: string[]): Promise<StringMap<Session[]>>{
         return this.storage.getSessionsForAll(participantIds);
     }
 

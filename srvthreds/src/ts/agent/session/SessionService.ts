@@ -46,7 +46,7 @@ export class SessionService {
         const { event, to } = message;
         //Logger.debug(`SessionService: getChannels for: ${to}`, event);
 
-        const sessionsByParticipant: StringMap<string[]> = await sessions.getSessionIdsForAll(to);
+        const sessionsByParticipant: StringMap<string[]> = await sessions.getSessionIdsForParticipantIds(to);
         if (!Object.keys(sessionsByParticipant).length) {
             Logger.warn(`SessionService: No participants are logged in for address ${to}`);
             return [];

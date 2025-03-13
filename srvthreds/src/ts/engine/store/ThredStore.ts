@@ -42,10 +42,6 @@ export class ThredStore {
     return this._currentReaction;
   }
 
-  addParticipant(address?: string | string[] | Address): void {
-    if(address) this.thredContext.addParticipantAddress(address);
-  }
-
   // This is the proper way to terminate a thred
   // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
   // this will ensure that it actually gets cleaned up

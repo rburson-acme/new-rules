@@ -1,18 +1,14 @@
-import { errorCodes, errorKeys, Logger, ReactionModel } from '../thredlib/index.js';
+import { Address, Logger, ReactionModel } from '../thredlib/index.js';
 import { Condition } from './Condition.js';
 import { ConditionFactory } from './ConditionFactory.js';
 import { ThredContext } from './ThredContext.js';
 import { Event } from '../thredlib/index.js';
-import { Message } from '../thredlib/index.js';
 import { Transition } from './Transition.js';
 import { ThredStore } from './store/ThredStore.js';
-import { PermissionModel } from '../thredlib/model/PermissionModel.js';
 import { Permissions } from './Permissions.js';
-import { EventThrowable } from '../thredlib/core/Errors.js';
+import { MessageTemplate } from './MessageTemplate.js';
 
-const {debug, logObject, error, h2} = Logger;
-
-export type ReactionResult = { message?: Message; transition?: Transition };
+export type ReactionResult = { messageTemplate?: MessageTemplate, transition?: Transition };
 
 /*
     @IMPORTANT any mutations here must be made in the Store
@@ -49,8 +45,8 @@ export class Reaction {
       const { transform, publish, transition } = result;
       const newEvent = await transform?.apply(event, thredStore);
       const to = await publish?.apply(event, thredStore);
-      const message = to && newEvent ? { event: newEvent, to, id: newEvent.id } : undefined;
-      return { message, transition };
+      const messageTemplate = to && newEvent ? { event: newEvent, to } : undefined;
+      return { messageTemplate, transition };
     }
   }
 

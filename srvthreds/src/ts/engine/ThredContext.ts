@@ -24,6 +24,7 @@ export class ThredContext implements ExpressionContext {
   }
 
   addParticipantAddress(addresses: string | string[] | Address) {
+    if(!addresses) return;
     if (Array.isArray(addresses)) {
       addresses.forEach((address) => this.uniqueParticipants.add(address));
     } else if (typeof addresses === 'string') {
