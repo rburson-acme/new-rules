@@ -11,6 +11,7 @@ export interface Event {
         readonly id: string;
         readonly name?: string;
         readonly uri?: string;
+        readonly replyTo?: string;
     };
     readonly re?: string;
     readonly data?: EventData;
