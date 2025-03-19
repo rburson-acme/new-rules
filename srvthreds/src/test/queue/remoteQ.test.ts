@@ -47,7 +47,7 @@ describe('amqp connection', function () {
             to: ['particpant0'],
             event: events.event0,
           },
-          topics: ['session.session1'],
+          topics: ['org.wt.session1'],
         })
       );
     }

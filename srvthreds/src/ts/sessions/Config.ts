@@ -3,6 +3,7 @@ export interface ResolverConfig {
         {
             name: string;
             nodeType: string;
+            nodeId: string;
             address: string;
         }[]
 }

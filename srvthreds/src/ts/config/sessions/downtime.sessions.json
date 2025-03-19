@@ -1,5 +1,5 @@
 {
-    "nodeId": "session1",
+    "nodeId": "org.wt.session1",
     "groups": [
         {
             "name": "operators",

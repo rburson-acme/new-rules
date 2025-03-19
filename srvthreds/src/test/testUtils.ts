@@ -20,6 +20,9 @@ import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
 import { PersistenceManager } from '../ts/engine/persistence/PersistenceManager.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
+import { System } from '../ts/engine/System.js';
+import sessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
+import resolverConfig from '../ts/config/simple_test_resolver_config.json';
 EngineConfig.engineConfig = engineConfig;
 const sessionAgentConfig = agentConfig as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -167,6 +170,8 @@ export class EngineConnectionManager {
       pubName: 'pub_event',
     });
     const eventQ = new EventQ(eventService);
+    const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    if(!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     const engine = new Engine(eventQ);
     await engine.start({ patternModels });
     const instance = new EngineConnectionManager(eventService, eventQ, engine);
@@ -215,8 +220,9 @@ export class ServerConnectionManager {
     const engineMessageQ = new MessageQ(engineMessageService);
 
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    if(!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     // engine start engine
-    const engineServer = new Server(engineEventQ, engineMessageQ, sessions);
+    const engineServer = new Server(engineEventQ, engineMessageQ);
     await engineServer.start({ patternModels });
 
     // setup the q's for the sessionService

@@ -5,6 +5,7 @@ import { StorageFactory } from '../../ts/storage/StorageFactory.js';
 import { Address, Logger } from '../../ts/thredlib/index.js';
 import { ResolverConfig } from '../../ts/sessions/Config.js';
 import { Storage } from '../../ts/storage/Storage.js';
+import { ThredContext } from '../../ts/engine/ThredContext.js';
 
 describe('sessions', function () {
   beforeAll(async () => {
@@ -158,11 +159,19 @@ describe('sessions', function () {
     expect(participantAddresses.length).toBe(1);
     expect(participantAddresses).toContain('bOompa');
   });
-  it('get node type from service address', function () {
-    const nodeType = sessions.getAddressResolver().getNodeTypeForServiceAddress('org.wt.test_agent');
-    expect(nodeType).toBe('test_agent');
-    const nodeType2 = sessions.getAddressResolver().getNodeTypeForServiceAddress('org.wt.test_agent_2');
-    expect(nodeType2).toBe('test_agent_2');
+  it('get address for node type', function () {
+    const address = sessions.getAddressResolver().getServiceAddressForNode('test_agent');
+    expect(address).toBe('org.wt.test_agent');
+    const nodeType2 = sessions.getAddressResolver().getServiceAddressForNode('test_agent_2');
+    expect(nodeType2).toBe('org.wt.test_agent_2');
+  });
+  it('get thred participants', async function () {
+    const particpantIds = await sessions.getAddressResolver().getParticipantIdsFor(['$thred', 'vSalt'], thredContext);
+    expect(particpantIds).toContain('bOompa');
+    expect(particpantIds).toContain('cBucket');
+    expect(particpantIds).toContain('lLoompa');
+    expect(particpantIds).toContain('vSalt');
+    expect(particpantIds.length).toBe(4);
   });
   it('remove participants', async function () {
     await sessions.removeParticipant('bOompa');
@@ -189,6 +198,9 @@ const sessionsModel = {
     },
   ],
 };
+
+const thredContext = new ThredContext({ thredId: 'testThredId', scope: {} });
+thredContext.addParticipantIds(['bOompa', 'cBucket', 'lLoompa', 'org.wt.persistence' ]);
 
 const resolverConfig: ResolverConfig = {
   agents: [

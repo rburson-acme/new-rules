@@ -23,14 +23,12 @@ export class ThredContext implements ExpressionContext {
     return [...this.uniqueParticipants];
   }
 
-  addParticipantAddress(addresses: string | string[] | Address) {
-    if(!addresses) return;
-    if (Array.isArray(addresses)) {
-      addresses.forEach((address) => this.uniqueParticipants.add(address));
-    } else if (typeof addresses === 'string') {
-      this.uniqueParticipants.add(addresses);
-    } else {
-      addresses.include.forEach((address) => this.uniqueParticipants.add(address));
+  addParticipantIds(participantIds: string | string[]) {
+    if(!participantIds) return;
+    if (Array.isArray(participantIds)) {
+      participantIds.forEach((participantId) => this.uniqueParticipants.add(participantId));
+    } else if (typeof participantIds === 'string') {
+      this.uniqueParticipants.add(participantIds);
     }
   }
 

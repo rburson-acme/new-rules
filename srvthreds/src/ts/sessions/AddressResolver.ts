@@ -24,6 +24,7 @@ export class AddressResolver {
 
   private aliasMap: StringMap<(thredContext?: ThredContext) => Promise<string[]>> = {
     [AddressResolver.ALL_ALIAS]: this.getAllParticipantIds,
+    [AddressResolver.THRED_ALIAS]: this.getThredParticipantIds,
   };
 
   constructor(
@@ -42,9 +43,12 @@ export class AddressResolver {
     }, {});
   }
 
+  // map both nodeId and nodeType to the service address
+  // so the it can be looked up by either
   setServiceAddressMap(agents: ResolverConfig['agents']) {
     this.serviceAddressMap = agents.reduce((accum, next) => {
-      accum[next.address] = next.nodeType;
+      accum[next.nodeType] = next.address;
+      accum[next.nodeId] = next.address;
       return accum;
     }, {} as StringMap<string>);
   }
@@ -70,14 +74,14 @@ export class AddressResolver {
     return address.startsWith('org.wt.');
   }
 
-  getNodeTypeForServiceAddress(address: string): string | undefined {
-    return this.serviceAddressMap?.[address];
+  getServiceAddressForNode(nodeTypeOrId: string): string | undefined {
+    return this.serviceAddressMap?.[nodeTypeOrId];
   }
 
   /*
    * Translate addresses (aliases, groups, and ids) to participantIds
    */
-  async getParticipantIdsFor(address: Address | string[]): Promise<string[]> {
+  async getParticipantIdsFor(address: Address | string[], thredContext?: ThredContext): Promise<string[]> {
     const { groups, aliasMap } = this;
 
     let addresses = Array.isArray(address) ? address : address.include;
@@ -97,11 +101,10 @@ export class AddressResolver {
         if (address.startsWith('$')) {
           const aliasHandler = aliasMap[address];
           if (aliasHandler) {
-            const result: string[] = await aliasHandler();
+            const result: string[] = await aliasHandler.bind(this)(thredContext);
             participantIds = participantIds.concat(result);
           } else {
-            const group = address.substring(1);
-            const ids = groups?.[group]?.getParticipantIds() || [];
+            const ids = this.getGroupAddresses(address);
             participantIds = participantIds.concat(ids);
           }
         } else {
@@ -115,11 +118,18 @@ export class AddressResolver {
     return [...resultSet];
   }
 
-  /*getCurrentThredParticipantIds(context: ThredContext): string[] {
+  getGroupAddresses(groupAddress: string): string[] {
+    const group = groupAddress.substring(1);
+    return this.groups?.[group]?.getParticipantIds() || [];
+  }
+
+  async getThredParticipantIds(context?: ThredContext): Promise<string[]> {
+    if(!context) return [];
     const addresses = context.getParticipantAddresses();
     // filter out service addresses
     const { participantAddresses } = this.filterServiceAddresses(addresses);
-  }*/
+    return participantAddresses;
+  }
 
   getAllParticipantIds(context?: ThredContext): Promise<string[]> {
     return this.storage.getAllParticipantIds();

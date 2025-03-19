@@ -63,7 +63,7 @@ const sensorEvent = EventBuilder.create({
 
 const persistenceEvent = EventBuilder.create({
   type: 'org.wt.persistence',
-  source: { id: 'persistence1', name: 'Persistence Agent' },
+  source: { id: 'org.wt.persistence', name: 'Persistence Agent' },
 })
   .mergeValues([{ contactId: 'demo_contact_id' }])
   .build();

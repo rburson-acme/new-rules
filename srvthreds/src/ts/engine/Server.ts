@@ -7,6 +7,7 @@ import { Session } from '../sessions/Session.js';
 import { RunConfig } from './Config.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageTemplate } from './MessageTemplate.js';
+import { System } from './System.js';
 
 const { debug, error, warn, crit, h1, h2 } = Logger;
 
@@ -31,10 +32,8 @@ export class Server {
   constructor(
     inboundQ: EventQ,
     private outboundQ: MessageQ,
-    private sessions: Sessions,
-    PROC?: { shutdown: () => Promise<void> },
   ) {
-    this.engine = new Engine(inboundQ, PROC);
+    this.engine = new Engine(inboundQ);
     this.engine.dispatchers.push(this.tell.bind(this));
   }
 
@@ -46,14 +45,14 @@ export class Server {
   // @TODO need better failure handling for all the possible async failures
   // @TODO - implement Engine notification upon failure, so that Engine can notify appropriate participants
   async tell(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
-    const { sessions } = this;
+    const sessions = System.getSessions();
     const event = messageTemplate.event;
     // don't propagate failures here as this is called in the event loop
     try {
       // translate 'directives' in the 'to' field to actual participantIds
-      const to = await this.sessions.getParticipantIdsFor(messageTemplate.to);
+      const to = await sessions.getParticipantIdsFor(messageTemplate.to, thredContext);
       // update the thredContext with the expanded participants
-      thredContext?.addParticipantAddress(to);
+      thredContext?.addParticipantIds(to);
 
       // -------------------------------------------------------------------
       // ----- Address any messages to Agents
@@ -74,12 +73,12 @@ export class Server {
       // send messages to agents
       await Parallel.forEach(serviceAddresses, async (address, index) => {
         try {
-          // determine the node type for the service to be used as the topic
-          const nodeType = addressResolver.getNodeTypeForServiceAddress(address);
+          // get the service address from the supplied nodeId or nodeType to be used as the 'topic'
+          const resolvedAddress = addressResolver.getServiceAddressForNode(address);
           const id = `${event.id}_agent_${index}`;
           const newMessage: Message = { id, event, to: [address] };
           debug(h2(`Server.tell(): Message ${id} to Agent ${address}`));
-          if (nodeType) await this.outboundQ.queue(newMessage, [nodeType]);
+          if (resolvedAddress) await this.outboundQ.queue(newMessage, [resolvedAddress]);
         } catch (e) {
           error(crit(`Engine.tell(): Error sending message to Agent service address ${address}`), e);
         }
@@ -108,7 +107,7 @@ export class Server {
           const newMessage: Message = { id, event, to: [...participants] };
           // route to specific node id if present (websocket sessions require this)
           // if there's no nodeId, assume any session service can retrieve it
-          const topicString = nodeId ? `session.${nodeId}` : 'session';
+          const topicString = nodeId ? nodeId : 'org.wt.session';
           debug(h2(`Server.tell(): Message ${id} to ${participants} via ${topicString}`));
           await this.outboundQ.queue(newMessage, [topicString]);
         } catch (e) {

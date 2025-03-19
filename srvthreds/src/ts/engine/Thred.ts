@@ -35,7 +35,7 @@ export class Thred {
         break transitionLoop;
       }
       // add the source of the event to the participants list
-      thredStore.thredContext.addParticipantAddress(inputEvent.source.id);
+      thredStore.thredContext.addParticipantIds(inputEvent.source.id);
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 

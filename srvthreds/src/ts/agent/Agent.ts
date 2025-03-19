@@ -98,6 +98,7 @@ export class Agent {
     */
   private async run() {
     while (true) {
+      // accept anything directed to this agents nodeId or nodeType
       const topics = [this.agentConfig.nodeId, this.agentConfig.nodeType];
       const qMessage: QMessage<Message> = await this.messageQ.pop(topics);
       try {
@@ -134,7 +135,7 @@ export class Agent {
 
     return Events.newEvent({
       id: Id.getNextId(this.agentConfig.nodeId),
-      type: `org.wt.${this.agentConfig.nodeType}`,
+      type: `${this.agentConfig.nodeType}`,
       re: prevEvent.id,
       data: {
         title: `${this.agentConfig.nodeId} Result`,

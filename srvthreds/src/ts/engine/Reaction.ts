@@ -7,8 +7,9 @@ import { Transition } from './Transition.js';
 import { ThredStore } from './store/ThredStore.js';
 import { Permissions } from './Permissions.js';
 import { MessageTemplate } from './MessageTemplate.js';
+import { System } from './System.js';
 
-export type ReactionResult = { messageTemplate?: MessageTemplate, transition?: Transition };
+export type ReactionResult = { messageTemplate?: MessageTemplate; transition?: Transition };
 
 /*
     @IMPORTANT any mutations here must be made in the Store
@@ -38,7 +39,7 @@ export class Reaction {
 
   // @TODO - catch failures here and notify admin and relevant participant(s)
   async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
-    if(!this.authorize(event)) return undefined;
+    if (!this.authorize(event)) return undefined;
     const { condition } = this;
     const result = await condition.apply(event, thredStore);
     if (result) {
@@ -51,28 +52,46 @@ export class Reaction {
   }
 
   async test(event: Event, context: ThredContext): Promise<boolean> {
-    if(!this.authorize(event)) return false;
+    if (!this.authorize(event)) return false;
     return this.condition.test(event, context);
   }
 
-
+  // @TODO - factor this into an Auth class
   // @TODO - need to queue exceptions and deliver to appropriate participants
   private authorize(event: Event): boolean {
-    // @TODO - allow Groups for allowedSources
-    // @TODO - allow expression / regex for allowedSources
     if (this.allowedSources) {
       const source = event.source.id;
       if (Array.isArray(this.allowedSources)) {
-        if (!this.allowedSources.includes(source)) {
+        if (!this.allowedSources.some((allowedSource) => this.sourceMatch(source, allowedSource))) {
           Logger.debug(Logger.h2(`Event source ${source} not in allowed sources ${this.allowedSources}`));
           return false;
         }
-      } else if (this.allowedSources !== source) {
+      } else if (!this.sourceMatch(source, this.allowedSources)) {
         Logger.debug(Logger.h2(`Event source ${source} not in allowed sources ${this.allowedSources}`));
         return false;
       }
     }
     return true;
     // @TODO - implement permissions
+  }
+
+  sourceMatch(source: string, allowedSource: string): boolean {
+    // groups are prefixed with '$'
+    if (allowedSource.startsWith('$')) {
+      const participantIds = System.getSessions().getAddressResolver().getGroupAddresses(allowedSource);
+      return participantIds.includes(source);
+      // regex
+    } else if (allowedSource.startsWith('/')) {
+      try {
+        const regex = new RegExp(allowedSource.substring(1, allowedSource.length - 1), "gi");
+        return !!source.match(regex);
+      } catch (e) {
+        Logger.error(`Reaction: failed to parse regex ${allowedSource}`, e);
+        return false;
+      }
+      // exact match on participantId
+    } else {
+      return source === allowedSource;
+    }
   }
 }

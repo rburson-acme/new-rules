@@ -42,7 +42,7 @@ export const patternModel: PatternModel = {
     },
     {
       name: 'notify_contact',
-      allowedSources: ['persistence1'],
+      allowedSources: ['org.wt.persistence'],
       condition: {
         type: 'filter',
         xpr: "$event.type = 'org.wt.persistence'",

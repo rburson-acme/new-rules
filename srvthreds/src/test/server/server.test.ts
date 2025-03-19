@@ -27,8 +27,8 @@ describe('connMan.sessionServer test', function () {
       expect(channelId).toBe('channel0');
       thredId = event.thredId;
     });
-    sessionService.addSession({ id: 'session0', nodeId: 'session1' }, 'participant0', 'channel0');
-    sessionService.addSession({ id: 'session1', nodeId: 'session1' }, 'participant1', 'channel1');
+    sessionService.addSession({ id: 'session0', nodeId: 'org.wt.session1' }, 'participant0', 'channel0');
+    sessionService.addSession({ id: 'session1', nodeId: 'org.wt.session1' }, 'participant1', 'channel1');
     connMan.agent.publishEvent(events.event0, 'participant1');
     return pr;
   });
@@ -48,8 +48,8 @@ describe('connMan.sessionServer test', function () {
       expect(channelId).toBe('channel0');
       thred2Id = event.thredId;
     });
-    sessionService.addSession({ id: 'session2', nodeId: 'session1' }, 'participant2', 'channel2');
-    sessionService.addSession({ id: 'session3', nodeId: 'session1' }, 'participant3', 'channel3');
+    sessionService.addSession({ id: 'session2', nodeId: 'org.wt.session1' }, 'participant2', 'channel2');
+    sessionService.addSession({ id: 'session3', nodeId: 'org.wt.session1' }, 'participant3', 'channel3');
     connMan.agent.publishEvent(events.event0, 'participant3');
     return pr;
   });

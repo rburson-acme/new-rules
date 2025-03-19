@@ -2,12 +2,14 @@
     "agents": [
         {
             "name": "Test Agent 1",
-            "nodeType": "test_agent",
+            "nodeType": "org.wt.test_agent",
+            "nodeId": "test_agent",
             "address": "org.wt.test_agent"
         },
         {
             "name": "Test Agent 2 Server",
-            "nodeType": "test_agent_2",
+            "nodeType": "org.wt.test_agent_2",
+            "nodeId": "test_agent_2",
             "address": "org.wt.test_agent_2"
         }
     ]

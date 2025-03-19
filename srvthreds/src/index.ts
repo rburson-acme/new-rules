@@ -38,6 +38,7 @@ import url from 'node:url';
 import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
 import { ConfigLoader } from './ts/config/ConfigLoader.js';
 import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
+import { System } from './ts/engine/System.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -117,23 +118,27 @@ class ServiceManager {
 
   // Start server
   async startServices() {
+
+    // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
     const qBroker = new RemoteQBroker(rascal_config);
+    // connect to persistence
+    await PersistenceManager.get().connect();
 
+    // ----------------------------------- Engine Setup -----------------------------------
     // set up the remote Qs for the engine
     this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
     this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
 
-    // connect to persistence
-    await PersistenceManager.get().connect();
-
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+
+    System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // @TODO separate service
     //  setup the engine server
-    const engineServer = new Server(engineEventQ, engineMessageQ, sessions, { shutdown: this.shutdown.bind(this) });
+    const engineServer = new Server(engineEventQ, engineMessageQ);
 
     // uncomment for manual testing
     await engineServer.start({ patternModels });
@@ -141,6 +146,7 @@ class ServiceManager {
     // comment this out for manual testing
     //await engineServer.start();
 
+    // ----------------------------------- Session Service Setup -----------------------------------
     // set up the remote Qs for the session service agent
     const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
@@ -157,6 +163,7 @@ class ServiceManager {
     });
     await this.sessionAgent.start();
  
+    // ----------------------------------- Persistence Agent Setup -----------------------------------
     // set up the remote Qs for the persistence agent
     const persistenceEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const persistenceEventQ: EventQ = new EventQ(persistenceEventService);

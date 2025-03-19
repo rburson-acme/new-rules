@@ -2,21 +2,15 @@
     "agents": [
         {
             "name": "Session Server",
-            "nodeType": "session",
-            "nodeId": "session1",
-            "address": "org.wt.session"
+            "nodeType": "org.wt.session",
+            "nodeId": "ort.wt.session1",
+            "address": "org.wt.session1"
         },
         {
             "name": "Persistence Agent",
-            "nodeType": "persistence",
-            "nodeId": "persistence1",
+            "nodeType": "org.wt.persistence",
+            "nodeId": "org.wt.persistence1",
             "address": "org.wt.persistence"
-        },
-        {
-            "name": "Admin Agent",
-            "nodeType": "admin",
-            "nodeId": "admin1",
-            "address": "org.wt.admin"
         }
     ]
 }

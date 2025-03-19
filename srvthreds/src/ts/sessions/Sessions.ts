@@ -6,6 +6,7 @@ import { SessionStorage } from './storage/SessionStorage.js';
 import { SessionParticipant } from './SessionParticipant.js';
 import { Session } from './Session.js';
 import { ResolverConfig } from './Config.js';
+import { ThredContext } from '../engine/ThredContext.js';
 
 export class Sessions {
 
@@ -65,9 +66,9 @@ export class Sessions {
         return this.storage.removeAllParticipants();
     }
 
-    getParticipantIdsFor(address: Address | string[]): Promise<string[]> {
+    getParticipantIdsFor(address: Address | string[], thredContext?: ThredContext): Promise<string[]> {
         const { addressResolver} = this;
-        return addressResolver.getParticipantIdsFor(address);
+        return addressResolver.getParticipantIdsFor(address, thredContext);
     }
 
     async getSessionIdsForParticipantIds(participantIds:string[]): Promise<StringMap<string[]>>{

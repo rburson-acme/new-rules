@@ -19,6 +19,7 @@ import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { ThredContext } from './ThredContext.js';
 import { ReactionResult } from './Reaction.js';
 import { MessageTemplate } from './MessageTemplate.js';
+import { System } from './System.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
@@ -32,9 +33,8 @@ export class Engine implements Dispatcher {
 
   constructor(
     readonly inboundQ: EventQ,
-    // process handle
-    readonly PROC?: { shutdown: (delay: number) => Promise<void> },
   ) {
+    if(!System.isInitialized()) throw new Error('System not initialized - call System.initialize() before creating Engine');
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new PatternsStore(storage), storage);
     // this can be determined by config so that we can run 'Admin' nodes seperately
@@ -55,7 +55,7 @@ export class Engine implements Dispatcher {
   }
 
   public async shutdown(delay: number = 0): Promise<void> {
-    return this.PROC?.shutdown(delay);
+    return System.getPROC().shutdown(delay);
   }
 
   // @TODO Messages should also be routed to archival service here for failover and latent delivery
