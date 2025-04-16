@@ -1,4 +1,1 @@
-export type Address = {
-    include: string[];
-    exclude?: string[];
-};
+export type Address = string[];

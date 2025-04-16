@@ -27,6 +27,11 @@ export interface PatternModel extends Persistent {
      */
     maxInstances?: number;
     /**
+     * Whether or not broadcasting from participants is allowed
+     * @property {boolean} broadcastAllowed
+     */
+    broadcastAllowed?: boolean;
+    /**
      * Reactions represent thred states
      * @property {ReactionModel[]} reactions
      */

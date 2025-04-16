@@ -53,10 +53,11 @@ export class AddressResolver {
     }, {} as StringMap<string>);
   }
 
-  filterServiceAddresses(addresses: string[]): {
+  filterServiceAddresses(address: Address): {
     serviceAddresses: string[];
     participantAddresses: string[];
   } {
+    const addresses = Array.isArray(address) ? address : [address];
     const serviceAddresses: string[] = [];
     let participantAddresses: Address = [];
     addresses.forEach((address) => {
@@ -83,17 +84,16 @@ export class AddressResolver {
    */
   async getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
     const { groups, aliasMap } = this;
-
+    const addresses = Array.isArray(address) ? address : [address];
     // @TODO @TEMP @DEMO add admin for demo ---
     //addresses.push('admin');
     // ---------------------------------------
-
     let participantIds: string[] = [];
     //intercept $all
-    if (address.indexOf(AddressResolver.ALL_ALIAS) > -1) {
+    if (addresses.indexOf(AddressResolver.ALL_ALIAS) > -1) {
       participantIds = await this.getAllParticipantIds();
     } else {
-      const uniqueAddresses = [...new Set(address)];
+      const uniqueAddresses = [...new Set(addresses)];
       await forEach(uniqueAddresses, async (address) => {
         // check for aliases or groups
         if (address.startsWith('$')) {

@@ -1,6 +1,11 @@
 export declare const eventTypes: {
     system: {
-        type: string;
+        tell: {
+            type: string;
+        };
+        broadcast: {
+            type: string;
+        };
         source: {
             id: string;
             name: string;
@@ -19,6 +24,9 @@ export declare const eventTypes: {
     };
     client: {
         tell: {
+            type: string;
+        };
+        broadcast: {
             type: string;
         };
     };
@@ -40,7 +48,4 @@ export declare const systemEventTypes: {
 };
 export declare const ThredId: {
     SYSTEM: string;
-};
-export declare const systemAddress: {
-    persistence: string;
 };
