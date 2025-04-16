@@ -32,7 +32,11 @@ describe('builtins tests', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
       expect(message.event.source.id).toBe(eventTypes.system.source.id);
       expect(Events.valueNamed(message.event, 'message')).toBe('Hello');
+      expect(Events.valueNamed(message.event, 'messageSource').id).toBe('participant1');
+      expect(message.to).toContain('participant0');
+      expect(message.to).toContain('participant2');
       expect(message.to).toContain('participant3');
+      expect(message.to).not.toContain('participant1');
     });
     const event = BuiltInEvents.getBroadcastMessageEvent(thredId!, { id: 'participant1' }, 'Hello');
     expect(Events.valueNamed(event, 'message')).toBe('Hello');

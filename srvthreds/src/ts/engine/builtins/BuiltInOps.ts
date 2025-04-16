@@ -21,7 +21,7 @@ export class BuiltInOps {
         const addressResolver = System.getSessions().getAddressResolver();
         const sourceId = event.source.id;
         // send the event to all (non-agent) participants in the thred
-        const thredParticpantIds = await addressResolver.getParticipantIdsFor(['$thred']);
+        const thredParticpantIds = await addressResolver.getParticipantIdsFor(['$thred'], thredStore.thredContext);
         // check participant membership in thred
         if (thredParticpantIds.includes(sourceId)) {
           if (!Events.valueNamed(event, 'message')) {

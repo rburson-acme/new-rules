@@ -1,6 +1,5 @@
 import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
-import { Message } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
 import { EventsStore } from './store/EventsStore.js';
@@ -24,17 +23,13 @@ import { System } from './System.js';
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
 export class Engine implements Dispatcher {
-  dispatchers: (
-    | ((message: MessageTemplate, thredContext?: ThredContext) => Promise<void>)
-    | ((messageTemplate: MessageTemplate, thredContext?: ThredContext) => void)
-  )[] = [];
+  dispatchers: ((messageTemplate: MessageTemplate) => Promise<void> | void)[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
 
-  constructor(
-    readonly inboundQ: EventQ,
-  ) {
-    if(!System.isInitialized()) throw new Error('System not initialized - call System.initialize() before creating Engine');
+  constructor(readonly inboundQ: EventQ) {
+    if (!System.isInitialized())
+      throw new Error('System not initialized - call System.initialize() before creating Engine');
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new PatternsStore(storage), storage);
     // this can be determined by config so that we can run 'Admin' nodes seperately
@@ -67,12 +62,19 @@ export class Engine implements Dispatcher {
    */
   public async dispatch(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
     const timestamp = Date.now();
+    const sessions = System.getSessions();
+    const event = messageTemplate.event;
     try {
+      // translate 'directives' in the 'to' field to actual participantIds
+      const to = await sessions.getParticipantIdsFor(messageTemplate.to, thredContext);
+      // update the thredContext with the expanded participants
+      thredContext?.addParticipantIds(to);
+      // log the event
       debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
       logObject(messageTemplate);
       await Pm.get().saveEvent({ event: messageTemplate.event, to: messageTemplate.to, timestamp });
       // NOTE: dispatch all at once - failure notification will be handled separately
-      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate, thredContext));
+      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher({event, to}));
     } catch (e) {
       error(crit(`Engine::Failed dispatch message : ${messageTemplate}`), e as Error, (e as Error).stack);
     }

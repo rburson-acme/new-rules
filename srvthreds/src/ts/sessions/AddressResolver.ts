@@ -58,7 +58,7 @@ export class AddressResolver {
     participantAddresses: string[];
   } {
     const serviceAddresses: string[] = [];
-    let participantAddresses: string[] | Address = [];
+    let participantAddresses: Address = [];
     addresses.forEach((address) => {
       if (this.isServiceAddress(address)) {
         serviceAddresses.push(address);
@@ -81,10 +81,8 @@ export class AddressResolver {
   /*
    * Translate addresses (aliases, groups, and ids) to participantIds
    */
-  async getParticipantIdsFor(address: Address | string[], thredContext?: ThredContext): Promise<string[]> {
+  async getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
     const { groups, aliasMap } = this;
-
-    let addresses = Array.isArray(address) ? address : address.include;
 
     // @TODO @TEMP @DEMO add admin for demo ---
     //addresses.push('admin');
@@ -92,10 +90,10 @@ export class AddressResolver {
 
     let participantIds: string[] = [];
     //intercept $all
-    if (addresses.indexOf(AddressResolver.ALL_ALIAS) > -1) {
+    if (address.indexOf(AddressResolver.ALL_ALIAS) > -1) {
       participantIds = await this.getAllParticipantIds();
     } else {
-      const uniqueAddresses = [...new Set(addresses)];
+      const uniqueAddresses = [...new Set(address)];
       await forEach(uniqueAddresses, async (address) => {
         // check for aliases or groups
         if (address.startsWith('$')) {
@@ -113,7 +111,6 @@ export class AddressResolver {
       });
     }
     const resultSet = new Set(participantIds);
-    (address as Address)?.exclude?.forEach((xAddress) => resultSet.delete(xAddress));
 
     return [...resultSet];
   }

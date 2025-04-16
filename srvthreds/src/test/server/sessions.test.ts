@@ -92,14 +92,6 @@ describe('sessions', function () {
     expect(participantIds).toContain('vSalt');
     expect(participantIds.length).toBe(4);
   });
-  it('get all - 1', async function () {
-    const participantIds = await sessions.getParticipantIdsFor({ include: ['$all'], exclude: ['lLoompa'] });
-    expect(participantIds).toContain('bOompa');
-    expect(participantIds).toContain('cBucket');
-    expect(participantIds).toContain('vSalt');
-    expect(participantIds).not.toContain('lLoompa');
-    expect(participantIds.length).toBe(3);
-  });
   it('get multiple', async function () {
     const participantIds = await sessions.getParticipantIdsFor(['bOompa', 'vSalt']);
     expect(participantIds).toContain('bOompa');

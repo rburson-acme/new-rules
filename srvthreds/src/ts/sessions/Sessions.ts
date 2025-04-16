@@ -66,7 +66,7 @@ export class Sessions {
         return this.storage.removeAllParticipants();
     }
 
-    getParticipantIdsFor(address: Address | string[], thredContext?: ThredContext): Promise<string[]> {
+    getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
         const { addressResolver} = this;
         return addressResolver.getParticipantIdsFor(address, thredContext);
     }

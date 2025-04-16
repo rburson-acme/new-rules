@@ -10,7 +10,7 @@ import { ThredStore } from './store/ThredStore.js';
     This is part of the 'stateless' tree that gets shared across processes
 */
 export class Publish {
-  to: Address | string[] | string;
+  to: Address;
 
   constructor(publish: PublishModel) {
     this.to = publish.to;

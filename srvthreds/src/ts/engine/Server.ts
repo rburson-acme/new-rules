@@ -1,13 +1,11 @@
 import { Engine } from './Engine.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
-import { Sessions } from '../sessions/Sessions.js';
-import { Message, Logger, StringMap, Parallel } from '../thredlib/index.js';
+import { Logger, StringMap, Parallel, Message } from '../thredlib/index.js';
 import { Session } from '../sessions/Session.js';
 import { RunConfig } from './Config.js';
-import { ThredContext } from './ThredContext.js';
-import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
+import { MessageTemplate } from './MessageTemplate.js';
 
 const { debug, error, warn, crit, h1, h2 } = Logger;
 
@@ -41,26 +39,22 @@ export class Server {
     return this.engine.start(config);
   }
 
+
   // outbound
+  // @TODO - refactor this into a Dispatcher class
   // @TODO need better failure handling for all the possible async failures
   // @TODO - implement Engine notification upon failure, so that Engine can notify appropriate participants
-  async tell(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
+  async tell(messageTemplate: MessageTemplate): Promise<void> {
     const sessions = System.getSessions();
-    const event = messageTemplate.event;
+    const { to, event } = messageTemplate;
     // don't propagate failures here as this is called in the event loop
     try {
-      // translate 'directives' in the 'to' field to actual participantIds
-      const to = await sessions.getParticipantIdsFor(messageTemplate.to, thredContext);
-      // update the thredContext with the expanded participants
-      thredContext?.addParticipantIds(to);
-
       // -------------------------------------------------------------------
       // ----- Address any messages to Agents
       const addressResolver = sessions.getAddressResolver();
       // seperate service addresses from participant addresses
       const { serviceAddresses, participantAddresses } = addressResolver.filterServiceAddresses(to);
       // -------------------------------------------------------------------
-      // ----- Address all other messages to participants with a Session
       // get a map of participantId to Sessions[] for all addressees
       const sessionsByParticipant: StringMap<Session[]> =
         await sessions.getSessionsForParticipantIds(participantAddresses);
