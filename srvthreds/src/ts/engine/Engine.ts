@@ -61,8 +61,7 @@ export class Engine implements Dispatcher {
   // @TODO Messages should also be routed to archival service here for failover and latent delivery
 
   /**
-   * These are outbound 'messages', addressed to specific participants
-   * 'React Systems' metaphor - message with address. (ie. tell)
+   * These are outbound 'messages', addressed to specific participants(i.e. an event with an address)
    * @param event
    * @param to
    */

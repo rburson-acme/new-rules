@@ -1,4 +1,4 @@
-import { Event, EventContent, EventError, Events as EventsLib, eventTypes } from "../thredlib";
+import { Event, EventBuilder, EventContent, EventError, Events as EventsLib, eventTypes } from "../thredlib";
 
 export class Events {
 
@@ -7,16 +7,18 @@ export class Events {
     title,
     content,
     error,
+    type
   }: {
     prevEvent: Event;
     content?: EventContent;
     title?: string;
     error?: EventError['error'];
+    type?: string;
   }) {
     const _content = error ? { error } : content;
 
     return EventsLib.newEvent({
-      type: eventTypes.system.type,
+      type: type || eventTypes.system.tell.type,
       re: prevEvent.id,
       data: {
         ...{ title },
@@ -26,4 +28,13 @@ export class Events {
       thredId: prevEvent.thredId,
     });
   };
+
+  static baseSystemEventBuilder({thredId, type, re }: { thredId: string, type?: string, re?: string }): EventBuilder {
+    return EventBuilder.create({
+      type: type || eventTypes.system.tell.type,
+      source: eventTypes.system.source,
+      thredId,
+      ...(re && { re }),
+    });
+  }
 }

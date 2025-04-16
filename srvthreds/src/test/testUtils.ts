@@ -273,7 +273,7 @@ export class ServerConnectionManager {
     await this.agent.shutdown();
   }
 
-  async stopAllThreds(id: string) {
+  async stopAllThreds(id?: string) {
     await (this.engineServer as any).engine.thredsStore.terminateAllThreds();
     /*let pr = getDispatcherPromise((this.agent as any).handler);
     await this.agent

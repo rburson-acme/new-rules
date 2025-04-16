@@ -5,6 +5,7 @@ import { ThredContext } from './ThredContext.js';
 import { Event, EventData } from '../thredlib/index.js';
 import { Id } from '../thredlib/core/Id.js';
 import { ThredStore } from './store/ThredStore.js';
+import { Events } from './Events.js';
 
 /*
     @IMPORTANT any mutations here must be made in the Store
@@ -41,16 +42,7 @@ export class Transform {
 
     const re = this.reXpr && await this.reXpr.apply(expressionParams);
 
-    const newEvent: Event = {
-      id: Id.nextEventId,
-      thredId: context.thredId,
-      type: eventTypes.system.type,
-      time: Date.now(),
-      source: eventTypes.system.source,
-      ...(re && { re }),
-      data,
-    };
+    return Events.baseSystemEventBuilder({ thredId: thredStore.id, re }).mergeData(data).build();
 
-    return newEvent;
   }
 }

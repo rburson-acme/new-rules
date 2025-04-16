@@ -7,9 +7,6 @@ import { Transition } from './Transition.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
 
-// where to pick up
-// test the thredlog methods
-
 export class Thred {
   /*
       'consider' should be the only external way to induce a state change (i.e. all calls go through here)

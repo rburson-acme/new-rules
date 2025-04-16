@@ -160,9 +160,9 @@ describe('sessions', function () {
     expect(participantAddresses).toContain('bOompa');
   });
   it('get address for node type', function () {
-    const address = sessions.getAddressResolver().getServiceAddressForNode('test_agent');
+    const address = sessions.getAddressResolver().getServiceAddressForNode('org.wt.test_agent');
     expect(address).toBe('org.wt.test_agent');
-    const nodeType2 = sessions.getAddressResolver().getServiceAddressForNode('test_agent_2');
+    const nodeType2 = sessions.getAddressResolver().getServiceAddressForNode('org.wt.test_agent_2');
     expect(nodeType2).toBe('org.wt.test_agent_2');
   });
   it('get thred participants', async function () {
@@ -206,12 +206,14 @@ const resolverConfig: ResolverConfig = {
   agents: [
     {
       name: 'Test Agent 1',
-      nodeType: 'test_agent',
+      nodeType: 'org.wt.test_agent',
+      nodeId: 'org.wt.test_agent1',
       address: 'org.wt.test_agent',
     },
     {
       name: 'Test Agent 2 Server',
-      nodeType: 'test_agent_2',
+      nodeType: 'org.wt.test_agent_2',
+      nodeId: 'org.wt.test_agent2',
       address: 'org.wt.test_agent_2',
     },
   ],

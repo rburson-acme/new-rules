@@ -10,6 +10,7 @@ import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
 import { MessageTemplate } from './MessageTemplate.js';
+import { BuiltInOps } from './builtins/BuiltInOps.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
@@ -53,6 +54,9 @@ export class Threds {
           errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
         );
       }
+      // handle built-in events
+      if(BuiltInOps.isBuiltInOp(event)) return BuiltInOps.consider(event, thredStore, this);
+
       return Thred.consider(event, thredStore, this);
     });
   }

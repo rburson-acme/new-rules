@@ -1,4 +1,5 @@
 export * from './core/Address.js';
+export * from './core/BuiltInEvents.js';
 export * from './core/Event.js';
 export * from './core/EventBuilder.js';
 export * from './core/Events.js';

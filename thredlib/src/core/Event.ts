@@ -20,8 +20,6 @@ export interface Event {
         readonly name?: string,
         // an optional representation of the source
         readonly uri?: string;
-        // alternative address for replies
-        readonly replyTo?: string;
     }
     // optional reference to another event
     readonly re?: string;
