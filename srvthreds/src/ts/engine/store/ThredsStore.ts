@@ -2,13 +2,12 @@ import { Pattern } from '../Pattern.js';
 import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Storage, Types, indexId } from '../../storage/Storage.js';
-import { errorCodes, errorKeys, Logger, Parallel } from '../../thredlib/index.js';
-import { EventThrowable } from '../../thredlib/core/Errors.js';
-import { EventsStore } from './EventsStore.js';
+import { Logger, Parallel } from '../../thredlib/index.js';
 import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
 
-// Thred locking is handled here, and should be contained to this class
-
+/*
+  - Thred locking is handled here, and should be contained to this class
+*/
 export class ThredsStore {
   constructor(
     readonly patternsStore: PatternsStore,
@@ -144,7 +143,7 @@ export class ThredsStore {
     } catch (e) {
       Logger.warn(Logger.crit(`releaseAndTerminateThred::Failed to delete Thred ${thredId}`));
     }
-    // @todo archive the context so that the thred could be replayed
+    // @todo archive the context and the reactionstore so that the thred could be replayed
     const thredStore = this.thredStores[thredId];
     delete this.thredStores[thredId];
     await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });

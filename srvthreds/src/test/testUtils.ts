@@ -171,7 +171,7 @@ export class EngineConnectionManager {
     });
     const eventQ = new EventQ(eventService);
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
-    if(!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
+    if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     const engine = new Engine(eventQ);
     await engine.start({ patternModels });
     const instance = new EngineConnectionManager(eventService, eventQ, engine);
@@ -220,7 +220,7 @@ export class ServerConnectionManager {
     const engineMessageQ = new MessageQ(engineMessageService);
 
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
-    if(!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
+    if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     // engine start engine
     const engineServer = new Server(engineEventQ, engineMessageQ);
     await engineServer.start({ patternModels });
@@ -235,7 +235,13 @@ export class ServerConnectionManager {
     const sessionMessageQ = new MessageQ(sessionMessageService);
     // standard (default) agent configuration file
     // this location is relative to the 'agent' directory
-    const agent = new Agent(sessionAgentConfig, sessionEventQ, sessionMessageQ, additionalArgs);
+    const agent = new Agent({
+      agentName: 'session_agent',
+      agentConfig: sessionAgentConfig,
+      eventQ: sessionEventQ,
+      messageQ: sessionMessageQ,
+      additionalArgs: additionalArgs,
+    });
     agent.start();
 
     const instance = new ServerConnectionManager(
@@ -284,7 +290,11 @@ export class ServerConnectionManager {
 }
 
 export class AgentConnectionManager {
-  static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
+  static async newAgentInstance(
+    agentName: string,
+    sessionAgentConfig: AgentConfig,
+    additionalArgs?: {},
+  ): Promise<AgentConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // this are not used for testing with this utility but currently required for the Agent
@@ -298,7 +308,13 @@ export class AgentConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(sessionAgentConfig, agentEventQ, agentMessageQ, additionalArgs);
+    const agent = new Agent({
+      agentName,
+      agentConfig: sessionAgentConfig,
+      eventQ: agentEventQ,
+      messageQ: agentMessageQ,
+      additionalArgs,
+    });
     agent.start();
 
     return new AgentConnectionManager(agentEventservice, agentMessageService, agentEventQ, agentMessageQ, agent);
@@ -330,6 +346,7 @@ export class AgentConnectionManager {
 // Allows for testing Agents WITH both Queue connections
 export class AgentQueueConnectionManager {
   static async newAgentInstance(
+    agentName: string,
     sessionAgentConfig: AgentConfig,
     additionalArgs?: {},
   ): Promise<AgentQueueConnectionManager> {
@@ -351,7 +368,13 @@ export class AgentQueueConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent(sessionAgentConfig, agentEventQ, agentMessageQ, additionalArgs);
+    const agent = new Agent({
+      agentName,
+      agentConfig: sessionAgentConfig,
+      eventQ: agentEventQ,
+      messageQ: agentMessageQ,
+      additionalArgs,
+    });
     await agent.start();
 
     return new AgentQueueConnectionManager(

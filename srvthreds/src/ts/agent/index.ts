@@ -3,10 +3,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
-import config from '../config/rascal_config.json' with { type: 'json' };
+import rascal_config from '../config/rascal_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../queue/remote/RemoteQBroker.js';
 import { RemoteQService } from '../queue/remote/RemoteQService.js';
 import { Agent } from './Agent.js';
+import { PersistenceManager } from '../engine/persistence/PersistenceManager.js';
 
 /***
  *     __                 _                     _               
@@ -24,15 +25,17 @@ class Server  {
     private eventService?: RemoteQService<Event>;
     private agent?: Agent;
 
-    async start(configFile: string) {
+    async start(agentName: string, configFile: string) {
         const agentConfig = await import(configFile);
         // set up the remote Qs
-        const qBroker = new RemoteQBroker(config);
+        const qBroker = new RemoteQBroker(rascal_config);
         this.eventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
         const eventQ: EventQ = new EventQ(this.eventService);
         const messageService = await RemoteQService.newInstance<Message>({ qBroker, subName: agentConfig.subscriptionName });
         const messageQ: MessageQ = new MessageQ(messageService);
-        this.agent = new Agent(agentConfig, eventQ, messageQ);
+        // connect to persistence
+        await PersistenceManager.get().connect();
+        this.agent = new Agent({ agentName, agentConfig: agentConfig, eventQ:eventQ, messageQ: messageQ });
         await this.agent.start();
     }
 
@@ -54,14 +57,16 @@ class Server  {
 
 
 const args = yargs(hideBin(process.argv)).usage('$0 [options]')
+    .options('agent-name', { alias: 'n', description: 'The unique name of this type of agent. Used for loading config dynamically.', type: 'string'})
     .options('config', { alias: 'c', description: 'Path to config file', type: 'string'})
+    .demandOption('agent-name', 'agent-name is required')
     .help()
     .alias('help', 'h').parseSync();
 
 const configPath = args.config || defaultConfigPath;
 
 const server = new Server();
-server.start(configPath);
+server.start(args['agent-name'], configPath);
 
 
 

@@ -3,9 +3,6 @@ import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
 import { Query } from '../../task/Taskable.js';
 import {
   PatternModel,
-  Event,
-  errorCodes,
-  errorKeys,
   Logger,
   ThredLogRecord,
   EventRecord,
@@ -34,7 +31,7 @@ export class PersistenceManager {
     return PersistenceFactory.disconnectAll();
   }
 
-  async getAllActivePatterns(): Promise<PatternModel[]> {
+  async getAllActivePatterns(): Promise<PatternModel[] | null> {
     return this.persistence.get({ type: Types.PatternModel, matcher: { meta: { active: true } } });
   }
 
@@ -42,7 +39,7 @@ export class PersistenceManager {
     return this.persistence.upsert({ type: Types.PatternModel, matcher: { id: pattern.id }, values: pattern });
   }
 
-  async getActivePattern(patternId: string): Promise<PatternModel | undefined> {
+  async getActivePattern(patternId: string): Promise<PatternModel | null> {
     return this.persistence.getOne({ type: Types.PatternModel, matcher: { id: patternId, meta: { active: true } } });
   }
 
@@ -56,7 +53,7 @@ export class PersistenceManager {
     }
   }
 
-  async getEventsForThred(thredId: string): Promise<EventRecord[]> {
+  async getEventsForThred(thredId: string): Promise<EventRecord[] | null> {
     return this.persistence.get({ type: Types.EventRecord, matcher: { thredId } });
   }
 
@@ -68,7 +65,7 @@ export class PersistenceManager {
     }
   }
 
-  async getThredLogRecords(thredId: string): Promise<ThredLogRecord[]> {
+  async getThredLogRecords(thredId: string): Promise<ThredLogRecord[] | null> {
     return this.persistence.get({ type: Types.ThredLogRecord, matcher: { thredId } });
   }
 
@@ -80,12 +77,27 @@ export class PersistenceManager {
     }
   }
   
-  async getThreds(matcher: Query['matcher']): Promise<ThredRecord[]> {
+  async getThreds(matcher: Query['matcher']): Promise<ThredRecord[] | null> {
     return this.persistence.get({ type: Types.ThredRecord, matcher });
   }
 
-  async getThred(thredId: string): Promise<ThredRecord> {
+  async getThred(thredId: string): Promise<ThredRecord | null> {
     return this.persistence.getOne({ type: Types.ThredRecord, matcher: { id: thredId } });
+  }
+
+  async saveConfig(configName: string, config: any): Promise<void> {
+    try {
+      await this.persistence.upsert({ type: Types.Config, matcher: { id: configName }, values: { config }});
+    } catch (err) {
+      Logger.error(Logger.crit(`Error saving config record with id: ${configName}`), err);
+    }
+  }
+
+  async getConfig(configName: string): Promise<any | null> {
+    const configRecord = await this.persistence.get({ type: Types.Config, matcher: { id: configName } });
+    if(configRecord?.length) {
+      return configRecord[0].config;
+    }
   }
 }
 
@@ -94,4 +106,5 @@ export const Types = {
   EventRecord: 'EventRecord',
   ThredLogRecord: 'ThredLogRecord',
   ThredRecord: 'ThredRecord',
+  Config: 'Config'
 };

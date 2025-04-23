@@ -7,4 +7,8 @@ export interface AgentConfig {
     subscriptionName: string;
     // specific agent configuration can go here
     customConfig?: any;
+    // types of events that this service may produce
+    // if not defined the event type defaults to the nodeType
+    eventTypes?: [{ type: string }];
+   
 }

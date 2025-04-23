@@ -9,9 +9,9 @@ export interface Taskable {
 
     put(query: Query, options?: any): Promise<string | string[]>;
 
-    getOne<T>(query: Query, options?: any): Promise<T>;
+    getOne<T>(query: Query, options?: any): Promise<T | null>;
     
-    get<T>(query: Query, options?: any): Promise<T[]>;
+    get<T>(query: Query, options?: any): Promise<T[] | null>;
 
     update(query: Query, options?: any): Promise<void>;
 

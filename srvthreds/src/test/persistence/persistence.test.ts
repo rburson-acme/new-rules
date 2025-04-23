@@ -28,7 +28,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('testvalue');
+    expect(obj?.testkey).toBe('testvalue');
   });
   test('simple update', async function () {
     await persistence.update({
@@ -42,7 +42,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('updated_testvalue');
+    expect(obj?.testkey).toBe('updated_testvalue');
   });
   test('simple replace', async function () {
     await persistence.replace({
@@ -56,7 +56,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('replace_testvalue');
+    expect(obj?.testkey).toBe('replace_testvalue');
   });
   test('simple delete', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
@@ -80,7 +80,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('replace_testvalue');
+    expect(obj?.testkey).toBe('replace_testvalue');
   });
   test('delete replace value', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
@@ -97,7 +97,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('upsert_testvalue');
+    expect(obj?.testkey).toBe('upsert_testvalue');
   });
   test('upsert (doc already there)', async function () {
     await persistence.upsert({
@@ -111,7 +111,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: testObjId },
     });
-    expect(obj.testkey).toBe('upsert_again');
+    expect(obj?.testkey).toBe('upsert_again');
   });
   test('delete replace value', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: testObjId } });
@@ -124,7 +124,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: assignedId },
     });
-    expect(obj.testkeyNoId).toBe('testvalueNoId');
+    expect(obj?.testkeyNoId).toBe('testvalueNoId');
   });
   test('simple update for assigned Id', async function () {
     await persistence.update({
@@ -138,7 +138,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { id: assignedId },
     });
-    expect(obj.testkeyNoId).toBe('updated_testvalue');
+    expect(obj?.testkeyNoId).toBe('updated_testvalue');
   });
   test('simple delete for assigned value', async function () {
     await persistence.delete({ type: testObjType, matcher: { id: assignedId } });
@@ -167,7 +167,7 @@ describe('persistence', function () {
       type: testObjType,
       matcher: { testNumeric: { $gte: 50 } },
     });
-    expect(obj.id).toBe(`TEST_ID_50`);
+    expect(obj?.id).toBe(`TEST_ID_50`);
   });
   test('find many gte', async function () {
     const obj = await persistence.get({
@@ -175,14 +175,14 @@ describe('persistence', function () {
       matcher: { testNumeric: { $gte: 50 } },
     });
     expect(Array.isArray(obj)).toBe(true);
-    expect(obj.length).toBe(50);
+    expect(obj?.length).toBe(50);
   });
   test('find regex', async function () {
     const obj = await persistence.get({
       type: testObjType,
       matcher: { testkey: { $re: '.*estvalue5.*' } },
     });
-    expect(obj.length).toBe(11);
+    expect(obj?.length).toBe(11);
   });
   test('find many no match', async function () {
     const obj = await persistence.get({
@@ -190,7 +190,7 @@ describe('persistence', function () {
       matcher: { testNumeric: { $gte: 100 } },
     });
     expect(Array.isArray(obj)).toBe(true);
-    expect(obj.length).toBe(0);
+    expect(obj?.length).toBe(0);
   });
   test('find many lt', async function () {
     const obj = await persistence.get({
@@ -198,14 +198,14 @@ describe('persistence', function () {
       matcher: { testNumeric: { $lt: 10 } },
     });
     expect(Array.isArray(obj)).toBe(true);
-    expect(obj.length).toBe(10);
+    expect(obj?.length).toBe(10);
   });
   test('find or', async function () {
     const obj = await persistence.getOne({
       type: testObjType,
       matcher: { $or: [{ testNumeric: 200 }, { testNumeric: 50 }] },
     });
-    expect(obj.id).toBe(`TEST_ID_50`);
+    expect(obj?.id).toBe(`TEST_ID_50`);
   });
   test('find many or', async function () {
     const obj = await persistence.get({
@@ -213,14 +213,14 @@ describe('persistence', function () {
       matcher: { $or: [{ testNumeric: 10 }, { testNumeric: 50 }] },
     });
     expect(Array.isArray(obj)).toBe(true);
-    expect(obj.length).toBe(2);
+    expect(obj?.length).toBe(2);
   });
   test('find in', async function () {
     const obj = await persistence.getOne({
       type: testObjType,
       matcher: { testArray: { $in: ['testarrayitem10'] } },
     });
-    expect(obj.id).toBe(`TEST_ID_10`);
+    expect(obj?.id).toBe(`TEST_ID_10`);
   });
   test('find many in', async function () {
     const obj = await persistence.get({
@@ -230,9 +230,9 @@ describe('persistence', function () {
       },
     });
     expect(Array.isArray(obj)).toBe(true);
-    expect(obj.length).toBe(2);
-    expect([...obj[0].testArray, ...obj[1].testArray]).toContain('testarrayitem70');
-    expect([...obj[0].testArray, ...obj[1].testArray]).toContain('testarrayitem10');
+    expect(obj?.length).toBe(2);
+    expect([...obj?.[0].testArray, ...obj?.[1].testArray]).toContain('testarrayitem70');
+    expect([...obj?.[0].testArray, ...obj?.[1].testArray]).toContain('testarrayitem10');
   });
   test('sort results', async function () {
     const obj = await persistence.get({
@@ -240,8 +240,8 @@ describe('persistence', function () {
       matcher: {},
       collector: { sort: [{ field: 'testNumeric', desc: true }] },
     });
-    expect(obj.length).toBe(100);
-    expect(obj[0].testNumeric).toBe(99);
+    expect(obj?.length).toBe(100);
+    expect(obj?.[0].testNumeric).toBe(99);
   });
   test('page results', async function () {
     const obj = await persistence.get({
@@ -249,8 +249,8 @@ describe('persistence', function () {
       matcher: {},
       collector: { sort: [{ field: 'testNumeric', desc: true }], limit: 10, skip: 90 },
     });
-    expect(obj.length).toBe(10);
-    expect(obj[0].testNumeric).toBe(9);
+    expect(obj?.length).toBe(10);
+    expect(obj?.[0].testNumeric).toBe(9);
   });
   test('query with selectors', async function () {
     const obj = await persistence.get({
@@ -259,10 +259,10 @@ describe('persistence', function () {
       collector: { sort: [{ field: 'testNumeric' }], limit: 10},
       selector: { include: ['testNumeric'] },
     });
-    expect(obj.length).toBe(10);
-    expect(Object.keys(obj[0]).length).toBe(2);
-    expect(obj[0].testNumeric).toBeDefined();
-    expect(obj[0].id).toBeDefined();
+    expect(obj?.length).toBe(10);
+    if(obj?.[0]) expect(Object.keys(obj[0]).length).toBe(2);
+    expect(obj?.[0].testNumeric).toBeDefined();
+    expect(obj?.[0].id).toBeDefined();
   });
   test('update many', async function () {
     const obj = await persistence.update({

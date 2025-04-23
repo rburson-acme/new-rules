@@ -12,9 +12,9 @@ export interface Query {
 
 export interface Persistence extends Taskable {
 
-    getOne<T>(query: Query, options?: any): Promise<Persistent & T>;
+    getOne<T>(query: Query, options?: any): Promise<Persistent & T | null>;
     
-    get<T>(query: Query, options?: any): Promise<(Persistent & T)[]>;
+    get<T>(query: Query, options?: any): Promise<(Persistent & T)[] | null>;
 
     deleteDatabase(): Promise<void>;
 

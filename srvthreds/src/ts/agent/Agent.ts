@@ -1,9 +1,20 @@
-import { Logger, Message, Event, StringMap, Events, EventError, errorCodes, errorKeys, EventContent } from '../thredlib/index.js';
+import {
+  Logger,
+  Message,
+  Event,
+  StringMap,
+  Events,
+  EventError,
+  errorCodes,
+  errorKeys,
+  EventContent,
+} from '../thredlib/index.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
 import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
+import { PersistenceManager } from '../engine/persistence/PersistenceManager.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -32,26 +43,36 @@ export interface EventPublisher {
 
 /**
   This framework class pulls Messages from the outbound MessageQ for a particular 'topic', which is
-  defined in the agent configuration. The message is then provided to the MessageHandler's 'processMessage' method.
-  The agent configuration also defines the agent's concrete implementation
+  defined in the agent config. The message is then provided to the MessageHandler's 'processMessage' method.
+  The agent config also specifies the agent's concrete implementation
   and starts an instance of the implementation. The processMessage method is called for each message pulled from the messageQ and passed
   to the instantiated agent (messageHandler) implementation to handle it.
   The 'publisher' provided to the agent implementation is used to send inbound Events to the Engine.
 */
 export class Agent {
   private handler?: MessageHandler;
+  private agentConfig?: AgentConfig;
   readonly eventPublisher: EventPublisher;
 
   constructor(
-    private agentConfig: AgentConfig,
-    private eventQ: EventQ,
-    private messageQ: MessageQ,
-    private additionalArgs?: {},
+    private params: {
+      agentName: string;
+      eventQ: EventQ;
+      messageQ: MessageQ;
+      agentConfig?: AgentConfig;
+      additionalArgs?: {};
+    },
   ) {
     this.eventPublisher = { publishEvent: this.publishEvent, createOutboundEvent: this.createOutboundEvent };
   }
 
   async start() {
+    const { agentName, additionalArgs } = this.params;
+    // load config from persistence if not provided
+    this.agentConfig = this.params.agentConfig
+      ? this.params.agentConfig
+      : await PersistenceManager.get().getConfig(agentName);
+    if (!this.agentConfig) throw new Error(`Agent: failed to load config for ${agentName}`);
     try {
       // agentImpl can be a string (dynamic import) or an object (direct instantiation)
       let Handler;
@@ -64,7 +85,7 @@ export class Agent {
       this.handler = new Handler({
         config: this.agentConfig,
         eventPublisher: this.eventPublisher,
-        additionalArgs: this.additionalArgs,
+        additionalArgs,
       });
       await this.handler?.initialize();
       Logger.debug(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
@@ -77,7 +98,9 @@ export class Agent {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    Logger.debug(Logger.h1(`Agent:${this.agentConfig.nodeId} received Message ${message.id} from ${message.event.source?.id}`));
+    Logger.debug(
+      Logger.h1(`Agent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`),
+    );
     Logger.logObject(message);
     return this.handler?.processMessage(message);
   }
@@ -88,22 +111,24 @@ export class Agent {
 
   // publish Events to engine
   publishEvent = async (event: Event, sourceId?: string): Promise<void> => {
-    Logger.debug(Logger.h1(`Agent:${this.agentConfig.nodeId} publish Event ${event.id} from ${sourceId}`));
+    const { eventQ } = this.params;
+    Logger.debug(Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${sourceId}`));
     Logger.logObject(event);
-    return this.eventQ.queue(event);
+    return eventQ.queue(event);
   };
 
   /*
         Begin pulling Messages from the Q to publish outbound to participants
     */
   private async run() {
+    const { messageQ } = this.params;
     while (true) {
       // accept anything directed to this agents nodeId or nodeType
-      const topics = [this.agentConfig.nodeId, this.agentConfig.nodeType];
-      const qMessage: QMessage<Message> = await this.messageQ.pop(topics);
+      const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
+      const qMessage: QMessage<Message> = await messageQ.pop(topics);
       try {
         await this.processMessage(qMessage.payload);
-        await this.messageQ.delete(qMessage);
+        await messageQ.delete(qMessage);
       } catch (e) {
         Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
         try {
@@ -112,7 +137,7 @@ export class Agent {
             prevEvent: qMessage.payload.event,
           });
           await this.eventPublisher.publishEvent(outboundEvent);
-          await this.messageQ.reject(qMessage, e as Error).catch(Logger.error);
+          await messageQ.reject(qMessage, e as Error).catch(Logger.error);
           // @TODO figure out on what types of Errors it makes sense to requeue
           // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
         } catch (e) {
@@ -125,23 +150,25 @@ export class Agent {
   private createOutboundEvent = <T>({
     prevEvent,
     content,
+    type,
     error,
   }: {
     prevEvent: Event;
     content?: EventContent;
+    type?: string;
     error?: EventError['error'];
   }) => {
     const _content = error ? { error } : content;
 
     return Events.newEvent({
-      id: Id.getNextId(this.agentConfig.nodeId),
-      type: `${this.agentConfig.nodeType}`,
+      id: Id.getNextId(this.agentConfig!.nodeId),
+      type: type || `${this.agentConfig!.nodeType}`,
       re: prevEvent.id,
       data: {
-        title: `${this.agentConfig.nodeId} Result`,
+        title: `${this.agentConfig!.nodeId} Result`,
         content: _content,
       },
-      source: { id: this.agentConfig.nodeId, name: this.agentConfig.name },
+      source: { id: this.agentConfig!.nodeId, name: this.agentConfig!.name },
       thredId: prevEvent.thredId,
     });
   };

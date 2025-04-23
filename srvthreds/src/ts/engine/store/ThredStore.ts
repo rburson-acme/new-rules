@@ -5,8 +5,13 @@ import { ReactionStore } from './ReactionStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Id } from '../Id.js';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
-import { Address, errorCodes, errorKeys, Thred } from '../../thredlib/index.js';
+import { errorCodes, errorKeys, Thred } from '../../thredlib/index.js';
 
+/*
+  - Handles all state changes for a thred, most of which occur within a lock created and held by the ThredsStore
+  - Natural termination of a thred occurs when it is transitioned to to an undefined reaction, followed by a call
+    to ThredsStore.saveThredStore()
+*/
 export class ThredStore {
   // @TODO thredContext should become a pointer to a events in a master log (persisted externally)
   private _currentReaction?: Reaction;
@@ -33,7 +38,7 @@ export class ThredStore {
   }
 
   transitionTo(reaction?: Reaction): void {
-    if(!reaction) this.endTime = Date.now();
+    if (!reaction) this.endTime = Date.now();
     this._currentReaction = reaction;
     this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
   }
@@ -81,7 +86,7 @@ export class ThredStore {
         expiry: this.currentReaction?.expiry,
       },
       startTime: this.startTime,
-      endTime: this.endTime
+      endTime: this.endTime,
     };
   }
 

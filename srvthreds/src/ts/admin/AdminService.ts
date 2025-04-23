@@ -154,9 +154,10 @@ export class AdminService {
       threds = thredStores.map((thredStore) => thredStore.toJSON());
     }
     if (status === 'completed' || status === 'all') {
-      threds.push(
-        ...(await PersistenceManager.get().getThreds(completedMatcher || {})).map((thredRecord) => thredRecord.thred),
-      );
+      const thredRecords = await PersistenceManager.get().getThreds(completedMatcher || {});
+      if (thredRecords?.length) {
+        threds.push(...thredRecords.map((thredRecord) => thredRecord.thred));
+      }
     }
 
     return {

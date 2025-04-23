@@ -15,7 +15,7 @@ Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('persistence agent test', function () {
   beforeAll(async () => {
-    connMan = await AgentQueueConnectionManager.newAgentInstance(persistenceAgentConfig);
+    connMan = await AgentQueueConnectionManager.newAgentInstance('persistence_agent', persistenceAgentConfig);
     await connMan.purgeAll();
     agent = connMan.agent;
   });
