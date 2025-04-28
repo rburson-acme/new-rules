@@ -55,7 +55,6 @@ class Server  {
     }
 }
 
-
 const args = yargs(hideBin(process.argv)).usage('$0 [options]')
     .options('agent-name', { alias: 'n', description: 'The unique name of this type of agent. Used for loading config dynamically.', type: 'string'})
     .options('config', { alias: 'c', description: 'Path to config file', type: 'string'})

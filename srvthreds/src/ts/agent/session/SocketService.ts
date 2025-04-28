@@ -11,8 +11,7 @@ export interface SocketServiceParams {
   serviceListener: ServiceListener;
   publisher: EventPublisher;
   nodeId: string;
-  httpServer?: http.Server;
-  port?: number;
+  httpServer: http.Server;
   auth?: Auth;
 }
 
@@ -44,8 +43,9 @@ export class SocketService {
     this.auth = params.auth || new BasicAuth();
     this.publisher = params.publisher;
     this.nodeId = params.nodeId;
-    this.httpServer = params.httpServer ? params.httpServer : this.createServer(params.port);
+    this.httpServer = params.httpServer;
     this.io = new Server(this.httpServer);
+    this.io.use(this.authenticate);
     this.io.on('connection', this.onConnect);
   }
 
@@ -55,19 +55,18 @@ export class SocketService {
     if (channel) {
       channel(event, channelId);
     } else {
-      Logger.debug(`server: channel ${channelId} not found`);
+      Logger.debug(`session: channel ${channelId} not found`);
     }
   };
 
-  private createServer(port?: number): http.Server {
-    const app: Express = express();
-    const httpServer = http.createServer(app);
-    const resolvedPort = port || 3000;
-    httpServer.listen(resolvedPort, function () {
-      Logger.info(`listening on *:${resolvedPort}`);
-    });
-    return httpServer;
-  }
+  // see this page for client handling of Auth error
+  // https://socket.io/docs/v4/middlewares/
+  private authenticate = (socket: Socket, next: (err?: any) => void ) => {
+      const token = socket.handshake.auth.token;
+      if (!token) return next(new Error('Authentication error: No token'));
+      Logger.debug(`session: validation successful for: token ${token}`);
+      this.auth.validate(token) ? next() : next(new Error('Authentication error: Invalid token'));
+  };
 
   private onConnect = (socket: Socket) => {
     // this.auth.authenticate(token);
@@ -77,7 +76,7 @@ export class SocketService {
     // i.e. for a given auth token, we need a consistent sessionId
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
-    Logger.debug(`server: a user connected on channel ${channelId} as ${participantId} session ${sessionId}`);
+    Logger.debug(`session: a user connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     this.channels[channelId] = this.sendSocket;
     // for websockets, session must include a node id (so that we can route message back here)
     this.serviceListener
@@ -88,22 +87,22 @@ export class SocketService {
           this.serviceListener
             .sessionEnded(sessionId)
             .then(() => {
-              Logger.debug(`server: user ${participantId} disconnected`);
+              Logger.debug(`session: user ${participantId} disconnected`);
             })
             .catch((e) => {
-              Logger.debug(`server: user ${participantId}::${sessionId} failed to remove Session`);
+              Logger.debug(`session: user ${participantId}::${sessionId} failed to remove Session`);
             });
         });
         // Handle inbound Events
         socket.on('message', (event: Event, fn) => {
           // @TODO - verify event source IS participantId (no spoofing!)
           this.publisher.publishEvent({ ...event, source: { id: participantId } }, participantId).catch((e) => {
-            Logger.debug(`server: publish ${event.id} failed for ${participantId}`, e);
+            Logger.debug(`session: publish ${event.id} failed for ${participantId}`, e);
           });
         });
       })
       .catch((e) => {
-        Logger.debug(`server: user ${participantId}::${sessionId} failed to add Session`);
+        Logger.debug(`session: user ${participantId}::${sessionId} failed to add Session`);
       });
   };
 
@@ -112,7 +111,7 @@ export class SocketService {
     if (toSocket && toSocket.connected) {
       toSocket.send(event);
     } else {
-      Logger.debug(`server: socket ${channelId} is not connected`);
+      Logger.debug(`session: socket ${channelId} is not connected`);
     }
   };
 

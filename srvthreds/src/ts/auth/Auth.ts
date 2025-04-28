@@ -1,8 +1,13 @@
+
+export interface AuthResult {
+    token: string;
+    expires: number;
+}
+
 export interface Auth {
+
+    login(username: string, password: string): AuthResult;
   
-    // jwt token
-    authenticate(token: any): any;
+    validate(token: string): boolean;
    
-    // jwt token
-    authorize(token: any, requiredRole: string): any;
 }

@@ -9,6 +9,7 @@ import { ServiceListener, SocketService } from './SocketService.js';
 import defaultSessionsModel from '../../config/sessions/sessions_model.json' with { type: 'json' };
 import defaultResolverConfig from '../../config/resolver_config.json' with { type: 'json' };
 import { SessionServiceListener } from './SessionServiceListener.js';
+import { HttpService } from './HttpService.js';
 
 // Agent specific configuration
 export interface SessionAgentConfig {
@@ -17,7 +18,6 @@ export interface SessionAgentConfig {
 
 // Agent specific additional args
 export interface SessionAgentArgs {
-  httpServer?: http.Server;
   sessionsModel?: SessionsModel;
   resolverConfig?: ResolverConfig;
 }
@@ -34,34 +34,33 @@ export class SessionAgent implements MessageHandler {
   private socketService: SocketService;
   // handles mapping sessions to external channels (i.e. sockets or rest calls, etc.)
   private sessionService: SessionService;
+  private loginService: HttpService
 
   // dispatchers for sending events (from Messages) to outbound channels
   dispatchers: ((event: Event, channelId: string) => void)[] = [];
 
-  constructor({config, eventPublisher, additionalArgs}: MessageHandlerParams) {
+  constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
     this.eventPublisher = eventPublisher;
+    this.loginService = new HttpService((this.agentConfig.customConfig as SessionAgentConfig)?.port);
 
     //use supplied session model or default
     const sessionsModel = (additionalArgs as SessionAgentArgs)?.sessionsModel || defaultSessionsModel;
     const resolverConfig = (additionalArgs as SessionAgentArgs)?.resolverConfig || defaultResolverConfig;
     this.sessionService = new SessionService(sessionsModel, resolverConfig);
 
-    // allow for use of existing http server instance
-    const httpServer = (additionalArgs as SessionAgentArgs)?.httpServer || undefined;
-
     this.socketService = new SocketService({
       serviceListener: new SessionServiceListener(this.sessionService),
       publisher: this.eventPublisher,
       nodeId: this.agentConfig.nodeId,
-      port: (this.agentConfig.customConfig as SessionAgentConfig)?.port,
-      httpServer,
+      httpServer: this.loginService.httpServer,
     });
     this.dispatchers.push(this.socketService.send);
   }
 
   async initialize(): Promise<void> {
-    return;
+    this.loginService.start();
+    Logger.info(`SessionAgent is running on port ${this.agentConfig.customConfig?.port}`);
   }
 
   // process Message from the Engine
@@ -73,7 +72,7 @@ export class SessionAgent implements MessageHandler {
           dispatcher(message.event, channelId);
         } catch (e) {
           Logger.error(e);
-          Logger.error(`Failed to send event to outbound channel ${channelId}`);
+          Logger.error(`session: Failed to send event to outbound channel ${channelId}`);
         }
       });
     });
@@ -81,10 +80,9 @@ export class SessionAgent implements MessageHandler {
 
   async shutdown(): Promise<void> {
     await this.socketService.shutdown();
+    await this.loginService.shutdown();
     return this.sessionService.shutdown();
   }
 }
-
-
 
 export default SessionAgent;

@@ -4,7 +4,7 @@ import fs from 'fs';
 import express from 'express';
 import http from 'http';
 import { Request, Response, Express } from 'express';
-//@temp sms
+import cors from 'cors';
 
 import { Logger, PatternModel, Event, Message, LoggerLevel } from './ts/thredlib/index.js';
 import { Sessions } from './ts/sessions/Sessions.js';
@@ -42,6 +42,8 @@ import { System } from './ts/engine/System.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const DEFAULT_PORT = 3001;
 
 /*
 
@@ -163,7 +165,6 @@ class ServiceManager {
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
       additionalArgs: {
-        httpServer,
         sessionsModel,
       },
     });
@@ -289,6 +290,6 @@ httpServer.listen(443, function () {
 });
 */
 
-httpServer.listen(3000, function () {
-  Logger.info('listening on *:3000');
+httpServer.listen(DEFAULT_PORT, function () {
+  Logger.info(`Engine Web Service running on *:${DEFAULT_PORT}`);
 });

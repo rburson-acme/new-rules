@@ -18,7 +18,9 @@
     "clean": "rimraf dist-server",
     "test": "npx vitest --run --bail=1 --no-file-parallelism",
     "generate-schemas": "cd .. ;cd thredlib ; npm run generate-event ; npm run generate-pattern",
-    "build-lib": "cd .. ;cd thredlib ; npm run build-all"
+    "build-lib": "cd .. ;cd thredlib ; npm run build-all",
+    "start-session-agent": "tsx src/ts/agent/index.ts -n session_agent",
+    "start-persistence-agent": "tsx src/ts/agent/index.ts -n persistence_agent"
   },
   "nodemonConfig": {
     "exec": "npm run dev",
@@ -36,8 +38,12 @@
     ]
   },
   "dependencies": {
+    "@types/bcrypt": "^5.0.2",
     "ajv": "^8.17.1",
     "amqplib": "^0.8.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
     "ioredis": "^5.4.1",
     "jsonata": "^2.0.6",

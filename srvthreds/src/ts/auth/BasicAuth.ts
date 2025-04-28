@@ -1,12 +1,14 @@
-import { Auth } from "./Auth.js";
+import { Auth, AuthResult } from "./Auth.js";
 
 export class BasicAuth implements Auth {
-   
-    authenticate(token: any): any {
-        return true;
+
+    login(username: string, password: string): AuthResult {
+        const token = 'temp_token'
+        const expires = Date.now() + 3600 * 1000; // Token expires in 1 hour
+        return { token, expires };
     }
-    
-    authorize(token: any, requiredRole: string): any {
+
+    validate(token: string): boolean {
         return true;
     }
 }
