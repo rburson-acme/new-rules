@@ -45,7 +45,7 @@ export class BuiltInOps {
           const messageTemplate: MessageTemplate = { event: newEvent, to };
 
           //send message
-          await threds.dispatch(messageTemplate, thredStore.thredContext);
+          await threds.handleMessage(messageTemplate, thredStore.thredContext);
 
         } else {
           throw EventThrowable.get(

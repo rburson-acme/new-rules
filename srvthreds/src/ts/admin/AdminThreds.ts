@@ -1,5 +1,5 @@
 import { PersistenceAdapter } from '../agent/persistence/PersistenceAdapter.js';
-import { Dispatcher } from '../engine/Dispatcher.js';
+import { MessageHandler } from '../engine/MessageHandler.js';
 import { Events } from '../engine/Events.js';
 import { Id } from '../engine/Id.js';
 import { ThredsStore } from '../engine/store/ThredsStore.js';
@@ -13,8 +13,8 @@ export class AdminThreds extends Threds {
   private adminService: AdminService;
   private persistenceAdapter: PersistenceAdapter;
 
-  constructor(thredsStore: ThredsStore, dispatcher: Dispatcher) {
-    super(thredsStore, dispatcher);
+  constructor(thredsStore: ThredsStore, messageHandler: MessageHandler) {
+    super(thredsStore, messageHandler);
     this.adminService = new AdminService(this);
     this.persistenceAdapter = new PersistenceAdapter();
   }
@@ -45,7 +45,7 @@ export class AdminThreds extends Threds {
           content: { values },
         });
         const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
-        await this.dispatch(message);
+        await this.handleMessage(message);
     } else {
       return super.consider(event);
     }

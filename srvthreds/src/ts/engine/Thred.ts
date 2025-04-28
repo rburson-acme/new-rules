@@ -40,7 +40,7 @@ export class Thred {
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
 
-      reactionResult?.messageTemplate && await threds.dispatch(reactionResult.messageTemplate, thredStore.thredContext);
+      reactionResult?.messageTemplate && await threds.handleMessage(reactionResult.messageTemplate, thredStore.thredContext);
     } while (inputEvent);
   }
 

@@ -2,7 +2,6 @@ import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
-import { EventsStore } from './store/EventsStore.js';
 import { PatternsStore } from './store/PatternsStore.js';
 import { EventQ } from '../queue/EventQ.js';
 import { StorageFactory } from '../storage/StorageFactory.js';
@@ -10,19 +9,18 @@ import { RunConfig } from './Config.js';
 import { QMessage } from '../queue/QService.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
-import { Dispatcher } from './Dispatcher.js';
+import { MessageHandler } from './MessageHandler.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { ThredContext } from './ThredContext.js';
-import { ReactionResult } from './Reaction.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
-export class Engine implements Dispatcher {
+export class Engine implements MessageHandler {
   dispatchers: ((messageTemplate: MessageTemplate) => Promise<void> | void)[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
@@ -61,7 +59,7 @@ export class Engine implements Dispatcher {
    * @param event
    * @param to
    */
-  public async dispatch(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
+  public async handleMessage(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
     const timestamp = Date.now();
     const sessions = System.getSessions();
     const event = messageTemplate.event;
@@ -117,7 +115,7 @@ export class Engine implements Dispatcher {
         title: `Failure processing Event ${inboundEvent.id} : ${eventError?.message}`,
         error: eventError,
       });
-      await this.dispatch({ event: outboundEvent, to: [inboundEvent.source.id] });
+      await this.handleMessage({ event: outboundEvent, to: [inboundEvent.source.id] });
     } catch (e) {
       error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
     }

@@ -5,7 +5,7 @@ import { ThredStore } from './store/ThredStore.js';
 import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
-import { Dispatcher } from './Dispatcher.js';
+import { MessageHandler } from './MessageHandler.js';
 import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
@@ -19,7 +19,7 @@ import { BuiltInOps } from './builtins/BuiltInOps.js';
 export class Threds {
   constructor(
     readonly thredsStore: ThredsStore,
-    private readonly dispatcher: Dispatcher,
+    private readonly messageHandler: MessageHandler,
   ) {}
 
   async initialize(): Promise<void> {}
@@ -32,12 +32,12 @@ export class Threds {
       : this.handleUnbound(event);
   }
 
-  async dispatch(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
-    return this.dispatcher.dispatch(messageTemplate, thredContext); // outbound messages with 'addressees'
+  async handleMessage(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
+    return this.messageHandler.handleMessage(messageTemplate, thredContext); // outbound messages with 'addressees'
   }
 
   shutdown(delay = 0): Promise<void> {
-    return this.dispatcher.shutdown(delay);
+    return this.messageHandler.shutdown(delay);
   }
 
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
@@ -45,7 +45,7 @@ export class Threds {
   private async handleBound(thredId: string, event: Event): Promise<void> {
     await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
       // @TODO @TEMP @DEMO // copy admin -----------
-      // await this.dispatch({id: event.id, event, to: []});
+      // await this.handleMessage{id: event.id, event, to: []});
       // -------------------------------------------
       if (!thredStore) {
         await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED, timestamp: Date.now() });
@@ -93,7 +93,7 @@ export class Threds {
     // Assign a thredId via a shallow copy of the event
     await this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
       // @TODO @TEMP @DEMO (copy the admin user) ----
-      //await this.dispatch({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
+      //await this.handleMessage({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
       // ---------------------------------------------
 
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
