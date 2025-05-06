@@ -1,22 +1,19 @@
 import './init.js';
 
-import fs from 'fs';
-import express from 'express';
+import express, { Express, Request, Response } from 'express';
 import http from 'http';
-import { Request, Response, Express } from 'express';
-import cors from 'cors';
 
-import { Logger, PatternModel, Event, Message, LoggerLevel } from './ts/thredlib/index.js';
-import { Sessions } from './ts/sessions/Sessions.js';
-import { SessionStorage } from './ts/sessions/storage/SessionStorage.js';
-import { EventQ } from './ts/queue/EventQ.js';
-import { MessageQ } from './ts/queue/MessageQ.js';
-import { Server } from './ts/engine/Server.js';
-import { StorageFactory } from './ts/storage/StorageFactory.js';
-import { RemoteQBroker } from './ts/queue/remote/RemoteQBroker.js';
-import { RemoteQService } from './ts/queue/remote/RemoteQService.js';
 import { Agent } from './ts/agent/Agent.js';
 import { Config as StaticEngineConfig } from './ts/engine/Config.js';
+import { Server } from './ts/engine/Server.js';
+import { EventQ } from './ts/queue/EventQ.js';
+import { MessageQ } from './ts/queue/MessageQ.js';
+import { RemoteQBroker } from './ts/queue/remote/RemoteQBroker.js';
+import { RemoteQService } from './ts/queue/remote/RemoteQService.js';
+import { Sessions } from './ts/sessions/Sessions.js';
+import { SessionStorage } from './ts/sessions/storage/SessionStorage.js';
+import { StorageFactory } from './ts/storage/StorageFactory.js';
+import { Event, Logger, Message, PatternModel } from './ts/thredlib/index.js';
 
 import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
 import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
@@ -24,21 +21,18 @@ import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json'
 //import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
 import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
 //import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
+import engineConfig from './ts/config/engine.json' with { type: 'json' };
 import patternModel from './ts/config/patterns/uav_detection.pattern.json' with { type: 'json' };
 //import { patternModel } from './ts/config/patterns/ts/uav_detection_pattern.js';
 //import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel] as PatternModel[];
-import engineConfig from './ts/config/engine.json' with { type: 'json' };
 StaticEngineConfig.engineConfig = engineConfig;
-import sessionAgentConfig from './ts/config/session_agent.json' with { type: 'json' };
-import persistenceAgentConfig from './ts/config/uav_demo/persistence_agent.json' with { type: 'json' };
 
 import path from 'node:path';
 import url from 'node:url';
 import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
-import { ConfigLoader } from './ts/config/ConfigLoader.js';
-import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
 import { System } from './ts/engine/System.js';
+import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

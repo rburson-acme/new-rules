@@ -54,27 +54,27 @@ export class AdminService {
     const to = [event.source.id];
     const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
     if (!opName) {
-      throw EventThrowable.get(
-        `No operation name supplied for system event`,
-        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      );
+      throw EventThrowable.get({
+        message: `No operation name supplied for system event`,
+        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      });
     }
     const operation = this.operations[opName];
     if (!operation) {
-      throw EventThrowable.get(
-        `No operation found called ${opName} for system event`,
-        errorCodes[errorKeys.ARGUMENT_VALIDATION_ERROR].code,
-      );
+      throw EventThrowable.get({
+        message: `No operation found called ${opName} for system event`,
+        code: errorCodes[errorKeys.ARGUMENT_VALIDATION_ERROR].code,
+      });
     } else {
       try {
         return await operation(args);
       } catch (e) {
         if (e instanceof EventThrowable) throw e;
-        throw EventThrowable.get(
-          `Operation ${opName} failed for system event`,
-          errorCodes[errorKeys.SERVER_ERROR].code,
-          e,
-        );
+        throw EventThrowable.get({
+          message: `Operation ${opName} failed for system event`,
+          code: errorCodes[errorKeys.SERVER_ERROR].code,
+          cause: e,
+        });
       }
     }
   }
@@ -98,10 +98,10 @@ export class AdminService {
     } = this.getThredArgs<TransitionThredArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
       if (!thredStore) {
-        throw EventThrowable.get(
-          `Thred ${thredId} does not, or no longer exists`,
-          errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
-        );
+        throw EventThrowable.get({
+          message: `Thred ${thredId} does not, or no longer exists`,
+          code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+        });
       }
       await Thred.transition(thredStore, this.threds, new Transition(transition));
     });
@@ -118,10 +118,10 @@ export class AdminService {
     } = this.getThredArgs<TerminateThreadArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
       if (!thredStore) {
-        throw EventThrowable.get(
-          `Thred ${thredId} does not, or no longer exists`,
-          errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
-        );
+        throw EventThrowable.get({
+          message: `Thred ${thredId} does not, or no longer exists`,
+          code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+        });
       }
       thredStore.finish();
     });
@@ -173,17 +173,17 @@ export class AdminService {
       args: { op, patternId },
     } = this.getArgs<ReloadPatternArgs>(args);
     if (!patternId) {
-      throw EventThrowable.get(
-        `No patternId supplied for reloadPattern operation on System`,
-        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      );
+      throw EventThrowable.get({
+        message: `No patternId supplied for reloadPattern operation on System`,
+        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      });
     }
     const patternModel = await PersistenceManager.get().getActivePattern(patternId);
     if (!patternModel) {
-      throw EventThrowable.get(
-        `Pattern ${patternId} not found or NOT ACTIVE for reloadPattern operation on System`,
-        errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
-      );
+      throw EventThrowable.get({
+        message: `Pattern ${patternId} not found or NOT ACTIVE for reloadPattern operation on System`,
+        code: errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
+      });
     }
 
     await this.threds.thredsStore.patternsStore.storePatternModel(patternModel);
@@ -218,10 +218,10 @@ export class AdminService {
     const { event } = args;
     const { thredId, ...rest } = Events.getValues(event) as T;
     if (!thredId) {
-      throw EventThrowable.get(
-        `No thredId supplied for terminateThred operation on System`,
-        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      );
+      throw EventThrowable.get({
+        message: `No thredId supplied for terminateThred operation on System`,
+        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      });
     }
     return { event, args: { thredId, ...rest } as T };
   }

@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Event, Logger as L, Message, Series } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Events, Event, Logger as L, Message, Series } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
@@ -11,6 +11,8 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { BuiltInOps } from './builtins/BuiltInOps.js';
+import { Events as EngineEvents } from './Events.js';
+import { ThredThrowable } from './ThredThrowable.js';
 
 /*
   Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
@@ -49,14 +51,16 @@ export class Threds {
       // -------------------------------------------
       if (!thredStore) {
         await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED, timestamp: Date.now() });
-        throw EventThrowable.get(
-          `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
-          errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
-        );
+        throw EventThrowable.get({
+          message: `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
+          code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+        });
       }
+      // handle (and throw) incoming error events from agents
+      this.handleErrorEvent(event, thredStore);
       // handle built-in events
-      if(BuiltInOps.isBuiltInOp(event)) return BuiltInOps.consider(event, thredStore, this);
-
+      if (BuiltInOps.isBuiltInOp(event)) return BuiltInOps.consider(event, thredStore, this);
+      // handle all other events
       return Thred.consider(event, thredStore, this);
     });
   }
@@ -98,5 +102,14 @@ export class Threds {
 
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
     });
+  }
+
+  private handleErrorEvent(event: Event, thredStore: ThredStore): void {
+    const error = Events.getError(event);
+    if (error) {
+      // @TODO once agent config is available - verify event is allowed (i.e. from one of the agents)
+      // report the error event to the $thred
+      throw ThredThrowable.get(error, 'thred', thredStore.thredContext);
+    }
   }
 }

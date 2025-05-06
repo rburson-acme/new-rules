@@ -19,33 +19,33 @@ export class AdminThreds extends Threds {
     this.persistenceAdapter = new PersistenceAdapter();
   }
 
-    async initialize(): Promise<void> {
-      await super.initialize();
-      return this.persistenceAdapter.initialize();
-    }
+  async initialize(): Promise<void> {
+    await super.initialize();
+    return this.persistenceAdapter.initialize();
+  }
 
   async consider(event: Event): Promise<void> {
     if (AdminService.isAdminEvent(event)) {
-      if(event.thredId !== ThredId.SYSTEM) {
-        throw EventThrowable.get(
-          `System event must have a system thredId: ${ThredId.SYSTEM}`,
-          errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-        );
+      if (event.thredId !== ThredId.SYSTEM) {
+        throw EventThrowable.get({
+          message: `System event must have a system thredId: ${ThredId.SYSTEM}`,
+          code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+        });
       }
       let values: EventValues['values'] | undefined;
-        if (event.type === eventTypes.control.dataControl.type) {
-          // persistence operation has a top level result key
-          values = { result : await this.persistenceAdapter.execute(event) };
-        } else if (event.type === eventTypes.control.sysControl.type) {
-          values = await this.adminService.handleSystemEvent({ event: event });
-        }
-        const outboundEvent = Events.newEventFromEvent({
-          prevEvent: event,
-          title: `System Event -> Thred: ${event.thredId} -> Re: Event: ${event.id}`,
-          content: { values },
-        });
-        const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
-        await this.handleMessage(message);
+      if (event.type === eventTypes.control.dataControl.type) {
+        // persistence operation has a top level result key
+        values = { result: await this.persistenceAdapter.execute(event) };
+      } else if (event.type === eventTypes.control.sysControl.type) {
+        values = await this.adminService.handleSystemEvent({ event: event });
+      }
+      const outboundEvent = Events.newEventFromEvent({
+        prevEvent: event,
+        title: `System Event -> Thred: ${event.thredId} -> Re: Event: ${event.id}`,
+        content: { values },
+      });
+      const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
+      await this.handleMessage(message);
     } else {
       return super.consider(event);
     }

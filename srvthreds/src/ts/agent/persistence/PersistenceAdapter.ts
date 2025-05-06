@@ -6,20 +6,20 @@ import { Spec } from '../../thredlib/task/Spec';
 import { Adapter } from '../adapter/Adapter';
 
 export class PersistenceAdapter implements Adapter {
-  constructor(private config?: { hostString?: string, dbname?: string }) {
-  }
+  constructor(private config?: { hostString?: string; dbname?: string }) {}
 
   async initialize(): Promise<void> {
     PersistenceFactory.connect(this.config?.hostString);
   }
 
+  // @TODO implement transactions for Persistence
   async execute(event: Event): Promise<EventValues['values']> {
     const content = event.data?.content;
     if (!content?.tasks)
-      throw EventThrowable.get(
-        'No tasks provided for Persistence operation',
-        errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      );
+      throw EventThrowable.get({
+        message: 'No tasks provided for Persistence operation',
+        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+      });
     // tasks is an array containing tasks and/or arrays of tasks
     // A task array represents a transaction
     return Series.map(content.tasks, async (task: EventTask | EventTask[]) => {
@@ -35,7 +35,6 @@ export class PersistenceAdapter implements Adapter {
   }
 
   async executeTask(task: EventTask): Promise<any> {
-
     // task options can override the adapter config with host and dbname
     const dbname = task?.options?.dbname || this.config?.dbname;
     const hostString = task?.options?.hostString || this.config?.hostString;
@@ -48,7 +47,7 @@ export class PersistenceAdapter implements Adapter {
       case Spec.PUT_OP:
         return persistence.put({ type, values });
       case Spec.GET_ONE_OP:
-        return persistence.getOne({ type, matcher, selector, collector});
+        return persistence.getOne({ type, matcher, selector, collector });
       case Spec.GET_OP:
         return persistence.get({ type, matcher, selector, collector });
       case Spec.UPDATE_OP:
@@ -61,7 +60,7 @@ export class PersistenceAdapter implements Adapter {
         return persistence.delete({ type, matcher });
       case Spec.COUNT_OP:
         return persistence.count({ type, matcher });
-      case Spec.RUN_OP: 
+      case Spec.RUN_OP:
         return persistence.run(values);
       default:
         throw new Error(`Unsupported task operation: ${task.op}`);

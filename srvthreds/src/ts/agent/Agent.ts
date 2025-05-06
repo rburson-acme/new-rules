@@ -8,6 +8,7 @@ import {
   errorCodes,
   errorKeys,
   EventContent,
+  serializableError,
 } from '../thredlib/index.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
@@ -129,11 +130,14 @@ export class Agent {
       try {
         await this.processMessage(qMessage.payload);
         await messageQ.delete(qMessage);
-      } catch (e) {
+      } catch (e: any) {
         Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
+        const cause = serializableError(e.eventError ? e.eventError.cause : e);
         try {
           const outboundEvent = this.eventPublisher.createOutboundEvent({
-            error: { ...errorCodes[errorKeys.TASK_ERROR], cause: e },
+            error: e.eventError
+              ? { ...e.eventError, cause }
+              : { ...errorCodes[errorKeys.TASK_ERROR], cause },
             prevEvent: qMessage.payload.event,
           });
           await this.eventPublisher.publishEvent(outboundEvent);

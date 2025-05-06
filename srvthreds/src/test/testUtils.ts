@@ -297,7 +297,7 @@ export class AgentConnectionManager {
   ): Promise<AgentConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
-    // this are not used for testing with this utility but currently required for the Agent
+    // these are not used for testing with this utility but currently required for the Agent
     // set up the remote Qs for the Agent
     const agentEventservice = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const agentEventQ: EventQ = new EventQ(agentEventservice);
@@ -359,8 +359,8 @@ export class AgentQueueConnectionManager {
     const engineMessageQ = new MessageQ(engineMessageService);
 
     // set up the remote Qs for the Agent
-    const agentEventservice = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
-    const agentEventQ: EventQ = new EventQ(agentEventservice);
+    const agentEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const agentEventQ: EventQ = new EventQ(agentEventService);
     const agentMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
       subName: sessionAgentConfig.subscriptionName,
@@ -380,7 +380,7 @@ export class AgentQueueConnectionManager {
     return new AgentQueueConnectionManager(
       engineEventService,
       engineMessageService,
-      agentEventservice,
+      agentEventService,
       agentMessageService,
       engineEventQ,
       engineMessageQ,

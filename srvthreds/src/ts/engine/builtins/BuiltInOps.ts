@@ -25,10 +25,10 @@ export class BuiltInOps {
         // check participant membership in thred
         if (thredParticpantIds.includes(sourceId)) {
           if (!Events.valueNamed(event, 'message')) {
-            throw EventThrowable.get(
-              `Broadcast event ${event.id} must have a 'message' value`,
-              errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-            );
+            throw EventThrowable.get({
+              message: `Broadcast event ${event.id} must have a 'message' value`,
+              code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
+            });
           }
           // make the new event
           const _values = { ...Events.getValues(event), messageSource: event.source };
@@ -46,18 +46,17 @@ export class BuiltInOps {
 
           //send message
           await threds.handleMessage(messageTemplate, thredStore.thredContext);
-
         } else {
-          throw EventThrowable.get(
-            `Participant ${sourceId} is not a member of the thred ${thredStore.id} and cannot broadcast`,
-            errorCodes[errorKeys.UNAUTHORIZED].code,
-          );
+          throw EventThrowable.get({
+            message: `Participant ${sourceId} is not a member of the thred ${thredStore.id} and cannot broadcast`,
+            code: errorCodes[errorKeys.UNAUTHORIZED].code,
+          });
         }
       } else {
-        throw EventThrowable.get(
-          `Pattern ${thredStore.pattern.name} does not allow broadcast events`,
-          errorCodes[errorKeys.UNAUTHORIZED].code,
-        );
+        throw EventThrowable.get({
+          message: `Pattern ${thredStore.pattern.name} does not allow broadcast events`,
+          code: errorCodes[errorKeys.UNAUTHORIZED].code,
+        });
       }
     }
   }

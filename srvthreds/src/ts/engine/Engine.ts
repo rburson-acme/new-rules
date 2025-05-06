@@ -7,7 +7,7 @@ import { EventQ } from '../queue/EventQ.js';
 import { StorageFactory } from '../storage/StorageFactory.js';
 import { RunConfig } from './Config.js';
 import { QMessage } from '../queue/QService.js';
-import { EventThrowable } from '../thredlib/core/Errors.js';
+import { EventThrowable, serializableError } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
 import { MessageHandler } from './MessageHandler.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
@@ -73,7 +73,7 @@ export class Engine implements MessageHandler {
       logObject(messageTemplate);
       await Pm.get().saveEvent({ event: messageTemplate.event, to: messageTemplate.to, timestamp });
       // NOTE: dispatch all at once - failure notification will be handled separately
-      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher({event, to}));
+      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher({ event, to }));
     } catch (e) {
       error(crit(`Engine::Failed dispatch message : ${messageTemplate}`), e as Error, (e as Error).stack);
     }
@@ -108,22 +108,23 @@ export class Engine implements MessageHandler {
   */
   private async handleError(e: any, inboundEvent: Event): Promise<void> {
     try {
-      const eventError =
-        e instanceof EventThrowable ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause: e };
+      const cause = serializableError(e.eventError ? e.eventError.cause : e);
+      const eventError = e.eventError ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause };
+      const to: string[] = e.notifyScope === 'thred' && e.thredContext ? ['$thred'] : [inboundEvent.source.id];
       const outboundEvent = Events.newEventFromEvent({
         prevEvent: inboundEvent,
         title: `Failure processing Event ${inboundEvent.id} : ${eventError?.message}`,
         error: eventError,
       });
-      await this.handleMessage({ event: outboundEvent, to: [inboundEvent.source.id] });
+      await this.handleMessage({ event: outboundEvent, to }, e.thredContext);
     } catch (e) {
       error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
     }
   }
 
   /**
-   * These are incoming 'events' to 'consumed' by any interested parties
-   * 'Reactive Programming' metaphor - no 'addressee'. (ie. publish)
+   * These are incoming 'events' to be 'consumed' by the Engine
+   * i.e. Events not Messages (no addressee)
    * @param event
    */
   consider(event: Event): Promise<void> {

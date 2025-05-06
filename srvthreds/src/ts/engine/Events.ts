@@ -16,12 +16,13 @@ export class Events {
     type?: string;
   }) {
     const _content = error ? { error } : content;
+    const _title = title || prevEvent.data?.title;
 
     return EventsLib.newEvent({
       type: type || eventTypes.system.tell.type,
       re: prevEvent.id,
       data: {
-        ...{ title },
+        ...{ _title: title },
         content: _content,
       },
       source: { ...eventTypes.system.source },

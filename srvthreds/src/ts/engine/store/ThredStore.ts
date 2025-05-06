@@ -93,10 +93,10 @@ export class ThredStore {
   static fromState(state: ThredStoreState, patternsStore: PatternsStore): ThredStore {
     const pattern = patternsStore.getPattern(state.patternId);
     if (!pattern)
-      throw EventThrowable.get(
-        `Pattern ${state.patternId} not loaded for Thred ${state.id}`,
-        errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
-      );
+      throw EventThrowable.get({
+        message: `Pattern ${state.patternId} not loaded for Thred ${state.id}`,
+        code: errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
+      });
     return new ThredStore(
       state.id,
       pattern,
