@@ -6,7 +6,7 @@ import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageHandler } from './MessageHandler.js';
-import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
+import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
 import { MessageTemplate } from './MessageTemplate.js';

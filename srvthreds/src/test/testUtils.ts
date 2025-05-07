@@ -18,7 +18,7 @@ import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from '../ts/config/engine.json' with { type: 'json' };
 import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
-import { PersistenceManager } from '../ts/engine/persistence/PersistenceManager.js';
+import { PersistenceManager } from '../ts/persistence/PersistenceManager.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
 import sessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
@@ -236,7 +236,7 @@ export class ServerConnectionManager {
     // standard (default) agent configuration file
     // this location is relative to the 'agent' directory
     const agent = new Agent({
-      agentName: 'session_agent',
+      configName: 'session_agent',
       agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
@@ -309,7 +309,7 @@ export class AgentConnectionManager {
 
     // create the Agent and start it
     const agent = new Agent({
-      agentName,
+      configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
       messageQ: agentMessageQ,
@@ -369,7 +369,7 @@ export class AgentQueueConnectionManager {
 
     // create the Agent and start it
     const agent = new Agent({
-      agentName,
+      configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
       messageQ: agentMessageQ,

@@ -1,13 +1,13 @@
-import { Persistence } from '../../persistence/Persistence.js';
-import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
-import { Query } from '../../task/Taskable.js';
+import { Persistence } from './Persistence.js';
+import { PersistenceFactory } from './PersistenceFactory.js';
+import { Query } from '../task/Taskable.js';
 import {
   PatternModel,
   Logger,
   ThredLogRecord,
   EventRecord,
   ThredRecord,
-} from '../../thredlib';
+} from '../thredlib/index.js';
 
 export class PersistenceManager {
   private static instance: PersistenceManager;

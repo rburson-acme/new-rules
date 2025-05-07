@@ -30,7 +30,7 @@ StaticEngineConfig.engineConfig = engineConfig;
 
 import path from 'node:path';
 import url from 'node:url';
-import { PersistenceManager } from './ts/engine/persistence/PersistenceManager.js';
+import { PersistenceManager } from './ts/persistence/PersistenceManager.js';
 import { System } from './ts/engine/System.js';
 import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
 
@@ -154,7 +154,7 @@ class ServiceManager {
     // create and run a Session Agent
     // if config is not provided, it will be loaded from persistence (run bootstrap first)
     this.sessionAgent = new Agent({
-      agentName: 'session_agent',
+      configName: 'session_agent',
       //agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
@@ -176,7 +176,7 @@ class ServiceManager {
 
     const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);
     this.persistenceAgent = new Agent({
-      agentName: 'persistence_agent',
+      configName: 'persistence_agent',
       // if config is not provided, it will be loaded from persistence (run bootstrap first)
       // agentConfig: persistenceAgentConfig,
       eventQ: persistenceEventQ,

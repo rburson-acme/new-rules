@@ -1,0 +1,29 @@
+{
+    "groups": [
+        {
+            "handle": "sacredband",
+            "name": "Sacred Band of Thebes",
+            "services": [
+                {
+                    "name": "Persistence Agent",
+                    "nodeType": "org.wt.persistence",
+                    "outbound": [
+                        {
+                            "type": "org.wt.persistence",
+                            "contentTypes": [
+                                "values"
+                            ]
+                        }
+                    ],
+                    "inbound": [
+                        {
+                            "contentTypes": [
+                                "tasks"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

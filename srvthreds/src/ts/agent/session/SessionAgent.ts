@@ -1,15 +1,13 @@
-import http from 'http';
-import { Message, Event, Logger, SessionsModel } from '../../thredlib/index.js';
+import defaultResolverConfig from '../../config/resolver_config.json' with { type: 'json' };
+import defaultSessionsModel from '../../config/sessions/sessions_model.json' with { type: 'json' };
 import { ResolverConfig } from '../../sessions/Config.js';
-import { StorageFactory } from '../../storage/StorageFactory.js';
+import { Event, Logger, Message, SessionsModel } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
 import { AgentConfig } from '../Config.js';
-import { SessionService } from './SessionService.js';
-import { ServiceListener, SocketService } from './SocketService.js';
-import defaultSessionsModel from '../../config/sessions/sessions_model.json' with { type: 'json' };
-import defaultResolverConfig from '../../config/resolver_config.json' with { type: 'json' };
-import { SessionServiceListener } from './SessionServiceListener.js';
 import { HttpService } from './HttpService.js';
+import { SessionService } from './SessionService.js';
+import { SessionServiceListener } from './SessionServiceListener.js';
+import { SocketService } from './SocketService.js';
 
 // Agent specific configuration
 export interface SessionAgentConfig {

@@ -3,7 +3,7 @@ import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Storage, Types, indexId } from '../../storage/Storage.js';
 import { Logger, Parallel } from '../../thredlib/index.js';
-import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
+import { PersistenceManager as Pm } from '../../persistence/PersistenceManager.js';
 
 /*
   - Thred locking is handled here, and should be contained to this class

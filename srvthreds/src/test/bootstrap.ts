@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { PersistenceManager } from '../ts/engine/persistence/PersistenceManager';
+import { PersistenceManager } from '../ts/persistence/PersistenceManager';
 import { Logger, LoggerLevel, Series } from '../ts/thredlib';
 import { ConfigLoader } from '../ts/config/ConfigLoader';
 import { StorageFactory } from '../ts/storage/StorageFactory';

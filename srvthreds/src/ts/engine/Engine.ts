@@ -13,7 +13,7 @@ import { MessageHandler } from './MessageHandler.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
-import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
+import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';

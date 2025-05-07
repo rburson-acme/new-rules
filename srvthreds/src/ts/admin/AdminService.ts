@@ -20,7 +20,7 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
 import { Transition } from '../engine/Transition.js';
-import { PersistenceManager } from '../engine/persistence/PersistenceManager.js';
+import { PersistenceManager } from '../persistence/PersistenceManager.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 

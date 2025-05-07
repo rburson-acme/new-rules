@@ -15,7 +15,7 @@ import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
 import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
-import { PersistenceManager } from '../engine/persistence/PersistenceManager.js';
+import { PersistenceManager } from '../persistence/PersistenceManager.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -57,7 +57,7 @@ export class Agent {
 
   constructor(
     private params: {
-      agentName: string;
+      configName: string;
       eventQ: EventQ;
       messageQ: MessageQ;
       agentConfig?: AgentConfig;
@@ -68,12 +68,12 @@ export class Agent {
   }
 
   async start() {
-    const { agentName, additionalArgs } = this.params;
+    const { configName, additionalArgs } = this.params;
     // load config from persistence if not provided
     this.agentConfig = this.params.agentConfig
       ? this.params.agentConfig
-      : await PersistenceManager.get().getConfig(agentName);
-    if (!this.agentConfig) throw new Error(`Agent: failed to load config for ${agentName}`);
+      : await PersistenceManager.get().getConfig(configName);
+    if (!this.agentConfig) throw new Error(`Agent: failed to load config for ${configName}`);
     try {
       // agentImpl can be a string (dynamic import) or an object (direct instantiation)
       let Handler;

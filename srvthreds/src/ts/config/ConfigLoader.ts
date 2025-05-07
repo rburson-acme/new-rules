@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PersistenceManager } from '../engine/persistence/PersistenceManager';
+import { PersistenceManager } from '../persistence/PersistenceManager';
 import { PatternsStore } from '../engine/store/PatternsStore';
 import { Storage } from '../storage/Storage';
 import { Logger, Series } from '../thredlib';

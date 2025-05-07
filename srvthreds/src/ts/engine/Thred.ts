@@ -4,7 +4,7 @@ import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
-import { PersistenceManager as Pm } from './persistence/PersistenceManager.js';
+import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
 import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
 
 export class Thred {
