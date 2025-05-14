@@ -8,19 +8,19 @@ import { useEffect } from 'react';
 const modules: RouteListItemType<ModuleNames>[] = [
   {
     description:
-      'Allows for NewRules to read health information (body temperature, heartrate, sleep data, etc.) and send data to connected services. ',
+      'Allows for Initiative Labs to read health information (body temperature, heartrate, sleep data, etc.) and send data to connected services. ',
     name: 'Health Information',
     iconName: 'heartbeat',
     navigateFn: () => router.push({ pathname: '/modules/health-info' }),
   },
   {
-    description: 'Allows for NewRules to determine your geolocation and send data to connected services. ',
+    description: 'Allows for Initiative Labs to determine your geolocation and send data to connected services. ',
     name: 'Geolocation',
     iconName: 'globe',
     navigateFn: () => router.push({ pathname: '/modules/geolocation' }),
   },
   {
-    description: 'Allows for NewRules to detect falls and injuries and send data to connected services. ',
+    description: 'Allows for Initiative Labs to detect falls and injuries and send data to connected services. ',
     name: 'Fall/Injury Detection',
     iconName: 'exclamation-triangle',
     navigateFn: () => router.push({ pathname: '/modules/injury' }),

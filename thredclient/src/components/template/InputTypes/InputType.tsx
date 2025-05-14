@@ -32,10 +32,9 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
         <TextBubble
           text={turnValueToText(value)}
-          bubbleStyle={{ backgroundColor: colors.green, alignSelf: 'center' }}
+          bubbleStyle={{ backgroundColor: colors.buttonTertiary, alignSelf: 'center' }}
           textStyle={{ color: '#fff' }}
         />
-        {/* <FontAwesome name="user-circle" size={40} color={colors.lightGrey} /> */}
         <Image source={avatar} style={{ width: 40, height: 40, borderRadius: 100 }} />
       </View>
     );

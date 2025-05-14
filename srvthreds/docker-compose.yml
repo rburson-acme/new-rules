@@ -13,7 +13,7 @@ services:
      #- ./.docker/config/redis.conf:/usr/local/etc/redis/redis.conf
 
   rabbitmq:
-    image: rabbitmq:management
+    image: rabbitmq:3-management
     container_name: rabbitmq
     volumes:
         #- ./.docker/rabbitmq/etc/:/etc/rabbitmq/

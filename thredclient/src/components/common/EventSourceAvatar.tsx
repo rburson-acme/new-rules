@@ -9,7 +9,11 @@ type EventSourceAvatarProps = {
   eventType?: string;
 };
 export const EventSourceAvatar = ({ uri, eventType }: EventSourceAvatarProps) => {
-  const avatarImage = uri ? { uri } : eventType === eventTypes.system.type ? systemAvatarImage : defaultAvatarImage;
+  const avatarImage = uri
+    ? { uri }
+    : eventType === eventTypes.system.tell.type
+    ? systemAvatarImage
+    : defaultAvatarImage;
 
   return <Image source={avatarImage} style={{ width: 35, height: 35, resizeMode: 'contain' }} />;
 };

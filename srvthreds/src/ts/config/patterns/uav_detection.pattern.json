@@ -4,6 +4,7 @@
     },
     "name": "UAV Detection",
     "id": "uav_detect",
+    "broadcastAllowed": true,
     "reactions": [
         {
             "name": "lookup_contact",

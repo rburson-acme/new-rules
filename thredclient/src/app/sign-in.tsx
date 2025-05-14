@@ -4,10 +4,12 @@ import { RootStore } from '@/src/stores/RootStore';
 import { Button } from '@/src/components/common/Button';
 import { observer } from 'mobx-react-lite';
 import { router } from 'expo-router';
+import { useTheme } from '../contexts/ThemeContext';
 
-const logo = require('../../assets/new-rules-logo.png');
+const logo = require('../../assets/initiative-blue.png');
 function SignIn() {
   const { authStore, connectionStore } = RootStore.get();
+  const { colors } = useTheme();
 
   const handleMessengerView = async () => {
     if (!authStore.userId) return;
@@ -24,12 +26,8 @@ function SignIn() {
 
   return (
     <View style={styles.container}>
-      <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }}>
+      <View style={{ width: '100%', alignItems: 'center' }}>
         <Image source={logo} style={[styles.logoStyle]} />
-        <View style={styles.logoContainer}>
-          <Text style={{ fontFamily: 'Nexa-Heavy', fontSize: 32 }}>New</Text>
-          <Text style={{ fontFamily: 'Nexa-ExtraLight', fontSize: 32 }}>Rules</Text>
-        </View>
       </View>
       <View style={styles.fieldContainer}>
         <TextInput
@@ -52,13 +50,13 @@ function SignIn() {
       <Button
         content="Messenger View"
         textStyle={styles.buttonTextStyle}
-        buttonStyle={{ ...styles.buttonStyle, marginTop: 30 }}
+        buttonStyle={{ ...styles.buttonStyle, backgroundColor: colors.buttonPrimary, marginTop: 30 }}
         onPress={handleMessengerView}
       />
       <Button
         content="Admin View"
         textStyle={styles.buttonTextStyle}
-        buttonStyle={styles.buttonStyle}
+        buttonStyle={{ ...styles.buttonStyle, backgroundColor: colors.buttonPrimary }}
         onPress={handleAdminView}
       />
     </View>
@@ -107,13 +105,12 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 12,
     width: 200,
-    backgroundColor: '#4DB9CC',
   },
   logoStyle: {
     resizeMode: 'contain',
-    width: Dimensions.get('screen').width * 0.5,
-    height: Dimensions.get('screen').height * 0.25,
-    margin: 0,
+    width: 200,
+    height: 100,
+    marginTop: 64,
     padding: 0,
   },
 });

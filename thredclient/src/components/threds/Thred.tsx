@@ -1,11 +1,13 @@
 import { ThredStore } from '@/src/stores/ThredStore';
-import { observer } from 'mobx-react-lite';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Event } from '../events/Event';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import React from 'react';
 import { DateStamp } from './DateStamp';
+import { Image } from 'expo-image';
+import { BroadcastInput } from './BroadcastInput';
 
 type ThredProps = {
   thredStore: ThredStore;
@@ -19,15 +21,19 @@ export const Thred = observer(({ thredStore, thredsStore }: ThredProps) => {
   const firstEvent = firstEventStore?.event;
 
   if (!firstEvent || !eventsStore) return null;
+
   return (
-    <FlatList
-      data={eventsStore.eventStores}
-      keyExtractor={eventStore => eventStore.event?.id || Math.random().toString()}
-      contentContainerStyle={[styles.containerStyle, { backgroundColor: colors.background }]}
-      style={{ backgroundColor: colors.background }}
-      ListHeaderComponent={<DateStamp time={firstEvent.time} />}
-      renderItem={({ item: eventStore }) => <Event data={eventStore.event?.data} eventStore={eventStore} />}
-    />
+    <>
+      <FlatList
+        data={eventsStore.eventStores}
+        keyExtractor={eventStore => eventStore.event?.id || Math.random().toString()}
+        contentContainerStyle={[styles.containerStyle, { backgroundColor: colors.background }]}
+        style={{ backgroundColor: colors.background }}
+        ListHeaderComponent={<DateStamp time={firstEvent.time} />}
+        renderItem={({ item: eventStore }) => <Event data={eventStore.event?.data} eventStore={eventStore} />}
+      />
+      <BroadcastInput thredStore={thredStore} />
+    </>
   );
 });
 

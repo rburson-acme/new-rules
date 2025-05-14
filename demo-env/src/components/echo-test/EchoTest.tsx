@@ -6,6 +6,7 @@ import { Event } from 'thredlib';
 const defaultText = JSON.stringify(
   {
     type: 'org.wt.echo',
+    broadcastAllowed: true,
     data: {
       title: 'Echo Event',
       content: {
