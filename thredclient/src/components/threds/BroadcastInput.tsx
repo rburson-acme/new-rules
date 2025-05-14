@@ -1,13 +1,13 @@
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { ThredStore } from '@/src/stores/ThredStore';
 import { Image } from 'expo-image';
-import { useLocalObservable } from 'mobx-react-lite';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 type BroadcastInputProps = {
   thredStore: ThredStore;
 };
-export const BroadcastInput = ({ thredStore }: BroadcastInputProps) => {
+export const BroadcastInput = observer(({ thredStore }: BroadcastInputProps) => {
   const localStore = useLocalObservable(() => ({
     text: '',
     setText(value: string) {
@@ -41,7 +41,7 @@ export const BroadcastInput = ({ thredStore }: BroadcastInputProps) => {
       </Pressable>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   containerStyle: { paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },

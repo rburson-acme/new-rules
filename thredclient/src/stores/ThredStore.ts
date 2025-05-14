@@ -24,7 +24,6 @@ export class ThredStore {
     if (!userId) throw Error('userId not found');
     const broadcastEvent = BuiltInEvents.getBroadcastMessageEvent(this.thred.id, { id: userId, name: userId }, message);
     this.rootStore.connectionStore.publish(broadcastEvent);
-    console.log({ broadcastEvent });
     this.eventsStore?.addEvent(broadcastEvent);
   };
 

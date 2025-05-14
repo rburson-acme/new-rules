@@ -15,5 +15,5 @@ export const EventSourceAvatar = ({ uri, eventType }: EventSourceAvatarProps) =>
     ? systemAvatarImage
     : defaultAvatarImage;
 
-  return <Image source={avatarImage} style={{ width: 35, height: 35, resizeMode: 'contain' }} />;
+  return <Image source={avatarImage} style={{ width: 35, height: 35 }} resizeMode="contain" />;
 };

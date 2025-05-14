@@ -27,7 +27,7 @@ function SignIn() {
   return (
     <View style={styles.container}>
       <View style={{ width: '100%', alignItems: 'center' }}>
-        <Image source={logo} style={[styles.logoStyle]} />
+        <Image source={logo} style={[styles.logoStyle]} resizeMode="contain" />
       </View>
       <View style={styles.fieldContainer}>
         <TextInput
@@ -107,7 +107,6 @@ const styles = StyleSheet.create({
     width: 200,
   },
   logoStyle: {
-    resizeMode: 'contain',
     width: 200,
     height: 100,
     marginTop: 64,
