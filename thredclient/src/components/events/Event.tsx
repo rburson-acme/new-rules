@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { EventData } from 'thredlib';
+import { EventData, Events } from 'thredlib';
 import { EventStore } from '@/src/stores/EventStore';
 import { Interaction } from '../template/Interaction';
 import { getComponentTypes } from '../template/componentTypes';
@@ -9,6 +9,7 @@ import { useTheme } from '@/src/contexts/ThemeContext';
 import { RegularText } from '../common/RegularText';
 import { OutgoingBroadcast } from './OutgoingBroadcast';
 import { IncomingBroadcast } from './IncomingBroadcast';
+import { ErrorEvent } from './ErrorEvent';
 
 type EventProps = {
   eventStore: EventStore;
@@ -20,20 +21,23 @@ export const Event = ({ data, eventStore }: EventProps) => {
   const templateStore = eventStore.openTemplateStore;
   if (!data) return null;
   const values = data.content?.values;
+  if (!eventStore.event) return null;
+  const error = Events.getError(eventStore.event);
 
-  if (eventStore.event?.type === 'org.wt.broadcast') {
+  if (error) {
+    return <ErrorEvent error={error} />;
+  }
+  if (eventStore.event.type === 'org.wt.broadcast') {
     return <IncomingBroadcast values={values} time={eventStore.event.time} />;
-  } else if (eventStore.event?.type === 'org.wt.client.broadcast') {
+  } else if (eventStore.event.type === 'org.wt.client.broadcast') {
     return <OutgoingBroadcast values={values} />;
   } else {
     return (
       <View style={styles.containerStyle}>
         <View>
           <ThredIcon uri={data?.display?.uri} tintColor={colors.border} />
-          {eventStore.event?.time && (
-            <RegularText style={[{ fontSize: 10 }]}>
-              {new Date(eventStore.event?.time).toLocaleTimeString()}
-            </RegularText>
+          {eventStore.event.time && (
+            <RegularText style={[{ fontSize: 10 }]}>{new Date(eventStore.event.time).toLocaleTimeString()}</RegularText>
           )}
         </View>
         <View style={[styles.eventDataContainer]}>
