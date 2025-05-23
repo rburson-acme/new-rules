@@ -8,7 +8,8 @@ import { ThredContext } from './ThredContext.js';
 export class Transition {
 
     static NEXT = '$next';
-    static TERMIATE = '$terminate';
+    static TERMINATE = '$terminate';
+    static NO_TRANSITION = '$noTransition';
 
     readonly name: string;
     readonly input: TransitionInput;

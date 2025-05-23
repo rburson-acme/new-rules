@@ -1,18 +1,28 @@
-import { Event, Logger as L } from '../thredlib/index.js';
+import { Event, Logger as L, ThredLogRecordType } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
 import { Threds } from './Threds.js';
 import { Transition } from './Transition.js';
-import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
-import { MATCH, NO_MATCH } from '../thredlib/persistence/ThredLogRecord.js';
+import { SystemController as Pm } from '../persistence/controllers/SystemController.js';
+import { Sessions } from '../sessions/Sessions.js';
+import { System } from './System.js';
+import { MessageTemplate } from './MessageTemplate.js';
+import { ThredsStore } from './store/ThredsStore.js';
+import { BuiltInReaction } from './builtins/BuiltInReaction.js';
 
+/**
+ * The Thred class is responsible for processing an Event through a series of state transitions (reactions).
+ * A Thred is a state machine that can be in one of many states (reactions) and can transition to other states based on input events.
+ */
 export class Thred {
-  /*
-      'consider' should be the only external way to induce a state change (i.e. all calls go through here)
-      Note this method should remain synchronous. Any specified consective reactions (via transition forward/local) will run and complete
-      before returning.  The caller may rely on that.
-    */
+  /**
+   * 'consider' is the only external way to induce a state change (i.e. all calls go through here)
+   * The consider method should be synchonized so that only one event for a particular thredId is processed at a time.
+   * This is currently handled by the Threds class using the withThredStore methods
+   * Note this method should remain synchronous. Any specified consective reactions (via transition forward/local) will run and complete
+   * before returning.  The caller may rely on that.
+   */
   static async consider(event: Event, thredStore: ThredStore, threds: Threds): Promise<void> {
     let inputEvent: Event | undefined = event;
 
@@ -23,8 +33,11 @@ export class Thred {
     const fromReactionName = thredStore.currentReaction?.name;
     // loop wil continue as long as there is a currentReaction and an inputEvent
     transitionLoop: do {
-      // apply the event to the current state. There will be a result if the event triggers a state change
-      const reactionResult: ReactionResult | undefined = await thredStore.currentReaction?.apply(inputEvent, thredStore);
+      // apply the event to the current state (or a builtin reaction). There will be a result if the event triggers a state change
+      const reactionResult: ReactionResult | undefined = BuiltInReaction.isBuiltInOp(inputEvent)
+        ? await BuiltInReaction.apply(inputEvent, thredStore)
+        : await thredStore.currentReaction?.apply(inputEvent, thredStore);
+
       //if there's not a match, end the loop
       if (!reactionResult) {
         await Thred.logNoTransition(thredStore, event, fromReactionName);
@@ -32,16 +45,30 @@ export class Thred {
         break transitionLoop;
       }
       // add the source of the event to the participants list
-      thredStore.thredContext.addParticipantIds(inputEvent.source.id);
+      thredStore.addParticipantIds([inputEvent.source.id]);
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
       // note thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
-      L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`));
+      L.debug(
+        L.h2(
+          `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`,
+        ),
+      );
 
-      reactionResult?.messageTemplate && await threds.handleMessage(reactionResult.messageTemplate, thredStore.thredContext);
+      reactionResult?.messageTemplate &&
+        (await threds.handleMessage(await Thred.resolveAddresses(reactionResult.messageTemplate, thredStore)));
     } while (inputEvent);
+  }
+
+  // resolve the 'to' field in the message template to actual participantIds and store participantIds associations
+  static async resolveAddresses(messageTemplate: MessageTemplate, thredStore: ThredStore): Promise<MessageTemplate> {
+    // translate 'directives' in the 'to' field to actual participantIds
+    const to = await System.getSessions().getParticipantIdsFor(messageTemplate.to, thredStore?.thredContext);
+    // update the thredContext with the expanded participants
+    thredStore?.addParticipantIds(to);
+    return { ...messageTemplate, to };
   }
 
   // state transition + apply next input
@@ -74,7 +101,7 @@ export class Thred {
     // get the next reaction (if any)
     thredStore.transitionTo(pattern.nextReaction(thredStore.currentReaction, transition));
     // get the next input event if any
-    return !thredStore.isFinished ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
+    return thredStore.isActive ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
   }
 
   private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
@@ -86,7 +113,7 @@ export class Thred {
     Pm.get().saveThredLogRecord({
       thredId: thredStore.id,
       eventId: event.id,
-      type: NO_MATCH,
+      type: ThredLogRecordType.NO_MATCH,
       fromReaction,
       timestamp: Date.now(),
     });
@@ -96,7 +123,7 @@ export class Thred {
     await Pm.get().saveThredLogRecord({
       thredId: thredStore.id,
       eventId: event.id,
-      type: MATCH,
+      type: ThredLogRecordType.MATCH,
       fromReaction,
       toReaction,
       timestamp: Date.now(),

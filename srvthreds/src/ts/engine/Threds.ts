@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Events, Event, Logger as L, Message, Series } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Events, Event, Logger as L, Message, Series, ThredLogRecordType } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
@@ -6,17 +6,18 @@ import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageHandler } from './MessageHandler.js';
-import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
+import { SystemController as Pm, SystemController } from '../persistence/controllers/SystemController.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { NO_PATTERN_MATCH, NO_THRED } from '../thredlib/persistence/ThredLogRecord.js';
 import { MessageTemplate } from './MessageTemplate.js';
-import { BuiltInOps } from './builtins/BuiltInOps.js';
 import { Events as EngineEvents } from './Events.js';
 import { ThredThrowable } from './ThredThrowable.js';
 
-/*
-  Threds are synchronized in this class. ThredStores are locked here on a per-thredId basis.
-  No two events with the same thredId should be processed at the same time.
+/**
+ * The Threds class is the main entry point for dispatching Events to Threds (existing or new).
+ * Events with a thredId are 'bound' while those without are 'unbound'
+ * Existing Threds are found by thredId. New Threds are created by matching the Events with Patterns
+ * Threds are synchronized in this class (using the withThredStore methods of the ThredStore). ThredStores are locked here on a per-thredId basis.
+ * No two events with the same thredId should be processed at the same time.
 */
 export class Threds {
   constructor(
@@ -34,8 +35,8 @@ export class Threds {
       : this.handleUnbound(event);
   }
 
-  async handleMessage(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
-    return this.messageHandler.handleMessage(messageTemplate, thredContext); // outbound messages with 'addressees'
+  async handleMessage(messageTemplate: MessageTemplate): Promise<void> {
+    return this.messageHandler.handleMessage(messageTemplate); // outbound messages with 'addressees'
   }
 
   shutdown(delay = 0): Promise<void> {
@@ -49,17 +50,17 @@ export class Threds {
       // @TODO @TEMP @DEMO // copy admin -----------
       // await this.handleMessage{id: event.id, event, to: []});
       // -------------------------------------------
+      const timestamp = Date.now();
       if (!thredStore) {
-        await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: NO_THRED, timestamp: Date.now() });
+        await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: ThredLogRecordType.NO_THRED, timestamp });
         throw EventThrowable.get({
           message: `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
           code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
         });
       }
       // handle (and throw) incoming error events from agents
-      this.handleErrorEvent(event, thredStore);
-      // handle built-in events
-      if (BuiltInOps.isBuiltInOp(event)) return BuiltInOps.consider(event, thredStore, this);
+      this.throwErrorEvent(event, thredStore);
+
       // handle all other events
       return Thred.consider(event, thredStore, this);
     });
@@ -82,11 +83,16 @@ export class Threds {
         }
       } catch (e) {
         L.error(L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`));
+        throw EventThrowable.get({
+          message: `Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}`,
+          code: errorCodes[errorKeys.SERVER_ERROR].code,
+          cause: e,
+        });
       }
     });
     if (matches === 0) {
-      // orphan event
-      Pm.get().saveThredLogRecord({ eventId: event.id, type: NO_PATTERN_MATCH, timestamp: Date.now() });
+      // orphan event - no need to wait on this storage operation
+      Pm.get().saveThredLogRecord({ eventId: event.id, type: ThredLogRecordType.NO_PATTERN_MATCH, timestamp: Date.now() });
       L.info(L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`));
     }
   }
@@ -99,12 +105,11 @@ export class Threds {
       // @TODO @TEMP @DEMO (copy the admin user) ----
       //await this.handleMessage({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
       // ---------------------------------------------
-
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
     });
   }
 
-  private handleErrorEvent(event: Event, thredStore: ThredStore): void {
+  private throwErrorEvent(event: Event, thredStore: ThredStore): void {
     const error = Events.getError(event);
     if (error) {
       // @TODO once agent config is available - verify event is allowed (i.e. from one of the agents)

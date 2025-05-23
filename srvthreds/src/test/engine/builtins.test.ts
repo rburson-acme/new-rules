@@ -89,7 +89,7 @@ const patternModels: PatternModel[] = [
           },
           // don't terminate the thred because we need it to remain active in order to broadcast
           transition: {
-            name: 'event1reaction',
+            name: '$noTransition',
           }
         },
       },

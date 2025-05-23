@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Logger, Parallel, toArray } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
@@ -13,13 +13,18 @@ import { MessageHandler } from './MessageHandler.js';
 import { AdminThreds } from '../admin/AdminThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
-import { PersistenceManager as Pm } from '../persistence/PersistenceManager.js';
+import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
+import { ThredStore } from './store/ThredStore.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
+/**
+ * The Engine is the main entry point for Event processing. 
+ * It pulls Events from the inbound queue and dispatches Messages to participants (users and agents).
+ */
 export class Engine implements MessageHandler {
   dispatchers: ((messageTemplate: MessageTemplate) => Promise<void> | void)[] = [];
   readonly threds: Threds;
@@ -59,21 +64,16 @@ export class Engine implements MessageHandler {
    * @param event
    * @param to
    */
-  public async handleMessage(messageTemplate: MessageTemplate, thredContext?: ThredContext): Promise<void> {
+  public async handleMessage(messageTemplate: MessageTemplate): Promise<void> {
     const timestamp = Date.now();
-    const sessions = System.getSessions();
     const event = messageTemplate.event;
     try {
-      // translate 'directives' in the 'to' field to actual participantIds
-      const to = await sessions.getParticipantIdsFor(messageTemplate.to, thredContext);
-      // update the thredContext with the expanded participants
-      thredContext?.addParticipantIds(to);
       // log the event
       debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
       logObject(messageTemplate);
-      await Pm.get().saveEvent({ event: messageTemplate.event, to: messageTemplate.to, timestamp });
+      await Sc.get().replaceEvent({ event: messageTemplate.event, to: toArray(messageTemplate.to), timestamp });
       // NOTE: dispatch all at once - failure notification will be handled separately
-      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher({ event, to }));
+      await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate));
     } catch (e) {
       error(crit(`Engine::Failed dispatch message : ${messageTemplate}`), e as Error, (e as Error).stack);
     }
@@ -89,13 +89,17 @@ export class Engine implements MessageHandler {
       const message: QMessage<Event> = await this.inboundQ.pop();
       const timestamp = Date.now();
       try {
+        // persist the event before consideration
+        await Sc.get().replaceEvent({ event: message.payload, timestamp });
+        // handle the event
         await this.consider(message.payload);
+        // remove the message from the queue
         await this.inboundQ.delete(message);
-        await Pm.get().saveEvent({ event: message.payload, timestamp });
       } catch (e) {
         error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
         await this.inboundQ.reject(message, e as Error).catch(error);
-        await Pm.get().saveEvent({ event: message.payload, error: e, timestamp });
+        // update the event with the error
+        await Sc.get().replaceEvent({ event: message.payload, error: e, timestamp });
         await this.handleError(e, message.payload);
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.inboundQ.requeue(message, e).catch(Logger.error);
@@ -109,14 +113,19 @@ export class Engine implements MessageHandler {
   private async handleError(e: any, inboundEvent: Event): Promise<void> {
     try {
       const cause = serializableError(e.eventError ? e.eventError.cause : e);
+      // if e is a ThredThrowable, it will have an eventError otherwise create it
       const eventError = e.eventError ? e.eventError : { ...errorCodes[errorKeys.SERVER_ERROR], cause };
+      // check the scope to determine who should be notified
       const to: string[] = e.notifyScope === 'thred' && e.thredContext ? ['$thred'] : [inboundEvent.source.id];
       const outboundEvent = Events.newEventFromEvent({
         prevEvent: inboundEvent,
         title: `Failure processing Event ${inboundEvent.id} : ${eventError?.message}`,
         error: eventError,
       });
-      await this.handleMessage({ event: outboundEvent, to }, e.thredContext);
+      // translate 'directives' in the 'to' field to actual participantIds
+      const resolvedTo = await System.getSessions().getParticipantIdsFor(to, e.thredContext);
+      // send the error message
+      await this.handleMessage({ event: outboundEvent, to: resolvedTo });
     } catch (e) {
       error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
     }

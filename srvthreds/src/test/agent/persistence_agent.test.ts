@@ -1,4 +1,4 @@
-import { Logger, LoggerLevel, Event, SMap, EventBuilder, Events } from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel, Event, SMap, EventBuilder, Events, EventThrowable } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
@@ -43,7 +43,7 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((Events.valueNamed(event, 'result'))[0][0].name).toBe('Object Test');
+          expect(Events.valueNamed(event, 'result')[0][0].name).toBe('Object Test');
           expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
@@ -54,19 +54,12 @@ describe('persistence agent test', function () {
     return pr;
   });
   test('test store object should fail w/ duplicate', async function () {
-    const pr = new Promise((resolve, reject) => {
-      agent.eventPublisher.publishEvent = withPromiseHandlers(
-        (event: Event) => {
-          expect(event.type).toBe('org.wt.persistence');
-          expect(event.data?.content?.values).toBeFalsy();
-          expect(event.data?.content?.error).toBeTruthy();
-        },
-        resolve,
-        reject,
-      );
-    });
-    agent.processMessage({ event: storeObjectEvent, to: ['org.wt.persistence'], id: 'test' });
-    return pr;
+    try {
+      await agent.processMessage({ event: storeObjectEvent, to: ['org.wt.persistence'], id: 'test' });
+    } catch (e) {
+      expect(e).toBeInstanceOf(EventThrowable);
+      expect((<EventThrowable>e).message).toContain('PersistenceAgent: Error processing message');
+    }
   });
   test('test update object', async function () {
     const pr = new Promise((resolve, reject) => {
@@ -91,7 +84,7 @@ describe('persistence agent test', function () {
           expect(event.type).toBe('org.wt.persistence');
           // this is an example of a task structured as a transaction - noticed the nested array result
           // see the event below for more details
-          expect((Events.valueNamed(event, 'result'))[0][0].testItems[0].name).toBe('first testItem renamed');
+          expect(Events.valueNamed(event, 'result')[0][0].testItems[0].name).toBe('first testItem renamed');
           expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
@@ -121,7 +114,7 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect((Events.valueNamed(event, 'result'))[0].name).toBe('Replacement Object');
+          expect(Events.valueNamed(event, 'result')[0].name).toBe('Replacement Object');
           expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
@@ -151,7 +144,7 @@ describe('persistence agent test', function () {
       agent.eventPublisher.publishEvent = withPromiseHandlers(
         (event: Event) => {
           expect(event.type).toBe('org.wt.persistence');
-          expect((Events.valueNamed(event, 'result'))[0].length).toBe(0);
+          expect(Events.valueNamed(event, 'result')[0].length).toBe(0);
           expect(event.data?.content?.error).toBeUndefined();
         },
         resolve,
@@ -201,7 +194,9 @@ const storeObjectEvent = baseBldr
 // the results will be structured in the same way (see the tests that use this event)
 const findObjectEvent = baseBldr
   .fork()
-  .mergeTasks([{ name: 'findObject', op: Spec.GET_ONE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } }])
+  .mergeTasks([
+    { name: 'findObject', op: Spec.GET_ONE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
+  ])
   .mergeData({ title: 'Find Object' })
   .build();
 

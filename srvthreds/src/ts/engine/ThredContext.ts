@@ -20,6 +20,10 @@ export class ThredContext implements ExpressionContext {
     return this.scope[name];
   }
 
+  hasParticipant(name: string): boolean {
+    return this.uniqueParticipants.has(name);
+  }
+
   getParticipantAddresses() {
     return [...this.uniqueParticipants];
   }

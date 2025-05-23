@@ -20,7 +20,7 @@ import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
 import { Transition } from '../engine/Transition.js';
-import { PersistenceManager } from '../persistence/PersistenceManager.js';
+import { SystemController } from '../persistence/controllers/SystemController.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 
@@ -123,7 +123,7 @@ export class AdminService {
           code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
         });
       }
-      thredStore.finish();
+      thredStore.terminate();
     });
     return { status: systemEventTypes.successfulStatus, op, thredId };
   };
@@ -143,18 +143,18 @@ export class AdminService {
   getThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
-      args: { op, thredIds, status, completedMatcher },
+      args: { op, thredIds, status, terminatedMatcher },
     } = this.getArgs<GetThredsArgs>(args);
     // status defaults to active
     let threds: any[] = [];
-    if (status !== 'completed') {
+    if (status !== 'terminated') {
       const thredStores = await (thredIds?.length
         ? this.threds.thredsStore.getThredStores(thredIds!)
         : this.threds.thredsStore.getAllThredStores());
       threds = thredStores.map((thredStore) => thredStore.toJSON());
     }
-    if (status === 'completed' || status === 'all') {
-      const thredRecords = await PersistenceManager.get().getThreds(completedMatcher || {});
+    if (status === 'terminated' || status === 'all') {
+      const thredRecords = await SystemController.get().getThreds(terminatedMatcher || {});
       if (thredRecords?.length) {
         threds.push(...thredRecords.map((thredRecord) => thredRecord.thred));
       }
@@ -178,7 +178,7 @@ export class AdminService {
         code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
       });
     }
-    const patternModel = await PersistenceManager.get().getActivePattern(patternId);
+    const patternModel = await SystemController.get().getActivePattern(patternId);
     if (!patternModel) {
       throw EventThrowable.get({
         message: `Pattern ${patternId} not found or NOT ACTIVE for reloadPattern operation on System`,

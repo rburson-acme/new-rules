@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { PersistenceManager } from '../ts/persistence/PersistenceManager';
+import { SystemController } from '../ts/persistence/controllers/SystemController';
 import { Logger, LoggerLevel, Series } from '../ts/thredlib';
 import { ConfigLoader } from '../ts/config/ConfigLoader';
 import { StorageFactory } from '../ts/storage/StorageFactory';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory';
+import { UserController } from '../ts/persistence/controllers/UserController';
 
 Logger.setLevel(LoggerLevel.DEBUG);
 
@@ -36,12 +37,12 @@ function retrievePatterns(directory: string): any[] {
 
 async function persistPatterns(patterns: any[]): Promise<void> {
   await Series.forEach(patterns, async (pattern) => {
-    await PersistenceManager.get().upsertPattern(pattern);
+    await SystemController.get().upsertPattern(pattern);
   });
 }
 
 async function loadPatternsIntoStorage() {
-  await ConfigLoader.loadStorageFromPersistence(PersistenceManager.get(), StorageFactory.getStorage());
+  await ConfigLoader.loadStorageFromPersistence(SystemController.get(), StorageFactory.getStorage());
 }
 
 // demo
@@ -68,6 +69,16 @@ async function loadDemoObjects() {
     values: { id: '3', contactId: 'participant3' },
     matcher: { sensorId: '3' },
   });
+  UserController.get().replaceUser({ id: 'sensor_agent0', password: 'password0' });
+}
+
+async function createTestUsers() {
+  const uc = UserController.get();
+  uc.replaceUser({ id: 'participant0', password: 'password0' });
+  uc.replaceUser({ id: 'participant1', password: 'password1' });
+  uc.replaceUser({ id: 'participant2', password: 'password2' });
+  uc.replaceUser({ id: 'participant3', password: 'password3' });
+
 }
 
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)
@@ -76,19 +87,22 @@ async function run() {
   Logger.info('  > Clearing database and storage...');
   await PersistenceFactory.removeDatabase();
   await StorageFactory.purgeAll();
+  await SystemController.get().connect();
+  await UserController.get().connect();
 
   Logger.info('  > Loading config files in ./run-config into database...');
   const runConfigDirectory = path.join(__dirname, '../../run-config');
-  await ConfigLoader.loadPersistenceWithConfigFiles(PersistenceManager.get(), runConfigDirectory);
+  await ConfigLoader.loadPersistenceWithConfigFiles(SystemController.get(), runConfigDirectory);
 
   Logger.info('  > Loading patterns into database...');
-  await PersistenceManager.get().connect();
   const relativeDirectory = path.join(__dirname, '../ts/config/patterns');
   const patterns = retrievePatterns(relativeDirectory);
   await persistPatterns(patterns);
   Logger.info('  > Loading patterns into storage...');
   await loadPatternsIntoStorage();
 
+  // create test users
+  await createTestUsers();
   //demo
   await loadDemoObjects();
 

@@ -7,7 +7,7 @@ import rascal_config from '../config/rascal_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../queue/remote/RemoteQBroker.js';
 import { RemoteQService } from '../queue/remote/RemoteQService.js';
 import { Agent } from './Agent.js';
-import { PersistenceManager } from '../persistence/PersistenceManager.js';
+import { SystemController } from '../persistence/controllers/SystemController.js';
 
 /***
  *     __                 _                     _               
@@ -32,7 +32,7 @@ class Server  {
         const messageService = await RemoteQService.newInstance<Message>({ qBroker, subName: agentConfig.subscriptionName });
         const messageQ: MessageQ = new MessageQ(messageService);
         // connect to persistence
-        await PersistenceManager.get().connect();
+        await SystemController.get().connect();
         this.agent = new Agent({ configName, agentConfig: agentConfig, eventQ:eventQ, messageQ: messageQ });
         await this.agent.start();
     }

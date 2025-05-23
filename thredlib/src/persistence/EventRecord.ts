@@ -6,5 +6,5 @@ export interface EventRecord extends Persistent{
     timestamp: number;
     thredId?: string;
     error?: any;
-    to?: string[] | Address;
+    to?: string[];
 }

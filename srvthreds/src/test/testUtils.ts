@@ -18,7 +18,7 @@ import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from '../ts/config/engine.json' with { type: 'json' };
 import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
-import { PersistenceManager } from '../ts/persistence/PersistenceManager.js';
+import { SystemController } from '../ts/persistence/controllers/SystemController.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
 import sessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';

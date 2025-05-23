@@ -79,7 +79,7 @@ describe('admin persistence test', function () {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.data?.content?.error).toBeUndefined();
       expect(Events.valueNamed(message.event, 'result')).toBeTruthy();
-      expect(Events.valueNamed(message.event, 'result')[0].length).toBe(12);
+      expect(Events.valueNamed(message.event, 'result')[0].length).toBe(13);
       expect(Events.valueNamed(message.event, 'result')[0][0].event.data.title).toBe('Store Pattern System Test');
     });
     engineConnMan.eventQ.queue(findEventsEvent);

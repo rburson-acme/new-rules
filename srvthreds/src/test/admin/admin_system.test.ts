@@ -157,9 +157,9 @@ describe('admin system test', function () {
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
   });
-  test('get All Completed Threds', async function () {
+  test('get All Terminated Threds', async function () {
     const lastHour = new Date().getTime() - (60 * 60 * 1000);
-    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'completed', { "thred.endTime": { $gte: lastHour } });
+    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'terminated', { "thred.endTime": { $gte: lastHour } });
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(getThredsEvent.id);

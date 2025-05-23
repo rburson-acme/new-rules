@@ -53,4 +53,5 @@ export const Types = {
   Event: 'Event',
   SessionParticipant: 'SessionParticipant',
   ParticipantSessions: 'ParticipantSession',
+  ParticipantThreds: 'ParticipantThreds',
 };

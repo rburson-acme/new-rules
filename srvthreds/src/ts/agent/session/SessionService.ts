@@ -36,10 +36,6 @@ export class SessionService {
         return this.sessions.removeParticipant(participantId);
     }
 
-    newSessionId(): Promise<string> {
-        return this.sessions.newSessionId();
-    }
-
     // map recipients to channelIds
     async getChannels(message: Message): Promise<string[]> {
         const { sessions, sessionChannelIds } = this;

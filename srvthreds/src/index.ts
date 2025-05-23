@@ -30,7 +30,7 @@ StaticEngineConfig.engineConfig = engineConfig;
 
 import path from 'node:path';
 import url from 'node:url';
-import { PersistenceManager } from './ts/persistence/PersistenceManager.js';
+import { SystemController } from './ts/persistence/controllers/SystemController.js';
 import { System } from './ts/engine/System.js';
 import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
 
@@ -117,7 +117,7 @@ class ServiceManager {
     // set up the message broker to be used by all q services in this process
     const qBroker = new RemoteQBroker(rascal_config);
     // connect to persistence
-    await PersistenceManager.get().connect();
+    await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
@@ -242,7 +242,7 @@ class ServiceManager {
     Logger.info(`Agent shutdown successfully.`);
 
     Logger.info(`Disconnecting PersistenceManager..`);
-    await PersistenceManager.get().disconnect();
+    await SystemController.get().disconnect();
     Logger.info(`Disconnecting all Storage connections...`);
     await StorageFactory.disconnectAll();
     Logger.info(`Disconnecting PubSub connections...`);

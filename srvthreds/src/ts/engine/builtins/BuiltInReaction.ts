@@ -1,11 +1,12 @@
-import { errorCodes, errorKeys, EventThrowable, eventTypes, Event, EventBuilder, Events } from '../../thredlib';
+import { errorCodes, errorKeys, Event, Events, EventThrowable, eventTypes } from '../../thredlib';
 import { Events as LocalEvents } from '../Events';
 import { MessageTemplate } from '../MessageTemplate';
+import { ReactionResult } from '../Reaction';
 import { ThredStore } from '../store/ThredStore';
 import { System } from '../System';
-import { Threds } from '../Threds';
+import { Transition } from '../Transition';
 
-export class BuiltInOps {
+export class BuiltInReaction {
   static isBuiltInOp(event: Event): boolean {
     return this.isBroadcastType(event);
   }
@@ -14,9 +15,9 @@ export class BuiltInOps {
     return event.type === eventTypes.client.broadcast.type;
   }
 
-  static async consider(event: Event, thredStore: ThredStore, threds: Threds): Promise<void> {
+  static async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
     // handle a broadcast message
-    if (this.isBroadcastType(event)) {
+    if (BuiltInReaction.isBroadcastType(event)) {
       if (thredStore.pattern.broadcastAllowed) {
         const addressResolver = System.getSessions().getAddressResolver();
         const sourceId = event.source.id;
@@ -43,9 +44,8 @@ export class BuiltInOps {
           // don't broadcast to the source of the message
           const to = thredParticpantIds.filter((id) => id !== sourceId);
           const messageTemplate: MessageTemplate = { event: newEvent, to };
+          return { messageTemplate, transition: new Transition({ name: Transition.NO_TRANSITION }) };
 
-          //send message
-          await threds.handleMessage(messageTemplate, thredStore.thredContext);
         } else {
           throw EventThrowable.get({
             message: `Participant ${sourceId} is not a member of the thred ${thredStore.id} and cannot broadcast`,

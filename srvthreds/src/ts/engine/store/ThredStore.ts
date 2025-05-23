@@ -5,13 +5,14 @@ import { ReactionStore } from './ReactionStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Id } from '../Id.js';
 import { EventThrowable } from '../../thredlib/core/Errors.js';
-import { errorCodes, errorKeys, Thred } from '../../thredlib/index.js';
+import { errorCodes, errorKeys, Thred, ThredStatus } from '../../thredlib/index.js';
 
-/*
-  - Handles all state changes for a thred, most of which occur within a lock created and held by the ThredsStore
-  - Natural termination of a thred occurs when it is transitioned to to an undefined reaction, followed by a call
-    to ThredsStore.saveThredStore()
-*/
+/**
+ * The ThredStore class is responsible for managing the state of a Thred.
+ * It handles all state changes for a thred, most of which occur within a lock created and held by the ThredsStore
+ * Natural termination of a thred occurs when it is transitioned to to an undefined reaction, followed by a call
+ * to ThredsStore.saveThredStore()
+ */
 export class ThredStore {
   // @TODO thredContext should become a pointer to a events in a master log (persisted externally)
   private _currentReaction?: Reaction;
@@ -22,6 +23,7 @@ export class ThredStore {
     public reactionStore: ReactionStore,
     readonly thredContext: ThredContext,
     readonly startTime: number,
+    private status: ThredStatus,
     private endTime?: number,
   ) {
     const { reactionName } = reactionStore;
@@ -34,28 +36,58 @@ export class ThredStore {
     const id = Id.getNextThredId(pattern.id);
     const thredContext = new ThredContext({ thredId: id });
     const reactionStore = new ReactionStore({ reactionName: pattern.initialReactionName });
-    return new ThredStore(id, pattern, reactionStore, thredContext, Date.now());
+    return new ThredStore(id, pattern, reactionStore, thredContext, Date.now(), ThredStatus.ACTIVE);
   }
 
   transitionTo(reaction?: Reaction): void {
-    if (!reaction) this.endTime = Date.now();
+    // no transition
+    if(this._currentReaction === reaction) return;
     this._currentReaction = reaction;
     this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
+    // thred is finished if there is no reaction
+    if (!reaction) {
+      this.endTime = Date.now();
+      this.status = this.shouldTerminate() ? ThredStatus.TERMINATED : ThredStatus.FINISHED;
+    }
   }
 
   get currentReaction(): Reaction | undefined {
     return this._currentReaction;
   }
 
-  // This is the proper way to terminate a thred
+  // This is the proper way to complete a thred
   // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
   // this will ensure that it actually gets cleaned up
   finish(): void {
     this.transitionTo(undefined);
   }
 
+  // This is the proper way to terminate and archive
+  // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
+  // this will ensure that it actually gets cleaned up
+  terminate(): void {
+    if (this.status !== ThredStatus.FINISHED) this.finish();
+    this.status = ThredStatus.TERMINATED;
+  }
+
+  addParticipantIds(participantIds: string | string[]) {
+    this.thredContext.addParticipantIds(participantIds);
+  }
+
+  hasParticipant(participantId: string): boolean {
+    return this.thredContext.hasParticipant(participantId);
+  }
+
+  get isActive() {
+    return this.status === ThredStatus.ACTIVE;
+  }
+
   get isFinished() {
-    return !this.currentReaction;
+    return this.status === ThredStatus.FINISHED;
+  }
+
+  get isTerminated() {
+    return this.status === ThredStatus.TERMINATED;
   }
 
   get reactionTimedOut(): boolean {
@@ -72,6 +104,7 @@ export class ThredStore {
       reactionStore: this.reactionStore?.getState(),
       startTime: this.startTime,
       endTime: this.endTime,
+      status: this.status,
     };
   }
 
@@ -81,12 +114,14 @@ export class ThredStore {
       id: this.id,
       patternId: this.pattern.id,
       patternName: this.pattern.name,
+      broadcastAllowed: this.pattern.broadcastAllowed,
       currentReaction: {
         reactionName: this.currentReaction?.name,
         expiry: this.currentReaction?.expiry,
       },
       startTime: this.startTime,
       endTime: this.endTime,
+      status: this.status,
     };
   }
 
@@ -103,7 +138,14 @@ export class ThredStore {
       ReactionStore.fromState(state.reactionStore),
       ThredContext.fromState(state.thredContext),
       state.startTime,
+      state.status,
+      state.endTime,
     );
+  }
+
+  private shouldTerminate(): boolean {
+    // leave thred open if broadcasting is allowed
+    return !this.pattern.broadcastAllowed;
   }
 }
 
@@ -113,5 +155,6 @@ export interface ThredStoreState {
   patternId: string;
   reactionStore: any;
   startTime: number;
+  status: ThredStatus;
   endTime?: number;
 }

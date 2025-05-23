@@ -213,7 +213,7 @@ export class RedisStorage implements Storage {
   }
 
   /*
-        Add a string to a set.  Update the type index (atomic, safe operation)
+        Add a string to a set.  Update the type set (atomic, safe operation)
     */
   async addToSet(type: string, item: string, setId: string): Promise<void> {
     try {

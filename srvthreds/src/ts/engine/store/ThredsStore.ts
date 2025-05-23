@@ -3,11 +3,13 @@ import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { PatternsStore } from './PatternsStore.js';
 import { Storage, Types, indexId } from '../../storage/Storage.js';
 import { Logger, Parallel } from '../../thredlib/index.js';
-import { PersistenceManager as Pm } from '../../persistence/PersistenceManager.js';
+import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
+import { ThredThrowable } from '../ThredThrowable.js';
 
-/*
-  - Thred locking is handled here, and should be contained to this class
-*/
+/**
+ * The ThredsStore class is responsible for managing ThredStores, which are used to process events in the context of a Thred.
+ * Thred locking is handled here, and should be contained to this class
+ */
 export class ThredsStore {
   constructor(
     readonly patternsStore: PatternsStore,
@@ -28,10 +30,13 @@ export class ThredsStore {
         async () => {
           await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
           await this.addThredStore(thredStore);
-          const result = await op(thredStore);
-          await this.saveThredStore(thredStore);
-          delete this.thredStores[thredStore.id];
-          return result;
+          try {
+            const result = await op(thredStore);
+            await this.saveThredStore(thredStore);
+            return result;
+          } finally {
+            delete this.thredStores[thredStore.id];
+          }
         },
       ],
       ttl,
@@ -50,10 +55,13 @@ export class ThredsStore {
       [
         async () => {
           const thredStore = await this.getThreadStore(thredId);
-          const result = await op(thredStore);
-          if (thredStore) await this.saveThredStore(thredStore);
-          delete this.thredStores[thredId];
-          return result;
+          try {
+            const result = await op(thredStore);
+            if (thredStore) await this.saveThredStore(thredStore);
+            return result;
+          } finally {
+            delete this.thredStores[thredId];
+          }
         },
       ],
       ttl,
@@ -77,7 +85,7 @@ export class ThredsStore {
     return states.map((state) => this.fromThredState(state));
   }
 
-  // aquire a lock on each thred and terminate the thred
+  // aquire a lock on each thred, terminate and archive the thred
   async terminateAllThreds(): Promise<void> {
     const thredIds = await this.getAllThredIds();
     return Parallel.forEach(thredIds, async (thredId: string) => {
@@ -88,7 +96,7 @@ export class ThredsStore {
             try {
               const thredStore = await this.getThreadStore(thredId);
               if (thredStore) {
-                thredStore.finish();
+                thredStore.terminate();
                 await this.deleteAndTerminateThred(thredId);
               }
             } catch (e) {
@@ -127,7 +135,7 @@ export class ThredsStore {
 
   // requires lock
   private async saveThredStore(thredStore: ThredStore): Promise<void> {
-    if (thredStore.isFinished) {
+    if (thredStore.isTerminated) {
       await this.deleteAndTerminateThred(thredStore.id);
     } else {
       await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
@@ -136,16 +144,25 @@ export class ThredsStore {
 
   // requires lock
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
-    Logger.debug(Logger.h2(`releaseAndTerminateThred::terminating Thred ${thredId}`));
+    Logger.debug(Logger.h2(`deleteAndTerminateThred::terminating Thred ${thredId}`));
     try {
       //If locked, the lock will simply expire
       await this.storage.delete(Types.Thred, thredId);
     } catch (e) {
-      Logger.warn(Logger.crit(`releaseAndTerminateThred::Failed to delete Thred ${thredId}`));
+      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId}`));
     }
     // @todo archive the context and the reactionstore so that the thred could be replayed
     const thredStore = this.thredStores[thredId];
     delete this.thredStores[thredId];
-    await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });
+    try {
+      await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });
+    } catch (e) {
+      Logger.error(Logger.crit(`deleteAndTerminate::Failed to save Thred ${thredId} to archive`));
+      throw ThredThrowable.get(
+        { cause: e, message: 'Failed to save Thred to archive' },
+        'sender',
+        thredStore.thredContext,
+      );
+    }
   }
 }

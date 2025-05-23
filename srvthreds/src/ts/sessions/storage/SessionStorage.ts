@@ -30,12 +30,22 @@ export class SessionStorage {
 
   async getSessionsFor(participantId: string): Promise<Session[]> {
     try {
-      const sessionsIds: string[] = await this.storage.retrieveSet(Types.ParticipantSessions, participantId);
-      if (!sessionsIds?.length) {
+      const sessionIds: string[] = await this.storage.retrieveSet(Types.ParticipantSessions, participantId);
+      if (!sessionIds?.length) {
         Logger.error(`No Session found for participant ${participantId}`);
         return [];
       }
-      const sessions: Session[] = await this.storage.retrieveAll(Types.SessionParticipant, sessionsIds);
+      const sessions: Session[] = await Series.reduce(
+        sessionIds,
+        async (result, sessionId) => {
+          if (sessionId) {
+            const sp: SessionParticipant = await this.storage.retrieve(Types.SessionParticipant, sessionId);
+            if(sp) result.push({ id: sessionId, nodeId: sp.nodeId });
+            return result;
+          }
+        },
+        [] as Session[],
+      );
       return sessions || [];
     } catch (e) {
       Logger.error(`Failed to get Session for participant ${participantId}`, e);

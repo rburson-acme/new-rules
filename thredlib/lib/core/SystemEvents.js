@@ -1,6 +1,7 @@
 import { systemEventTypes, eventTypes, ThredId } from './types.js';
 import { EventBuilder } from './EventBuilder.js';
 import { Spec } from '../task/Spec.js';
+import { Types } from '../persistence/types.js';
 export class SystemEvents {
     /***
      *     _____ _                  _     ___            _             _
@@ -42,8 +43,8 @@ export class SystemEvents {
      *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
      *        |___/
      */
-    static getGetThredsEvent(source, status, completedMatcher) {
-        const values = { op: systemEventTypes.operations.getThreds, status, completedMatcher };
+    static getGetThredsEvent(source, status, terminatedMatcher) {
+        const values = { op: systemEventTypes.operations.getThreds, status, terminatedMatcher };
         return EventBuilder.create({
             type: eventTypes.control.sysControl.type,
             thredId: ThredId.SYSTEM,
@@ -102,7 +103,7 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: 'PatternModel', values: pattern } })
+            .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: Types.PatternModel, values: pattern } })
             .mergeData({ title: `Store Pattern ${pattern.name}` })
             .build();
     }
@@ -115,7 +116,7 @@ export class SystemEvents {
             .mergeTasks({
             name: 'findPattern',
             op: Spec.GET_ONE_OP,
-            params: { type: 'PatternModel', matcher: { id: patternId } },
+            params: { type: Types.PatternModel, matcher: { id: patternId } },
         })
             .mergeData({ title: 'Find Pattern' })
             .build();
@@ -126,7 +127,7 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'findAllPatterns', op: Spec.GET_OP, params: { type: 'PatternModel' } })
+            .mergeTasks({ name: 'findAllPatterns', op: Spec.GET_OP, params: { type: Types.PatternModel } })
             .mergeData({ title: 'Find All Patterns' })
             .build();
     }
@@ -136,7 +137,7 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'findPatterns', op: Spec.GET_OP, params: { type: 'PatternModel', matcher } })
+            .mergeTasks({ name: 'findPatterns', op: Spec.GET_OP, params: { type: Types.PatternModel, matcher } })
             .mergeData({ title: 'Find Patterns' })
             .build();
     }
@@ -151,7 +152,7 @@ export class SystemEvents {
             name: 'updatePattern',
             op: Spec.UPDATE_OP,
             params: {
-                type: 'PatternModel',
+                type: Types.PatternModel,
                 matcher: { id: patternId },
                 values: updateValues,
             },
@@ -166,7 +167,7 @@ export class SystemEvents {
             source,
         })
             .mergeTasks([
-            { name: 'deletePattern', op: Spec.DELETE_OP, params: { type: 'PatternModel', matcher: { id: patternId } } },
+            { name: 'deletePattern', op: Spec.DELETE_OP, params: { type: Types.PatternModel, matcher: { id: patternId } } },
         ])
             .mergeData({ title: 'Delete Pattern' })
             .build();
@@ -180,7 +181,7 @@ export class SystemEvents {
             .mergeTasks({
             name: 'findEvents',
             op: Spec.GET_OP,
-            params: { type: 'EventRecord', matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
+            params: { type: Types.EventRecord, matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
         })
             .mergeData({ title: 'Find Events' })
             .build();
@@ -191,7 +192,7 @@ export class SystemEvents {
             thredId: ThredId.SYSTEM,
             source,
         })
-            .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: 'EventRecord', matcher } })
+            .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: Types.EventRecord, matcher } })
             .mergeData({ title: 'Find Events' })
             .build();
     }
@@ -204,7 +205,7 @@ export class SystemEvents {
             .mergeTasks({
             name: 'getThredLog',
             op: Spec.GET_OP,
-            params: { type: 'ThredLogEntry', matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
+            params: { type: Types.ThredLogRecord, matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
         })
             .mergeData({ title: 'Get ThredLog' })
             .build();
