@@ -27,7 +27,7 @@ export const ThredEvent = observer(({ event, pattern }: ThredEventsProps) => {
       key={event.id}
       style={[styles.container, { backgroundColor: colors.secondaryBackground, borderColor: colors.border }]}>
       <View style={styles.innerContainer}>
-        <ThredIcon uri={event.event.data?.display?.uri} tintColor={colors.green} />
+        <ThredIcon uri={event.event.data?.display?.uri} tintColor={colors.buttonTertiary} />
         <View style={{ flexWrap: 'wrap', flex: 1 }}>
           <RegularText style={[fonts.regular]}>{event.timestamp ? formatDateAndTime(event.timestamp) : ''}</RegularText>
           <View style={{ flex: 1, flexWrap: 'wrap' }}>

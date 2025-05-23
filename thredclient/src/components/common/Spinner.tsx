@@ -6,6 +6,6 @@ type SpinnerProps = { color?: string };
 export const Spinner = ({ color }: SpinnerProps) => {
   const { colors } = useTheme();
 
-  const spinnerColor = color || colors.WTBlue;
+  const spinnerColor = color || colors.buttonPrimary;
   return <ActivityIndicator size="large" color={spinnerColor} />;
 };

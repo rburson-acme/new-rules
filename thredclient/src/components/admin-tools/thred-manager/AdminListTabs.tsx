@@ -15,7 +15,7 @@ export const AdminListTabs = observer(({ adminThredsStore }: AdminListTabsProps)
     <View style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 16 }}>
       <Pressable
         style={[
-          { backgroundColor: adminThredsStore.tab === 'active' ? colors.WTBlue : colors.secondaryBackground },
+          { backgroundColor: adminThredsStore.tab === 'active' ? colors.buttonPrimary : colors.secondaryBackground },
           styles.tab,
         ]}
         onPress={() => {
@@ -25,7 +25,7 @@ export const AdminListTabs = observer(({ adminThredsStore }: AdminListTabsProps)
       </Pressable>
       <Pressable
         style={[
-          { backgroundColor: adminThredsStore.tab === 'inactive' ? colors.WTBlue : colors.secondaryBackground },
+          { backgroundColor: adminThredsStore.tab === 'inactive' ? colors.buttonPrimary : colors.secondaryBackground },
           styles.tab,
         ]}
         onPress={() => {
@@ -35,7 +35,7 @@ export const AdminListTabs = observer(({ adminThredsStore }: AdminListTabsProps)
       </Pressable>
       <Pressable
         style={[
-          { backgroundColor: adminThredsStore.tab === 'all' ? colors.WTBlue : colors.secondaryBackground },
+          { backgroundColor: adminThredsStore.tab === 'all' ? colors.buttonPrimary : colors.secondaryBackground },
           styles.tab,
         ]}
         onPress={() => {

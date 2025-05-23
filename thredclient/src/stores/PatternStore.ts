@@ -9,7 +9,7 @@ import {
   TransitionModel,
 } from 'thredlib';
 import { RootStore } from './RootStore';
-import { action, makeObservable, observable, runInAction, toJS } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import { set } from 'lodash';
 
 export type ContentType =
@@ -22,6 +22,28 @@ export type ContentType =
   | 'map'
   | 'video'
   | 'group';
+
+const contentTypes: Record<ContentType, any> = {
+  booleanInput: {
+    input: {
+      type: 'boolean',
+      display: '',
+      name: '',
+      set: [
+        { display: '', value: true },
+        { display: '', value: false },
+      ],
+    },
+  },
+  numericInput: { input: { type: 'numeric', display: '', name: '' } },
+  textInput: { input: { type: 'text', display: '', name: '' } },
+  nominalInput: { input: { type: 'nominal', display: '', name: '', multiple: false, set: [] } },
+  image: { image: { height: 0, width: 0, uri: '' } },
+  text: { text: { value: '' } },
+  map: { map: { locations: [{ latitude: '', longitude: '', name: '' }] } },
+  video: { video: { uri: '' } },
+  group: { group: { items: [] } },
+};
 
 export class PatternStore {
   constructor(public pattern: PatternModel, readonly rootStore: RootStore) {
@@ -50,7 +72,15 @@ export class PatternStore {
       updateValues,
     );
     this.rootStore.connectionStore.exchange(updatePatternEvent, event => {});
+  }
 
+  private updateReaction(reactionIndex: number, update: Partial<ReactionModel>) {
+    runInAction(() => {
+      this.pattern.reactions[reactionIndex] = {
+        ...this.pattern.reactions[reactionIndex],
+        ...update,
+      };
+    });
   }
 
   updatePatternValue(updatePath: string, value: any) {
@@ -108,15 +138,7 @@ export class PatternStore {
     };
 
     const reaction = this.pattern.reactions[index];
-    runInAction(() => {
-      this.pattern.reactions[index] = {
-        ...reaction,
-        condition: {
-          ...reaction.condition,
-          transform: newTransform,
-        },
-      };
-    });
+    this.updateReaction(index, { condition: { ...reaction.condition, transform: newTransform } });
   }
 
   addTransition(index: number) {
@@ -128,15 +150,7 @@ export class PatternStore {
     };
     const reaction = this.pattern.reactions[index];
 
-    runInAction(() => {
-      this.pattern.reactions[index] = {
-        ...reaction,
-        condition: {
-          ...reaction.condition,
-          transition: newTransition,
-        },
-      };
-    });
+    this.updateReaction(index, { condition: { ...reaction.condition, transition: newTransition } });
   }
 
   addEventDataTemplate(index: number) {
@@ -150,17 +164,14 @@ export class PatternStore {
     };
     const reaction = this.pattern.reactions[index];
 
-    runInAction(() => {
-      this.pattern.reactions[index] = {
-        ...reaction,
-        condition: {
-          ...reaction.condition,
-          transform: {
-            ...reaction.condition.transform,
-            eventDataTemplate: newEventDataTemplate,
-          },
+    this.updateReaction(index, {
+      condition: {
+        ...reaction.condition,
+        transform: {
+          ...reaction.condition.transform,
+          eventDataTemplate: newEventDataTemplate,
         },
-      };
+      },
     });
   }
 
@@ -172,113 +183,32 @@ export class PatternStore {
     };
     const reaction = this.pattern.reactions[index];
 
-    runInAction(() => {
-      this.pattern.reactions[index] = {
-        ...reaction,
-        condition: {
-          ...reaction.condition,
-          transform: {
-            ...reaction.condition.transform,
-            eventDataTemplate: {
-              advice: {
-                ...reaction.condition.transform?.eventDataTemplate?.advice,
-                eventType: reaction.condition.transform?.eventDataTemplate?.advice?.eventType || '',
-                template: newTemplate,
-              },
+    this.updateReaction(index, {
+      condition: {
+        ...reaction.condition,
+        transform: {
+          ...reaction.condition.transform,
+          eventDataTemplate: {
+            ...reaction.condition.transform?.eventDataTemplate,
+            advice: {
+              ...reaction.condition.transform?.eventDataTemplate?.advice,
+              template: newTemplate,
+              eventType: reaction.condition.transform?.eventDataTemplate?.advice?.eventType || '',
             },
           },
-          transition: {
-            ...reaction.condition.transition,
-            name: reaction.condition.transition?.name || '',
-          },
         },
-      };
+      },
     });
   }
 
   addInteractionContent(type: ContentType, interactionIndex: number, reactionIndex: number) {
-    const advice = this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice;
-    const content = advice?.template?.interactions.at(interactionIndex)?.interaction.content;
-    switch (type) {
-      case 'booleanInput':
-        content?.push({
-          input: {
-            type: 'boolean',
-            display: '',
-            name: '',
-            set: [
-              { display: '', value: true },
-              { display: '', value: false },
-            ],
-          },
-        });
-        break;
-      case 'numericInput':
-        content?.push({
-          input: {
-            type: 'numeric',
-            display: '',
-            name: '',
-          },
-        });
-        break;
-      case 'textInput':
-        content?.push({
-          input: {
-            type: 'text',
-            display: '',
-            name: '',
-          },
-        });
-        break;
-      case 'nominalInput':
-        content?.push({
-          input: {
-            type: 'nominal',
-            display: '',
-            name: '',
-            multiple: false,
-            set: [],
-          },
-        });
-        break;
-      case 'image':
-        content?.push({
-          image: {
-            height: 0,
-            width: 0,
-            uri: '',
-          },
-        });
-        break;
-      case 'text':
-        content?.push({
-          text: {
-            value: '',
-          },
-        });
-        break;
-      case 'map':
-        content?.push({
-          map: {
-            locations: [{ latitude: '', longitude: '', name: '' }],
-          },
-        });
-        break;
-      case 'video':
-        content?.push({
-          video: {
-            uri: '',
-          },
-        });
-        break;
-      case 'group':
-        content?.push({
-          group: {
-            items: [],
-          },
-        });
-        break;
+    const content =
+      this.pattern.reactions[reactionIndex]?.condition.transform?.eventDataTemplate?.advice?.template?.interactions?.at(
+        interactionIndex,
+      )?.interaction.content;
+
+    if (content && contentTypes[type]) {
+      content.push(contentTypes[type]);
     }
   }
 
@@ -308,12 +238,11 @@ export class PatternStore {
   }
 
   removeInteraction(interactionIndex: number, reactionIndex: number, path: string) {
-    const interactions = toJS(
-      this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions,
-    );
+    const interactions =
+      this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions;
 
     runInAction(() => {
-      const interaction = interactions?.splice(interactionIndex, 1);
+      interactions?.splice(interactionIndex, 1);
       this.pattern.reactions[
         reactionIndex
       ].condition.transform?.eventDataTemplate?.advice?.template?.interactions.splice(interactionIndex, 1);
@@ -322,11 +251,10 @@ export class PatternStore {
   }
 
   removeContent(interactionIndex: number, reactionIndex: number, contentIndex: number, path: string) {
-    const content = toJS(
+    const content =
       this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions.at(
         interactionIndex,
-      )?.interaction.content,
-    );
+      )?.interaction.content;
     runInAction(() => {
       this.pattern.reactions[reactionIndex].condition.transform?.eventDataTemplate?.advice?.template?.interactions
         .at(interactionIndex)

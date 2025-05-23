@@ -35,7 +35,7 @@ const BooleanButton = observer(({ setItem, interactionStore, name }: BooleanButt
       buttonStyle={[
         styles.buttonStyle,
         {
-          backgroundColor: colors.lightBlue,
+          backgroundColor: colors.buttonPrimary,
         },
       ]}
       textStyle={styles.textStyle}

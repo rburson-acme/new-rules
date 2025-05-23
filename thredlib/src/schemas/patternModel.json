@@ -3,26 +3,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "AddressModel": {
-      "additionalProperties": false,
-      "description": "Include and/or exclude participants or groups from the publish spec",
-      "properties": {
-        "exclude": {
+      "anyOf": [
+        {
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "include": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
+        {
+          "type": "string"
         }
-      },
-      "required": [
-        "include"
       ],
-      "type": "object"
+      "description": "address to participants or groups from the publish spec"
     },
     "BooleanInput": {
       "additionalProperties": false,
@@ -615,6 +607,10 @@
     },
     "PatternModel": {
       "properties": {
+        "broadcastAllowed": {
+          "description": "Whether or not broadcasting from participants is allowed",
+          "type": "boolean"
+        },
         "created": {
           "format": "date-time",
           "type": "string"
@@ -686,21 +682,8 @@
           "type": "string"
         },
         "to": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/AddressModel"
-            },
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "description": "The address(es) to send the outbound Event to. These may be participants or groups. May be a single string, an array of strings, or an object with include/exclude arrays"
+          "$ref": "#/definitions/AddressModel",
+          "description": "The address(es) to send the outbound Event to. These may be participants or groups."
         }
       },
       "required": [

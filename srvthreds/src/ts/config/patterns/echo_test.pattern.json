@@ -6,6 +6,7 @@
     "id": "echo_test",
     "instanceInterval": 0,
     "maxInstances": 0,
+    "broadcastAllowed": true,
     "reactions": [
         {
             "name": "echo",

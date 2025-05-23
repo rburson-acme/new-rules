@@ -1,5 +1,5 @@
 import { observable, makeObservable } from 'mobx';
-import { Event, SystemEvents } from 'thredlib';
+import { BuiltInEvents, Event, SystemEvents } from 'thredlib';
 import { RootStore } from './RootStore';
 import { Thred } from '../core/Thred';
 import { EventsStore } from './EventsStore';
@@ -19,6 +19,14 @@ export class ThredStore {
     this.eventsStore?.addEvent(event);
   };
 
+  sendBroadcast = (message: string) => {
+    const userId = this.rootStore.authStore.userId;
+    if (!userId) throw Error('userId not found');
+    const broadcastEvent = BuiltInEvents.getBroadcastMessageEvent(this.thred.id, { id: userId, name: userId }, message);
+    this.rootStore.connectionStore.publish(broadcastEvent);
+    this.eventsStore?.addEvent(broadcastEvent);
+  };
+
   terminateThred = () => {
     const userId = this.rootStore.authStore.userId;
     if (!userId) throw Error('userId not found');
@@ -33,7 +41,6 @@ export class ThredStore {
       this.rootStore.adminThredsStore.removeThred(this.thred.id);
 
       this.rootStore.thredsStore.removeThred(this.thred.id);
-      this.rootStore.thredsStore.unselectThred();
     });
   };
 }

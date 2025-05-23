@@ -93,13 +93,11 @@ const styles = StyleSheet.create({
 });
 
 const HeaderTitle = () => {
-  const newRulesLogo = require('../../../assets/new-rules-logo.png');
+  const initiativeLabsLogo = require('../../../assets/initiative-blue.png');
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Image source={newRulesLogo} style={{ width: 48, height: 48, resizeMode: 'contain' }} />
-      <Text style={{ fontFamily: 'Nexa-Heavy', fontSize: 18 }}>New</Text>
-      <Text style={{ fontFamily: 'Nexa-ExtraLight', fontSize: 18 }}>Rules</Text>
+      <Image source={initiativeLabsLogo} style={{ width: 100, height: 48 }} resizeMode="contain" />
     </View>
   );
 };

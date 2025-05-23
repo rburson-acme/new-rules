@@ -40,6 +40,7 @@ export class ThredsStore {
     this.searchText = text;
   }
 
+  
   get filteredThreds() {
     if (!this.searchText) return this.thredStores;
     return this.thredStores.filter(thredStore => {
