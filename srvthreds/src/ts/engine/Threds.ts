@@ -43,6 +43,10 @@ export class Threds {
     return this.messageHandler.shutdown(delay);
   }
 
+  addThredToParticipants(thredId: string, participants: string[]): Promise<void> {
+    return this.thredsStore.addThredToParticipants(thredId, participants);
+  }
+
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to aquire a lock inside this operation
   private async handleBound(thredId: string, event: Event): Promise<void> {

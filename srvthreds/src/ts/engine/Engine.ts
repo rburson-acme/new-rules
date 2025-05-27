@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Logger, Parallel, toArray } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Logger, Parallel, addressToArray } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
@@ -18,6 +18,7 @@ import { ThredContext } from './ThredContext.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 import { ThredStore } from './store/ThredStore.js';
+import { ParticipantsStore } from './store/ParticipantsStore.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;
 
@@ -34,7 +35,7 @@ export class Engine implements MessageHandler {
     if (!System.isInitialized())
       throw new Error('System not initialized - call System.initialize() before creating Engine');
     const storage = StorageFactory.getStorage();
-    this.thredsStore = new ThredsStore(new PatternsStore(storage), storage);
+    this.thredsStore = new ThredsStore(new PatternsStore(storage), storage, new ParticipantsStore(storage));
     // this can be determined by config so that we can run 'Admin' nodes seperately
     // this.threds = new Threds(this.thredsStore, this);
     this.threds = new AdminThreds(this.thredsStore, this);
@@ -71,7 +72,7 @@ export class Engine implements MessageHandler {
       // log the event
       debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
       logObject(messageTemplate);
-      await Sc.get().replaceEvent({ event: messageTemplate.event, to: toArray(messageTemplate.to), timestamp });
+      await Sc.get().replaceEvent({ event: messageTemplate.event, to: addressToArray(messageTemplate.to), timestamp });
       // NOTE: dispatch all at once - failure notification will be handled separately
       await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate));
     } catch (e) {

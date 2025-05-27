@@ -5,6 +5,7 @@ import { Storage, Types, indexId } from '../../storage/Storage.js';
 import { Logger, Parallel } from '../../thredlib/index.js';
 import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
 import { ThredThrowable } from '../ThredThrowable.js';
+import { ParticipantsStore } from './ParticipantsStore.js';
 
 /**
  * The ThredsStore class is responsible for managing ThredStores, which are used to process events in the context of a Thred.
@@ -14,6 +15,7 @@ export class ThredsStore {
   constructor(
     readonly patternsStore: PatternsStore,
     readonly storage: Storage,
+    private readonly participantsStore: ParticipantsStore,
     private thredStores: { [thredId: string]: ThredStore } = {},
   ) {}
 
@@ -110,6 +112,10 @@ export class ThredsStore {
 
   getAllThredIds(): Promise<string[]> {
     return this.storage.retrieveSet(Types.Thred, indexId);
+  }
+
+  addThredToParticipants(thredId: string, participantIds: string[]): Promise<void> {
+    return this.participantsStore.addThredToParticipants(participantIds, thredId);
   }
 
   /* MUST BE RUN WITHIN A LOCK (one of the above locking methods) */
