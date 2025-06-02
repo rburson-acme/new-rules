@@ -1,4 +1,13 @@
-import { errorCodes, errorKeys, Events, Event, Logger as L, Message, Series, ThredLogRecordType } from '../thredlib/index.js';
+import {
+  errorCodes,
+  errorKeys,
+  Events,
+  Event,
+  Logger as L,
+  Message,
+  Series,
+  ThredLogRecordType,
+} from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
 import { ThredStore } from './store/ThredStore.js';
@@ -18,7 +27,7 @@ import { ThredThrowable } from './ThredThrowable.js';
  * Existing Threds are found by thredId. New Threds are created by matching the Events with Patterns
  * Threds are synchronized in this class (using the withThredStore methods of the ThredStore). ThredStores are locked here on a per-thredId basis.
  * No two events with the same thredId should be processed at the same time.
-*/
+ */
 export class Threds {
   constructor(
     readonly thredsStore: ThredsStore,
@@ -41,6 +50,10 @@ export class Threds {
 
   shutdown(delay = 0): Promise<void> {
     return this.messageHandler.shutdown(delay);
+  }
+
+  addThredToParticipants(thredId: string, participants: string[]): Promise<void> {
+    return this.thredsStore.addThredToParticipantsStore(thredId, participants);
   }
 
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
@@ -92,7 +105,11 @@ export class Threds {
     });
     if (matches === 0) {
       // orphan event - no need to wait on this storage operation
-      Pm.get().saveThredLogRecord({ eventId: event.id, type: ThredLogRecordType.NO_PATTERN_MATCH, timestamp: Date.now() });
+      Pm.get().saveThredLogRecord({
+        eventId: event.id,
+        type: ThredLogRecordType.NO_PATTERN_MATCH,
+        timestamp: Date.now(),
+      });
       L.info(L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`));
     }
   }

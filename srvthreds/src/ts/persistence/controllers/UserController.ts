@@ -1,7 +1,15 @@
 import { Persistence } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
 import { Query } from '../../task/Taskable.js';
-import { PatternModel, Logger, ThredLogRecord, EventRecord, ThredRecord, Persistent } from '../../thredlib/index.js';
+import {
+  PatternModel,
+  Logger,
+  ThredLogRecord,
+  EventRecord,
+  ThredRecord,
+  Persistent,
+  Parallel,
+} from '../../thredlib/index.js';
 import { User } from '../../thredlib/persistence/User.js';
 import { Types } from '../../thredlib/persistence/types.js';
 
@@ -31,23 +39,37 @@ export class UserController {
     await this.persistence.replace({ type: Types.User, matcher: { id: user.id }, values: user });
   }
 
-  async addActiveThredId(userId: string, thredId: string): Promise<void> {
-    return this.persistence.update({
-      type: Types.User,
-      matcher: { id: userId },
-      values: { $add: { 'threds.activeIds': thredId } },
+  async addArchivedThredIdToUsers(userIds: string[], thredId: string): Promise<void> {
+    return Parallel.forEach(userIds, async (userId) => {
+      return this.addArchivedThredId(userId, thredId);
     });
   }
 
-  async moveActiveThredIdToTerminated(userId: string, thredId: string): Promise<void> {
+  async addArchivedThredId(userId: string, thredId: string): Promise<void> {
     return this.persistence.update({
       type: Types.User,
       matcher: { id: userId },
-      values: { $remove: { 'threds.activeIds': thredId }, $add: { 'threds.terminatedIds': thredId } },
+      values: { $add: { 'threds.archived': thredId } },
+    });
+  }
+
+  async removeArchivedThredId(userId: string, thredId: string): Promise<void> {
+    return this.persistence.update({
+      type: Types.User,
+      matcher: { id: userId },
+      values: { $remove: { 'threds.archived': thredId } },
     });
   }
 
   async getUser(id: string): Promise<User | null> {
     return this.persistence.getOne({ type: Types.User, matcher: { id } });
+  }
+
+  async getUserArchivedThredIds(userId: string): Promise<User | null> {
+    return this.persistence.getOne({
+      type: Types.User,
+      matcher: { id: userId },
+      selector: { include: ['threds.archived'] },
+    });
   }
 }

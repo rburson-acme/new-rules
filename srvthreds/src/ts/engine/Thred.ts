@@ -1,4 +1,4 @@
-import { Event, Logger as L, ThredLogRecordType } from '../thredlib/index.js';
+import { Event, Logger as L, ThredLogRecordType, addressToArray } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
@@ -18,7 +18,7 @@ import { BuiltInReaction } from './builtins/BuiltInReaction.js';
 export class Thred {
   /**
    * 'consider' is the only external way to induce a state change (i.e. all calls go through here)
-   * The consider method should be synchonized so that only one event for a particular thredId is processed at a time.
+   * The consider method should be synchonized so that only one event for a particular thredId is processed at a time. i.e. lock on thredId
    * This is currently handled by the Threds class using the withThredStore methods
    * Note this method should remain synchronous. Any specified consective reactions (via transition forward/local) will run and complete
    * before returning.  The caller may rely on that.
@@ -44,8 +44,6 @@ export class Thred {
         L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`));
         break transitionLoop;
       }
-      // add the source of the event to the participants list
-      thredStore.addParticipantIds([inputEvent.source.id]);
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
@@ -56,19 +54,34 @@ export class Thred {
           `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`,
         ),
       );
-
-      reactionResult?.messageTemplate &&
-        (await threds.handleMessage(await Thred.resolveAddresses(reactionResult.messageTemplate, thredStore)));
+      // resolve and store the participant addresses
+      const to = reactionResult.messageTemplate
+        ? await this.resolveAndUpdateParticipants(
+            addressToArray(reactionResult.messageTemplate.to),
+            event.source.id,
+            thredStore,
+            threds,
+          )
+        : [];
+      // dispatch the message
+      reactionResult?.messageTemplate && (await threds.handleMessage({ ...reactionResult.messageTemplate, to }));
     } while (inputEvent);
   }
 
   // resolve the 'to' field in the message template to actual participantIds and store participantIds associations
-  static async resolveAddresses(messageTemplate: MessageTemplate, thredStore: ThredStore): Promise<MessageTemplate> {
+  static async resolveAndUpdateParticipants(
+    addresses: string[],
+    sourceId: string,
+    thredStore: ThredStore,
+    threds: Threds,
+  ): Promise<string[]> {
     // translate 'directives' in the 'to' field to actual participantIds
-    const to = await System.getSessions().getParticipantIdsFor(messageTemplate.to, thredStore?.thredContext);
+    const to = await System.getSessions().getParticipantIdsFor(addresses, thredStore?.thredContext);
     // update the thredContext with the expanded participants
-    thredStore?.addParticipantIds(to);
-    return { ...messageTemplate, to };
+    thredStore?.addParticipantIds([...to, sourceId]);
+    // update the store w/ participant to thred mappings
+    await threds.addThredToParticipants(thredStore.id, [...to, sourceId]);
+    return to;
   }
 
   // state transition + apply next input

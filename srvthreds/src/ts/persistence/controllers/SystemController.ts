@@ -1,9 +1,8 @@
+import { Query } from '../../task/Taskable.js';
+import { EventRecord, Logger, PatternModel, ThredLogRecord, ThredRecord } from '../../thredlib/index.js';
+import { Types } from '../../thredlib/persistence/types.js';
 import { Persistence } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
-import { Query } from '../../task/Taskable.js';
-import { PatternModel, Logger, ThredLogRecord, EventRecord, ThredRecord, Persistent } from '../../thredlib/index.js';
-import { User } from '../../thredlib/persistence/User.js';
-import { Types } from '../../thredlib/persistence/types.js';
 
 export class SystemController {
   private static instance: SystemController;
@@ -27,10 +26,10 @@ export class SystemController {
     return PersistenceFactory.disconnectAll();
   }
 
-  /***************************************************** 
-  * Logging Operations
-  * These should fail quietly 
-  ***************************************************** */
+  /*****************************************************
+   * Logging Operations
+   * These should fail quietly
+   ***************************************************** */
   async replaceEvent(record: EventRecord): Promise<void> {
     try {
       record.id = record.event.id;
@@ -60,9 +59,9 @@ export class SystemController {
     }
   }
 
-  /***************************************************** 
-  * System Operations
-  ***************************************************** */
+  /*****************************************************
+   * System Operations
+   ***************************************************** */
   async getAllActivePatterns(): Promise<PatternModel[] | null> {
     return this.persistence.get({ type: Types.PatternModel, matcher: { meta: { active: true } } });
   }
@@ -80,14 +79,15 @@ export class SystemController {
   }
 
   async getEventsForParticipant(thredId: string, participantId: string): Promise<EventRecord[] | null> {
-    return this.persistence.get({ type: Types.EventRecord, matcher: { thredId, to: { $in: [participantId] } } });
+    return this.persistence.get({
+      type: Types.EventRecord,
+      matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
+    });
   }
-
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[] | null> {
     return this.persistence.get({ type: Types.ThredLogRecord, matcher: { thredId } });
   }
-
 
   async getThreds(matcher: Query['matcher']): Promise<ThredRecord[] | null> {
     return this.persistence.get({ type: Types.ThredRecord, matcher });

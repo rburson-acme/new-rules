@@ -13,7 +13,7 @@ import { adminTestPatternModels, adminTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);
 
-describe('admin system test', function () {
+describe('admin functions system test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
     await engineConnMan.purgeAll();
@@ -142,24 +142,29 @@ describe('admin system test', function () {
   test('get All Active Threds', async function () {
     const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(getThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
       const threds = Events.valueNamed(message.event, 'threds');
       expect(threds).length(2);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
-      expect(threds.map((thred: { currentReaction: { reactionName: string}; }) => thred.currentReaction.reactionName)).toContain('event2Reaction');
-      expect(threds.map((thred: { currentReaction: { reactionName: string}; }) => thred.currentReaction.reactionName)).toContain('event1Reaction');
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
+      expect(
+        threds.map((thred: { currentReaction: { reactionName: string } }) => thred.currentReaction.reactionName),
+      ).toContain('event2Reaction');
+      expect(
+        threds.map((thred: { currentReaction: { reactionName: string } }) => thred.currentReaction.reactionName),
+      ).toContain('event1Reaction');
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
   });
   test('get All Terminated Threds', async function () {
-    const lastHour = new Date().getTime() - (60 * 60 * 1000);
-    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'terminated', { "thred.endTime": { $gte: lastHour } });
+    const lastHour = new Date().getTime() - 60 * 60 * 1000;
+    const getThredsEvent = SystemEvents.getGetThredsEvent(adminTestSource, 'terminated', {
+      'thred.endTime': { $gte: lastHour },
+    });
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(getThredsEvent.id);
@@ -181,9 +186,9 @@ describe('admin system test', function () {
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
       const threds = Events.valueNamed(message.event, 'threds');
       expect(threds).length(3);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId0);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId0);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -221,4 +226,3 @@ let engineConnMan: EngineConnectionManager;
 let thredId0: string | undefined;
 let thredId1: string | undefined;
 let thredId2: string | undefined;
-

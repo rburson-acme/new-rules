@@ -1,4 +1,4 @@
-export function toArray(address) {
+export function addressToArray(address) {
     if (Array.isArray(address)) {
         return address;
     }
