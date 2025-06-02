@@ -271,7 +271,13 @@ export class RedisStorage implements Storage {
   /*
         save() with unlock
     */
-  async saveAndRelease(lock: LockWrapper, type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
+  async saveAndRelease(
+    lock: LockWrapper,
+    type: string,
+    item: any,
+    id: string,
+    meta?: Record<string, string>,
+  ): Promise<void> {
     const key = $key(type, id);
     await this.save(type, item, id, meta);
     await this._release(lock.lock);
@@ -288,7 +294,13 @@ export class RedisStorage implements Storage {
   /*
         save() with lock
     */
-  async saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<{ lock: Lock }> {
+  async saveAndClaim(
+    type: string,
+    item: any,
+    id: string,
+    ttl?: number,
+    meta?: Record<string, string>,
+  ): Promise<{ lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {

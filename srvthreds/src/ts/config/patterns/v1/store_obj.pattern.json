@@ -1,44 +1,42 @@
 {
-    "name": "Store Object",
-    "id": "store_object",
-    "instanceInterval": 0,
-    "maxInstances": 0,
-    "reactions": [
-        {
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'org.wt.control.dataControl'",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Store Object",
-                        "content": {
-                            "type": "task",
-                            "values": {
-                                "tasks": [
-                                    [
-                                        {
-                                            "name": "storeExample1",
-                                            "op": "replace",
-                                            "params": {
-                                                "type": "$xpr( $content.values.objectType )",
-                                                "matcher": {
-                                                    "id": "$xpr( $content.values.object.id )"
-                                                },
-                                                "values": "$xpr ( $content.values.object )"
-                                            }
-                                        }
-                                    ]
-                                ]
-                            }
-                        }
+  "name": "Store Object",
+  "id": "store_object",
+  "instanceInterval": 0,
+  "maxInstances": 0,
+  "reactions": [
+    {
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.control.dataControl'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Store Object",
+            "content": {
+              "type": "task",
+              "values": {
+                "tasks": [
+                  [
+                    {
+                      "name": "storeExample1",
+                      "op": "replace",
+                      "params": {
+                        "type": "$xpr( $content.values.objectType )",
+                        "matcher": {
+                          "id": "$xpr( $content.values.object.id )"
+                        },
+                        "values": "$xpr ( $content.values.object )"
+                      }
                     }
-                },
-                "publish": {
-                    "to": [
-                        "org.wt.persistence"
-                    ]
-                }
+                  ]
+                ]
+              }
             }
+          }
+        },
+        "publish": {
+          "to": ["org.wt.persistence"]
         }
-    ]
+      }
+    }
+  ]
 }

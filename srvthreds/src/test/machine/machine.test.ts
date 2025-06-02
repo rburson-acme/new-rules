@@ -4,36 +4,35 @@ import { MachineContext } from '../../ts/thredlib/index.js';
 type InputEventType = { material: 'ice' | 'fire' };
 type MachineContextValueType = string;
 
-const machine = Machine.createMachine<InputEventType, MachineContextValueType>({
-  initialStateName: 'cold',
-  states: [
-    {
-      name: 'cold',
-      transition:
-        ({ event, machineContext }) => {
+const machine = Machine.createMachine<InputEventType, MachineContextValueType>(
+  {
+    initialStateName: 'cold',
+    states: [
+      {
+        name: 'cold',
+        transition: ({ event, machineContext }) => {
           machineContext.value = 'cold';
           return event.material === 'fire' ? 'warm' : undefined;
-        }
-    },
-    {
-      name: 'warm',
-      transition:
-        ({ event, machineContext }) => {
+        },
+      },
+      {
+        name: 'warm',
+        transition: ({ event, machineContext }) => {
           machineContext.value = 'warm';
           return event.material === 'fire' ? 'hot' : 'cold';
-        }
-    },
-    {
-      name: 'hot',
-      transition:
-        ({ event, machineContext }) => {
+        },
+      },
+      {
+        name: 'hot',
+        transition: ({ event, machineContext }) => {
           machineContext.value = 'hot';
           return event.material === 'ice' ? 'warm' : null;
-        }
-    }
-  ]
-}, { value: "" } as MachineContext<MachineContextValueType>)
-
+        },
+      },
+    ],
+  },
+  { value: '' } as MachineContext<MachineContextValueType>,
+);
 
 describe('machine', function () {
   test('shouldHaveIntialState', function () {

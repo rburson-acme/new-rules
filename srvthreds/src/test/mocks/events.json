@@ -1,273 +1,279 @@
 [
-    {
-        "id": "100",
-        "type": "wonkaInc.downtime",
-        "time": 1584887617722,
-        "data": {
-            "description": "Widget Jam",
-            "content": {
-                "errorCode": "EC_1034"
-            }
-        },
-        "source": {
-            "id": "assembly-10",
-            "name": "Gobstopper Assembly 339"
-        }
+  {
+    "id": "100",
+    "type": "wonkaInc.downtime",
+    "time": 1584887617722,
+    "data": {
+      "description": "Widget Jam",
+      "content": {
+        "errorCode": "EC_1034"
+      }
     },
-    {
-        "id": "105",
-        "type": "org.wt.tell",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "title": "Widget Jam ERP Entry",
-            "content": {
-                "advice": {
-                    "eventType": "wonkaInc.erp.entry.created"
-                },
-                "values": {
-                    "tasks": [{
-                        "name": "entryCreate",
-                        "op": "create",
-                        "target": "failure_log",
-                        "values": {
-                            "name": "Widget Jam",
-                            "code": "EC_1034",
-                            "location": "Gobstopper Assembly 339"
-                        }
-                    }]
-                }
-            }
-        },
-        "source": {
-            "id": "SYSTEM",
-            "name": "Workthreds Bot"
-        }
-    },
-    {
-        "id": "115",
-        "type": "org.wt.tell",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "title": "System Failure",
-            "description": "The Gobstopper Assembly 339 has failed with a Widget Jam",
-            "content": {
-                "advice": {
-                    "eventType": "wonkaInc.operator",
-                    "template": {
-                        "name": "operator_failure_workorder",
-                        "view": {
-                            "opts": {
-                                "submit": "onclick"
-                            },
-                            "children": [
-                                {
-                                    "text": "Do you need to create a new work order?"
-                                },
-                                {
-                                    "input": {
-                                        "type": "button",
-                                        "label": "Yes",
-                                        "value": true
-                                    }
-                                },
-                                {
-                                    "input": {
-                                        "type": "button",
-                                        "label": "No",
-                                        "value": false
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "source": {
-            "id": "SYSTEM",
-            "name": "Workthreds Bot"
-        }
-    },
-    {
-        "id": "120",
-        "type": "wonkaInc.operator",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "contentType": "application/json",
-            "content": {
-                "operator_failure_workorder": {
-                    "value": true
-                }
-            }
-        },
-        "source": {
-            "id": "bOompa",
-            "name": "Bob Oompa"
-        }
-    },
-    {
-        "id": "125",
-        "type": "org.wt.tell",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "content": {
-                "advice": {
-                    "eventType": "wonkaInc.cmms.failureWorkOrder.created"
-                },
-                "values":{
-                    "tasks": [{
-                        "name": "workOrderCreate",
-                        "op": "create",
-                        "target": "work_orders",
-                        "values": {
-                            "name": "Widget Jam",
-                            "submittedBy": "bOompa",
-                            "code": "EC_1034",
-                            "location": "Gobstopper Assembly 339"
-                        }
-                    }]
-                }
-            }
-        },
-        "source": {
-            "id": "SYSTEM",
-            "name": "Workthreds Bot"
-        }
-    },
-    {
-        "id": "130",
-        "type": "wonkaInc.cmms.failureWorkOrder.created",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "contentType": "application/json",
-            "content": {
-                "workOrderCreate": [
-                    {
-                        "id": "3939",
-                        "name": "Widget Jam",
-                        "code": "EC_1034",
-                        "location": "Gobstopper Assembly 339"
-                    }
-                ]
-            }
-        },
-        "source": {
-            "id": "wonkaInc.cmms.agent",
-            "name": "Workthreds Wonka Inc. CMMS Agent"
-        }
-    },
-    {
-        "id": "132",
-        "type": "org.wt.tell",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "title": "Widget Jam Query",
-            "content": {
-                "advice": {
-                    "eventType": "wonkaInc.wfm.availableTechnicians"
-                },
-                "values": {
-                    "tasks": [{
-                        "name": "availableTechnicians",
-                        "op": "read",
-                        "target": "employee",
-                        "selector": "{ id, name } where available && role = 'technician'"
-                    }]
-                }
-            }
-        },
-        "source": {
-            "id": "SYSTEM",
-            "name": "Workthreds Bot"
-        }
-    },
-    {
-        "id": "134",
-        "type": "wonkaInc.wfm.availableTechnicians",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "contentType": "application/json",
-            "content": {
-                "availableTechnicians": [
-                    { "id": "fLoompa", "name": "Fernando Loompa" },
-                    { "id": "cBucket", "name": "Charlie" }
-                ]
-            }
-        },
-        "source": {
-            "id": "wonkaInc.wfm.agnt",
-            "name": "Workthreads Workforce Management Agent"
-        }
-    },
-    {
-        "id": "135",
-        "type": "org.wt.tell",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "title": "Assistance Needed",
-            "description": "Gobstopper Assembly 339 has failed with a Widget Jam",
-            "content": {
-                "advice": {
-                    "eventType": "wonkaInc.technician",
-                    "template": {
-                        "name": "technician_accept_work",
-                        "view": {
-                            "opts": {
-                                "submit": "onclick"
-                            },
-                            "children": [
-                                {
-                                    "text": "Are you available to accept the work order?"
-                                },
-                                {
-                                    "input": {
-                                        "type": "button",
-                                        "label": "Yes",
-                                        "value": true
-                                    }
-                                },
-                                {
-                                    "input": {
-                                        "type": "button",
-                                        "label": "No",
-                                        "value": false
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "source": {
-            "id": "SYSTEM",
-            "name": "Workthreds Bot"
-        }
-    },
-    {
-        "id": "140",
-        "type": "wonkaInc.technician",
-        "time": 1584887617722,
-        "thredId": "t100",
-        "data": {
-            "contentType": "application/json",
-            "content": {
-                "technician_accept_work": {
-                    "value": true
-                }
-            }
-        },
-        "source": {
-            "id": "fLoompa",
-            "name": "Fernando Loompa"
-        }
+    "source": {
+      "id": "assembly-10",
+      "name": "Gobstopper Assembly 339"
     }
+  },
+  {
+    "id": "105",
+    "type": "org.wt.tell",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "title": "Widget Jam ERP Entry",
+      "content": {
+        "advice": {
+          "eventType": "wonkaInc.erp.entry.created"
+        },
+        "values": {
+          "tasks": [
+            {
+              "name": "entryCreate",
+              "op": "create",
+              "target": "failure_log",
+              "values": {
+                "name": "Widget Jam",
+                "code": "EC_1034",
+                "location": "Gobstopper Assembly 339"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "source": {
+      "id": "SYSTEM",
+      "name": "Workthreds Bot"
+    }
+  },
+  {
+    "id": "115",
+    "type": "org.wt.tell",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "title": "System Failure",
+      "description": "The Gobstopper Assembly 339 has failed with a Widget Jam",
+      "content": {
+        "advice": {
+          "eventType": "wonkaInc.operator",
+          "template": {
+            "name": "operator_failure_workorder",
+            "view": {
+              "opts": {
+                "submit": "onclick"
+              },
+              "children": [
+                {
+                  "text": "Do you need to create a new work order?"
+                },
+                {
+                  "input": {
+                    "type": "button",
+                    "label": "Yes",
+                    "value": true
+                  }
+                },
+                {
+                  "input": {
+                    "type": "button",
+                    "label": "No",
+                    "value": false
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "id": "SYSTEM",
+      "name": "Workthreds Bot"
+    }
+  },
+  {
+    "id": "120",
+    "type": "wonkaInc.operator",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "contentType": "application/json",
+      "content": {
+        "operator_failure_workorder": {
+          "value": true
+        }
+      }
+    },
+    "source": {
+      "id": "bOompa",
+      "name": "Bob Oompa"
+    }
+  },
+  {
+    "id": "125",
+    "type": "org.wt.tell",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "content": {
+        "advice": {
+          "eventType": "wonkaInc.cmms.failureWorkOrder.created"
+        },
+        "values": {
+          "tasks": [
+            {
+              "name": "workOrderCreate",
+              "op": "create",
+              "target": "work_orders",
+              "values": {
+                "name": "Widget Jam",
+                "submittedBy": "bOompa",
+                "code": "EC_1034",
+                "location": "Gobstopper Assembly 339"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "source": {
+      "id": "SYSTEM",
+      "name": "Workthreds Bot"
+    }
+  },
+  {
+    "id": "130",
+    "type": "wonkaInc.cmms.failureWorkOrder.created",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "contentType": "application/json",
+      "content": {
+        "workOrderCreate": [
+          {
+            "id": "3939",
+            "name": "Widget Jam",
+            "code": "EC_1034",
+            "location": "Gobstopper Assembly 339"
+          }
+        ]
+      }
+    },
+    "source": {
+      "id": "wonkaInc.cmms.agent",
+      "name": "Workthreds Wonka Inc. CMMS Agent"
+    }
+  },
+  {
+    "id": "132",
+    "type": "org.wt.tell",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "title": "Widget Jam Query",
+      "content": {
+        "advice": {
+          "eventType": "wonkaInc.wfm.availableTechnicians"
+        },
+        "values": {
+          "tasks": [
+            {
+              "name": "availableTechnicians",
+              "op": "read",
+              "target": "employee",
+              "selector": "{ id, name } where available && role = 'technician'"
+            }
+          ]
+        }
+      }
+    },
+    "source": {
+      "id": "SYSTEM",
+      "name": "Workthreds Bot"
+    }
+  },
+  {
+    "id": "134",
+    "type": "wonkaInc.wfm.availableTechnicians",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "contentType": "application/json",
+      "content": {
+        "availableTechnicians": [
+          { "id": "fLoompa", "name": "Fernando Loompa" },
+          { "id": "cBucket", "name": "Charlie" }
+        ]
+      }
+    },
+    "source": {
+      "id": "wonkaInc.wfm.agnt",
+      "name": "Workthreads Workforce Management Agent"
+    }
+  },
+  {
+    "id": "135",
+    "type": "org.wt.tell",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "title": "Assistance Needed",
+      "description": "Gobstopper Assembly 339 has failed with a Widget Jam",
+      "content": {
+        "advice": {
+          "eventType": "wonkaInc.technician",
+          "template": {
+            "name": "technician_accept_work",
+            "view": {
+              "opts": {
+                "submit": "onclick"
+              },
+              "children": [
+                {
+                  "text": "Are you available to accept the work order?"
+                },
+                {
+                  "input": {
+                    "type": "button",
+                    "label": "Yes",
+                    "value": true
+                  }
+                },
+                {
+                  "input": {
+                    "type": "button",
+                    "label": "No",
+                    "value": false
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "id": "SYSTEM",
+      "name": "Workthreds Bot"
+    }
+  },
+  {
+    "id": "140",
+    "type": "wonkaInc.technician",
+    "time": 1584887617722,
+    "thredId": "t100",
+    "data": {
+      "contentType": "application/json",
+      "content": {
+        "technician_accept_work": {
+          "value": true
+        }
+      }
+    },
+    "source": {
+      "id": "fLoompa",
+      "name": "Fernando Loompa"
+    }
+  }
 ]

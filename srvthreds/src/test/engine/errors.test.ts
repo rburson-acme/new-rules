@@ -45,7 +45,7 @@ describe('errors tests', function () {
   test('send an error message (e.g. from persistence agent)', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
       expect(Events.getError(message.event)).toBeDefined();
-      expect(Events.getError(message.event)?.cause.message).toBe('Persistence connection closed');  
+      expect(Events.getError(message.event)?.cause.message).toBe('Persistence connection closed');
       expect(message.to).toContain('participant0');
       expect(message.to).toContain('participant1');
       expect(message.to).toContain('participant2');

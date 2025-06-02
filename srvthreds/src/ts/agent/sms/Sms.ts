@@ -1,13 +1,12 @@
 import { Event } from '../../thredlib/index.js';
 
 export class Sms {
+  send(event: Event, channelId: string) {
+    this.dispatch(channelId);
+  }
 
-    send(event: Event, channelId: string) {
-        this.dispatch(channelId);
-    }
-
-    dispatch(channelId: string): Promise<any> {
-        /*
+  dispatch(channelId: string): Promise<any> {
+    /*
         const client = twilio(accountSid, authToken);
 
         return client.messages.create({
@@ -17,11 +16,10 @@ export class Sms {
             })
             .then(message => console.log(message.sid));
         */
-       return Promise.resolve();
-    }
-   // mediaUrl: ['https://drive.google.com/file/d/1Ym5A94qhEW7tagIJkymUPlTaFaRKeU1Y/view?usp=sharing'],
+    return Promise.resolve();
+  }
+  // mediaUrl: ['https://drive.google.com/file/d/1Ym5A94qhEW7tagIJkymUPlTaFaRKeU1Y/view?usp=sharing'],
 }
-
 
 // From orignial Socker Server ....................
 
@@ -60,4 +58,3 @@ export class Sms {
     // smsConnect('bOompa', '+16785235412');
 
     */
-

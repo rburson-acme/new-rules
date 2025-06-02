@@ -1,30 +1,30 @@
 {
-    "nodeId": "org.wt.session1",
-    "groups": [
+  "nodeId": "org.wt.session1",
+  "groups": [
+    {
+      "name": "operators",
+      "participants": [
         {
-            "name": "operators",
-            "participants": [
-                {
-                    "participantId": "bOompa"
-                },
-                {
-                    "participantId": "cBucket"
-                }
-            ]
+          "participantId": "bOompa"
         },
         {
-            "name": "technicians",
-            "participants": [
-                {
-                    "participantId": "lLoompa"
-                },
-                {
-                    "participantId": "vSalt"
-                },
-                {
-                    "participantId": "cBucket"
-                }
-            ]
+          "participantId": "cBucket"
         }
-    ]
+      ]
+    },
+    {
+      "name": "technicians",
+      "participants": [
+        {
+          "participantId": "lLoompa"
+        },
+        {
+          "participantId": "vSalt"
+        },
+        {
+          "participantId": "cBucket"
+        }
+      ]
+    }
+  ]
 }

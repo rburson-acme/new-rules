@@ -144,9 +144,7 @@ describe('sessions', function () {
     expect(participantAddresses.length).toBe(1);
   });
   it('test no service addresses', function () {
-    const { serviceAddresses, participantAddresses } = sessions
-      .getAddressResolver()
-      .filterServiceAddresses(['bOompa']);
+    const { serviceAddresses, participantAddresses } = sessions.getAddressResolver().filterServiceAddresses(['bOompa']);
     expect(serviceAddresses.length).toBe(0);
     expect(participantAddresses.length).toBe(1);
     expect(participantAddresses).toContain('bOompa');
@@ -192,7 +190,7 @@ const sessionsModel = {
 };
 
 const thredContext = new ThredContext({ thredId: 'testThredId', scope: {} });
-thredContext.addParticipantIds(['bOompa', 'cBucket', 'lLoompa', 'org.wt.persistence' ]);
+thredContext.addParticipantIds(['bOompa', 'cBucket', 'lLoompa', 'org.wt.persistence']);
 
 const resolverConfig: ResolverConfig = {
   agents: [

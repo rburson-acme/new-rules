@@ -83,7 +83,7 @@ export class Reaction {
       // regex
     } else if (allowedSource.startsWith('/')) {
       try {
-        const regex = new RegExp(allowedSource.substring(1, allowedSource.length - 1), "gi");
+        const regex = new RegExp(allowedSource.substring(1, allowedSource.length - 1), 'gi');
         return !!source.match(regex);
       } catch (e) {
         Logger.error(`Reaction: failed to parse regex ${allowedSource}`, e);

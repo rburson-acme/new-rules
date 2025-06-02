@@ -256,11 +256,11 @@ describe('persistence', function () {
     const obj = await persistence.get({
       type: testObjType,
       matcher: {},
-      collector: { sort: [{ field: 'testNumeric' }], limit: 10},
+      collector: { sort: [{ field: 'testNumeric' }], limit: 10 },
       selector: { include: ['testNumeric'] },
     });
     expect(obj?.length).toBe(10);
-    if(obj?.[0]) expect(Object.keys(obj[0]).length).toBe(2);
+    if (obj?.[0]) expect(Object.keys(obj[0]).length).toBe(2);
     expect(obj?.[0].testNumeric).toBeDefined();
     expect(obj?.[0].id).toBeDefined();
   });

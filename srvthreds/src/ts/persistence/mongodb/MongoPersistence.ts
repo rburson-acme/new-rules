@@ -31,7 +31,7 @@ export class MongoPersistence implements Persistence {
     return ids;
   }
 
-  async getOne<T>(query: Query, options?: any): Promise<Persistent & T | null> {
+  async getOne<T>(query: Query, options?: any): Promise<(Persistent & T) | null> {
     if (!query.matcher) query.matcher = {};
     const mappedMatcher = MongoSpec.mapMatcherValues(query.matcher);
     const mappedSelector = MongoSpec.mapSelectorValues(query.selector);
@@ -70,7 +70,7 @@ export class MongoPersistence implements Persistence {
       return this.update(query, options);
     } else {
       // if the filter contained the objects id, copy it over to the values to be inserted
-      if(query.matcher[Spec.ID]) {
+      if (query.matcher[Spec.ID]) {
         (query.values as Record<string, any>)[Spec.ID] = query.matcher[Spec.ID];
       }
       return this.put(query, options);

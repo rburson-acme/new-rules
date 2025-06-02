@@ -1,10 +1,12 @@
 {
-    "groups": [{
-            "name": "group0",
-            "participants": [ { "participantId": "participant0" }, { "participantId": "participant1" } ]
-        },
-        {
-            "name": "group1",
-            "participants": [ { "participantId": "participant3" }, { "participantId": "participant1" } ]
-     }]
+  "groups": [
+    {
+      "name": "group0",
+      "participants": [{ "participantId": "participant0" }, { "participantId": "participant1" }]
+    },
+    {
+      "name": "group1",
+      "participants": [{ "participantId": "participant3" }, { "participantId": "participant1" }]
+    }
+  ]
 }

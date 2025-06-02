@@ -26,7 +26,10 @@ describe('admin pattern management test', function () {
     patternCreationTime = engineConnMan.engine.thredsStore.patternsStore.patternStore('systemTest').timestamp;
   });
   test('should save a modified pattern', function () {
-    const savePatternEvent = SystemEvents.getSavePatternEvent({ ...adminTestPatternModels[0], name: 'Modified System Test' }, adminTestSource);
+    const savePatternEvent = SystemEvents.getSavePatternEvent(
+      { ...adminTestPatternModels[0], name: 'Modified System Test' },
+      adminTestSource,
+    );
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.data?.content?.error).toBeUndefined();
       // should return id as result if successful
@@ -60,4 +63,3 @@ describe('admin pattern management test', function () {
 
 let engineConnMan: EngineConnectionManager;
 let patternCreationTime: number;
-

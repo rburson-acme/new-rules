@@ -19,8 +19,8 @@ export interface Storage {
   addToSet(type: string, item: string, setId: string): Promise<void>;
   removeFromSet(type: string, item: string, setId: string, ttl?: number): Promise<void>;
   disconnect(): Promise<void>;
-  purgeAll(): Promise<void> 
-  
+  purgeAll(): Promise<void>;
+
   /*
      retrieve() with a lock
     */
@@ -35,7 +35,13 @@ export interface Storage {
   /*
      save() with lock
     */
-  saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<{ lock: Lock }>;
+  saveAndClaim(
+    type: string,
+    item: any,
+    id: string,
+    ttl?: number,
+    meta?: Record<string, string>,
+  ): Promise<{ lock: Lock }>;
   claimAndDelete(type: string, id: string, ttl?: number): Promise<void>;
   /* 
      extend the lock

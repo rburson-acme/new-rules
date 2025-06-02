@@ -14,7 +14,10 @@ export class RedisPubSub implements PubSub {
     await this.pub.publish(topic, JSON.stringify(message));
   }
 
-  public async subscribe(topics: string[], notifyFn: (topic: string, message: Record<string, any>) => void): Promise<void> {
+  public async subscribe(
+    topics: string[],
+    notifyFn: (topic: string, message: Record<string, any>) => void,
+  ): Promise<void> {
     await this.sub.subscribe(...topics, (err, count) => {
       if (err) {
         Logger.error('Failed to subscribe: %s', err.message);

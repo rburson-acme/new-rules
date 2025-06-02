@@ -43,9 +43,7 @@
           }
         },
         "publish": {
-          "to": [
-            "mes.database"
-          ]
+          "to": ["mes.database"]
         },
         "transition": {
           "name": "$next",
@@ -85,9 +83,7 @@
           }
         },
         "publish": {
-          "to": [
-            "customer.erp"
-          ]
+          "to": ["customer.erp"]
         }
       }
     },
@@ -149,18 +145,14 @@
                                   "value": {
                                     "forInput": "operator_response",
                                     "display": "Yes, the operation was successful",
-                                    "set": [
-                                      true
-                                    ]
+                                    "set": [true]
                                   }
                                 },
                                 {
                                   "value": {
                                     "forInput": "operator_response",
                                     "display": "No, the operation failed",
-                                    "set": [
-                                      false
-                                    ]
+                                    "set": [false]
                                   }
                                 }
                               ]
@@ -176,36 +168,32 @@
           }
         },
         "publish": {
-          "to": [
-            "pat"
-          ]
+          "to": ["pat"]
         }
       }
     },
     {
       "condition": {
-          "type": "or",
-          "operands": [
-              {
-                  "type": "filter",
-                  "xpr": "$event.type='customer.operator' and $content.values.operator_response"
-              },
-              {
-                  "type": "filter",
-                  "xpr": "$event.type='customer.operator' and $not($content.values.operator_response)"
-              }
-          ],
-          "transform": {
-              "eventDataTemplate": {
-                  "title": "Thanks.",
-                  "description": "Your response will be logged."
-              }
+        "type": "or",
+        "operands": [
+          {
+            "type": "filter",
+            "xpr": "$event.type='customer.operator' and $content.values.operator_response"
           },
-          "publish": {
-              "to": [
-                  "pat"
-              ]
+          {
+            "type": "filter",
+            "xpr": "$event.type='customer.operator' and $not($content.values.operator_response)"
           }
+        ],
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Thanks.",
+            "description": "Your response will be logged."
+          }
+        },
+        "publish": {
+          "to": ["pat"]
+        }
       }
     }
   ]

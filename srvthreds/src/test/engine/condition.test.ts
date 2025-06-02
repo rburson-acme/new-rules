@@ -10,99 +10,80 @@ describe('conditions', function () {
   });
   // match the first event and start the thred
   test('match filter', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      async (message) => {
-        expect(await await connMan.engine.numThreds).toBe(1);
-        expect(message.event.data?.title).toBe('outbound.event0');
-        expect(message.to).toContain('outbound.event0.recipient');
-        thredId = message.event.thredId;
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
+      expect(await await connMan.engine.numThreds).toBe(1);
+      expect(message.event.data?.title).toBe('outbound.event0');
+      expect(message.to).toContain('outbound.event0.recipient');
+      thredId = message.event.thredId;
+    });
     connMan.eventQ.queue(events.event0);
     return pr;
   });
   // should match both AND conditions and return the 'and condition' level result
   test('and condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event1');
-        expect(message.event.data?.description).toBe(
-          'response to event 1 and event 1a'
-        );
-        expect(message.to).toContain('outbound.event1.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event1');
+      expect(message.event.data?.description).toBe('response to event 1 and event 1a');
+      expect(message.to).toContain('outbound.event1.recipient');
+    });
     connMan.eventQ.queue({ ...events.event1, thredId });
     connMan.eventQ.queue({ ...events.event1a, thredId });
     return pr;
   });
   // should match the first OR condition and return the first condition level result
   test('match first or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event2');
-        expect(message.to).toContain('outbound.event2.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event2');
+      expect(message.to).toContain('outbound.event2.recipient');
+    });
     connMan.eventQ.queue({ ...events.event2, thredId });
     return pr;
   });
   // should match the second OR condition and return the second condition-level result
   test('match second or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event2a');
-        expect(message.to).toContain('outbound.event2a.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event2a');
+      expect(message.to).toContain('outbound.event2a.recipient');
+    });
     connMan.eventQ.queue({ ...events.event2a, thredId });
     return pr;
   });
-
 
   // These are placeholders for more sophisticated tests in the future
 
   // should return the first condition level result
   test('match first or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event3');
-        expect(message.to).toContain('outbound.event3.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event3');
+      expect(message.to).toContain('outbound.event3.recipient');
+    });
     connMan.eventQ.queue({ ...events.event3, thredId });
     return pr;
   });
   // should return the shared 'or condition' level result
   test('match second or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event3a');
-        expect(message.to).toContain('outbound.event3a.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event3a');
+      expect(message.to).toContain('outbound.event3a.recipient');
+    });
     connMan.eventQ.queue({ ...events.event3a, thredId });
     return pr;
   });
   // should return the shared 'or condition' level result
   test('match first or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event4x');
-        expect(message.to).toContain('outbound.event4x.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event4x');
+      expect(message.to).toContain('outbound.event4x.recipient');
+    });
     connMan.eventQ.queue({ ...events.event4, thredId });
     return pr;
   });
   // should return the shared 'or condition' level result
   test('match second or condition', function () {
-    const pr = withDispatcherPromise(connMan.engine.dispatchers,
-      (message) => {
-        expect(message.event.data?.title).toBe('outbound.event4x');
-        expect(message.to).toContain('outbound.event4x.recipient');
-      },
-    );
+    const pr = withDispatcherPromise(connMan.engine.dispatchers, (message) => {
+      expect(message.event.data?.title).toBe('outbound.event4x');
+      expect(message.to).toContain('outbound.event4x.recipient');
+    });
     connMan.eventQ.queue({ ...events.event4a, thredId });
     return pr;
   });
@@ -160,8 +141,7 @@ const patternModels: PatternModel[] = [
           transform: {
             eventDataTemplate: {
               title: 'outbound.event1',
-              description:
-                "$xpr( 'response to event ' & $local('event1').id & ' and event ' & $local('event2').id )",
+              description: "$xpr( 'response to event ' & $local('event1').id & ' and event ' & $local('event2').id )",
             },
           },
           publish: {

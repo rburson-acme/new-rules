@@ -1,453 +1,427 @@
 {
-    "name": "Downtime",
-    "id": "downtime",
-    "instanceInterval": 0,
-    "maxInstances": 0,
-    "reactions": [
-        {
-            "name": "notify_erp_of_downtime",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'wonkaInc.downtime'",
-                "onTrue": { "xpr": "$setLocal('first_event', $event)" },
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "$xpr( 'New Reporting Entry: ' & $data.description & ' - ERP' )",
-                        "description": "$xpr( $event.source.name & ' has failed with a ' & $data.description)",
-                        "content": {
-                            "advice": {
-                                "eventType": "wonkaInc.erp.entry.created"
-                            },
-                            "values": {
-                                "tasks": [
-                                    {
-                                        "name": "entryCreate",
-                                        "op": "create",
-                                        "target": "failure_log",
-                                        "values": {
-                                            "name": "$xpr( $data.description )",
-                                            "code": "$xpr( $content.errorCode )",
-                                            "location": "$xpr( $event.source.name )"
-                                        }
-                                    }
-                                ]
-                            }
-                        },
-                        "display": {
-                            "uri": "https://www.pinclipart.com/picdir/middle/36-363869_light-blue-warning-sign-blue-triangle-clipart.png"
-                        }
+  "name": "Downtime",
+  "id": "downtime",
+  "instanceInterval": 0,
+  "maxInstances": 0,
+  "reactions": [
+    {
+      "name": "notify_erp_of_downtime",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'wonkaInc.downtime'",
+        "onTrue": { "xpr": "$setLocal('first_event', $event)" },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "$xpr( 'New Reporting Entry: ' & $data.description & ' - ERP' )",
+            "description": "$xpr( $event.source.name & ' has failed with a ' & $data.description)",
+            "content": {
+              "advice": {
+                "eventType": "wonkaInc.erp.entry.created"
+              },
+              "values": {
+                "tasks": [
+                  {
+                    "name": "entryCreate",
+                    "op": "create",
+                    "target": "failure_log",
+                    "values": {
+                      "name": "$xpr( $data.description )",
+                      "code": "$xpr( $content.errorCode )",
+                      "location": "$xpr( $event.source.name )"
                     }
-                },
-                "publish": {
-                    "to": [
-                        "wonkaInc.erp.agent"
-                    ]
-                },
-                "transition": {
-                    "name": "$next",
-                    "input": "forward"
-                }
-            }
-        },
-        {
-            "name": "notify_operator",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'wonkaInc.downtime'",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "System Failure",
-                        "description": "$xpr( $event.source.name & ' has failed with a ' & $data.description)",
-                        "content": {
-                            "advice": {
-                                "eventType": "wonkaInc.operator",
-                                "title": "Work order needed?",
-                                "template": {
-                                    "name": "operator_create_workorder",
-                                    "interactions": [
-                                        {
-                                            "interaction": {
-                                                "content": [
-                                                    {
-                                                        "input": {
-                                                            "name": "operator_response",
-                                                            "type": "nominal",
-                                                            "display": "Do you need to create a new work order?"
-                                                        }
-                                                    },
-                                                    {
-                                                        "group": {
-                                                            "items": [
-                                                                {
-                                                                    "value": {
-                                                                        "forInput": "operator_response",
-                                                                        "display": "Yes, create a work order",
-                                                                        "set": [
-                                                                            true
-                                                                        ]
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "value": {
-                                                                        "forInput": "operator_response",
-                                                                        "display": "No, don't create a work order",
-                                                                        "set": [
-                                                                            false
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "bOompa"
-                    ]
-                }
-            }
-        },
-        {
-            "name": "handle_operator_response",
-            "condition": {
-                "type": "or",
-                "operands": [
-                    {
-                        "type": "filter",
-                        "xpr": "$event.type='wonkaInc.operator' and $content.values.operator_response",
-                        "onTrue": {
-                            "xpr": "$setLocal('operator_id', $event.source.id)"
-                        },
-                        "transform": {
-                            "eventDataTemplate": {
-                                "title": "$xpr( 'Create Work Order: ' & $local('first_event').data.description )",
-                                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
-                                "content": {
-                                    "advice": {
-                                        "eventType": "wonkaInc.cmms.failureWorkOrder.created"
-                                    },
-                                    "values": {
-                                        "tasks": [
-                                            {
-                                                "name": "workOrderCreate",
-                                                "op": "create",
-                                                "target": "work_orders",
-                                                "values": {
-                                                    "name": "$xpr( $local('first_event').data.description )",
-                                                    "submittedBy": "$xpr( $event.source.id )",
-                                                    "code": "$xpr( $local('first_event').data.content.errorCode )",
-                                                    "location": "$xpr( $local('first_event').source.name )"
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    "display": {
-                                        "uri": "https://www.pinclipart.com/picdir/middle/36-363869_light-blue-warning-sign-blue-triangle-clipart.png"
-                                    }
-                                }
-                            }
-                        },
-                        "publish": {
-                            "to": [
-                                "wonkaInc.cmms.agent"
-                            ]
-                        }
-                    },
-                    {
-                        "type": "filter",
-                        "xpr": "$event.type='wonkaInc.operator' and $not($content.values.operator_response)",
-                        "transition": {
-                            "name": "$terminate"
-                        }
-                    }
+                  }
                 ]
+              }
+            },
+            "display": {
+              "uri": "https://www.pinclipart.com/picdir/middle/36-363869_light-blue-warning-sign-blue-triangle-clipart.png"
             }
+          }
         },
-        {
-            "name": "notify_operator_workorder_created",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
-                "onTrue": {
-                    "xpr": "$setLocal('current_work_order_id', $content.values.id)"
-                },
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Work order has been created",
-                        "description": "$xpr( $event.source.name & ' created workorder ' & $content.values.id)"
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "$xpr( $local('operator_id') )"
-                    ]
-                },
-                "transition": {
-                    "name": "$next",
-                    "input": "forward"
-                }
-            }
+        "publish": {
+          "to": ["wonkaInc.erp.agent"]
         },
-        {
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Available Technican Query",
-                        "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
-                        "content": {
-                            "advice": {
-                                "eventType": "wonkaInc.rms.availableResources"
-                            },
-                            "values": {
-                                "tasks": [
-                                    {
-                                        "name": "availableTechnicians",
-                                        "op": "read",
-                                        "target": "employee",
-                                        "selector": "{ id, name }",
-                                        "values": {
-                                            "available": true,
-                                            "code": "$xpr( $local('first_event').data.content.errorCode )",
-                                            "location": "$xpr( $local('first_event').source.name )",
-                                            "role": "technician"
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "wonkaInc.rms.agent"
-                    ]
-                }
-            }
-        },
-        {
-            "name": "notifyAvailableTechnician",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'wonkaInc.rms.availableResources'",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Assistance Needed",
-                        "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
-                        "content": {
-                            "advice": {
-                                "eventType": "wonkaInc.technician",
-                                "title": "Are you available?",
-                                "template": {
-                                    "name": "technician_accept_work",
-                                    "interactions": [
-                                        {
-                                            "interaction": {
-                                                "content": [
-                                                    {
-                                                        "input": {
-                                                            "name": "technician_response",
-                                                            "type": "nominal",
-                                                            "display": "Are you available to accept the work order?"
-                                                        }
-                                                    },
-                                                    {
-                                                        "group": {
-                                                            "items": [
-                                                                {
-                                                                    "value": {
-                                                                        "forInput": "technician_response",
-                                                                        "display": "Yes, I can accept",
-                                                                        "set": [
-                                                                            true
-                                                                        ]
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "value": {
-                                                                        "forInput": "technician_response",
-                                                                        "display": "No, not right now",
-                                                                        "set": [
-                                                                            false
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "$xpr( $content.values.availableTechnicians[0].id )"
-                    ]
-                }
-            }
-        },
-        {
-            "condition": {
-                "type": "or",
-                "operands": [
-                    {
-                        "type": "filter",
-                        "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
-                        "transform": {
-                            "eventDataTemplate": {
-                                "title": "$xpr( $event.source.id & ' has now become unavailable' )",
-                                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
-                                "content": {
-                                    "advice": {
-                                        "eventType": "wonkaInc.rms.availableTechniciansUpdated"
-                                    },
-                                    "values": {
-                                        "tasks": [
-                                            {
-                                                "name": "technicianUnavailable",
-                                                "op": "update",
-                                                "target": "employee",
-                                                "values": {
-                                                    "id": "$xpr( $event.source.id )",
-                                                    "available": false,
-                                                    "unavailableAt": "$xpr( $millis() )",
-                                                    "unavailableTimeout": 15
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        },
-                        "transition": {
-                            "name": "updateWorkOrder",
-                            "input": "forward"
-                        }
-                    },
-                    {
-                        "type": "filter",
-                        "xpr": "$event.type='wonkaInc.technician' and $not($content.values.technician_response)",
-                        "transform": {
-                            "eventDataTemplate": {
-                                "title": "Available Technican Query",
-                                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
-                                "content": {
-                                    "advice": {
-                                        "eventType": "wonkaInc.rms.availableResources"
-                                    },
-                                    "values": {
-                                        "tasks": [
-                                            {
-                                                "name": "technicianUnavailable",
-                                                "op": "update",
-                                                "target": "employee",
-                                                "values": {
-                                                    "id": "$xpr( $event.source.id )",
-                                                    "available": false,
-                                                    "unavailableAt": "$xpr( $millis() )",
-                                                    "unavailableTimeout": 15
-                                                }
-                                            },
-                                            {
-                                                "name": "availableTechnicians",
-                                                "op": "read",
-                                                "target": "employee",
-                                                "selector": "{ id, name }",
-                                                "values": {
-                                                    "available": true,
-                                                    "code": "$xpr( $local('first_event').data.content.errorCode )",
-                                                    "location": "$xpr( $local('first_event').source.name )",
-                                                    "role": "technician"
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        },
-                        "transition": {
-                            "name": "notifyAvailableTechnician"
-                        }
-                    }
-                ],
-                "publish": {
-                    "to": [
-                        "wonkaInc.rms.agent"
-                    ]
-                }
-            }
-        },
-        {
-            "name": "updateWorkOrder",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "$xpr( 'Work Order Assigned to : '  & $event.source.id )",
-                        "description": "$xpr( $event.source.name & ' has taken the work order.')",
-                        "content": {
-                            "advice": {
-                                "eventType": "wonkaInc.cmms.failureWorkOrder.updated"
-                            },
-                            "values": {
-                                "tasks": [
-                                    {
-                                        "name": "workOrderUpdate",
-                                        "op": "update",
-                                        "target": "work_orders",
-                                        "values": {
-                                            "id": "$xpr( $local('current_work_order_id') )",
-                                            "assignedTo": "$xpr( $event.source.id )",
-                                            "assignedTime": "$xpr( $millis() )"
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "wonkaInc.cmms.agent"
-                    ]
-                }
-            }
-        },
-        {
-            "name": "notify_technician_workorder_updated",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type='wonkaInc.cmms.failureWorkOrder.updated'",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Work order has been updated",
-                        "description": "$xpr( 'You have been assigned to work order ' & $content.values.id )"
-                    }
-                },
-                "publish": {
-                    "to": [
-                        "$xpr( $content.values.assignedTo )"
-                    ]
-                },
-                "transition": {
-                    "name": "$terminate"
-                }
-            }
+        "transition": {
+          "name": "$next",
+          "input": "forward"
         }
-    ]
+      }
+    },
+    {
+      "name": "notify_operator",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'wonkaInc.downtime'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "System Failure",
+            "description": "$xpr( $event.source.name & ' has failed with a ' & $data.description)",
+            "content": {
+              "advice": {
+                "eventType": "wonkaInc.operator",
+                "title": "Work order needed?",
+                "template": {
+                  "name": "operator_create_workorder",
+                  "interactions": [
+                    {
+                      "interaction": {
+                        "content": [
+                          {
+                            "input": {
+                              "name": "operator_response",
+                              "type": "nominal",
+                              "display": "Do you need to create a new work order?"
+                            }
+                          },
+                          {
+                            "group": {
+                              "items": [
+                                {
+                                  "value": {
+                                    "forInput": "operator_response",
+                                    "display": "Yes, create a work order",
+                                    "set": [true]
+                                  }
+                                },
+                                {
+                                  "value": {
+                                    "forInput": "operator_response",
+                                    "display": "No, don't create a work order",
+                                    "set": [false]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": ["bOompa"]
+        }
+      }
+    },
+    {
+      "name": "handle_operator_response",
+      "condition": {
+        "type": "or",
+        "operands": [
+          {
+            "type": "filter",
+            "xpr": "$event.type='wonkaInc.operator' and $content.values.operator_response",
+            "onTrue": {
+              "xpr": "$setLocal('operator_id', $event.source.id)"
+            },
+            "transform": {
+              "eventDataTemplate": {
+                "title": "$xpr( 'Create Work Order: ' & $local('first_event').data.description )",
+                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
+                "content": {
+                  "advice": {
+                    "eventType": "wonkaInc.cmms.failureWorkOrder.created"
+                  },
+                  "values": {
+                    "tasks": [
+                      {
+                        "name": "workOrderCreate",
+                        "op": "create",
+                        "target": "work_orders",
+                        "values": {
+                          "name": "$xpr( $local('first_event').data.description )",
+                          "submittedBy": "$xpr( $event.source.id )",
+                          "code": "$xpr( $local('first_event').data.content.errorCode )",
+                          "location": "$xpr( $local('first_event').source.name )"
+                        }
+                      }
+                    ]
+                  },
+                  "display": {
+                    "uri": "https://www.pinclipart.com/picdir/middle/36-363869_light-blue-warning-sign-blue-triangle-clipart.png"
+                  }
+                }
+              }
+            },
+            "publish": {
+              "to": ["wonkaInc.cmms.agent"]
+            }
+          },
+          {
+            "type": "filter",
+            "xpr": "$event.type='wonkaInc.operator' and $not($content.values.operator_response)",
+            "transition": {
+              "name": "$terminate"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "notify_operator_workorder_created",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
+        "onTrue": {
+          "xpr": "$setLocal('current_work_order_id', $content.values.id)"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Work order has been created",
+            "description": "$xpr( $event.source.name & ' created workorder ' & $content.values.id)"
+          }
+        },
+        "publish": {
+          "to": ["$xpr( $local('operator_id') )"]
+        },
+        "transition": {
+          "name": "$next",
+          "input": "forward"
+        }
+      }
+    },
+    {
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'wonkaInc.cmms.failureWorkOrder.created'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Available Technican Query",
+            "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
+            "content": {
+              "advice": {
+                "eventType": "wonkaInc.rms.availableResources"
+              },
+              "values": {
+                "tasks": [
+                  {
+                    "name": "availableTechnicians",
+                    "op": "read",
+                    "target": "employee",
+                    "selector": "{ id, name }",
+                    "values": {
+                      "available": true,
+                      "code": "$xpr( $local('first_event').data.content.errorCode )",
+                      "location": "$xpr( $local('first_event').source.name )",
+                      "role": "technician"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": ["wonkaInc.rms.agent"]
+        }
+      }
+    },
+    {
+      "name": "notifyAvailableTechnician",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'wonkaInc.rms.availableResources'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Assistance Needed",
+            "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
+            "content": {
+              "advice": {
+                "eventType": "wonkaInc.technician",
+                "title": "Are you available?",
+                "template": {
+                  "name": "technician_accept_work",
+                  "interactions": [
+                    {
+                      "interaction": {
+                        "content": [
+                          {
+                            "input": {
+                              "name": "technician_response",
+                              "type": "nominal",
+                              "display": "Are you available to accept the work order?"
+                            }
+                          },
+                          {
+                            "group": {
+                              "items": [
+                                {
+                                  "value": {
+                                    "forInput": "technician_response",
+                                    "display": "Yes, I can accept",
+                                    "set": [true]
+                                  }
+                                },
+                                {
+                                  "value": {
+                                    "forInput": "technician_response",
+                                    "display": "No, not right now",
+                                    "set": [false]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": ["$xpr( $content.values.availableTechnicians[0].id )"]
+        }
+      }
+    },
+    {
+      "condition": {
+        "type": "or",
+        "operands": [
+          {
+            "type": "filter",
+            "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
+            "transform": {
+              "eventDataTemplate": {
+                "title": "$xpr( $event.source.id & ' has now become unavailable' )",
+                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
+                "content": {
+                  "advice": {
+                    "eventType": "wonkaInc.rms.availableTechniciansUpdated"
+                  },
+                  "values": {
+                    "tasks": [
+                      {
+                        "name": "technicianUnavailable",
+                        "op": "update",
+                        "target": "employee",
+                        "values": {
+                          "id": "$xpr( $event.source.id )",
+                          "available": false,
+                          "unavailableAt": "$xpr( $millis() )",
+                          "unavailableTimeout": 15
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "transition": {
+              "name": "updateWorkOrder",
+              "input": "forward"
+            }
+          },
+          {
+            "type": "filter",
+            "xpr": "$event.type='wonkaInc.technician' and $not($content.values.technician_response)",
+            "transform": {
+              "eventDataTemplate": {
+                "title": "Available Technican Query",
+                "description": "$xpr( $local('first_event').source.name & ' has failed with a ' & $local('first_event').data.description)",
+                "content": {
+                  "advice": {
+                    "eventType": "wonkaInc.rms.availableResources"
+                  },
+                  "values": {
+                    "tasks": [
+                      {
+                        "name": "technicianUnavailable",
+                        "op": "update",
+                        "target": "employee",
+                        "values": {
+                          "id": "$xpr( $event.source.id )",
+                          "available": false,
+                          "unavailableAt": "$xpr( $millis() )",
+                          "unavailableTimeout": 15
+                        }
+                      },
+                      {
+                        "name": "availableTechnicians",
+                        "op": "read",
+                        "target": "employee",
+                        "selector": "{ id, name }",
+                        "values": {
+                          "available": true,
+                          "code": "$xpr( $local('first_event').data.content.errorCode )",
+                          "location": "$xpr( $local('first_event').source.name )",
+                          "role": "technician"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "transition": {
+              "name": "notifyAvailableTechnician"
+            }
+          }
+        ],
+        "publish": {
+          "to": ["wonkaInc.rms.agent"]
+        }
+      }
+    },
+    {
+      "name": "updateWorkOrder",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type='wonkaInc.technician' and $content.values.technician_response",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "$xpr( 'Work Order Assigned to : '  & $event.source.id )",
+            "description": "$xpr( $event.source.name & ' has taken the work order.')",
+            "content": {
+              "advice": {
+                "eventType": "wonkaInc.cmms.failureWorkOrder.updated"
+              },
+              "values": {
+                "tasks": [
+                  {
+                    "name": "workOrderUpdate",
+                    "op": "update",
+                    "target": "work_orders",
+                    "values": {
+                      "id": "$xpr( $local('current_work_order_id') )",
+                      "assignedTo": "$xpr( $event.source.id )",
+                      "assignedTime": "$xpr( $millis() )"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": ["wonkaInc.cmms.agent"]
+        }
+      }
+    },
+    {
+      "name": "notify_technician_workorder_updated",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type='wonkaInc.cmms.failureWorkOrder.updated'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Work order has been updated",
+            "description": "$xpr( 'You have been assigned to work order ' & $content.values.id )"
+          }
+        },
+        "publish": {
+          "to": ["$xpr( $content.values.assignedTo )"]
+        },
+        "transition": {
+          "name": "$terminate"
+        }
+      }
+    }
+  ]
 }

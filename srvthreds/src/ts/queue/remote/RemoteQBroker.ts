@@ -8,28 +8,27 @@ import { Logger } from '../../thredlib/index.js';
     This should allow for a more perfect distribution across nodes. However, it has the most network overhead.
 */
 export class RemoteQBroker {
+  broker?: BrokerAsPromised;
 
-    broker?: BrokerAsPromised;
-    
-    constructor(private config?: any) { 
-        if(!config) {
-            this.config = baseConfig as any;
-        }
+  constructor(private config?: any) {
+    if (!config) {
+      this.config = baseConfig as any;
     }
+  }
 
-    async connect(): Promise<void> {
-        const withDefaults = rascal.withDefaultConfig(this.config as any);
-        await rascal.BrokerAsPromised.create(withDefaults).then(broker => {
-            this.broker = broker;
-            this.broker.on('error', Logger.error);
-        });
-    }
+  async connect(): Promise<void> {
+    const withDefaults = rascal.withDefaultConfig(this.config as any);
+    await rascal.BrokerAsPromised.create(withDefaults).then((broker) => {
+      this.broker = broker;
+      this.broker.on('error', Logger.error);
+    });
+  }
 
-    get isConnected(): boolean {
-        return this.broker !== undefined;
-    }
+  get isConnected(): boolean {
+    return this.broker !== undefined;
+  }
 
-   /*
+  /*
         Remove all remote messages
     */
   async deleteAll(): Promise<void> {
@@ -40,10 +39,9 @@ export class RemoteQBroker {
     await this.broker?.unsubscribeAll();
   }
 
-    async disconnect(): Promise<void> {
-        await this.broker?.unsubscribeAll();
-        await this.broker?.shutdown();
-        this.broker = undefined;
-    }
-
+  async disconnect(): Promise<void> {
+    await this.broker?.unsubscribeAll();
+    await this.broker?.shutdown();
+    this.broker = undefined;
+  }
 }

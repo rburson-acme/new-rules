@@ -121,7 +121,7 @@ export class AddressResolver {
   }
 
   async getThredParticipantIds(context?: ThredContext): Promise<string[]> {
-    if(!context) return [];
+    if (!context) return [];
     const addresses = context.getParticipantAddresses();
     // filter out service addresses
     const { participantAddresses } = this.filterServiceAddresses(addresses);

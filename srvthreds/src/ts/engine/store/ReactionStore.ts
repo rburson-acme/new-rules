@@ -32,7 +32,7 @@ export class ReactionStore {
   }
 
   isExpired(expiry: number) {
-    return (Date.now() - this.startTime) > expiry;
+    return Date.now() - this.startTime > expiry;
   }
 
   getState() {

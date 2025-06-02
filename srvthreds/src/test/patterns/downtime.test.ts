@@ -203,8 +203,8 @@ const events: Record<string, Event> = {
       description: 'Unknown Event',
       content: {
         values: {
-        errorCode: 'Dang'
-        }
+          errorCode: 'Dang',
+        },
       },
     },
     source: {
@@ -220,8 +220,8 @@ const events: Record<string, Event> = {
       description: 'Widget Jam',
       content: {
         values: {
-        errorCode: 'EC_1034',
-        }
+          errorCode: 'EC_1034',
+        },
       },
     },
     source: {

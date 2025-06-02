@@ -17,7 +17,7 @@ describe('builtins tests', function () {
       expect(message.to).toContain('participant2');
       thredId = message.event.thredId;
     });
-    connMan.eventQ.queue({...events.event0, source: { id: 'participant0' }});
+    connMan.eventQ.queue({ ...events.event0, source: { id: 'participant0' } });
     return pr;
   });
   test('add 1 more participant', function () {
@@ -25,7 +25,7 @@ describe('builtins tests', function () {
       expect(message.event.data?.title).toBe('outbound.event1');
       expect(message.to).toContain('participant3');
     });
-    connMan.eventQ.queue({...events.event1, thredId, source: { id: 'participant1' }});
+    connMan.eventQ.queue({ ...events.event1, thredId, source: { id: 'participant1' } });
     return pr;
   });
   test('send a broadcast message', function () {
@@ -90,7 +90,7 @@ const patternModels: PatternModel[] = [
           // don't terminate the thred because we need it to remain active in order to broadcast
           transition: {
             name: '$noTransition',
-          }
+          },
         },
       },
     ],

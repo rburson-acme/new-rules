@@ -34,7 +34,7 @@ describe.skip('client connection test', function () {
           },
           resolve,
           reject,
-        )
+        ),
       );
     });
     eventManager0.publish(events.event0);
@@ -59,9 +59,12 @@ describe.skip('client connection test', function () {
     const pr = new Promise<void>((resolve, reject) => {
       eventManager0.subscribe(
         withPromiseHandlers(
-        (event) => {
-          expect(event.data?.title).toBe('outbound.event2');
-        }, resolve, reject),
+          (event) => {
+            expect(event.data?.title).toBe('outbound.event2');
+          },
+          resolve,
+          reject,
+        ),
       );
     });
     eventManager1.publish({ ...events.event2, thredId });

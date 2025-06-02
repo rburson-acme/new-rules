@@ -6,13 +6,13 @@
         "reaction": {
           "name": "init",
           "condition": {
-              "type": "filter",
-              "expr": "type = 'wonkaInc.downtime'",
-              "transform": {
-                "expr": ""
-              },
-              "publish": {},
-              "transition": {}
+            "type": "filter",
+            "expr": "type = 'wonkaInc.downtime'",
+            "transform": {
+              "expr": ""
+            },
+            "publish": {},
+            "transition": {}
           }
         }
       },

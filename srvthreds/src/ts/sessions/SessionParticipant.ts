@@ -1,6 +1,4 @@
 export interface SessionParticipant {
-
-    participantId: string,
-    nodeId: string
-
+  participantId: string;
+  nodeId: string;
 }

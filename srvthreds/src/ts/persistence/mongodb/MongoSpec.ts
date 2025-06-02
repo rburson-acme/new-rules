@@ -117,7 +117,7 @@ export class MongoSpec {
     });
     if (!replace && !mappedValues[MongoSpec._ID]) mappedValues[MongoSpec._ID] = Id.generate();
     const now = new Date();
-    if(!replace) mappedValues[Spec.CREATED] = now;
+    if (!replace) mappedValues[Spec.CREATED] = now;
     mappedValues[Spec.MODIFIED] = now;
     return mappedValues;
   }

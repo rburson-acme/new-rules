@@ -135,9 +135,7 @@ export class Agent {
         const cause = serializableError(e.eventError ? e.eventError.cause : e);
         try {
           const outboundEvent = this.eventPublisher.createOutboundEvent({
-            error: e.eventError
-              ? { ...e.eventError, cause }
-              : { ...errorCodes[errorKeys.TASK_ERROR], cause },
+            error: e.eventError ? { ...e.eventError, cause } : { ...errorCodes[errorKeys.TASK_ERROR], cause },
             prevEvent: qMessage.payload.event,
           });
           await this.eventPublisher.publishEvent(outboundEvent);

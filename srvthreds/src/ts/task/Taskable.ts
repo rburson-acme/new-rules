@@ -1,28 +1,26 @@
 export interface Query {
-    type: string;
-    matcher?: Record<string, any>;
-    selector?: Record<string, any>;
-    values?: Record<string, any> | any[];
+  type: string;
+  matcher?: Record<string, any>;
+  selector?: Record<string, any>;
+  values?: Record<string, any> | any[];
 }
 
 export interface Taskable {
+  put(query: Query, options?: any): Promise<string | string[]>;
 
-    put(query: Query, options?: any): Promise<string | string[]>;
+  getOne<T>(query: Query, options?: any): Promise<T | null>;
 
-    getOne<T>(query: Query, options?: any): Promise<T | null>;
-    
-    get<T>(query: Query, options?: any): Promise<T[] | null>;
+  get<T>(query: Query, options?: any): Promise<T[] | null>;
 
-    update(query: Query, options?: any): Promise<void>;
+  update(query: Query, options?: any): Promise<void>;
 
-    upsert(query: Query, options?: any): Promise<string | string[] | void>;
-    
-    replace(query: Query, options?: any): Promise<void>;
+  upsert(query: Query, options?: any): Promise<string | string[] | void>;
 
-    delete(query: Query, options?: any): Promise<void>;
+  replace(query: Query, options?: any): Promise<void>;
 
-    count(query: Query, options?: any): Promise<number>;
+  delete(query: Query, options?: any): Promise<void>;
 
-    run(params: any): Promise<any>;
+  count(query: Query, options?: any): Promise<number>;
 
+  run(params: any): Promise<any>;
 }

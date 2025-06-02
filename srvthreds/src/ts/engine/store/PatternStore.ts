@@ -1,30 +1,31 @@
-import { PatternModel } from "../../thredlib/index.js";
-import { Pattern } from "../Pattern.js";
+import { PatternModel } from '../../thredlib/index.js';
+import { Pattern } from '../Pattern.js';
 
 export class PatternStore {
+  static TIMESTAMP_KEY = 'ts';
+  readonly pattern: Pattern;
 
-    static TIMESTAMP_KEY = 'ts';
-    readonly pattern: Pattern;
+  constructor(
+    readonly patternModel: PatternModel,
+    readonly timestamp: number,
+  ) {
+    this.pattern = new Pattern(patternModel);
+  }
 
-    constructor(readonly patternModel: PatternModel, readonly timestamp: number) {
-        this.pattern = new Pattern(patternModel);
-    }
+  isStale(newTimestamp: number): boolean {
+    return this.timestamp < newTimestamp;
+  }
 
-    isStale(newTimestamp: number): boolean {
-        return this.timestamp < newTimestamp;
-    }
+  getState(): PatternStoreState {
+    return { patternModel: this.patternModel, timestamp: this.timestamp };
+  }
 
-    getState(): PatternStoreState {
-        return { patternModel: this.patternModel, timestamp: this.timestamp };
-    }
-
-    static fromState(state: PatternStoreState): PatternStore {
-        return new PatternStore(state.patternModel, state.timestamp);   
-    }
-
+  static fromState(state: PatternStoreState): PatternStore {
+    return new PatternStore(state.patternModel, state.timestamp);
+  }
 }
 
 interface PatternStoreState {
-    patternModel: PatternModel,
-    timestamp: number;
+  patternModel: PatternModel;
+  timestamp: number;
 }

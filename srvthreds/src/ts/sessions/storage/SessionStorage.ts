@@ -40,7 +40,7 @@ export class SessionStorage {
         async (result, sessionId) => {
           if (sessionId) {
             const sp: SessionParticipant = await this.storage.retrieve(Types.SessionParticipant, sessionId);
-            if(sp) result.push({ id: sessionId, nodeId: sp.nodeId });
+            if (sp) result.push({ id: sessionId, nodeId: sp.nodeId });
             return result;
           }
         },

@@ -44,7 +44,6 @@ describe('redis storage', function () {
       console.log(`there was an operation on ${redisKey}: ${redisOpeation}`);
     });
     */
-
   });
   test('save and claim w/ quick release', async function () {
     const id = testObjId;
@@ -81,15 +80,15 @@ describe('redis storage', function () {
 });
 
 const newRedisClient = async () => {
-    const client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-      },
-    });
-    return client;
-}
+  const client = new Redis({
+    // This is the default value of `retryStrategy`
+    retryStrategy(times) {
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    },
+  });
+  return client;
+};
 
 let client: Redis;
 let redlock: Redlock;

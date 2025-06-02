@@ -32,7 +32,7 @@ export class SessionAgent implements MessageHandler {
   private socketService: SocketService;
   // handles mapping sessions to external channels (i.e. sockets or rest calls, etc.)
   private sessionService: SessionService;
-  private loginService: HttpService
+  private loginService: HttpService;
 
   // dispatchers for sending events (from Messages) to outbound channels
   dispatchers: ((event: Event, channelId: string) => void)[] = [];

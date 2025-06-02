@@ -16,7 +16,7 @@ Logger.setLevel(LoggerLevel.DEBUG);
   - Loads the patterns in ./src/ts/config/patterns into the database
   - Loads any 'active' patterns from persistence into storage
   - Loads demo objects into the database
-*/ 
+*/
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,7 +78,6 @@ async function createTestUsers() {
   uc.replaceUser({ id: 'participant1', password: 'password1' });
   uc.replaceUser({ id: 'participant2', password: 'password2' });
   uc.replaceUser({ id: 'participant3', password: 'password3' });
-
 }
 
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)

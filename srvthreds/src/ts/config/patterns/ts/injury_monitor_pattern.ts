@@ -1,4 +1,4 @@
-import { PatternModel } from "../../../thredlib";
+import { PatternModel } from '../../../thredlib';
 
 export const patternModel: PatternModel = {
   name: 'Injury Monitor',

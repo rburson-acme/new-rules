@@ -1,16 +1,16 @@
 {
-    "agents": [
-        {
-            "name": "Session Server",
-            "nodeType": "org.wt.session",
-            "nodeId": "ort.wt.session1",
-            "address": "org.wt.session1"
-        },
-        {
-            "name": "Persistence Agent",
-            "nodeType": "org.wt.persistence",
-            "nodeId": "org.wt.persistence1",
-            "address": "org.wt.persistence"
-        }
-    ]
+  "agents": [
+    {
+      "name": "Session Server",
+      "nodeType": "org.wt.session",
+      "nodeId": "ort.wt.session1",
+      "address": "org.wt.session1"
+    },
+    {
+      "name": "Persistence Agent",
+      "nodeType": "org.wt.persistence",
+      "nodeId": "org.wt.persistence1",
+      "address": "org.wt.persistence"
+    }
+  ]
 }

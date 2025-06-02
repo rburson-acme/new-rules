@@ -3,8 +3,8 @@
   <head>
     <title>Socket.IO chat</title>
     <head>
-      <link rel="stylesheet" href="spinner.css">
-      <link rel="stylesheet" href="control.css">
+      <link rel="stylesheet" href="spinner.css" />
+      <link rel="stylesheet" href="control.css" />
     </head>
   </head>
   <body>
@@ -12,10 +12,10 @@
       <form action="">
         <div class="input_container">
           <h4>ERP System (Downtime Incidents)</h4>
-          <img id='image_primary' class="img_icon" src="images/database.png"/>
+          <img id="image_primary" class="img_icon" src="images/database.png" />
           <div>
             <div style="position: relative; display: inline-block">
-              <button id='send_button'>Send ERP Entry Created</button>
+              <button id="send_button">Send ERP Entry Created</button>
               <div id="spinner" class="spinner"></div>
             </div>
           </div>
@@ -23,17 +23,17 @@
 
           <div id="popup" class="popup">
             <div class="popup-container">
-              <img id="event_image" src="">
+              <img id="event_image" src="" />
               <h2 id="event_from">Message Source</h2>
               <p id="event_thread_id">ThredId</p>
               <p id="event_data_title">Message Title</p>
               <p id="event_data_description">Message Description</p>
-              <button id="close">Close</button> 
+              <button id="close">Close</button>
             </div>
-        </div>
-        <!-- <button id="open">Open</button> -->
+          </div>
+          <!-- <button id="open">Open</button> -->
 
-          <div id='json_container' style="height: 50%; display: none;">
+          <div id="json_container" style="height: 50%; display: none">
             <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
               {
                 "id": "132",
@@ -64,7 +64,9 @@
     </div>
     <script src="http://localhost:3000/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script>const id = 'wonkaInc.erp.agent';</script>
+    <script>
+      const id = 'wonkaInc.erp.agent';
+    </script>
     <script src="control.js"></script>
   </body>
 </html>

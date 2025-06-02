@@ -9,77 +9,80 @@ import { ResolverConfig } from './Config.js';
 import { ThredContext } from '../engine/ThredContext.js';
 
 export class Sessions {
+  private addressResolver: AddressResolver;
 
-    private addressResolver: AddressResolver;
+  constructor(
+    sessionsModel: SessionsModel,
+    resolverConfig: ResolverConfig,
+    private storage: SessionStorage,
+  ) {
+    this.addressResolver = new AddressResolver(sessionsModel.groups, resolverConfig, storage);
+  }
 
-    constructor(sessionsModel: SessionsModel, resolverConfig: ResolverConfig, private storage: SessionStorage) {
-        this.addressResolver = new AddressResolver(sessionsModel.groups, resolverConfig, storage);
-    }
+  getAddressResolver(): AddressResolver {
+    return this.addressResolver;
+  }
 
-    getAddressResolver(): AddressResolver {
-        return this.addressResolver;
-    }
+  newSessionId(): Promise<string> {
+    return this.storage.nextSessionId();
+  }
 
-    newSessionId(): Promise<string> {
-        return this.storage.nextSessionId();
+  async addSession(session: Session, participantId: string): Promise<void> {
+    try {
+      await this.storage.addSession(session, participantId);
+    } catch (e) {
+      Logger.error(`addSession(): Could not add session ${session.id}`);
+      throw e;
     }
+  }
 
-    async addSession(session: Session, participantId: string): Promise<void> {
-        try {
-            await this.storage.addSession(session, participantId);
-        } catch(e) {
-            Logger.error(`addSession(): Could not add session ${session.id}`);
-            throw e;
-        }
-    }
-    
-    exists(sessionId: string, participantId: string): Promise<boolean> {
-        return this.storage.exists(sessionId, participantId);
-    }
-    
-    getSessionsFor(participantId: string): Promise<Session[]>{
-        return this.storage.getSessionsFor(participantId);
-    }
+  exists(sessionId: string, participantId: string): Promise<boolean> {
+    return this.storage.exists(sessionId, participantId);
+  }
 
-    getSessionIdsFor(participantId: string): Promise<string[]>{
-        return this.storage.getSessionIdsFor(participantId);
-    }
+  getSessionsFor(participantId: string): Promise<Session[]> {
+    return this.storage.getSessionsFor(participantId);
+  }
 
-    getSessionParticipant(sessionId: string): Promise<SessionParticipant | undefined> {
-        return this.storage.getSessionParticipant(sessionId);
-    }
+  getSessionIdsFor(participantId: string): Promise<string[]> {
+    return this.storage.getSessionIdsFor(participantId);
+  }
 
-    async hasAnySessions(participantId: string): Promise<boolean> {
-        const sessionIds = await this.getSessionIdsFor(participantId);
-        return sessionIds && sessionIds.length > 0;
-    }
+  getSessionParticipant(sessionId: string): Promise<SessionParticipant | undefined> {
+    return this.storage.getSessionParticipant(sessionId);
+  }
 
-    removeSession(sessionId: string): Promise<void> {
-        return this.storage.removeSession(sessionId);
-    }
+  async hasAnySessions(participantId: string): Promise<boolean> {
+    const sessionIds = await this.getSessionIdsFor(participantId);
+    return sessionIds && sessionIds.length > 0;
+  }
 
-    removeParticipant(participantId: string): Promise<void> {
-        return this.storage.removeParticipant(participantId);
-    }
+  removeSession(sessionId: string): Promise<void> {
+    return this.storage.removeSession(sessionId);
+  }
 
-    removeAllParticipants(): Promise<void> {
-        return this.storage.removeAllParticipants();
-    }
+  removeParticipant(participantId: string): Promise<void> {
+    return this.storage.removeParticipant(participantId);
+  }
 
-    getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
-        const { addressResolver} = this;
-        return addressResolver.getParticipantIdsFor(address, thredContext);
-    }
+  removeAllParticipants(): Promise<void> {
+    return this.storage.removeAllParticipants();
+  }
 
-    async getSessionIdsForParticipantIds(participantIds:string[]): Promise<StringMap<string[]>>{
-        return this.storage.getSessionIdsForAll(participantIds);
-    }
+  getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
+    const { addressResolver } = this;
+    return addressResolver.getParticipantIdsFor(address, thredContext);
+  }
 
-    async getSessionsForParticipantIds(participantIds: string[]): Promise<StringMap<Session[]>>{
-        return this.storage.getSessionsForAll(participantIds);
-    }
+  async getSessionIdsForParticipantIds(participantIds: string[]): Promise<StringMap<string[]>> {
+    return this.storage.getSessionIdsForAll(participantIds);
+  }
 
-    getAllParticipantIds(): Promise<string[]> {
-        return this.storage.getAllParticipantIds();
-    }
+  async getSessionsForParticipantIds(participantIds: string[]): Promise<StringMap<Session[]>> {
+    return this.storage.getSessionsForAll(participantIds);
+  }
+
+  getAllParticipantIds(): Promise<string[]> {
+    return this.storage.getAllParticipantIds();
+  }
 }

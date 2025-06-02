@@ -1,9 +1,8 @@
-import { PermissionModel } from "../thredlib/model/PermissionModel";
+import { PermissionModel } from '../thredlib/model/PermissionModel';
 
 export class Permissions {
-    constructor(readonly permissionModel: PermissionModel) {
-    }
-    allowsRole(role: string): boolean {
-        return !!this.permissionModel?.allowedRoles.includes(role);
-    }
+  constructor(readonly permissionModel: PermissionModel) {}
+  allowsRole(role: string): boolean {
+    return !!this.permissionModel?.allowedRoles.includes(role);
+  }
 }

@@ -18,10 +18,7 @@ export class MongoPersistenceProvider implements PersistenceProvider {
   private client: MongoClient;
   private dbs: Record<string, MongoPersistence> = {};
 
-  constructor(
-    hostString?: string,
-    config?: { connectOptions?: MongoClientOptions },
-  ) {
+  constructor(hostString?: string, config?: { connectOptions?: MongoClientOptions }) {
     const _host = hostString || MongoPersistenceProvider.defaultHost;
     this.client = new MongoClient(`mongodb://${_host}`, config?.connectOptions);
   }
@@ -35,12 +32,12 @@ export class MongoPersistenceProvider implements PersistenceProvider {
 
   getInstance(dbname?: string): Persistence {
     const _dbname = dbname || MongoPersistenceProvider.DEFAULT_DB_NAME;
-    if (!this.dbs[_dbname]) this.dbs[_dbname] = new MongoPersistence(this.client.db(dbname || MongoPersistenceProvider.defaultDb));
+    if (!this.dbs[_dbname])
+      this.dbs[_dbname] = new MongoPersistence(this.client.db(dbname || MongoPersistenceProvider.defaultDb));
     return this.dbs[_dbname];
   }
 
   async disconnect(): Promise<void> {
     return this.client?.close();
   }
-
 }

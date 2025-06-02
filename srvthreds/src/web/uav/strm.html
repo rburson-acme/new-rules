@@ -1,43 +1,42 @@
 <!doctype html>
 <html>
-
-<head>
-  <title>New Rules Client</title>
-
   <head>
-    <link rel="stylesheet" href="spinner.css">
-    <link rel="stylesheet" href="control.css">
+    <title>New Rules Client</title>
+
+    <head>
+      <link rel="stylesheet" href="spinner.css" />
+      <link rel="stylesheet" href="control.css" />
+    </head>
   </head>
-</head>
 
-<body>
-  <div class="container">
-    <form action="">
-      <div class="input_container">
-        <h4>Surveillance Control System</h4>
-        <img id='image_primary' class="img_icon" src="images/webcam.jpg" />
-        <div>
-          <div style="position: relative; display: inline-block">
-            <button id='send_button'>Send Video Stream Event</button>
-            <div id="spinner" class="spinner"></div>
+  <body>
+    <div class="container">
+      <form action="">
+        <div class="input_container">
+          <h4>Surveillance Control System</h4>
+          <img id="image_primary" class="img_icon" src="images/webcam.jpg" />
+          <div>
+            <div style="position: relative; display: inline-block">
+              <button id="send_button">Send Video Stream Event</button>
+              <div id="spinner" class="spinner"></div>
+            </div>
           </div>
-        </div>
-        <button id="showhide" class="link">Show/Hide JSON</button>
+          <button id="showhide" class="link">Show/Hide JSON</button>
 
-        <div id="popup" class="popup">
-          <div class="popup-container">
-            <img id="event_image" src="">
-            <h2 id="event_from">Message Source</h2>
-            <p id="event_thread_id">ThredId</p>
-            <p id="event_data_title">Message Title</p>
-            <p id="event_data_description">Message Description</p>
-            <button id="close">Close</button>
+          <div id="popup" class="popup">
+            <div class="popup-container">
+              <img id="event_image" src="" />
+              <h2 id="event_from">Message Source</h2>
+              <p id="event_thread_id">ThredId</p>
+              <p id="event_data_title">Message Title</p>
+              <p id="event_data_description">Message Description</p>
+              <button id="close">Close</button>
+            </div>
           </div>
-        </div>
-        <!-- <button id="open">Open</button> -->
+          <!-- <button id="open">Open</button> -->
 
-        <div id='json_container' style="height: 50%; display: none;">
-          <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
+          <div id="json_container" style="height: 50%; display: none">
+            <textarea id="data" placeholder="Paste JSON Here" autocomplete="off">
             {
               id: '117388469638211',
               type: 'org.wt.videoStream',
@@ -61,15 +60,16 @@
             }
 
             </textarea>
+          </div>
         </div>
-      </div>
-    </form>
-    <ul id="messages"></ul>
-  </div>
-  <script src="http://localhost:3000/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script>const id = 'streamService1';</script>
-  <script src="control.js"></script>
-</body>
-
+      </form>
+      <ul id="messages"></ul>
+    </div>
+    <script src="http://localhost:3000/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      const id = 'streamService1';
+    </script>
+    <script src="control.js"></script>
+  </body>
 </html>

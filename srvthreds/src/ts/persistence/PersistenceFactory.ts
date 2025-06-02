@@ -11,12 +11,14 @@ export class PersistenceFactory {
   static getPersistenceProvider(hostString?: string): PersistenceProvider {
     const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
     if (!PersistenceFactory.instanceMap[_hostString]) {
-      PersistenceFactory.instanceMap[_hostString] = hostString ? new MongoPersistenceProvider(hostString) : new MongoPersistenceProvider();
+      PersistenceFactory.instanceMap[_hostString] = hostString
+        ? new MongoPersistenceProvider(hostString)
+        : new MongoPersistenceProvider();
     }
     return PersistenceFactory.instanceMap[_hostString];
   }
 
-  static getPersistence(params?: { hostString?: string, dbname?: string }): Persistence {
+  static getPersistence(params?: { hostString?: string; dbname?: string }): Persistence {
     const { hostString, dbname } = params || {};
     const persistenceProvider = PersistenceFactory.getPersistenceProvider(hostString);
     return persistenceProvider.getInstance(dbname);
@@ -37,7 +39,7 @@ export class PersistenceFactory {
     PersistenceFactory.instanceMap = {};
   }
 
-  static async removeDatabase(params?: { hostString?: string, dbname?: string }): Promise<void> {
+  static async removeDatabase(params?: { hostString?: string; dbname?: string }): Promise<void> {
     const { hostString, dbname } = params || {};
     try {
       const persistence = PersistenceFactory.getPersistence({ hostString, dbname });

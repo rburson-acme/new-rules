@@ -69,7 +69,6 @@ export class RemoteQService<T> implements QService<T> {
     this.q = [];
   }
 
-
   /*
     @TODO: In the future, handle backpressure from the broker
     // add these handlers to QBroker

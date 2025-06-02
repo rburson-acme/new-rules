@@ -3,7 +3,6 @@ import { PatternStore } from './PatternStore.js';
 import { indexId, Lock, Storage, Types } from '../../storage/Storage.js';
 import { Logger, PatternModel, Persistent, Series } from '../../thredlib/index.js';
 
-
 /*****************************************************************************************************
  - Pattern locking is handled here and should be contained to this class
  - This class works directly with the memory cache and does not interact with the persistence layer

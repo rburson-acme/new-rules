@@ -33,13 +33,13 @@ export class PersistenceAgent implements MessageHandler {
   }
 
   /**
-    * Process an inbound message from the Q.
-    * The result should be published to engine using the eventPublisher.
-    * An EventThrowable should be thrown if there is an error processing the message.
-    * @param message
-    * @returns {Promise<void>}
-    * @throws {EventThrowable} if there is an error processing the message
-  */
+   * Process an inbound message from the Q.
+   * The result should be published to engine using the eventPublisher.
+   * An EventThrowable should be thrown if there is an error processing the message.
+   * @param message
+   * @returns {Promise<void>}
+   * @throws {EventThrowable} if there is an error processing the message
+   */
   async processMessage(message: Message): Promise<void> {
     try {
       const result = await (this.adapter as PersistenceAdapter).execute(message.event);

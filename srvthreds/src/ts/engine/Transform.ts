@@ -40,9 +40,8 @@ export class Transform {
       throw Error('No eventDataTemplate or template expression provided to transform directive');
     }
 
-    const re = this.reXpr && await this.reXpr.apply(expressionParams);
+    const re = this.reXpr && (await this.reXpr.apply(expressionParams));
 
     return Events.baseSystemEventBuilder({ thredId: thredStore.id, re }).mergeData(data).build();
-
   }
 }

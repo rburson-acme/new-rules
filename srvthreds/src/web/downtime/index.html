@@ -3,18 +3,44 @@
   <head>
     <title>Workthreds Demo</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing:border-box }
-      html { width: 100%; height: 100% }
-      body { font: 14px Helvetica, Arial; height: 100%; }
-      h1 { margin-bottom: 10px }
-      .container { width: 100%; height: 100%; padding: 50px; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        font:
+          14px Helvetica,
+          Arial;
+        height: 100%;
+      }
+      h1 {
+        margin-bottom: 10px;
+      }
+      .container {
+        width: 100%;
+        height: 100%;
+        padding: 50px;
+      }
     </style>
   </head>
   <body>
-    <div><img style="width: 500px; margin-top: 20px; margin-right: 20px; margin-left: 20px" src="images/workthreds_logo.png"/></div>
+    <div>
+      <img
+        style="width: 500px; margin-top: 20px; margin-right: 20px; margin-left: 20px"
+        src="images/workthreds_logo.png"
+      />
+    </div>
     <div class="container">
       <h1>Routing Operation Demo</h1>
-        <h2><a href="mes" onclick="window.open(this.href,'mes_window',
+      <h2>
+        <a
+          href="mes"
+          onclick="window.open(this.href,'mes_window',
           `toolbar=no,
            location=no,
            status=no,
@@ -22,9 +48,14 @@
            scrollbars=yes,
            resizable=yes,
            width=800,
-           height=600`);return false;" >MES Interface</a>
-        </h2>
-        <h2><a href="mes_db" onclick="window.open(this.href,'mes_db_window',
+           height=600`);return false;"
+          >MES Interface</a
+        >
+      </h2>
+      <h2>
+        <a
+          href="mes_db"
+          onclick="window.open(this.href,'mes_db_window',
           `toolbar=no,
            location=no,
            status=no,
@@ -32,9 +63,14 @@
            scrollbars=yes,
            resizable=yes,
            width=350,
-           height=400`);return false;" >MES History Database</a>
-        </h2>
-        <h2><a href="erp_heatlot" onclick="window.open(this.href,'erp_heatlot_window',
+           height=400`);return false;"
+          >MES History Database</a
+        >
+      </h2>
+      <h2>
+        <a
+          href="erp_heatlot"
+          onclick="window.open(this.href,'erp_heatlot_window',
           `toolbar=no,
            location=no,
            status=no,
@@ -42,9 +78,11 @@
            scrollbars=yes,
            resizable=yes,
            width=350,
-           height=400`);return false;" >ERP heat lot</a>
-        </h2>
-        <h2><a href="builds/wt_latest.apk">Android Client (latest)</a></h2>
+           height=400`);return false;"
+          >ERP heat lot</a
+        >
+      </h2>
+      <h2><a href="builds/wt_latest.apk">Android Client (latest)</a></h2>
     </div>
   </body>
 </html>

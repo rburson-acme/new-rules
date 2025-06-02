@@ -34,9 +34,7 @@ describe('amqp connection', function () {
   test('queue 1000', function () {
     const results = new Array<Promise<void>>();
     for (let i = 0; i < 500; i++) {
-      results.push(
-        eventPubService.queue({ id: `test${i}`, payload: events.event0 })
-      );
+      results.push(eventPubService.queue({ id: `test${i}`, payload: events.event0 }));
     }
     for (let i = 0; i < 500; i++) {
       results.push(
@@ -48,7 +46,7 @@ describe('amqp connection', function () {
             event: events.event0,
           },
           topics: ['org.wt.session1'],
-        })
+        }),
       );
     }
     return Promise.all(results);
@@ -85,9 +83,7 @@ describe('amqp connection', function () {
     await qBroker.unsubscribeAll().catch(Logger.error);
     const results = new Array<Promise<void>>();
     for (let i = 0; i < 100; i++) {
-      results.push(
-        eventPubService.queue({ id: `test${i}`, payload: events.event0 })
-      );
+      results.push(eventPubService.queue({ id: `test${i}`, payload: events.event0 }));
     }
     return Promise.all(results);
   });

@@ -1,5 +1,3 @@
-
-
 export class Topics {
-    static readonly PatternChanged = 'patternChanged';
+  static readonly PatternChanged = 'patternChanged';
 }

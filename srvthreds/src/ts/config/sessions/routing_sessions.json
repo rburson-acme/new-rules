@@ -1,16 +1,16 @@
 {
-    "nodeId": "org.wt.session1",
-    "groups": [
+  "nodeId": "org.wt.session1",
+  "groups": [
+    {
+      "name": "technicians",
+      "participants": [
         {
-            "name": "technicians",
-            "participants": [
-                {
-                    "participantId": "pat"
-                },
-                {
-                    "participantId": "rob"
-                }
-            ]
+          "participantId": "pat"
+        },
+        {
+          "participantId": "rob"
         }
-    ]
+      ]
+    }
+  ]
 }

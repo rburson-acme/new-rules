@@ -11,9 +11,7 @@ describe('transitions', function () {
   // test an event that does not match the pattern
   test('ignore unknown event', function () {
     //direct call so that we can synchronize result
-    return connMan.engine.consider(events.noMatch).then(async () =>
-      expect(await connMan.engine.numThreds).toBe(0)
-    );
+    return connMan.engine.consider(events.noMatch).then(async () => expect(await connMan.engine.numThreds).toBe(0));
   });
   // match the first event and start the thred
   test('match first event', () => {
@@ -40,15 +38,15 @@ describe('transitions', function () {
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
         withReject((message) => {
-            expect(message.event.data?.title).toBe('outbound.event2');
-            expect(message.to).toContain('outbound.event2.recipient');
-            connMan.engine.dispatchers = [
-              withReject((message) => {
-                  expect(message.event.data?.title).toBe('outbound.event2a');
-                  expect(message.to).toContain('outbound.event2a.recipient');
-                  resolve();
-              }, reject),
-            ];
+          expect(message.event.data?.title).toBe('outbound.event2');
+          expect(message.to).toContain('outbound.event2.recipient');
+          connMan.engine.dispatchers = [
+            withReject((message) => {
+              expect(message.event.data?.title).toBe('outbound.event2a');
+              expect(message.to).toContain('outbound.event2a.recipient');
+              resolve();
+            }, reject),
+          ];
         }, reject),
       ];
     });
@@ -74,15 +72,15 @@ describe('transitions', function () {
     const pr = new Promise<void>((resolve, reject) => {
       connMan.engine.dispatchers = [
         withReject((message) => {
-            expect(message.event.data?.title).toBe('outbound.event3');
-            expect(message.to).toContain('outbound.event3.recipient');
-            connMan.engine.dispatchers = [
-              withReject((message) => {
-                  expect(message.event.data?.title).toBe('outbound.event2a');
-                  expect(message.to).toContain('outbound.event2a.recipient');
-                  resolve();
-              }, reject),
-            ];
+          expect(message.event.data?.title).toBe('outbound.event3');
+          expect(message.to).toContain('outbound.event3.recipient');
+          connMan.engine.dispatchers = [
+            withReject((message) => {
+              expect(message.event.data?.title).toBe('outbound.event2a');
+              expect(message.to).toContain('outbound.event2a.recipient');
+              resolve();
+            }, reject),
+          ];
         }, reject),
       ];
     });
@@ -104,9 +102,9 @@ describe('transitions', function () {
       expect(message.event.data?.title).toBe('outbound.event5');
       expect(message.to).toContain('outbound.event5.recipient');
     });
-    await connMan.engine.consider({ ...events.event5, thredId }).then(async () => 
-      expect(await connMan.engine.numThreds).toBe(0)
-    );
+    await connMan.engine
+      .consider({ ...events.event5, thredId })
+      .then(async () => expect(await connMan.engine.numThreds).toBe(0));
     return pr;
   });
   // send an event to the thred

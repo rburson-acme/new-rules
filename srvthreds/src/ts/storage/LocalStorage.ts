@@ -63,7 +63,7 @@ export class LocalStorage implements Storage {
      With a RemoteStorage implementation, objects could be locked and we'd be notified when they are released
     */
   saveAndRelease(lock: Lock, type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
-    if(meta) throw new Error('Meta not yet implemented');
+    if (meta) throw new Error('Meta not yet implemented');
     try {
       const data = JSON.stringify(item);
       fs.writeFileSync(`tmp/${type}_${id}.json`, data);
@@ -83,7 +83,7 @@ export class LocalStorage implements Storage {
      With a RemoteStorage implementation, objects could be locked and we'd be notified when they are released
     */
   saveAndClaim(type: string, item: any, id: string, ttl?: number, meta?: Record<string, string>): Promise<Lock> {
-    if(meta) throw new Error('Meta not yet implemented');
+    if (meta) throw new Error('Meta not yet implemented');
     try {
       const data = JSON.stringify(item);
       fs.writeFileSync(`tmp/${type}_${id}.json`, data);
@@ -107,7 +107,7 @@ export class LocalStorage implements Storage {
 
   save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
-    if(meta) throw new Error('Meta not yet implemented');
+    if (meta) throw new Error('Meta not yet implemented');
     return new Promise((resolve, reject) => {
       try {
         const data = JSON.stringify(item);

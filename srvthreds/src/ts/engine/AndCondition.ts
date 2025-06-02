@@ -16,7 +16,8 @@ export class AndCondition extends Condition {
   constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory, id: string) {
     super(conditionModel, conditionFactory, id);
     const nextId = +id + 1;
-    this.operands = conditionModel?.operands?.map((operand) => conditionFactory.newCondition(operand, `${nextId}`)) || [];
+    this.operands =
+      conditionModel?.operands?.map((operand) => conditionFactory.newCondition(operand, `${nextId}`)) || [];
   }
 
   /*
@@ -47,5 +48,4 @@ export class AndCondition extends Condition {
   async test(event: Event, context: ThredContext): Promise<boolean> {
     return Series.some(this.operands, async (operand) => await operand.test(event, context));
   }
-
 }

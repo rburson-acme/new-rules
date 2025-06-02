@@ -6,19 +6,17 @@ import { Filter } from './Filter.js';
 import { OrCondition } from './OrCondition.js';
 
 export class ConditionFactory {
+  static typeMap: StringMap<any> = {
+    and: AndCondition,
+    or: OrCondition,
+    filter: Filter,
+  };
 
-    static typeMap: StringMap<any> = {
-        "and": AndCondition,
-        "or": OrCondition,
-        "filter": Filter
-    };
+  private conditionId: number = 0;
 
-    private conditionId: number = 0;
-
-    newCondition(conditionModel: ConditionModel, id: string): Condition {
-        const type = ConditionFactory.typeMap[conditionModel.type];
-        if (!type) throw Error(`Invalid Condition type: ${conditionModel.type}`);
-        return new type(conditionModel, this, id);
-    }
-
+  newCondition(conditionModel: ConditionModel, id: string): Condition {
+    const type = ConditionFactory.typeMap[conditionModel.type];
+    if (!type) throw Error(`Invalid Condition type: ${conditionModel.type}`);
+    return new type(conditionModel, this, id);
+  }
 }

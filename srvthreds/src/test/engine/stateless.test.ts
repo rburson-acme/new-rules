@@ -35,7 +35,7 @@ describe('stateless', function () {
     connMan.eventQ.queue({ ...events.event1a, thredId });
     return pr;
   });
-    test('forward condition', async function () {
+  test('forward condition', async function () {
     // rebuild engine and use stored state
     await initEngine();
     const pr = new Promise<void>((resolve, reject) => {

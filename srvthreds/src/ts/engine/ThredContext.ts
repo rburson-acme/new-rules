@@ -5,7 +5,7 @@ export class ThredContext implements ExpressionContext {
   private readonly scope: Record<string, any>;
   private uniqueParticipants: Set<string>;
 
-  constructor(params?: { thredId: string; scope?: Record<string, any>; permissions?: any, participantIds?: string[] }) {
+  constructor(params?: { thredId: string; scope?: Record<string, any>; permissions?: any; participantIds?: string[] }) {
     this.thredId = params?.thredId ?? undefined;
     this.scope = params?.scope || {};
     this.uniqueParticipants = new Set<string>(params?.participantIds || []);
@@ -29,7 +29,7 @@ export class ThredContext implements ExpressionContext {
   }
 
   addParticipantIds(participantIds: string | string[]) {
-    if(!participantIds) return;
+    if (!participantIds) return;
     if (Array.isArray(participantIds)) {
       participantIds.forEach((participantId) => this.uniqueParticipants.add(participantId));
     } else if (typeof participantIds === 'string') {

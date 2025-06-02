@@ -22,10 +22,7 @@ export class Server {
   // @TODO seperate service
   private engine: Engine;
 
-  constructor(
-    inboundQ: EventQ,
-    outboundQ: MessageQ,
-  ) {
+  constructor(inboundQ: EventQ, outboundQ: MessageQ) {
     this.engine = new Engine(inboundQ);
     const dispatcher = new QDispatcher(outboundQ);
     this.engine.dispatchers.push(dispatcher.tell);
@@ -34,5 +31,4 @@ export class Server {
   async start(config?: RunConfig): Promise<void> {
     return this.engine.start(config);
   }
-
 }

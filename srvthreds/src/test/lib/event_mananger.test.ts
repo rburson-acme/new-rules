@@ -31,7 +31,8 @@ describe('event manager test', function () {
           resolve,
           reject,
         ),
-        { filter: "$event.type = 'inbound.event0'" });
+        { filter: "$event.type = 'inbound.event0'" },
+      );
     });
     (eventManager as any).connectionListener(events.event0);
     return pr;
@@ -46,15 +47,16 @@ describe('event manager test', function () {
           resolve,
           reject,
         ),
-        { filter: "$event.type = 'inbound.event1'" });
-        delay(100).then(resolve)
-        eventManager.unsubscribeAll();
+        { filter: "$event.type = 'inbound.event1'" },
+      );
+      delay(100).then(resolve);
+      eventManager.unsubscribeAll();
     });
     (eventManager as any).connectionListener(events.event0);
     return pr;
   });
   test('test subscribe w/ filter once', async function () {
-    eventManager.publish = (event: Event) => {}
+    eventManager.publish = (event: Event) => {};
     const pr = new Promise((resolve, reject) => {
       eventManager.subscribeOnce(
         withPromiseHandlers(
@@ -64,7 +66,8 @@ describe('event manager test', function () {
           resolve,
           reject,
         ),
-        { filter: "$event.type = 'inbound.event0'" });
+        { filter: "$event.type = 'inbound.event0'" },
+      );
     });
     expect((eventManager as any).subscribers.size).toBe(1);
     (eventManager as any).connectionListener(events.event0);
@@ -75,7 +78,8 @@ describe('event manager test', function () {
   });
   test('test exchange', async function () {
     const pr = new Promise((resolve, reject) => {
-      eventManager.exchange(events.event0,
+      eventManager.exchange(
+        events.event0,
         withPromiseHandlers(
           (event) => {
             expect(event).toEqual(events.event1);

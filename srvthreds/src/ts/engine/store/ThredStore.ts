@@ -41,7 +41,7 @@ export class ThredStore {
 
   transitionTo(reaction?: Reaction): void {
     // no transition
-    if(this._currentReaction === reaction) return;
+    if (this._currentReaction === reaction) return;
     this._currentReaction = reaction;
     this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
     // thred is finished if there is no reaction

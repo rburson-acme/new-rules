@@ -61,11 +61,11 @@ export class SocketService {
 
   // see this page for client handling of Auth error
   // https://socket.io/docs/v4/middlewares/
-  private authenticate = (socket: Socket, next: (err?: any) => void ) => {
-      const token = socket.handshake.auth.token;
-      if (!token) return next(new Error('Authentication error: No token'));
-      Logger.debug(`session: validation successful for: token ${token}`);
-      this.auth.validate(token) ? next() : next(new Error('Authentication error: Invalid token'));
+  private authenticate = (socket: Socket, next: (err?: any) => void) => {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error: No token'));
+    Logger.debug(`session: validation successful for: token ${token}`);
+    this.auth.validate(token) ? next() : next(new Error('Authentication error: Invalid token'));
   };
 
   private onConnect = (socket: Socket) => {

@@ -26,7 +26,7 @@ describe('admin persistence test', function () {
     const findPatternEvent = SystemEvents.getFindPatternEvent('systemTest', adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
-      expect((Events.valueNamed(message.event, 'result'))[0].name).toBe('System Test');
+      expect(Events.valueNamed(message.event, 'result')[0].name).toBe('System Test');
       expect(message.event.data?.content?.error).toBeUndefined();
     });
     engineConnMan.eventQ.queue(findPatternEvent);
@@ -47,7 +47,7 @@ describe('admin persistence test', function () {
   test('should retrieve a pattern', function () {
     const findPatternEvent = SystemEvents.getFindPatternEvent('systemTest', adminTestSource);
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-      expect((Events.valueNamed(message.event, 'result'))[0].reactions[0].name).toBe('first reaction renamed');
+      expect(Events.valueNamed(message.event, 'result')[0].reactions[0].name).toBe('first reaction renamed');
       expect(message.event.data?.content?.error).toBeUndefined();
     });
     engineConnMan.eventQ.queue(findPatternEvent);

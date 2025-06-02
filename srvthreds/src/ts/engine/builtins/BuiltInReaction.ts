@@ -45,7 +45,6 @@ export class BuiltInReaction {
           const to = thredParticpantIds.filter((id) => id !== sourceId);
           const messageTemplate: MessageTemplate = { event: newEvent, to };
           return { messageTemplate, transition: new Transition({ name: Transition.NO_TRANSITION }) };
-
         } else {
           throw EventThrowable.get({
             message: `Participant ${sourceId} is not a member of the thred ${thredStore.id} and cannot broadcast`,
