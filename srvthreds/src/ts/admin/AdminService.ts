@@ -16,7 +16,7 @@ import {
   systemEventTypes,
   TerminateAllThredsArgs,
   TerminateThreadArgs,
-  TransitionThredArgs,
+  TransitionThredArgs
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 
@@ -31,6 +31,7 @@ import { SystemService, SystemServiceArgs } from './SystemService.js';
 
 export class AdminService {
   constructor(private threds: Threds) {}
+
 
   async handleSystemEvent(args: SystemServiceArgs): Promise<EventValues['values']> {
     return SystemService.handleSystemEvent(args, this.operations);

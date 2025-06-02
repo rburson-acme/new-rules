@@ -16,6 +16,7 @@ import { Topics } from '../pubsub/Topics.js';
 import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
+import { ThredStore } from './store/ThredStore.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
 
 const { debug, error, warn, crit, h1, h2, logObject } = Logger;

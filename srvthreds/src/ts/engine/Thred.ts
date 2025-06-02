@@ -69,12 +69,7 @@ export class Thred {
   }
 
   // resolve the 'to' field in the message template to actual participantIds and store participantIds associations
-  static async resolveAndUpdateParticipants(
-    addresses: string[],
-    sourceId: string,
-    thredStore: ThredStore,
-    threds: Threds,
-  ): Promise<string[]> {
+  static async resolveAndUpdateParticipants(addresses: string[], sourceId: string, thredStore: ThredStore, threds: Threds): Promise<string[]> {
     // translate 'directives' in the 'to' field to actual participantIds
     const to = await System.getSessions().getParticipantIdsFor(addresses, thredStore?.thredContext);
     // update the thredContext with the expanded participants

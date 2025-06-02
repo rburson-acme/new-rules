@@ -6,12 +6,18 @@ export class ParticipantsStore {
 
   addThredToParticipants(participantIds: string[], thredId: string): Promise<void> {
     return Parallel.forEach(participantIds, (participantId) => {
-      return this.storage.addToSet(Types.ParticipantThreds, thredId, participantId);
+        return this.storage.addToSet(Types.ParticipantThreds, thredId, participantId);
     });
   }
 
   getParticipantThreds(participantId: string): Promise<string[]> {
     return this.storage.retrieveSet(Types.ParticipantThreds, participantId);
+  }
+  
+  removeThredFromParticipants(participantIds: string[], thredId: string): Promise<void> {
+    return Parallel.forEach(participantIds, (participantId) => {
+        return this.storage.removeFromSet(Types.ParticipantThreds, thredId, participantId);
+    });
   }
 
   removeThredFromParticipants(participantIds: string[], thredId: string): Promise<void> {
