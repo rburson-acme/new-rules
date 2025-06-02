@@ -58,10 +58,7 @@ export class SystemService {
   }
   //@TODO authenticate sender source (up channel) so this is secure
   static isAdminEvent(event: Event): boolean {
-    return (
-      event.type === eventTypes.control.sysControl.type ||
-      event.type === eventTypes.control.dataControl.type
-    );
+    return event.type === eventTypes.control.sysControl.type || event.type === eventTypes.control.dataControl.type;
   }
 
   static getArgs<T extends SystemEventInputValues>(args: SystemServiceArgs): { event: Event; args: T } {

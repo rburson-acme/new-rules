@@ -27,7 +27,7 @@ describe('user functions system test', function () {
       expect(message.to).toContain('outbound.event0.recipient');
       thredId0 = message.event.thredId;
     });
-    engineConnMan.eventQ.queue({...events.event0, ...{ source: userTestSource} });
+    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource } });
     return pr;
   });
   // admin (we need to archive atleast one thred for testing)
@@ -61,7 +61,7 @@ describe('user functions system test', function () {
       expect(message.to).toContain('outbound.event0.recipient');
       thredId1 = message.event.thredId;
     });
-    engineConnMan.eventQ.queue({...events.event0, ...{ source: userTestSource} });
+    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource } });
     return pr;
   });
   test('should start an additional Thred', function () {
@@ -72,7 +72,7 @@ describe('user functions system test', function () {
       expect(message.to).toContain('outbound.event0.recipient');
       thredId2 = message.event.thredId;
     });
-    engineConnMan.eventQ.queue({...events.event0, ...{ source: userTestSource} });
+    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource } });
     return pr;
   });
   test('get All Active Threds', async function () {
@@ -84,9 +84,11 @@ describe('user functions system test', function () {
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.user.getThreds);
       const threds = Events.valueNamed(message.event, 'threds');
       expect(threds).length(2);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
-      expect(threds.map((thred: { currentReaction: { reactionName: string}; }) => thred.currentReaction.reactionName)).toContain('event1Reaction');
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
+      expect(
+        threds.map((thred: { currentReaction: { reactionName: string } }) => thred.currentReaction.reactionName),
+      ).toContain('event1Reaction');
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -114,9 +116,9 @@ describe('user functions system test', function () {
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
       const threds = Events.valueNamed(message.event, 'threds');
       expect(threds).length(3);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId2);
-      expect(threds.map((thred: { id: any; }) => thred.id)).toContain(thredId0);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
+      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId0);
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -131,4 +133,3 @@ let engineConnMan: EngineConnectionManager;
 let thredId0: string | undefined;
 let thredId1: string | undefined;
 let thredId2: string | undefined;
-
