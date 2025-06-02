@@ -1,6 +1,7 @@
 import { PatternModel } from "../../ts/thredlib";
 
 export const adminTestSource = { id: 'admin1', name: 'Admin User' };
+export const userTestSource = { id: 'participant0', name: 'User 1' };
 
 export const adminTestPatternModels: PatternModel[] = [
   {

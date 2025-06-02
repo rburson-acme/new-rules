@@ -21,6 +21,9 @@ export declare const eventTypes: {
         dataControl: {
             type: string;
         };
+        userControl: {
+            type: string;
+        };
     };
     client: {
         tell: {
@@ -44,6 +47,10 @@ export declare const systemEventTypes: {
         getThreds: string;
         terminateAllThreds: string;
         shutdown: string;
+        user: {
+            getThreds: string;
+            getEvents: string;
+        };
     };
 };
 export declare const ThredId: {

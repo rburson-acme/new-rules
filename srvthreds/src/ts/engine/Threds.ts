@@ -44,7 +44,7 @@ export class Threds {
   }
 
   addThredToParticipants(thredId: string, participants: string[]): Promise<void> {
-    return this.thredsStore.addThredToParticipants(thredId, participants);
+    return this.thredsStore.addThredToParticipantsStore(thredId, participants);
   }
 
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis

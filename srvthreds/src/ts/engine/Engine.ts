@@ -10,7 +10,7 @@ import { QMessage } from '../queue/QService.js';
 import { EventThrowable, serializableError } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
 import { MessageHandler } from './MessageHandler.js';
-import { AdminThreds } from '../admin/AdminThreds.js';
+import { SystemThreds } from '../admin/SystemThreds.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
 import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
@@ -36,9 +36,9 @@ export class Engine implements MessageHandler {
       throw new Error('System not initialized - call System.initialize() before creating Engine');
     const storage = StorageFactory.getStorage();
     this.thredsStore = new ThredsStore(new PatternsStore(storage), storage, new ParticipantsStore(storage));
-    // this can be determined by config so that we can run 'Admin' nodes seperately
+    // this can be determined by config so that we can run 'System' nodes seperately
     // this.threds = new Threds(this.thredsStore, this);
-    this.threds = new AdminThreds(this.thredsStore, this);
+    this.threds = new SystemThreds(this.thredsStore, this);
   }
 
   public async start(config?: RunConfig) {

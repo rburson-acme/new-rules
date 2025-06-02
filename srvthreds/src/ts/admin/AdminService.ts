@@ -1,28 +1,24 @@
-import {
-  Event,
-  eventTypes,
-  Events,
-  StringMap,
-  systemEventTypes,
-  SystemEventInputValues,
-  errorKeys,
-  errorCodes,
-  EventValues,
-  TerminateThreadArgs,
-  SystemEventThredInputValues,
-  GetThredsArgs,
-  TransitionThredArgs,
-  TerminateAllThredsArgs,
-  ShutdownArgs,
-  ReloadPatternArgs,
-} from '../thredlib/index.js';
-import { EventThrowable } from '../thredlib/core/Errors.js';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
 import { Transition } from '../engine/Transition.js';
 import { SystemController } from '../persistence/controllers/SystemController.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
+import { EventThrowable } from '../thredlib/core/Errors.js';
+import {
+  errorCodes,
+  errorKeys,
+  EventValues,
+  GetThredsArgs,
+  ReloadPatternArgs,
+  ShutdownArgs,
+  StringMap,
+  systemEventTypes,
+  TerminateAllThredsArgs,
+  TerminateThreadArgs,
+  TransitionThredArgs
+} from '../thredlib/index.js';
+import { SystemService, SystemServiceArgs } from './SystemService.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -33,50 +29,12 @@ import { Topics } from '../pubsub/Topics.js';
  *                                          |_|
  */
 
-export interface AdminServiceArgs {
-  readonly event: Event;
-}
-
-/*
-    Thred related operations
-    These operations perform thred state changes so are therefore are all synchronous
-*/
 export class AdminService {
   constructor(private threds: Threds) {}
 
-  //@TODO authenticate sender source (up channel) so this is secure
-  static isAdminEvent(event: Event): boolean {
-    return event.type === eventTypes.control.sysControl.type || event.type === eventTypes.control.dataControl.type;
-  }
 
-  async handleSystemEvent(args: AdminServiceArgs): Promise<EventValues['values']> {
-    const { event } = args;
-    const to = [event.source.id];
-    const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
-    if (!opName) {
-      throw EventThrowable.get({
-        message: `No operation name supplied for system event`,
-        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      });
-    }
-    const operation = this.operations[opName];
-    if (!operation) {
-      throw EventThrowable.get({
-        message: `No operation found called ${opName} for system event`,
-        code: errorCodes[errorKeys.ARGUMENT_VALIDATION_ERROR].code,
-      });
-    } else {
-      try {
-        return await operation(args);
-      } catch (e) {
-        if (e instanceof EventThrowable) throw e;
-        throw EventThrowable.get({
-          message: `Operation ${opName} failed for system event`,
-          code: errorCodes[errorKeys.SERVER_ERROR].code,
-          cause: e,
-        });
-      }
-    }
+  async handleSystemEvent(args: SystemServiceArgs): Promise<EventValues['values']> {
+    return SystemService.handleSystemEvent(args, this.operations);
   }
 
   /***
@@ -88,14 +46,18 @@ export class AdminService {
    *
    */
 
+  /* Thred related operations
+    These operations perform thred state changes so are therefore are all synchronous
+    */
+
   /*
         Move the thred to the given state
     */
-  transitionThred = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  transitionThred = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { thredId, op, transition },
-    } = this.getThredArgs<TransitionThredArgs>(args);
+    } = SystemService.getThredArgs<TransitionThredArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
       if (!thredStore) {
         throw EventThrowable.get({
@@ -111,11 +73,11 @@ export class AdminService {
   /*
         Terminate the thred
     */
-  terminateThred = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  terminateThred = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { thredId, op },
-    } = this.getThredArgs<TerminateThreadArgs>(args);
+    } = SystemService.getThredArgs<TerminateThreadArgs>(args);
     await this.threds.thredsStore.withThredStore(thredId, async (thredStore) => {
       if (!thredStore) {
         throw EventThrowable.get({
@@ -140,11 +102,11 @@ export class AdminService {
   /*
     Get all current threds or a specific set of threds
   */
-  getThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  getThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { op, thredIds, status, terminatedMatcher },
-    } = this.getArgs<GetThredsArgs>(args);
+    } = SystemService.getArgs<GetThredsArgs>(args);
     // status defaults to active
     let threds: any[] = [];
     if (status !== 'terminated') {
@@ -167,11 +129,11 @@ export class AdminService {
     };
   };
 
-  reloadPattern = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  reloadPattern = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { op, patternId },
-    } = this.getArgs<ReloadPatternArgs>(args);
+    } = SystemService.getArgs<ReloadPatternArgs>(args);
     if (!patternId) {
       throw EventThrowable.get({
         message: `No patternId supplied for reloadPattern operation on System`,
@@ -191,42 +153,25 @@ export class AdminService {
     return { status: systemEventTypes.successfulStatus, op, patternId };
   };
 
-  terminateAllThreds = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  terminateAllThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { op },
-    } = this.getArgs<TerminateAllThredsArgs>(args);
+    } = SystemService.getArgs<TerminateAllThredsArgs>(args);
     await this.threds.thredsStore.terminateAllThreds();
     return { status: systemEventTypes.successfulStatus, op };
   };
 
-  shutdown = async (args: AdminServiceArgs): Promise<EventValues['values']> => {
+  shutdown = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
       args: { op, delay },
-    } = this.getArgs<ShutdownArgs>(args);
+    } = SystemService.getArgs<ShutdownArgs>(args);
     await this.threds.shutdown(delay);
     return { status: systemEventTypes.successfulStatus, op };
   };
 
-  private getArgs<T extends SystemEventInputValues>(args: AdminServiceArgs): { event: Event; args: T } {
-    const { event } = args;
-    return { event, args: Events.getValues(event) as T };
-  }
-
-  private getThredArgs<T extends SystemEventThredInputValues>(args: AdminServiceArgs): { event: Event; args: T } {
-    const { event } = args;
-    const { thredId, ...rest } = Events.getValues(event) as T;
-    if (!thredId) {
-      throw EventThrowable.get({
-        message: `No thredId supplied for terminateThred operation on System`,
-        code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
-      });
-    }
-    return { event, args: { thredId, ...rest } as T };
-  }
-
-  private operations: StringMap<(args: AdminServiceArgs) => Promise<EventValues['values']>> = {
+  private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,
     [systemEventTypes.operations.getThreds]: this.getThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,

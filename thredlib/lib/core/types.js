@@ -21,6 +21,9 @@ export const eventTypes = {
         dataControl: {
             type: 'org.wt.control.dataControl',
         },
+        userControl: {
+            type: 'org.wt.control.userControl',
+        }
     },
     client: {
         tell: {
@@ -45,6 +48,10 @@ export const systemEventTypes = {
         getThreds: 'getThreds',
         terminateAllThreds: 'terminateAllThreds',
         shutdown: 'shutdown',
+        user: {
+            getThreds: 'getThreds',
+            getEvents: 'getEvents',
+        }
     },
 };
 export const ThredId = {

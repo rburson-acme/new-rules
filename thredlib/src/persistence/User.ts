@@ -12,7 +12,6 @@ export interface User extends Persistent {
         iconURI?: string;
     }
     threds?: {
-        activeIds: string[];
-        terminatedIds: string[];
+        archived: string[]; 
     }
 }

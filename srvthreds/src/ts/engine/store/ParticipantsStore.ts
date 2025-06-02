@@ -13,6 +13,12 @@ export class ParticipantsStore {
   getParticipantThreds(participantId: string): Promise<string[]> {
     return this.storage.retrieveSet(Types.ParticipantThreds, participantId);
   }
+  
+  removeThredFromParticipants(participantIds: string[], thredId: string): Promise<void> {
+    return Parallel.forEach(participantIds, (participantId) => {
+        return this.storage.removeFromSet(Types.ParticipantThreds, thredId, participantId);
+    });
+  }
 
   removeThredFromParticipant(participantId: string, thredId: string): Promise<void> {
     return this.storage.removeFromSet(Types.ParticipantThreds, thredId, participantId);

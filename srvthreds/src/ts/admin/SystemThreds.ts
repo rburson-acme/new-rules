@@ -1,21 +1,23 @@
 import { PersistenceAdapter } from '../agent/persistence/PersistenceAdapter.js';
-import { MessageHandler } from '../engine/MessageHandler.js';
 import { Events } from '../engine/Events.js';
-import { Id } from '../engine/Id.js';
+import { MessageHandler } from '../engine/MessageHandler.js';
 import { ThredsStore } from '../engine/store/ThredsStore.js';
 import { Threds } from '../engine/Threds.js';
-import { PersistenceFactory } from '../persistence/PersistenceFactory.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { errorCodes, errorKeys, Event, eventTypes, EventValues, Logger, Message, ThredId } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Event, eventTypes, EventValues, Message, ThredId } from '../thredlib/index.js';
 import { AdminService } from './AdminService.js';
+import { SystemService } from './SystemService.js';
+import { UserService } from './UserService.js';
 
-export class AdminThreds extends Threds {
+export class SystemThreds extends Threds {
   private adminService: AdminService;
+  private userService: UserService;
   private persistenceAdapter: PersistenceAdapter;
 
   constructor(thredsStore: ThredsStore, messageHandler: MessageHandler) {
     super(thredsStore, messageHandler);
     this.adminService = new AdminService(this);
+    this.userService = new UserService(this);
     this.persistenceAdapter = new PersistenceAdapter();
   }
 
@@ -24,8 +26,13 @@ export class AdminThreds extends Threds {
     return this.persistenceAdapter.initialize();
   }
 
+  /**
+   *  This implementation of consider intercepts and routes system events
+   *  These events do not create Threds, but rather handle system-level operations
+   *  If the event is not a system event, it calls the base implementation
+   */
   async consider(event: Event): Promise<void> {
-    if (AdminService.isAdminEvent(event)) {
+    if (SystemService.isSystemEvent(event)) {
       if (event.thredId !== ThredId.SYSTEM) {
         throw EventThrowable.get({
           message: `System event must have a system thredId: ${ThredId.SYSTEM}`,
@@ -33,11 +40,16 @@ export class AdminThreds extends Threds {
         });
       }
       let values: EventValues['values'] | undefined;
-      if (event.type === eventTypes.control.dataControl.type) {
-        // persistence operation has a top level result key
-        values = { result: await this.persistenceAdapter.execute(event) };
-      } else if (event.type === eventTypes.control.sysControl.type) {
-        values = await this.adminService.handleSystemEvent({ event: event });
+      if (SystemService.isAdminEvent(event)) {
+        //@TODO verify admin permissions of the source
+        if (event.type === eventTypes.control.dataControl.type) {
+          // persistence operation has a top level result key
+          values = { result: await this.persistenceAdapter.execute(event) };
+        } else if (event.type === eventTypes.control.sysControl.type) {
+          values = await this.adminService.handleSystemEvent({ event: event });
+        }
+      } else if (event.type === eventTypes.control.userControl.type) {
+        values = await this.userService.handleSystemEvent({ event: event });
       }
       const outboundEvent = Events.newEventFromEvent({
         prevEvent: event,

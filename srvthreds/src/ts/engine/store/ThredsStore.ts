@@ -6,6 +6,7 @@ import { Logger, Parallel } from '../../thredlib/index.js';
 import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
 import { ThredThrowable } from '../ThredThrowable.js';
 import { ParticipantsStore } from './ParticipantsStore.js';
+import { UserController } from '../../persistence/controllers/UserController.js';
 
 /**
  * The ThredsStore class is responsible for managing ThredStores, which are used to process events in the context of a Thred.
@@ -114,8 +115,16 @@ export class ThredsStore {
     return this.storage.retrieveSet(Types.Thred, indexId);
   }
 
-  addThredToParticipants(thredId: string, participantIds: string[]): Promise<void> {
+  addThredToParticipantsStore(thredId: string, participantIds: string[]): Promise<void> {
     return this.participantsStore.addThredToParticipants(participantIds, thredId);
+  }
+
+  async getThredsForParticipant(participantId: string, thredIds?: string[]): Promise<ThredStore[]> {
+    // get all the current thredIds for the participant
+    const allThredIds = await this.participantsStore.getParticipantThreds(participantId);
+    // if thredIds are provided, filter them to only include those that the participant is actually associated with
+    const ownedThreds = thredIds ? thredIds?.filter((thredId) => allThredIds.includes(thredId)) : allThredIds;
+    return this.getThredStores(ownedThreds);
   }
 
   /* MUST BE RUN WITHIN A LOCK (one of the above locking methods) */
@@ -151,24 +160,33 @@ export class ThredsStore {
   // requires lock
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
     Logger.debug(Logger.h2(`deleteAndTerminateThred::terminating Thred ${thredId}`));
+    const thredStore = this.thredStores[thredId];
     try {
       //If locked, the lock will simply expire
       await this.storage.delete(Types.Thred, thredId);
     } catch (e) {
-      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId}`));
+      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId} from storage`));
+    }
+    // move the user/thred associations to the archive
+    const participantAddresses = thredStore.thredContext.getParticipantAddresses();
+    try {
+      await this.participantsStore.removeThredFromParticipants(participantAddresses, thredId);
+    } catch (e) {
+      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to remove thred ${thredId} from participants in storage`));
+    }
+    // associate the thredId with each User (participant)
+    try {
+      await UserController.get().addArchivedThredIdToUsers(participantAddresses, thredId);
+    } catch (e) {
+      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to add archived thredId to Users for thred ${thredId}`));
     }
     // @todo archive the context and the reactionstore so that the thred could be replayed
-    const thredStore = this.thredStores[thredId];
     delete this.thredStores[thredId];
     try {
       await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });
     } catch (e) {
-      Logger.error(Logger.crit(`deleteAndTerminate::Failed to save Thred ${thredId} to archive`));
-      throw ThredThrowable.get(
-        { cause: e, message: 'Failed to save Thred to archive' },
-        'sender',
-        thredStore.thredContext,
-      );
+      Logger.error(Logger.crit(`deleteAndTerminate::Failed to save ThredRecord ${thredId} to archive`));
+      //throw ThredThrowable.get( { cause: e, message: 'Failed to save Thred to archive' }, 'sender', thredStore.thredContext,);
     }
   }
 }

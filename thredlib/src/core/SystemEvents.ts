@@ -40,15 +40,17 @@ export interface ExpireReactionArgs extends SystemEventThredInputValues {
 
 export interface TerminateThreadArgs extends SystemEventThredInputValues {}
 
+export interface GetEventsArgs extends  SystemEventThredInputValues{}
+
 export class SystemEvents {
-  /***
-   *     _____ _                  _     ___            _             _
-   *    /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
-   *      / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
-   *     / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
-   *     \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
-   *
-   */
+/***
+ *       _       _           _         _____ _                  _     ___            _             _ 
+ *      /_\   __| |_ __ ___ (_)_ __   /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
+ *     //_\\ / _` | '_ ` _ \| | '_ \    / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
+ *    /  _  \ (_| | | | | | | | | | |  / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
+ *    \_/ \_/\__,_|_| |_| |_|_|_| |_|  \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
+ *                                                                                                   
+ */
 
   // request to explicitly transition a thred to a new state
   static getTransitionThredEvent(thredId: string, transition: TransitionModel, source: Event['source']) {
@@ -77,12 +79,12 @@ export class SystemEvents {
   }
 
   /***
-   *     __               ___            _             _
-   *    / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
-   *    \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
-   *    _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
-   *    \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
-   *        |___/
+   *       _       _           _         __               ___            _             _
+   *      /_\   __| |_ __ ___ (_)_ __   / _\_   _ ___    / __\___  _ __ | |_ _ __ ___ | |
+   *     //_\\ / _` | '_ ` _ \| | '_ \  \ \| | | / __|  / /  / _ \| '_ \| __| '__/ _ \| |
+   *    /  _  \ (_| | | | | | | | | | | _\ \ |_| \__ \ / /__| (_) | | | | |_| | | (_) | |
+   *    \_/ \_/\__,_|_| |_| |_|_|_| |_| \__/\__, |___/ \____/\___/|_| |_|\__|_|  \___/|_|
+   *                                        |___/
    */
 
   static getGetThredsEvent(
@@ -99,7 +101,7 @@ export class SystemEvents {
       .mergeValues(values)
       .mergeData({ title: 'Run Get Threds' })
       .build();
-  } // build this out in client
+  }
 
   static getReloadPatternEvent(patternId: string, source: Event['source']) {
     const values: ReloadPatternArgs = { op: systemEventTypes.operations.reloadPattern, patternId };
@@ -124,7 +126,7 @@ export class SystemEvents {
       .mergeValues(values)
       .mergeData({ title: 'Run Shutdown' })
       .build();
-  } // build this out in client
+  }
 
   // request to terminate all threds
   static getTerminateAllThredsEvent(source: Event['source']) {
@@ -135,19 +137,18 @@ export class SystemEvents {
       source,
     })
       .mergeValues(values)
-      .mergeData({ title: 'Run Terminat All Threds' })
+      .mergeData({ title: 'Run Terminate All Threds' })
       .build();
   }
 
   /***
-   *        ___      _            ___
-   *       /   \__ _| |_ __ _    /___\_ __  ___
-   *      / /\ / _` | __/ _` |  //  // '_ \/ __|
-   *     / /_// (_| | || (_| | / \_//| |_) \__ \
-   *    /___,' \__,_|\__\__,_| \___/ | .__/|___/
-   *                                 |_|
+   *       _       _           _            ___      _            ___
+   *      /_\   __| |_ __ ___ (_)_ __      /   \__ _| |_ __ _    /___\_ __  ___
+   *     //_\\ / _` | '_ ` _ \| | '_ \    / /\ / _` | __/ _` |  //  // '_ \/ __|
+   *    /  _  \ (_| | | | | | | | | | |  / /_// (_| | || (_| | / \_//| |_) \__ \
+   *    \_/ \_/\__,_|_| |_| |_|_|_| |_| /___,' \__,_|\__\__,_| \___/ | .__/|___/
+   *                                                                 |_|
    */
-
   static getSavePatternEvent(pattern: PatternModel, source: Event['source']) {
     return EventBuilder.create({
       type: eventTypes.control.dataControl.type,
@@ -269,4 +270,44 @@ export class SystemEvents {
       .mergeData({ title: 'Get ThredLog' })
       .build();
   }
+
+  /***
+ *                              ___            _             _     ___           
+ *     /\ /\  ___  ___ _ __    / __\___  _ __ | |_ _ __ ___ | |   /___\_ __  ___ 
+ *    / / \ \/ __|/ _ \ '__|  / /  / _ \| '_ \| __| '__/ _ \| |  //  // '_ \/ __|
+ *    \ \_/ /\__ \  __/ |    / /__| (_) | | | | |_| | | (_) | | / \_//| |_) \__ \
+ *     \___/ |___/\___|_|    \____/\___/|_| |_|\__|_|  \___/|_| \___/ | .__/|___/
+ *                                                                    |_|        
+ */
+  static getGetUserThredsEvent(
+    source: Event['source'],
+    status?: GetThredsArgs['status'],
+    terminatedMatcher?: EventTaskParams['matcher'],
+  ) {
+    const values: GetThredsArgs = { op: systemEventTypes.operations.user.getThreds, status, terminatedMatcher };
+    return EventBuilder.create({
+      type: eventTypes.control.userControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeValues(values)
+      .mergeData({ title: 'Run Get User Threds' })
+      .build();
+  }
+
+  static getGetUserEventsEvent(
+    thredId: string,
+    source: Event['source'],
+  ) {
+    const values: GetEventsArgs = { op: systemEventTypes.operations.user.getEvents, thredId };
+    return EventBuilder.create({
+      type: eventTypes.control.userControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeValues(values)
+      .mergeData({ title: 'Run Get User Events' })
+      .build();
+  }
+
 }

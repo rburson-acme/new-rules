@@ -23,6 +23,7 @@ import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
 import sessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
 import resolverConfig from '../ts/config/simple_test_resolver_config.json';
+import { UserController } from '../ts/persistence/controllers/UserController.js';
 EngineConfig.engineConfig = engineConfig;
 const sessionAgentConfig = agentConfig as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -159,6 +160,17 @@ export const getDispatcherPromise = (server: any): Promise<any> => {
       },
     ];
   });
+};
+
+export const createDbFixtures = async () => {
+  await PersistenceFactory.connect();
+  const uc = UserController.get();
+  await Promise.all([
+    uc.replaceUser({ id: 'participant0', password: 'password0' }),
+    uc.replaceUser({ id: 'participant1', password: 'password1' }),
+    uc.replaceUser({ id: 'participant2', password: 'password2' }),
+    uc.replaceUser({ id: 'participant3', password: 'password3' }),
+  ]);
 };
 
 // initializes an engine instance with the given patternModels
