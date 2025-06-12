@@ -1,4 +1,3 @@
-export const indexId = 'IDX';
 export interface Storage {
   /*
       aquire() with a lock on the given resources which is released after the ops are completed
@@ -18,6 +17,8 @@ export interface Storage {
   setCount(type: string, setId: string): Promise<number>;
   addToSet(type: string, item: string, setId: string): Promise<void>;
   removeFromSet(type: string, item: string, setId: string, ttl?: number): Promise<void>;
+  retrieveTypeIds(type: string): Promise<string[]>;
+  typeCount(type: string): Promise<number>;
   disconnect(): Promise<void>;
   purgeAll(): Promise<void>;
 

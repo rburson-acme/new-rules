@@ -1,40 +1,20 @@
 import Redis from 'ioredis';
-import { Logger } from '../thredlib';
-import { PubSub } from './PubSub';
+import { Logger } from '../../thredlib';
+import { PubSub } from '../PubSub';
+import { Pub } from '../Pub';
 
-export class RedisPubSub implements PubSub {
+export class RedisPub implements Pub {
   private pub;
-  private sub;
   constructor() {
     this.pub = this.newClient();
-    this.sub = this.newClient();
   }
 
   public async publish(topic: string, message: Record<string, any>): Promise<void> {
     await this.pub.publish(topic, JSON.stringify(message));
   }
 
-  public async subscribe(
-    topics: string[],
-    notifyFn: (topic: string, message: Record<string, any>) => void,
-  ): Promise<void> {
-    await this.sub.subscribe(...topics, (err, count) => {
-      if (err) {
-        Logger.error('Failed to subscribe: %s', err.message);
-      }
-    });
-    this.sub.on('message', (topic, message) => {
-      try {
-        notifyFn(topic, JSON.parse(message));
-      } catch (e) {
-        Logger.error(e);
-      }
-    });
-  }
-
   public async disconnect(): Promise<void> {
     await this.pub.quit();
-    await this.sub.quit();
   }
 
   private newClient() {

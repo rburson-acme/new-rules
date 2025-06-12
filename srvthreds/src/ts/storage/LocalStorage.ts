@@ -1,10 +1,12 @@
 import fs from 'fs';
 import { Logger, remove, addUnique, addUniqueById, removeById, Identifiable, Parallel } from '../thredlib/index.js';
-import { Lock, Storage, indexId } from './Storage.js';
+import { Lock, Storage } from './Storage.js';
 
 // @TODO - if this is ever needed, a small change is required regarding 'locking'
 // All methods should 'sync' operations (readFileSync, writeFileSync, etc)
 // Currently only the lock related methods do this
+
+const indexId = 'IDX';
 
 export class LocalStorage implements Storage {
   reconnect(): Promise<void> {
@@ -235,6 +237,20 @@ export class LocalStorage implements Storage {
 
   async removeFromSetWithLock(type: string, item: string, setId: string): Promise<void> {
     throw new Error('Method not implemented');
+  }
+
+  /*
+    Retrieve all ids of a type
+  */
+  async retrieveTypeIds(type: string): Promise<string[]> {
+    return this.retrieveSet(type, indexId);
+  }
+
+  /*
+    Count the number of items of a type
+  */
+  async typeCount(type: string): Promise<number> {
+    return this.setCount(type, indexId);
   }
 
   private addToIndex(type: string, id: string): Promise<void> {

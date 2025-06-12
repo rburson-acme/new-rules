@@ -229,6 +229,7 @@ export class SystemEvents {
             .mergeData({ title: 'Run Get User Threds' })
             .build();
     }
+    // yes, this is ridiculous, but it actually means what it says
     static getGetUserEventsEvent(thredId, source) {
         const values = { op: systemEventTypes.operations.user.getEvents, thredId };
         return EventBuilder.create({

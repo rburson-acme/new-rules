@@ -5,7 +5,7 @@ services:
   redis:
     image: redis:latest
     container_name: redis
-    command: redis-server --save 20 1 --loglevel warning
+    command: redis-server --save 20 1 --loglevel warning --notify-keyspace-events KA
     ports:
       - "6379:6379"
     volumes:

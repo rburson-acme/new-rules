@@ -1,4 +1,3 @@
-import { Persistence } from '../../persistence/Persistence';
 import { PersistenceFactory } from '../../persistence/PersistenceFactory';
 import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
 import { EventThrowable } from '../../thredlib/core/Errors';

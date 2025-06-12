@@ -12,6 +12,8 @@ export interface GetThredsArgs extends SystemEventInputValues {
     readonly status?: 'active' | 'terminated' | 'all';
     readonly terminatedMatcher?: EventTaskParams['matcher'];
 }
+export interface WatchThredsArgs extends SystemEventInputValues {
+}
 export interface ReloadPatternArgs extends SystemEventInputValues {
     readonly patternId: string;
 }

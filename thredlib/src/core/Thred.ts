@@ -16,6 +16,8 @@ export interface Thred {
 
 export enum ThredStatus {
   ACTIVE = 'a',
+  // note finished is also and 'active' thred
   FINISHED = 'f',
+  // these are considered 'archived' threds
   TERMINATED = 't',
 }

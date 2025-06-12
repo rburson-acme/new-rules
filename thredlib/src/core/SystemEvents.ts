@@ -20,6 +20,9 @@ export interface GetThredsArgs extends SystemEventInputValues {
   readonly terminatedMatcher?: EventTaskParams['matcher'];
 }
 
+export interface WatchThredsArgs extends SystemEventInputValues {
+}
+
 export interface ReloadPatternArgs extends SystemEventInputValues {
   readonly patternId: string;
 }
@@ -295,6 +298,7 @@ export class SystemEvents {
       .build();
   }
 
+  // yes, this is ridiculous, but it actually means what it says
   static getGetUserEventsEvent(
     thredId: string,
     source: Event['source'],

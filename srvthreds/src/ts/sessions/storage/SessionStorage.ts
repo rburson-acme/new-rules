@@ -1,4 +1,4 @@
-import { Storage, Types, indexId } from '../../storage/Storage.js';
+import { Storage, Types } from '../../storage/Storage.js';
 import { Logger, Parallel, Series, StringMap } from '../../thredlib/index.js';
 import { SessionParticipant } from '../SessionParticipant.js';
 import { Session } from '../Session.js';
@@ -124,6 +124,6 @@ export class SessionStorage {
   }
 
   getAllParticipantIds(): Promise<string[]> {
-    return this.storage.retrieveSet(Types.ParticipantSessions, indexId);
+    return this.storage.retrieveTypeIds(Types.ParticipantSessions);
   }
 }

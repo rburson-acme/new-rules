@@ -47,7 +47,7 @@ export class Engine implements MessageHandler {
     if (config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
     await this.threds.initialize();
     // subscribe to pattern changes in storage
-    await PubSubFactory.getPubSub().subscribe([Topics.PatternChanged], async (topic, message) => {
+    await PubSubFactory.getSub().subscribe([Topics.PatternChanged], async (topic, message) => {
       await this.thredsStore.patternsStore.staleCheck(message.id);
     });
     this.run();

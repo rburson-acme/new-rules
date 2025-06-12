@@ -1,7 +1,7 @@
 import Redis, { ChainableCommander } from 'ioredis';
 import Redlock, { Lock as RLock } from 'redlock';
-import { Logger, Series, StringMap, Timers } from '../thredlib/index.js';
-import { Lock, Storage, indexId } from './Storage.js';
+import { Logger, Series } from '../thredlib/index.js';
+import { Lock, Storage } from './Storage.js';
 
 interface LockWrapper extends Lock {
   lock: RLock;
@@ -244,6 +244,20 @@ export class RedisStorage implements Storage {
   }
 
   /*
+    Retrieve all ids of a type
+  */
+  retrieveTypeIds(type: string): Promise<string[]> {
+    return this.client.smembers($indexKey(type));
+  }
+
+  /*
+    Count the number of items of a type
+  */
+  typeCount(type: string): Promise<number> {
+    return this.client.scard($indexKey(type));
+  }
+
+  /*
     Remove all keys from the database
   */
   async purgeAll(): Promise<void> {
@@ -373,12 +387,12 @@ export class RedisStorage implements Storage {
   // ****************** End manual lock operations ******************
 
   private addToIndex(type: string, id: string, client: ChainableCommander): ChainableCommander {
-    this.client.sadd($key(type, indexId), id);
+    this.client.sadd($indexKey(type), id);
     return client;
   }
 
   private removeFromIndex(type: string, id: string, client: ChainableCommander): ChainableCommander {
-    this.client.srem($key(type, indexId), id);
+    this.client.srem($indexKey(type), id);
     return client;
   }
 
@@ -402,6 +416,10 @@ const $toLockKey = (type: string, id: string) => {
 
 const $key = (type: string, id: string): string => {
   return `${type}:${id}`;
+};
+
+const $indexKey = (type: string): string => {
+  return `IDX:${type}`;
 };
 
 const $lockKey = (key: string): string => {

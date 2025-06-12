@@ -1,6 +1,6 @@
-import { Logger, LoggerLevel, Timers } from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 import { RedisStorage } from '../../ts/storage/RedisStorage.js';
-import { Lock, Storage, indexId } from '../../ts/storage/Storage.js';
+import { Lock, Storage } from '../../ts/storage/Storage.js';
 import { delay } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
@@ -102,8 +102,8 @@ describe('redis locks', function () {
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {
-    const result = await storage.exists(setType, indexId);
-    expect(result).toBe(false);
+    const result = await storage.typeCount(setType);
+    expect(result).toBe(0);
   });
   test('should add and remove from set', function () {
     const ops = new Array<Promise<void>>();
@@ -118,8 +118,8 @@ describe('redis locks', function () {
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {
-    const result = await storage.exists(setType, indexId);
-    expect(result).toBe(false);
+    const result = await storage.typeCount(setType);
+    expect(result).toBe(0);
   });
 
   // cleanup in case of failure

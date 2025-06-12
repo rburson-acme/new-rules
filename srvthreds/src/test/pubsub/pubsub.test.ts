@@ -18,11 +18,11 @@ describe('pubsub test', function () {
         reject,
       );
     });
-    await PubSubFactory.getPubSub().subscribe(['test'], notifyFn!);
-    PubSubFactory.getPubSub().publish('test', { value: 'hello' });
+    await PubSubFactory.getSub().subscribe(['test'], notifyFn!);
+    PubSubFactory.getPub().publish('test', { value: 'hello' });
     return pr;
   });
   afterAll(async () => {
-    await PubSubFactory.getPubSub().disconnect();
+    await PubSubFactory.disconnectAll();
   });
 });

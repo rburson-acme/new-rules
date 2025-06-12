@@ -1,6 +1,4 @@
-import { Persistence } from '../../persistence/Persistence.js';
-import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
-import { Message, Event, Events, errorKeys, EventValues, EventThrowable } from '../../thredlib/index.js';
+import { Message, errorKeys, EventThrowable } from '../../thredlib/index.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
 import { AgentConfig } from '../Config.js';

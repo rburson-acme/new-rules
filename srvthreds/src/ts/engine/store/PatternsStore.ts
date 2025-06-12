@@ -1,7 +1,7 @@
 import { Pattern } from '../Pattern.js';
 import { PatternStore } from './PatternStore.js';
-import { indexId, Lock, Storage, Types } from '../../storage/Storage.js';
-import { Logger, PatternModel, Persistent, Series } from '../../thredlib/index.js';
+import { Storage, Types } from '../../storage/Storage.js';
+import { Logger, PatternModel, Series } from '../../thredlib/index.js';
 
 /*****************************************************************************************************
  - Pattern locking is handled here and should be contained to this class
@@ -16,7 +16,7 @@ export class PatternsStore {
 
   // load all patterns that are already cached in storage
   async loadPatterns(): Promise<void> {
-    const patternIds = await this.storage.retrieveSet(Types.Pattern, indexId);
+    const patternIds = await this.storage.retrieveTypeIds(Types.Pattern);
     await Series.forEach(patternIds, async (patternId) => {
       await this.loadPattern(patternId);
     });

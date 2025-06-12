@@ -17,6 +17,7 @@ import {
   TerminateAllThredsArgs,
   TerminateThreadArgs,
   TransitionThredArgs,
+  WatchThredsArgs,
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 
@@ -128,6 +129,15 @@ export class AdminService {
     };
   };
 
+  watchRunningThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op },
+    } = SystemService.getArgs<WatchThredsArgs>(args);
+
+    return { status: systemEventTypes.successfulStatus, op };
+  };
+
   reloadPattern = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
@@ -148,7 +158,7 @@ export class AdminService {
     }
 
     await this.threds.thredsStore.patternsStore.storePatternModel(patternModel);
-    await PubSubFactory.getPubSub().publish(Topics.PatternChanged, { id: patternId });
+    await PubSubFactory.getPub().publish(Topics.PatternChanged, { id: patternId });
     return { status: systemEventTypes.successfulStatus, op, patternId };
   };
 

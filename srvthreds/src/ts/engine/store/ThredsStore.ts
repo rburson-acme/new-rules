@@ -1,10 +1,9 @@
 import { Pattern } from '../Pattern.js';
 import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { PatternsStore } from './PatternsStore.js';
-import { Storage, Types, indexId } from '../../storage/Storage.js';
+import { Storage, Types } from '../../storage/Storage.js';
 import { Logger, Parallel } from '../../thredlib/index.js';
 import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
-import { ThredThrowable } from '../ThredThrowable.js';
 import { ParticipantsStore } from './ParticipantsStore.js';
 import { UserController } from '../../persistence/controllers/UserController.js';
 
@@ -73,7 +72,7 @@ export class ThredsStore {
   }
 
   get numThreds(): Promise<number> {
-    return this.storage.setCount(Types.Thred, indexId);
+    return this.storage.typeCount(Types.Thred);
   }
 
   // no need to lock - read only
@@ -112,7 +111,7 @@ export class ThredsStore {
   }
 
   getAllThredIds(): Promise<string[]> {
-    return this.storage.retrieveSet(Types.Thred, indexId);
+    return this.storage.retrieveTypeIds(Types.Thred);
   }
 
   addThredToParticipantsStore(thredId: string, participantIds: string[]): Promise<void> {
