@@ -20,13 +20,13 @@ export class ThredsStore {
   ) {}
 
   /*
-      Create and aquire a lock on the give thread and execute the operation, returning it's result
+      Create and acquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
       This method adds the thredStore to thredStores map and removes it after the operation 
   */
   async withNewThredStore(pattern: Pattern, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
     const thredStore = ThredStore.newInstance(pattern);
-    const results = await this.storage.aquire(
+    const results = await this.storage.acquire(
       [{ type: Types.Thred, id: thredStore.id }],
       [
         async () => {
@@ -47,12 +47,12 @@ export class ThredsStore {
   }
 
   /*
-      aquire a lock on the give thread and execute the operation, returning it's result
+      acquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
       This method adds the thredStore to thredStores map and removes it after the operation 
   */
   async withThredStore(thredId: string, op: (thredStore?: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
-    const results = await this.storage.aquire(
+    const results = await this.storage.acquire(
       [{ type: Types.Thred, id: thredId }],
       [
         async () => {
@@ -87,11 +87,11 @@ export class ThredsStore {
     return states.map((state) => this.fromThredState(state));
   }
 
-  // aquire a lock on each thred, terminate and archive the thred
+  // acquire a lock on each thred, terminate and archive the thred
   async terminateAllThreds(): Promise<void> {
     const thredIds = await this.getAllThredIds();
     return Parallel.forEach(thredIds, async (thredId: string) => {
-      const results = await this.storage.aquire(
+      const results = await this.storage.acquire(
         [{ type: Types.Thred, id: thredId }],
         [
           async () => {

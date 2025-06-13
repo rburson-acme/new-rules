@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import { createClient, RedisClientType } from 'redis';
 import { Logger } from '../../thredlib';
 import { PubSub } from '../PubSub';
 import { Pub } from '../Pub';
@@ -18,23 +18,31 @@ export class RedisPub implements Pub {
   }
 
   private newClient() {
-    const client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+    const client = createClient({
+      socket: {
+        reconnectStrategy: (retries) => {
+          const delay = Math.min(retries * 50, 2000);
+          return delay;
+        },
       },
     });
+
     client.on('error', function (error) {
       Logger.error(error);
     });
     client.on('ready', function () {
       /* Logger.info('Ready'); */
     });
-    client.on('reconnecting', function () {
+    client.on('reconnect', function () {
       Logger.info('Redis reconnecting...');
     });
     client.on('end', function () {});
+
+    // Connect the client
+    client.connect().catch((error) => {
+      Logger.error('Failed to connect to Redis:', error);
+    });
+
     return client;
   }
 }

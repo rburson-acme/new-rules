@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import { createClient } from 'redis';
 import { Logger } from '../../thredlib';
 import { PubSub } from '../PubSub';
 import { Sub } from '../Sub';
@@ -13,26 +13,25 @@ export class RedisSub implements Sub {
     topics: string[],
     notifyFn: (topic: string, message: Record<string, any>) => void,
   ): Promise<void> {
-    await this.sub.subscribe(...topics, (err, count) => {
-      if (err) {
-        Logger.error('Failed to subscribe: %s', err.message);
-      }
-    });
-    this.sub.on('message', (topic, message) => {
-      try {
-        notifyFn(topic, JSON.parse(message));
-      } catch (e) {
-        Logger.error(e);
-      }
-    });
+    try {
+      await this.sub.subscribe(topics, (message, channel) => {
+        try {
+          notifyFn(channel, JSON.parse(message));
+        } catch (e) {
+          Logger.error(e);
+        }
+      });
+    } catch (err) {
+      Logger.error('Failed to subscribe: %s', err instanceof Error ? err.message : String(err));
+    }
   }
 
   public async unsubscribe(topics: string[]): Promise<void> {
-    await this.sub.unsubscribe(...topics, (err, count) => {
-      if (err) {
-        Logger.error('Failed to unsubscribe: %s', err.message);
-      }
-    });
+    try {
+      await this.sub.unsubscribe(topics);
+    } catch (err) {
+      Logger.error('Failed to unsubscribe: %s', err instanceof Error ? err.message : String(err));
+    }
   }
 
   public async disconnect(): Promise<void> {
@@ -40,23 +39,31 @@ export class RedisSub implements Sub {
   }
 
   private newClient() {
-    const client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+    const client = createClient({
+      socket: {
+        reconnectStrategy: (retries) => {
+          const delay = Math.min(retries * 50, 2000);
+          return delay;
+        },
       },
     });
+
     client.on('error', function (error) {
       Logger.error(error);
     });
     client.on('ready', function () {
       /* Logger.info('Ready'); */
     });
-    client.on('reconnecting', function () {
+    client.on('reconnect', function () {
       Logger.info('Redis reconnecting...');
     });
     client.on('end', function () {});
+
+    // Connect the client
+    client.connect().catch((error) => {
+      Logger.error('Failed to connect to Redis:', error);
+    });
+
     return client;
   }
 }

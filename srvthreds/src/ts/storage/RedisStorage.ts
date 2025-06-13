@@ -1,5 +1,5 @@
-import Redis, { ChainableCommander } from 'ioredis';
-import Redlock, { Lock as RLock } from 'redlock';
+import { createClient, RedisClientType } from 'redis';
+import Redlock, { Lock as RLock } from './Redlock.js';
 import { Logger, Series } from '../thredlib/index.js';
 import { Lock, Storage } from './Storage.js';
 
@@ -8,8 +8,8 @@ interface LockWrapper extends Lock {
 }
 
 export class RedisStorage implements Storage {
-  // Locks will expire based on this value by default, if not specified explictly during operations
-  // However, they should always be released explicity
+  // Locks will expire based on this value by default, if not specified explicitly during operations
+  // However, they should always be released explicitly
   private static defaultLockTTL = 5000;
 
   private static redlockDefaults = {
@@ -24,34 +24,42 @@ export class RedisStorage implements Storage {
   };
   private DATAKEY = 'data';
 
-  private client: Redis;
+  private client: RedisClientType;
   private redlock: Redlock;
 
   //@TODO - set up sentinel or clustering
 
   constructor() {
-    this.client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+    this.client = createClient({
+      socket: {
+        reconnectStrategy: (retries) => {
+          const delay = Math.min(retries * 50, 2000);
+          return delay;
+        },
       },
     });
+
     this.client.on('error', function (error) {
       Logger.error(error);
     });
     this.client.on('ready', function () {
       /* Logger.info('Ready'); */
     });
-    this.client.on('reconnecting', function () {
+    this.client.on('reconnect', function () {
       Logger.info('Redis reconnecting...');
     });
     this.client.on('end', function () {});
+
+    // Connect the client
+    this.client.connect().catch((error) => {
+      Logger.error('Failed to connect to Redis:', error);
+    });
+
     /*
-        Adjust retryCount and retry delay upwards if too many clients are failing to aquire the same locked object
+        Adjust retryCount and retry delay upwards if too many clients are failing to acquire the same locked object
     */
     this.redlock = new Redlock([this.client], RedisStorage.redlockDefaults);
-    this.redlock.on('clientError', function (err) {
+    this.redlock.on('error', function (err) {
       Logger.error(err);
     });
   }
@@ -63,14 +71,14 @@ export class RedisStorage implements Storage {
     await this.client.quit();
   }
 
-  async aquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
+  async acquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
     return this.redlock.using(
       resources.map(({ type, id }) => $toLockKey(type, id)),
       ttl || RedisStorage.defaultLockTTL,
       async (signal) => {
         const results = await Series.map(ops, (op) => {
           if (signal.aborted) {
-            Logger.error('Aquire operation aborted!');
+            Logger.error('Acquire operation aborted!');
             throw signal.error;
           }
           return op();
@@ -90,7 +98,7 @@ export class RedisStorage implements Storage {
       const data = JSON.stringify(item);
       //multi.set($key(type, id), data);
       const fields = { [this.DATAKEY]: data, ...meta };
-      multi.hset($key(type, id), fields);
+      multi.hSet($key(type, id), fields);
       this.addToIndex(type, id, multi);
       await multi.exec().then(this.checkMultiResult);
     } catch (e) {
@@ -108,7 +116,7 @@ export class RedisStorage implements Storage {
         .mget(...targets)
         .then((resp) => resp.map((jsonStr) => (jsonStr ? JSON.parse(jsonStr) : undefined)));*/
       return Series.map(ids, (id) =>
-        this.client.hget($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined)),
+        this.client.hGet($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined)),
       );
     } catch (e) {
       return Promise.reject(e);
@@ -122,7 +130,7 @@ export class RedisStorage implements Storage {
     // Logger.info(`Retrieving ${type}:${id}`);
     try {
       //return this.client.get($key(type, id)).then((resp) => (resp ? JSON.parse(resp) : undefined));
-      return this.client.hget($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined));
+      return this.client.hGet($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -133,7 +141,7 @@ export class RedisStorage implements Storage {
     */
   getMetaValue(type: string, id: string, key: string): Promise<string | null> {
     try {
-      return this.client.hget($key(type, id), key);
+      return this.client.hGet($key(type, id), key);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -144,7 +152,7 @@ export class RedisStorage implements Storage {
     */
   async setMetaValue(type: string, id: string, key: string, value: string | number | Buffer): Promise<void> {
     try {
-      await this.client.hset($key(type, id), key, value);
+      await this.client.hSet($key(type, id), key, value);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -169,7 +177,7 @@ export class RedisStorage implements Storage {
         Get a set (atomic, safe operation)
     */
   retrieveSet(type: string, setId: string): Promise<string[]> {
-    return this.client.smembers($key(type, setId));
+    return this.client.sMembers($key(type, setId));
   }
 
   /*
@@ -195,7 +203,7 @@ export class RedisStorage implements Storage {
     */
   setContains(type: string, item: string, setId: string): Promise<boolean> {
     try {
-      return this.client.sismember($key(type, setId), item).then((resp) => !!resp);
+      return this.client.sIsMember($key(type, setId), item).then((resp) => !!resp);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -206,7 +214,7 @@ export class RedisStorage implements Storage {
     */
   setCount(type: string, setId: string): Promise<number> {
     try {
-      return this.client.scard($key(type, setId));
+      return this.client.sCard($key(type, setId));
     } catch (e) {
       return Promise.reject(e);
     }
@@ -218,7 +226,7 @@ export class RedisStorage implements Storage {
   async addToSet(type: string, item: string, setId: string): Promise<void> {
     try {
       const multi = this.client.multi();
-      multi.sadd($key(type, setId), item);
+      multi.sAdd($key(type, setId), item);
       this.addToIndex(type, setId, multi);
       await multi.exec().then(this.checkMultiResult);
     } catch (e) {
@@ -233,11 +241,14 @@ export class RedisStorage implements Storage {
     try {
       const key = $key(type, setId);
       const multi = this.client.multi();
-      multi.srem(key, item);
-      multi.scard(key);
+      multi.sRem(key, item);
+      multi.sCard(key);
       const [removed, remaining] = await multi.exec().then(this.checkMultiResult);
-      if (removed > 0 && remaining === 0) this.removeFromIndex(type, setId, multi);
-      await multi.exec().then(this.checkMultiResult);
+      if (removed > 0 && remaining === 0) {
+        const cleanupMulti = this.client.multi();
+        this.removeFromIndex(type, setId, cleanupMulti);
+        await cleanupMulti.exec().then(this.checkMultiResult);
+      }
     } catch (e) {
       throw e;
     }
@@ -247,21 +258,21 @@ export class RedisStorage implements Storage {
     Retrieve all ids of a type
   */
   retrieveTypeIds(type: string): Promise<string[]> {
-    return this.client.smembers($indexKey(type));
+    return this.client.sMembers($indexKey(type));
   }
 
   /*
     Count the number of items of a type
   */
   typeCount(type: string): Promise<number> {
-    return this.client.scard($indexKey(type));
+    return this.client.sCard($indexKey(type));
   }
 
   /*
     Remove all keys from the database
   */
   async purgeAll(): Promise<void> {
-    await this.client.flushdb();
+    await this.client.flushDb();
   }
 
   // ****************** Manual lock operations ******************
@@ -292,13 +303,12 @@ export class RedisStorage implements Storage {
     id: string,
     meta?: Record<string, string>,
   ): Promise<void> {
-    const key = $key(type, id);
     await this.save(type, item, id, meta);
     await this._release(lock.lock);
   }
 
   async release(lock: Lock): Promise<void> {
-    this._release(lock.lock);
+    await this._release(lock.lock);
   }
 
   async _release(lock: RLock): Promise<void> {
@@ -363,8 +373,8 @@ export class RedisStorage implements Storage {
       const key = $key(type, setId);
       const lock = await this.getLock(key, ttl);
       const multi = this.client.multi();
-      multi.srem(key, item);
-      multi.scard(key);
+      multi.sRem(key, item);
+      multi.sCard(key);
       const [removed, remaining] = await multi.exec().then(this.checkMultiResult);
       if (removed > 0 && remaining === 0) this.removeFromIndex(type, setId, multi);
       await multi.exec().then(this.checkMultiResult);
@@ -386,27 +396,30 @@ export class RedisStorage implements Storage {
 
   // ****************** End manual lock operations ******************
 
-  private addToIndex(type: string, id: string, client: ChainableCommander): ChainableCommander {
-    this.client.sadd($indexKey(type), id);
+  private addToIndex(
+    type: string,
+    id: string,
+    client: ReturnType<RedisClientType['multi']>,
+  ): ReturnType<RedisClientType['multi']> {
+    client.sAdd($indexKey(type), id);
     return client;
   }
 
-  private removeFromIndex(type: string, id: string, client: ChainableCommander): ChainableCommander {
-    this.client.srem($indexKey(type), id);
+  private removeFromIndex(
+    type: string,
+    id: string,
+    client: ReturnType<RedisClientType['multi']>,
+  ): ReturnType<RedisClientType['multi']> {
+    client.sRem($indexKey(type), id);
     return client;
   }
 
-  private checkMultiResult(resp: [error: Error | null, result: unknown][] | null): Promise<any[]> {
-    const results = [];
-    if (resp) {
-      for (let i = 0; i < resp.length; i++) {
-        if (resp[i][0]) {
-          return Promise.reject(resp[i][0]);
-        }
-        results[i] = resp[i][1];
-      }
+  private checkMultiResult(resp: any[] | null): Promise<any[]> {
+    if (!resp) {
+      return Promise.resolve([]);
     }
-    return Promise.resolve(results);
+    // node-redis returns results directly, not as [error, result] tuples
+    return Promise.resolve(resp);
   }
 }
 

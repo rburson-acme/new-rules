@@ -86,16 +86,16 @@ export class PatternsStore {
   }
 
   /*
-      aquire a lock on the given pattern and execute the operation, returning it's result
+      acquire a lock on the given pattern and execute the operation, returning it's result
       lock is released at the end of the operation
   */
   async withLock(patternId: string, op: () => Promise<any>, ttl?: number): Promise<any> {
-    return await this.storage.aquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
+    return await this.storage.acquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
   }
 
   // unload a pattern store
   async unloadPatternStore(patternId: string): Promise<void> {
-    this.storage.aquire(
+    this.storage.acquire(
       [{ type: Types.Pattern, id: patternId }],
       [
         async () => {

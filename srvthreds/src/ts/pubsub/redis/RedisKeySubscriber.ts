@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import { createClient } from 'redis';
 import { Logger } from '../../thredlib';
 import { KeySubscriber } from '../KeySubscriber';
 
@@ -12,26 +12,28 @@ export class RedisKeySubscriber implements KeySubscriber {
     patterns: string[],
     notifyFn: (pattern: string, topic: string, message: any) => void,
   ): Promise<void> {
-    await this.sub.psubscribe(...patterns, (err, count) => {
-      if (err) {
-        Logger.error('Failed to subscribe: %s', err.message);
-      }
-    });
-    this.sub.on('pmessage', (pattern, topic, message) => {
-      try {
-        notifyFn(pattern, topic, message);
-      } catch (e) {
-        Logger.error(e);
-      }
-    });
+    try {
+      await this.sub.pSubscribe(patterns, (message: string, channel: string) => {
+        try {
+          // For pattern subscriptions, we need to find which pattern matched
+          // node-redis doesn't provide the pattern directly in the callback
+          // We'll use the channel as both pattern and topic for now
+          notifyFn(channel, channel, message);
+        } catch (e) {
+          Logger.error(e);
+        }
+      });
+    } catch (err) {
+      Logger.error('Failed to subscribe: %s', err instanceof Error ? err.message : String(err));
+    }
   }
 
   public async unsubscribe(patterns: string[]): Promise<void> {
-    await this.sub.punsubscribe(...patterns, (err, count) => {
-      if (err) {
-        Logger.error('Failed to punsubscribe: %s', err.message);
-      }
-    });
+    try {
+      await this.sub.pUnsubscribe(patterns);
+    } catch (err) {
+      Logger.error('Failed to punsubscribe: %s', err instanceof Error ? err.message : String(err));
+    }
   }
 
   public async disconnect(): Promise<void> {
@@ -39,23 +41,31 @@ export class RedisKeySubscriber implements KeySubscriber {
   }
 
   private newClient() {
-    const client = new Redis({
-      // This is the default value of `retryStrategy`
-      retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+    const client = createClient({
+      socket: {
+        reconnectStrategy: (retries) => {
+          const delay = Math.min(retries * 50, 2000);
+          return delay;
+        },
       },
     });
+
     client.on('error', function (error) {
       Logger.error(error);
     });
     client.on('ready', function () {
       /* Logger.info('Ready'); */
     });
-    client.on('reconnecting', function () {
+    client.on('reconnect', function () {
       Logger.info('Redis reconnecting...');
     });
     client.on('end', function () {});
+
+    // Connect the client
+    client.connect().catch((error) => {
+      Logger.error('Failed to connect to Redis:', error);
+    });
+
     return client;
   }
 }

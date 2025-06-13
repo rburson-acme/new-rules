@@ -17,7 +17,7 @@ export class LocalStorage implements Storage {
     return Promise.resolve();
   }
 
-  aquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
+  acquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
     throw new Error('Method not implemented');
   }
 

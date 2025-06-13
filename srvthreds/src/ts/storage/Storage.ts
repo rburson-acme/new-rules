@@ -1,8 +1,8 @@
 export interface Storage {
   /*
-      aquire() with a lock on the given resources which is released after the ops are completed
+      acquire() with a lock on the given resources which is released after the ops are completed
   */
-  aquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]>;
+  acquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]>;
 
   save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void>;
   retrieveAll(type: string, ids: string[]): Promise<any[]>;
