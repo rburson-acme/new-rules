@@ -29,6 +29,20 @@ const sessionAgentConfig = agentConfig as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
 sessionAgentConfig.agentImpl = SessionAgent;
 
+export const getEvent = (id: string, type: string, sourceId: string): Event => {
+  return {
+    id: id,
+    type: type,
+    source: {
+      id: sourceId,
+    },
+  };
+};
+
+export const eventWith = (event: Event, params: Partial<Event>): Event => {
+  return { ...event, ...params };
+};
+
 export const events: Record<string, Event> = {
   noMatch: {
     id: 'x',

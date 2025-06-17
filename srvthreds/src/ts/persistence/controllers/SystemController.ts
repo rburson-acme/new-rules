@@ -40,6 +40,32 @@ export class SystemController {
     }
   }
 
+  async upsertEventWithError(record: EventRecord): Promise<void> {
+    try {
+      record.id = record.event.id;
+      const exists = await this.persistence.count({ type: Types.EventRecord, matcher: { id: record.id } });
+      if (exists) {
+        await this.persistence.update({
+          type: Types.EventRecord,
+          values: { error: record.error },
+          matcher: { id: record.id },
+        });
+      } else {
+        await this.persistence.put({ type: Types.EventRecord, values: record });
+      }
+    } catch (err) {
+      Logger.error(Logger.crit(`Error updating event record: ${record.id} for thred: ${record.thredId}`), err);
+    }
+  }
+
+  async addErrorToEvent(id: string, error: any): Promise<void> {
+    try {
+      await this.persistence.update({ type: Types.EventRecord, values: { error }, matcher: { id } });
+    } catch (err) {
+      Logger.error(Logger.crit(`Error updating error field for event: ${error.id}`), err);
+    }
+  }
+
   async saveThredLogRecord(record: ThredLogRecord): Promise<void> {
     try {
       await this.persistence.put({ type: Types.ThredLogRecord, values: record });

@@ -65,13 +65,10 @@ export class Engine implements MessageHandler {
    * @param to
    */
   public async handleMessage(messageTemplate: MessageTemplate): Promise<void> {
-    const timestamp = Date.now();
-    const event = messageTemplate.event;
     try {
       // log the event
       debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
       logObject(messageTemplate);
-      await Sc.get().replaceEvent({ event: messageTemplate.event, to: addressToArray(messageTemplate.to), timestamp });
       // NOTE: dispatch all at once - failure notification will be handled separately
       await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate));
     } catch (e) {
@@ -89,8 +86,6 @@ export class Engine implements MessageHandler {
       const message: QMessage<Event> = await this.inboundQ.pop();
       const timestamp = Date.now();
       try {
-        // persist the event before consideration
-        await Sc.get().replaceEvent({ event: message.payload, timestamp });
         // handle the event
         await this.consider(message.payload);
         // remove the message from the queue
@@ -99,7 +94,7 @@ export class Engine implements MessageHandler {
         error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
         await this.inboundQ.reject(message, e as Error).catch(error);
         // update the event with the error
-        await Sc.get().replaceEvent({ event: message.payload, error: e, timestamp });
+        await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
         await this.handleError(e, message.payload);
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.inboundQ.requeue(message, e).catch(Logger.error);

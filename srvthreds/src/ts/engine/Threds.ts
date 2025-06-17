@@ -4,9 +4,9 @@ import {
   Events,
   Event,
   Logger as L,
-  Message,
   Series,
   ThredLogRecordType,
+  addressToArray,
 } from '../thredlib/index.js';
 
 import { ThredsStore } from './store/ThredsStore.js';
@@ -15,10 +15,9 @@ import { Pattern } from './Pattern.js';
 import { Thred } from './Thred.js';
 import { ThredContext } from './ThredContext.js';
 import { MessageHandler } from './MessageHandler.js';
-import { SystemController as Pm, SystemController } from '../persistence/controllers/SystemController.js';
+import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { MessageTemplate } from './MessageTemplate.js';
-import { Events as EngineEvents } from './Events.js';
 import { ThredThrowable } from './ThredThrowable.js';
 
 /**
@@ -45,6 +44,11 @@ export class Threds {
   }
 
   async handleMessage(messageTemplate: MessageTemplate): Promise<void> {
+    await Sc.get().replaceEvent({
+      event: messageTemplate.event,
+      to: addressToArray(messageTemplate.to),
+      timestamp: Date.now(),
+    });
     return this.messageHandler.handleMessage(messageTemplate); // outbound messages with 'addressees'
   }
 
@@ -59,13 +63,15 @@ export class Threds {
   // top-level lock here - 'withThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
   private async handleBound(thredId: string, event: Event): Promise<void> {
+    const timestamp = Date.now();
+    // save the event before consideration
+    await Sc.get().replaceEvent({ event: { ...event, thredId }, timestamp });
     await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
       // @TODO @TEMP @DEMO // copy admin -----------
       // await this.handleMessage{id: event.id, event, to: []});
       // -------------------------------------------
-      const timestamp = Date.now();
       if (!thredStore) {
-        await Pm.get().saveThredLogRecord({ thredId, eventId: event.id, type: ThredLogRecordType.NO_THRED, timestamp });
+        await Sc.get().saveThredLogRecord({ thredId, eventId: event.id, type: ThredLogRecordType.NO_THRED, timestamp });
         throw EventThrowable.get({
           message: `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
           code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
@@ -105,7 +111,8 @@ export class Threds {
     });
     if (matches === 0) {
       // orphan event - no need to wait on this storage operation
-      Pm.get().saveThredLogRecord({
+      await Sc.get().replaceEvent({ event: { ...event }, timestamp: Date.now() });
+      Sc.get().saveThredLogRecord({
         eventId: event.id,
         type: ThredLogRecordType.NO_PATTERN_MATCH,
         timestamp: Date.now(),
@@ -122,6 +129,8 @@ export class Threds {
       // @TODO @TEMP @DEMO (copy the admin user) ----
       //await this.handleMessage({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
       // ---------------------------------------------
+      // persist the event before consideration
+      await Sc.get().replaceEvent({ event: { ...event, thredId: thredStore.id }, timestamp: Date.now() });
       return Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
     });
   }

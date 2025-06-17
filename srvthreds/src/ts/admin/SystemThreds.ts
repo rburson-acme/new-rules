@@ -8,6 +8,7 @@ import { errorCodes, errorKeys, Event, eventTypes, EventValues, Message, ThredId
 import { AdminService } from './AdminService.js';
 import { SystemService } from './SystemService.js';
 import { UserService } from './UserService.js';
+import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 
 export class SystemThreds extends Threds {
   private adminService: AdminService;
@@ -33,6 +34,8 @@ export class SystemThreds extends Threds {
    */
   async consider(event: Event): Promise<void> {
     if (SystemService.isSystemEvent(event)) {
+      // record the event before consideration
+      await Sc.get().replaceEvent({ event: { ...event }, timestamp: Date.now() });
       if (event.thredId !== ThredId.SYSTEM) {
         throw EventThrowable.get({
           message: `System event must have a system thredId: ${ThredId.SYSTEM}`,

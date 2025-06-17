@@ -96,3 +96,82 @@ export const adminTestPatternModels: PatternModel[] = [
     ],
   },
 ];
+
+export const userTestPatternModels: PatternModel[] = [
+  {
+    meta: { active: true },
+    name: 'System Test',
+    id: 'systemTest',
+    instanceInterval: 0,
+    maxInstances: 0,
+    reactions: [
+      {
+        name: 'event0Reaction',
+        condition: {
+          type: 'filter',
+          xpr: "$event.type = 'inbound.event0'",
+          onTrue: { xpr: "$setLocal('event0', $event)" },
+          transform: {
+            meta: { reXpr: '$event.id' },
+            eventDataTemplate: {
+              title: 'outbound.event0',
+            },
+          },
+          publish: {
+            to: [userTestSource.id],
+          },
+        },
+      },
+      {
+        name: 'event1Reaction',
+        condition: {
+          type: 'filter',
+          xpr: "$event.type = 'inbound.event1'",
+          transform: {
+            eventDataTemplate: {
+              title: 'outbound.event1',
+            },
+          },
+          publish: {
+            to: [userTestSource.id],
+          },
+        },
+      },
+      {
+        name: 'event2Reaction',
+        condition: {
+          type: 'filter',
+          xpr: "$event.type = 'inbound.event2'",
+          transform: {
+            eventDataTemplate: {
+              title: 'outbound.event2',
+            },
+          },
+          publish: {
+            to: [userTestSource.id],
+          },
+        },
+      },
+      {
+        name: 'event3Reaction',
+        condition: {
+          type: 'filter',
+          xpr: "$event.type = 'inbound.event3'",
+          transform: {
+            eventDataTemplate: {
+              title: 'outbound.event3',
+            },
+          },
+          transition: {
+            name: 'event0Reaction',
+            input: 'local',
+            localName: 'event0',
+          },
+          publish: {
+            to: [userTestSource.id],
+          },
+        },
+      },
+    ],
+  },
+];

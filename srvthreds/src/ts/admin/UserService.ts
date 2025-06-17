@@ -86,7 +86,7 @@ export class UserService {
         code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
       });
     }
-    const events = SystemController.get().getEventsForParticipant(thredId, event.source.id);
+    const events = await SystemController.get().getEventsForParticipant(thredId, event.source.id);
     return {
       status: systemEventTypes.successfulStatus,
       op,
@@ -96,5 +96,6 @@ export class UserService {
 
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.user.getThreds]: this.getThreds,
+    [systemEventTypes.operations.user.getEvents]: this.getEvents,
   };
 }
