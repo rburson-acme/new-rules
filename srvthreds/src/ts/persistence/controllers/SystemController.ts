@@ -108,11 +108,16 @@ export class SystemController {
     return this.persistence.get({
       type: Types.EventRecord,
       matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
+      collector: { sort: [{ field: 'timestamp' }] },
     });
   }
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[] | null> {
-    return this.persistence.get({ type: Types.ThredLogRecord, matcher: { thredId } });
+    return this.persistence.get({
+      type: Types.ThredLogRecord,
+      matcher: { thredId },
+      collector: { sort: [{ field: 'timestamp' }] },
+    });
   }
 
   async getThreds(matcher: Query['matcher']): Promise<ThredRecord[] | null> {

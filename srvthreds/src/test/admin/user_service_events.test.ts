@@ -1,4 +1,13 @@
-import { Logger, LoggerLevel, systemEventTypes, Message, Events, SystemEvents } from '../../ts/thredlib/index.js';
+import {
+  Logger,
+  LoggerLevel,
+  systemEventTypes,
+  Message,
+  Events,
+  SystemEvents,
+  errorCodes,
+  errorKeys,
+} from '../../ts/thredlib/index.js';
 import {
   EngineConnectionManager,
   events,
@@ -132,19 +141,18 @@ describe('UserService getEvents method test', function () {
       return pr;
     });
 
-    /*
-    test('should return empty array when no events exist for participant', async function () {
+    test('should retrieve one outbound event for thredId3 for userTestSource', async function () {
       // Try to get events for thredId3 which was created by adminTestSource, not userTestSource
       const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId3 as string, userTestSource);
       const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
         expect(message.event.type).toBe('org.wt.tell');
         expect(message.event.re).toBe(getEventsEvent.id);
         expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
-        
+
         const events = Events.valueNamed(message.event, 'events');
         expect(events).toBeDefined();
         expect(Array.isArray(events)).toBe(true);
-        expect(events.length).toBe(0);
+        expect(events.length).toBe(1);
       });
       engineConnMan.eventQ.queue(getEventsEvent);
       return pr;
@@ -155,11 +163,11 @@ describe('UserService getEvents method test', function () {
       const getEventsEvent = SystemEvents.getGetUserEventsEvent('', userTestSource);
       // Remove the thredId from values to simulate missing parameter
       delete (getEventsEvent.data?.content?.values as any).thredId;
-      
+
       const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
         expect(message.event.type).toBe('org.wt.tell');
         expect(message.event.re).toBe(getEventsEvent.id);
-        
+
         const error = Events.getError(message.event);
         expect(error).toBeDefined();
         expect(error?.code).toBe(errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code);
@@ -169,78 +177,11 @@ describe('UserService getEvents method test', function () {
       return pr;
     });
 
-    test('should handle non-existent thredId', async function () {
-      const nonExistentThredId = 'non-existent-thred-id';
-      const getEventsEvent = SystemEvents.getGetUserEventsEvent(nonExistentThredId, userTestSource);
-      
-      const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        expect(message.event.type).toBe('org.wt.tell');
-        expect(message.event.re).toBe(getEventsEvent.id);
-        expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
-        
-        const events = Events.valueNamed(message.event, 'events');
-        expect(events).toBeDefined();
-        expect(Array.isArray(events)).toBe(true);
-        expect(events.length).toBe(0); // Should return empty array for non-existent thread
-      });
-      engineConnMan.eventQ.queue(getEventsEvent);
-      return pr;
-    });
-
-    test('should verify event data structure', async function () {
-      const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId1 as string, userTestSource);
-      const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        const events = Events.valueNamed(message.event, 'events');
-        expect(events.length).toBeGreaterThan(0);
-        
-        // Verify event record structure
-        const firstEvent = events[0];
-        expect(firstEvent).toHaveProperty('id');
-        expect(firstEvent).toHaveProperty('thredId');
-        expect(firstEvent).toHaveProperty('event');
-        expect(firstEvent).toHaveProperty('timestamp');
-        
-        // Verify event structure
-        expect(firstEvent.event).toHaveProperty('id');
-        expect(firstEvent.event).toHaveProperty('type');
-        expect(firstEvent.event).toHaveProperty('source');
-        expect(firstEvent.event).toHaveProperty('data');
-      });
-      engineConnMan.eventQ.queue(getEventsEvent);
-      return pr;
-    });
-  });
-
-  describe('Pagination and filtering tests', () => {
-    test('should handle events with specific event types', async function () {
-      // Send a specific event type to thread 1
-      const pr1 = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
-        expect(message.event.data?.title).toBe('outbound.event2');
-      });
-      engineConnMan.eventQ.queue({ ...events.event2, thredId: thredId1, source: userTestSource });
-      await pr1;
-      
-      await delay(500);
-      
-      const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId1 as string, userTestSource);
-      const pr2 = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        const events = Events.valueNamed(message.event, 'events');
-        
-        // Should now have events of multiple types
-        const eventTypes = events.map((er: EventRecord) => er.event.type);
-        expect(eventTypes).toContain('inbound.event0');
-        expect(eventTypes).toContain('inbound.event1');
-        expect(eventTypes).toContain('inbound.event2');
-      });
-      engineConnMan.eventQ.queue(getEventsEvent);
-      return pr2;
-    });
-
     test('should retrieve events in chronological order', async function () {
       const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId2 as string, userTestSource);
       const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
         const events = Events.valueNamed(message.event, 'events');
-        
+
         // Verify events are in chronological order (oldest first)
         for (let i = 1; i < events.length; i++) {
           const prevTimestamp = events[i - 1].timestamp;
@@ -251,103 +192,6 @@ describe('UserService getEvents method test', function () {
       engineConnMan.eventQ.queue(getEventsEvent);
       return pr;
     });
-  });
-
-  describe('Edge cases and error scenarios', () => {
-    test('should handle terminated thread events', async function () {
-      // Terminate thread 1
-      const terminateEvent = SystemEvents.getTerminateThredEvent(thredId1 as string, adminTestSource);
-      const pr1 = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
-      });
-      engineConnMan.eventQ.queue(terminateEvent);
-      await pr1;
-      
-      await delay(500);
-      
-      // Try to get events for terminated thread
-      const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId1 as string, userTestSource);
-      const pr2 = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        expect(message.event.type).toBe('org.wt.tell');
-        expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
-        
-        const events = Events.valueNamed(message.event, 'events');
-        // Should still return events even for terminated thread
-        expect(events).toBeDefined();
-        expect(Array.isArray(events)).toBe(true);
-      });
-      engineConnMan.eventQ.queue(getEventsEvent);
-      return pr2;
-    });
-
-    test('should handle concurrent event retrieval', async function () {
-      // Send multiple getEvents requests concurrently
-      const promises = [];
-      
-      for (let i = 0; i < 3; i++) {
-        const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId2 as string, userTestSource);
-        const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-          expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
-          const events = Events.valueNamed(message.event, 'events');
-          expect(events).toBeDefined();
-          expect(Array.isArray(events)).toBe(true);
-        });
-        engineConnMan.eventQ.queue(getEventsEvent);
-        promises.push(pr);
-      }
-      
-      await Promise.all(promises);
-    });
-
-    test('should handle events with large data payloads', async function () {
-      // Create event with large data payload
-      const largeDataEvent: Event = {
-        id: 'large-data-event',
-        type: 'inbound.event1',
-        thredId: thredId2,
-        source: userTestSource,
-        data: {
-          title: 'Large Data Event',
-          content: {
-            values: {
-              largeArray: new Array(100).fill('test-data'),
-              nestedObject: {
-                level1: {
-                  level2: {
-                    level3: {
-                      data: 'deeply nested data'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      };
-      
-      const pr1 = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
-        expect(message.event.data?.title).toBe('outbound.event1');
-      });
-      engineConnMan.eventQ.queue(largeDataEvent);
-      await pr1;
-      
-      await delay(500);
-      
-      // Retrieve events including the large data event
-      const getEventsEvent = SystemEvents.getGetUserEventsEvent(thredId2 as string, userTestSource);
-      const pr2 = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
-        const events = Events.valueNamed(message.event, 'events');
-        
-        // Find the large data event
-        const largeEvent = events.find((er: EventRecord) => er.event.id === 'large-data-event');
-        expect(largeEvent).toBeDefined();
-        expect(largeEvent.event.data?.content?.values?.largeArray).toHaveLength(100);
-        expect(largeEvent.event.data?.content?.values?.nestedObject?.level1?.level2?.level3?.data).toBe('deeply nested data');
-      });
-      engineConnMan.eventQ.queue(getEventsEvent);
-      return pr2;
-    });
-    */
   });
 
   afterAll(async () => {
