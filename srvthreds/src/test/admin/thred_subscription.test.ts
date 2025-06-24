@@ -1,6 +1,4 @@
 import { ThredSubscriptions } from '../../ts/admin/ThredSubscriptions';
-import { Thred } from '../../ts/engine/Thred';
-import { KeySubscriberFactory } from '../../ts/pubsub/KeySubscriberFactory';
 import { PubSubFactory } from '../../ts/pubsub/PubSubFactory';
 import { Logger, LoggerLevel, Message } from '../../ts/thredlib';
 import { EngineConnectionManager, events, withDispatcherPromise, withPromiseHandlers } from '../testUtils';

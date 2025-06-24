@@ -76,15 +76,21 @@ export class ThredsStore {
   }
 
   // no need to lock - read only
-  async getAllThredStores(): Promise<ThredStore[]> {
-    return this.getThredStores(await this.getAllThredIds());
+  async getAllThredStoresReadOnly(): Promise<ThredStore[]> {
+    return this.getThredStoresReadOnly(await this.getAllThredIds());
   }
 
   // no need to lock - read only
-  async getThredStores(thredIds: string[]): Promise<ThredStore[]> {
+  async getThredStoresReadOnly(thredIds: string[]): Promise<ThredStore[]> {
     if (thredIds.length === 0) return [];
     const states = await this.storage.retrieveAll(Types.Thred, thredIds);
     return states.map((state) => this.fromThredState(state));
+  }
+
+  // no need to lock - read only
+  async getThredStoreReadOnly(thredId: string): Promise<ThredStore> {
+    const state = await this.storage.retrieve(Types.Thred, thredId);
+    return this.fromThredState(state);
   }
 
   // acquire a lock on each thred, terminate and archive the thred
@@ -123,7 +129,7 @@ export class ThredsStore {
     const allThredIds = await this.participantsStore.getParticipantThreds(participantId);
     // if thredIds are provided, filter them to only include those that the participant is actually associated with
     const ownedThreds = thredIds ? thredIds?.filter((thredId) => allThredIds.includes(thredId)) : allThredIds;
-    return this.getThredStores(ownedThreds);
+    return this.getThredStoresReadOnly(ownedThreds);
   }
 
   /* MUST BE RUN WITHIN A LOCK (one of the above locking methods) */

@@ -52,16 +52,9 @@ export interface EventData {
 
 export type EventContent = EventValues & EventTasks & Resources & InlineContent & EventError;
 
-export interface EventError {
-    error?: { 
-        message: string,
-        code?: number,
-        cause?: any;
-    }
-}
-
 // simple interface for transferring known, free-form json values
 export interface EventValues {
+    valuesType?: string; // optional application level type of the values
     values?: Record<string, any> | Record<string, any>[];
 }
 
@@ -81,6 +74,19 @@ export interface Resources {
 // allows for embedding content directly in the event
 export interface InlineContent {
    items?: InlineItem[]; 
+}
+export interface EventError {
+    error?: { 
+        message: string,
+        code?: number,
+        cause?: any;
+    }
+}
+
+export interface InlineItem {
+    readonly contentType: string;
+    readonly encoding: string;
+    readonly content: string;
 }
 
 export interface EventTask {
@@ -108,11 +114,4 @@ export interface Resource {
     // mimetype/mediatype of the content field
     readonly contentType: string;
     readonly uri: string;
-}
-
-
-export interface InlineItem {
-    readonly contentType: string;
-    readonly encoding: string;
-    readonly content: string;
 }

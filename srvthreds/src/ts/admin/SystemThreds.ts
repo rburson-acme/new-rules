@@ -9,6 +9,7 @@ import { AdminService } from './AdminService.js';
 import { SystemService } from './SystemService.js';
 import { UserService } from './UserService.js';
 import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
+import { MessageTemplate } from '../engine/MessageTemplate.js';
 
 export class SystemThreds extends Threds {
   private adminService: AdminService;
@@ -59,7 +60,7 @@ export class SystemThreds extends Threds {
         title: `System Event -> Thred: ${event.thredId} -> Re: Event: ${event.id}`,
         content: { values },
       });
-      const message: Message = { event: outboundEvent, id: outboundEvent.id, to: [event.source.id] };
+      const message: MessageTemplate = { event: outboundEvent, to: [event.source.id] };
       await this.handleMessage(message);
     } else {
       return super.consider(event);

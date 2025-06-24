@@ -103,6 +103,10 @@ export class SystemController {
   async getEventsForThred(thredId: string): Promise<EventRecord[] | null> {
     return this.persistence.get({ type: Types.EventRecord, matcher: { thredId } });
   }
+  
+  async getEventsForThredAfter(thredId: string, timestamp: number): Promise<EventRecord[] | null> {
+    return this.persistence.get({ type: Types.EventRecord, matcher: { thredId, timestamp: { $gt: timestamp } } });
+  }
 
   async getEventsForParticipant(thredId: string, participantId: string): Promise<EventRecord[] | null> {
     return this.persistence.get({

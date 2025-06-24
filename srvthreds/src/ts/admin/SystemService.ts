@@ -22,7 +22,7 @@ export class SystemService {
   ): Promise<EventValues['values']> {
     const { event } = args;
     const to = [event.source.id];
-    const opName = (Events.getContent(event)?.values as SystemEventInputValues)?.op;
+    const opName = Events.valueNamed(event, 'op');
     if (!opName) {
       throw EventThrowable.get({
         message: `No operation name supplied for system event`,

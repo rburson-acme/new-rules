@@ -1,3 +1,4 @@
+import { SubscriberSessionAsPromised } from 'rascal';
 import { Thred } from '../engine/Thred.js';
 import { Threds } from '../engine/Threds.js';
 import { Transition } from '../engine/Transition.js';
@@ -20,6 +21,8 @@ import {
   WatchThredsArgs,
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
+import { ParticipantSubscriptions, ParticipantSubscriptionType } from '../sessions/ParticipantSubscriptions.js';
+import { NotificationHandler } from './NotificationHandler.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -31,7 +34,10 @@ import { SystemService, SystemServiceArgs } from './SystemService.js';
  */
 
 export class AdminService {
-  constructor(private threds: Threds) {}
+  private notificationHandler: NotificationHandler;
+  constructor(private threds: Threds) {
+    this.notificationHandler = NotificationHandler.getInstance(threds);
+  }
 
   async handleSystemEvent(args: SystemServiceArgs): Promise<EventValues['values']> {
     return SystemService.handleSystemEvent(args, this.operations);
@@ -111,8 +117,8 @@ export class AdminService {
     let threds: any[] = [];
     if (status !== 'terminated') {
       const thredStores = await (thredIds?.length
-        ? this.threds.thredsStore.getThredStores(thredIds!)
-        : this.threds.thredsStore.getAllThredStores());
+        ? this.threds.thredsStore.getThredStoresReadOnly(thredIds!)
+        : this.threds.thredsStore.getAllThredStoresReadOnly());
       threds = thredStores.map((thredStore) => thredStore.toJSON());
     }
     if (status === 'terminated' || status === 'all') {
@@ -134,7 +140,8 @@ export class AdminService {
       event,
       args: { op },
     } = SystemService.getArgs<WatchThredsArgs>(args);
-
+    const sourceId = event.source.id;
+    this.notificationHandler.registerForNotification(sourceId);
     return { status: systemEventTypes.successfulStatus, op };
   };
 

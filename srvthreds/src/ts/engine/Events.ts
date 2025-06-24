@@ -21,7 +21,7 @@ export class Events {
       type: type || eventTypes.system.tell.type,
       re: prevEvent.id,
       data: {
-        ...{ _title: title },
+        ...{ title: _title },
         content: _content,
       },
       source: { ...eventTypes.system.source },
