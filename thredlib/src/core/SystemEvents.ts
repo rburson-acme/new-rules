@@ -21,6 +21,7 @@ export interface GetThredsArgs extends SystemEventInputValues {
 }
 
 export interface WatchThredsArgs extends SystemEventInputValues {
+  directive?: 'start' | 'stop' | 'renew';
 }
 
 export interface ReloadPatternArgs extends SystemEventInputValues {
@@ -103,6 +104,18 @@ export class SystemEvents {
     })
       .mergeValues(values)
       .mergeData({ title: 'Run Get Threds' })
+      .build();
+  }
+
+  static getWatchThredsEvent(source: Event['source'], directive?: WatchThredsArgs['directive']) {
+    const values: WatchThredsArgs = { op: systemEventTypes.operations.watchThreds, directive };
+    return EventBuilder.create({
+      type: eventTypes.control.sysControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeValues(values)
+      .mergeData({ title: 'Run Watch Threds' })
       .build();
   }
 

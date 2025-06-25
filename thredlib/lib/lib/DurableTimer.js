@@ -1,41 +1,38 @@
 export class DurableTimer {
-    // This timer can persisted and safely resumed
     startTime = 0;
-    timeoutId;
+    timeoutId = null;
     hasFinished = false;
     duration = 0;
     finished = () => { };
     start(duration, finished) {
+        this.stop();
         this.duration = duration;
         this.finished = finished;
-        if (this.timeoutId)
-            clearTimeout(this.timeoutId);
-        this.hasFinished = false;
         this.startTime = Date.now();
-        const finish = () => {
+        this.timeoutId = setTimeout(() => {
             this.hasFinished = true;
             finished();
-        };
-        this.timeoutId = setTimeout(finish, duration);
+        }, duration);
     }
     resume() {
-        if (!this.hasFinished && this.startTime) {
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            const finish = () => {
+        if (this.hasFinished || !this.startTime)
+            return;
+        this.timeoutId && clearTimeout(this.timeoutId);
+        const remaining = this.duration - (Date.now() - this.startTime);
+        if (remaining <= 0) {
+            this.hasFinished = true;
+            this.finished();
+        }
+        else
+            this.timeoutId = setTimeout(() => {
                 this.hasFinished = true;
                 this.finished();
-            };
-            // run for the remaing time
-            const remainingDuration = this.duration - (Date.now() - this.startTime);
-            this.timeoutId = setTimeout(finish, remainingDuration);
-        }
+            }, remaining);
     }
     stop() {
-        this.startTime = 0;
+        this.startTime = this.duration = 0;
         this.hasFinished = false;
-        if (this.timeoutId)
-            clearTimeout(this.timeoutId);
+        this.finished = () => { };
+        this.timeoutId && (clearTimeout(this.timeoutId), (this.timeoutId = null));
     }
 }

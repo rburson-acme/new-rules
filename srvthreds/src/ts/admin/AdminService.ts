@@ -21,7 +21,6 @@ import {
   WatchThredsArgs,
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
-import { ParticipantSubscriptions, ParticipantSubscriptionType } from '../sessions/ParticipantSubscriptions.js';
 import { NotificationHandler } from './NotificationHandler.js';
 
 /***
@@ -135,14 +134,20 @@ export class AdminService {
     };
   };
 
-  watchRunningThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
+  watchThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
-      args: { op },
+      args: { op, directive },
     } = SystemService.getArgs<WatchThredsArgs>(args);
     const sourceId = event.source.id;
-    this.notificationHandler.registerForNotification(sourceId);
-    return { status: systemEventTypes.successfulStatus, op };
+    if (directive === 'renew') {
+      this.notificationHandler.renewRegistration(sourceId);
+    } else if (directive === 'stop') {
+      this.notificationHandler.unregisterForNotification(sourceId);
+    } else {
+      this.notificationHandler.registerForNotification(sourceId, event.re);
+    }
+    return { status: systemEventTypes.successfulStatus, op, directive };
   };
 
   reloadPattern = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
@@ -190,6 +195,7 @@ export class AdminService {
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,
     [systemEventTypes.operations.getThreds]: this.getThreds,
+    [systemEventTypes.operations.watchThreds]: this.watchThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,
     [systemEventTypes.operations.reloadPattern]: this.reloadPattern,
     [systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,

@@ -1,13 +1,15 @@
 import { KeySubscriberFactory } from '../pubsub/KeySubscriberFactory';
 import { PubSubFactory } from '../pubsub/PubSubFactory';
 import { Topics } from '../pubsub/Topics';
+import { Logger } from '../thredlib';
 import { debounce } from '../thredlib/lib/debounce';
 
 /*
  * ThredSubscriptions is a singleton class that manages subscriptions to thread changes.
  */
 export class ThredSubscriptions {
-  private static SUB_DEBOUCE_TIME = 100; // milliseconds
+  // lower debounce times here may cause unexpected behavior when threds are transitioned quickly
+  private static SUB_DEBOUCE_TIME = 1000; // milliseconds
   /*
    Note see the Redis keyspace start up configuration.  It is currently set to report key events for all ops (KA).
    This could be tuned to be more specific to improve performance. for example: KGh would only report hset and delete
@@ -36,14 +38,23 @@ export class ThredSubscriptions {
     if (this.subscriptions.size === 0) {
       this.keySubscriber.subscribe([ThredSubscriptions.THRED_PATTERN], async (pattern, channel, eventType) => {
         const thredId = channel.split(':')[2];
-        console.debug('got notification for thred change', thredId, eventType);
+        Logger.debug('got notification for thred change', thredId, eventType);
         this.subscriptions.forEach((value, key) => value(thredId, eventType));
       });
     }
     this.subscriptions.set(
       handle,
-      debounce(notifyFn, ThredSubscriptions.SUB_DEBOUCE_TIME, { leading: true, trailing: false }),
+      // debounce with trailing edge to avoid multiple calls in quick succession
+      debounce(notifyFn, ThredSubscriptions.SUB_DEBOUCE_TIME),
     );
+  }
+
+  hasAnySubscriptions(): boolean {
+    return this.subscriptions.size > 0;
+  }
+
+  hasSubscription(handle: string): boolean {
+    return this.subscriptions.has(handle);
   }
 
   /*

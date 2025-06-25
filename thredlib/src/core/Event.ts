@@ -9,6 +9,8 @@ export interface Event {
     // the thred to which the event belongs if already assigned
     readonly thredId?: string;
     // the fully qualified event type (this should be a 'class' of event)
+    // e.g. 'org.wt.tell' this should not be used for application level designations
+    // use content specific types like 'valuesType' for application level context
     readonly type: string;
     // time of event inception
     time?: number;

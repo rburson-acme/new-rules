@@ -36,12 +36,33 @@ export class NotificationHandler {
    * Register a participant for thred change notifications
    * @param participantId - The ID of the participant to register
    */
-  public registerForNotification(participantId: string, re: string): void {
+  public registerForNotification(participantId: string, re?: string): void {
+    // Lazily subscribe to notifications for thred changes
+    if (!ThredSubscriptions.getInstance().hasSubscription('notificationHandler')) {
+      this.setupNotifications();
+    }
     // Add subscription for the participant
     ParticipantSubscriptions.getInstance().addSubscription({
       participantId,
       type: ParticipantSubscriptionType.THREDS,
+      re,
     });
+  }
+
+  /**
+   * Renew the registration for a participant
+   * @param participantId - The ID of the participant to renew registration for
+   */
+  public renewRegistration(participantId: string): void {
+    ParticipantSubscriptions.getInstance().renewSubscription(participantId, ParticipantSubscriptionType.THREDS);
+  }
+
+  /**
+   * Unregister a participant from thred change notifications
+   * @param participantId - The ID of the participant to unregister
+   */
+  public unregisterForNotification(participantId: string): void {
+    ParticipantSubscriptions.getInstance().removeSubscriptionsOfType(participantId, ParticipantSubscriptionType.THREDS);
   }
 
   private setupNotifications(): void {
@@ -51,6 +72,7 @@ export class NotificationHandler {
       async (thredId: string, eventType: string) => {
         const thredStore = await this.threds.thredsStore.getThredStoreReadOnly(thredId);
         const thredJson = thredStore.toJSON();
+        // notify all participants subscribed to thred changes asynchronously
         Parallel.forEach(
           ParticipantSubscriptions.getInstance().getSubscriptionsForType(ParticipantSubscriptionType.THREDS),
           async (subscription) => {

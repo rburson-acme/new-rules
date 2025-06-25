@@ -54,6 +54,17 @@ export class SystemEvents {
             .mergeData({ title: 'Run Get Threds' })
             .build();
     }
+    static getWatchThredsEvent(source, directive) {
+        const values = { op: systemEventTypes.operations.watchThreds, directive };
+        return EventBuilder.create({
+            type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
+            source,
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Watch Threds' })
+            .build();
+    }
     static getReloadPatternEvent(patternId, source) {
         const values = { op: systemEventTypes.operations.reloadPattern, patternId };
         return EventBuilder.create({

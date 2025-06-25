@@ -1,101 +1,192 @@
+import { ThredThrowable } from '../engine/ThredThrowable';
+import { errorCodes, errorKeys, Logger } from '../thredlib';
+import { DurableIntervalTimer } from '../thredlib/lib/DurableIntervalTimer';
+
 /**
- * Singleton class that manages subscriptions for participants.
+ * Singleton class managing participant subscriptions with automatic timestamping and timeout support.
  *
- * This class allows adding any number of subscriptions for each participant, supporting multiple types of subscriptions.
- * Subscriptions can be queried by participant or by subscription type.
- * 
- * **Important:** Removing subscriptions is only possible by type for a given participant; individual subscriptions cannot be removed directly.
+ * Maintains dual indexes for efficient querying by participant or subscription type.
+ * Subscriptions are removed by type only, not individually.
  *
- * Internally, the class maintains two collections:
- * - `subscriptionsByParticipant`: Maps participant IDs to their set of subscriptions.
- * - `subscriptionsByType`: Maps subscription types to sets of all subscriptions of that type.
- *
- * Use `ParticipantSubscriptions.getInstance()` to access the singleton instance.
+ * **Automatic Timeout Management:**
+ * - Uses DurableIntervalTimer for periodic cleanup of expired subscriptions
+ * - Runs cleanup every SUBSCRIPTION_CLEANUP_INTERVAL (60 seconds)
+ * - Removes subscriptions older than MAX_SUBSCRIPTION_AGE (60 seconds)
+ * - Timer starts automatically on singleton initialization
+ * - Timer can be manually stopped via stopSubscriptionChecks()
  *
  * @example
  * ```typescript
  * const subs = ParticipantSubscriptions.getInstance();
- * subs.addSubscription('user1', { type: ParticipantSubscriptionType.THREDS });
+ * subs.addSubscription({ participantId: 'user1', type: ParticipantSubscriptionType.THREDS });
  * const userSubs = subs.getSubscriptionsForParticipant('user1');
+ * subs.renewSubscription('user1', ParticipantSubscriptionType.THREDS);
  * subs.removeSubscriptionsOfType('user1', ParticipantSubscriptionType.THREDS);
+ * // Stop automatic cleanup if needed
+ * subs.stopSubscriptionChecks();
  * ```
  */
+
+const MAX_SUBSCRIPTION_AGE = 60000; // 1 minute
+const SUBSCRIPTION_CLEANUP_INTERVAL = 60000; // 1 minute
 export interface ParticipantSubscription {
-    participantId: string;
-    type: ParticipantSubscriptionType;
-    //filter: string;
-    re?: string;
+  timestamp?: number;
+  participantId: string;
+  type: ParticipantSubscriptionType;
+  re?: string;
 }
 
 export enum ParticipantSubscriptionType {
-    THREDS = 'threds',
+  THREDS = 'threds',
 }
 
-/*
-    ParticipantSubscriptions is a singleton class that manages subscriptions for participants.
-    It allows adding any number of subscriptions for each participant of any type.
-    However, removeing subscriptions is only possible by type, not by individual subscription.
- */
 export class ParticipantSubscriptions {
+  private static instance: ParticipantSubscriptions;
 
-    private static instance: ParticipantSubscriptions;
+  /**
+   * DurableIntervalTimer instance for automatic subscription timeout cleanup.
+   * Configured to run every SUBSCRIPTION_CLEANUP_INTERVAL and remove subscriptions
+   * older than MAX_SUBSCRIPTION_AGE.
+   */
+  private timeoutTimer = new DurableIntervalTimer();
 
-    private constructor() {}
+  private constructor() {
+    // Start automatic timeout cleanup on initialization
+    this.timeoutTimer.start(SUBSCRIPTION_CLEANUP_INTERVAL, () => this.checkSubscriptionTimeouts(MAX_SUBSCRIPTION_AGE));
+  }
 
-    static getInstance(): ParticipantSubscriptions {
-        if (!ParticipantSubscriptions.instance) {
-            ParticipantSubscriptions.instance = new ParticipantSubscriptions();
-        }
-        return ParticipantSubscriptions.instance;
+  static getInstance(): ParticipantSubscriptions {
+    if (!ParticipantSubscriptions.instance) {
+      ParticipantSubscriptions.instance = new ParticipantSubscriptions();
     }
+    return ParticipantSubscriptions.instance;
+  }
 
-    private subscriptionsByParticipant: Map<string, Set<ParticipantSubscription>> = new Map();
-    private subscriptionsByType: Map<ParticipantSubscriptionType, Set<ParticipantSubscription>> = new Map();
+  private subscriptionsByParticipant: Map<string, Set<ParticipantSubscription>> = new Map();
+  private subscriptionsByType: Map<ParticipantSubscriptionType, Set<ParticipantSubscription>> = new Map();
 
-    addSubscription(subscription: ParticipantSubscription): void {
-        // Add to participant-based collection
-        if (!this.subscriptionsByParticipant.has(subscription.participantId)) {
-            this.subscriptionsByParticipant.set(subscription.participantId, new Set());
-        }
-        this.subscriptionsByParticipant.get(subscription.participantId)!.add(subscription);
-
-        // Add to type-based collection
-        if (!this.subscriptionsByType.has(subscription.type)) {
-            this.subscriptionsByType.set(subscription.type, new Set());
-        }
-        this.subscriptionsByType.get(subscription.type)!.add(subscription);
+  addSubscription(subscription: ParticipantSubscription): void {
+    // Add to participant-based collection
+    if (!this.subscriptionsByParticipant.has(subscription.participantId)) {
+      this.subscriptionsByParticipant.set(subscription.participantId, new Set());
     }
-
-    getSubscriptionsForParticipant(participantId: string): ParticipantSubscription[] | undefined {
-        const subscriptionSet = this.subscriptionsByParticipant.get(participantId);
-        return subscriptionSet ? Array.from(subscriptionSet) : undefined;
+    // prevent duplicate subscriptions
+    if (!this.hasSubscription(subscription.participantId, subscription.type)) {
+      subscription.timestamp = Date.now(); // Set timestamp when adding a new subscription
+      this.subscriptionsByParticipant.get(subscription.participantId)!.add(subscription);
+      // Add to type-based collection
+      if (!this.subscriptionsByType.has(subscription.type)) {
+        this.subscriptionsByType.set(subscription.type, new Set());
+      }
+      this.subscriptionsByType.get(subscription.type)!.add(subscription);
     }
+  }
 
-    getSubscriptionsForType(type: ParticipantSubscriptionType): ParticipantSubscription[] {
-        const subscriptionSet = this.subscriptionsByType.get(type);
-        return subscriptionSet ? Array.from(subscriptionSet) : [];
+  hasSubscription(participantId: string, type: ParticipantSubscriptionType): boolean {
+    const participantSubs = this.subscriptionsByParticipant.get(participantId);
+    if (!participantSubs) return false;
+    for (const sub of participantSubs) {
+      if (sub.type === type) return true;
     }
+    return false;
+  }
 
-    removeSubscriptionsOfType(participantId: string, type: ParticipantSubscriptionType): void {
-        // Early return if no subscriptions exist for this participant
-        const participantSubs = this.subscriptionsByParticipant.get(participantId);
-        if (!participantSubs) return;
-        
-        // Find and remove matching subscriptions (by type)
-        const subsToRemove = [...participantSubs].filter(sub => sub.type === type);
-        if (!subsToRemove.length) return;
-        
-        // Process both collections in a single pass
-        subsToRemove.forEach(sub => {
-            // Remove from participant collection
-            participantSubs.delete(sub);
-            
-            // Remove from type collection
-            const typeSubs = this.subscriptionsByType.get(sub.type);
-            typeSubs?.delete(sub) && !typeSubs.size && this.subscriptionsByType.delete(sub.type);
+  renewSubscription(participantId: string, type: ParticipantSubscriptionType): void {
+    const participantSubs = this.subscriptionsByParticipant.get(participantId);
+    if (!participantSubs)
+      throw ThredThrowable.get({
+        code: errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
+        message: `Participant ${participantId} not found for subscription renewal`,
+      });
+    for (const subscription of participantSubs) {
+      if (subscription.type === type) {
+        subscription.timestamp = Date.now();
+        return;
+      } else {
+        throw ThredThrowable.get({
+          code: errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
+          message: `Subscription type ${type} not found for participant ${participantId}`,
         });
-        
-        // Clean up empty participant collection
-        !participantSubs.size && this.subscriptionsByParticipant.delete(participantId);
+      }
     }
-}   
+  }
+
+  getSubscriptionsForParticipant(participantId: string): ParticipantSubscription[] | undefined {
+    const subscriptionSet = this.subscriptionsByParticipant.get(participantId);
+    return subscriptionSet ? Array.from(subscriptionSet) : undefined;
+  }
+
+  getSubscriptionsForType(type: ParticipantSubscriptionType): ParticipantSubscription[] {
+    const subscriptionSet = this.subscriptionsByType.get(type);
+    return subscriptionSet ? Array.from(subscriptionSet) : [];
+  }
+
+  removeSubscriptionsOfType(participantId: string, type: ParticipantSubscriptionType): void {
+    const participantSubs = this.subscriptionsByParticipant.get(participantId);
+    if (!participantSubs) return;
+
+    const subsToRemove: ParticipantSubscription[] = [];
+
+    // Collect subscriptions to remove without array conversion
+    for (const sub of participantSubs) {
+      if (sub.type === type) {
+        subsToRemove.push(sub);
+      }
+    }
+
+    if (subsToRemove.length === 0) return;
+
+    // Remove subscriptions from both collections
+    for (const sub of subsToRemove) {
+      participantSubs.delete(sub);
+
+      const typeSubs = this.subscriptionsByType.get(sub.type);
+      if (typeSubs) {
+        typeSubs.delete(sub);
+        if (typeSubs.size === 0) {
+          this.subscriptionsByType.delete(sub.type);
+        }
+      }
+    }
+
+    // Clean up empty participant collection
+    if (participantSubs.size === 0) {
+      this.subscriptionsByParticipant.delete(participantId);
+    }
+  }
+
+  /**
+   * Internal method called by timeoutTimer to clean up expired subscriptions.
+   * Identifies and removes subscriptions older than the specified threshold.
+   *
+   * @param olderThan - Age threshold in milliseconds for subscription removal
+   * @private
+   */
+  private checkSubscriptionTimeouts(olderThan: number): void {
+    const cutoffTime = Date.now() - olderThan;
+    const timeoutSubscriptions: Array<{ participantId: string; type: ParticipantSubscriptionType }> = [];
+    for (const [participantId, subscriptions] of this.subscriptionsByParticipant) {
+      for (const subscription of subscriptions) {
+        if (subscription.timestamp && subscription.timestamp < cutoffTime) {
+          timeoutSubscriptions.push({ participantId, type: subscription.type });
+        }
+      }
+    }
+    for (const { participantId, type } of timeoutSubscriptions) {
+      Logger.debug(`Removing expired subscription for participant ${participantId} of type ${type}`);
+      // Remove expired subscriptions
+      this.removeSubscriptionsOfType(participantId, type);
+    }
+  }
+
+  /**
+   * Stops the automatic subscription timeout cleanup timer.
+   * Once stopped, expired subscriptions will no longer be automatically removed.
+   * Useful for shutdown scenarios or when manual cleanup control is needed.
+   *
+   * @public
+   */
+  stopSubscriptionChecks(): void {
+    this.timeoutTimer.stop();
+  }
+}

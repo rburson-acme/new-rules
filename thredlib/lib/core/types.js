@@ -46,6 +46,7 @@ export const systemEventTypes = {
         terminateThred: 'terminateThred',
         reloadPattern: 'reloadPattern',
         getThreds: 'getThreds',
+        watchThreds: 'watchThreds',
         terminateAllThreds: 'terminateAllThreds',
         shutdown: 'shutdown',
         user: {

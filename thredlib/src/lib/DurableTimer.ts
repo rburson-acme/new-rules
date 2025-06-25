@@ -1,45 +1,39 @@
-
 export class DurableTimer {
+  private startTime = 0;
+  private timeoutId: any = null;
+  private hasFinished = false;
+  private duration = 0;
+  private finished = () => {};
 
-    // This timer can persisted and safely resumed
+  start(duration: number, finished: () => void) {
+    this.stop();
+    this.duration = duration;
+    this.finished = finished;
+    this.startTime = Date.now();
+    this.timeoutId = setTimeout(() => {
+      this.hasFinished = true;
+      finished();
+    }, duration);
+  }
 
-    private startTime: number = 0;
-    private timeoutId: any;
-    private hasFinished = false;
-    private duration = 0;
-    private finished: ()=>void = ()=>{}; 
+  resume() {
+    if (this.hasFinished || !this.startTime) return;
+    this.timeoutId && clearTimeout(this.timeoutId);
+    const remaining = this.duration - (Date.now() - this.startTime);
+    if (remaining <= 0) {
+      this.hasFinished = true;
+      this.finished();
+    } else
+      this.timeoutId = setTimeout(() => {
+        this.hasFinished = true;
+        this.finished();
+      }, remaining);
+  }
 
-    start(duration: number, finished: ()=>void) {
-        this.duration = duration;
-        this.finished = finished;
-        if(this.timeoutId) clearTimeout(this.timeoutId);
-        this.hasFinished = false;
-        this.startTime = Date.now(); 
-        const finish = () => {
-            this.hasFinished = true;
-            finished();
-        }
-        this.timeoutId = setTimeout(finish, duration);
-    }
-
-    resume() {
-        if(!this.hasFinished && this.startTime) {
-            if(this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            const finish = () => {
-                this.hasFinished = true;
-                this.finished();
-            }
-            // run for the remaing time
-            const remainingDuration = this.duration - (Date.now() - this.startTime);
-            this.timeoutId = setTimeout(finish, remainingDuration);
-        }
-    }
-
-    stop() {
-        this.startTime = 0;
-        this.hasFinished = false;
-        if(this.timeoutId) clearTimeout(this.timeoutId);
-    }
+  stop() {
+    this.startTime = this.duration = 0;
+    this.hasFinished = false;
+    this.finished = () => {};
+    this.timeoutId && (clearTimeout(this.timeoutId), (this.timeoutId = null));
+  }
 }
