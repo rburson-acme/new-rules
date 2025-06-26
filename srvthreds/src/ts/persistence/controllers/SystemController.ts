@@ -137,6 +137,7 @@ export class SystemController {
   }
 
   async getConfig(configName: string): Promise<any | null> {
-    return this.persistence.getOne({ type: Types.Config, matcher: { id: configName } });
+    const entry = await this.persistence.getOne({ type: Types.Config, matcher: { id: configName } });
+    return entry ? entry.config : null;
   }
 }
