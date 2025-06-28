@@ -1,17 +1,23 @@
-import { ReactionModel } from "../model/ReactionModel.js";
+import { ReactionModel } from '../model/ReactionModel.js';
 
 export interface Thred {
-      id: string;
-      patternId: string;
-      patternName: string;
-      currentReaction?: {
-        reactionName?: string,
-        expiry: ReactionModel['expiry']
-      };
-      broadcastAllowed: boolean;
-      startTime: number;
-      endTime?: number;
-      status: ThredStatus;
+  id: string;
+  patternId: string;
+  patternName: string;
+  currentReaction?: {
+    reactionName?: string;
+    expiry: ReactionModel['expiry'];
+  };
+  broadcastAllowed: boolean;
+  startTime: number;
+  lastUpdateTime: number;
+  endTime?: number;
+  status: ThredStatus;
+  meta: {
+    label?: string;
+    description?: string;
+    displayUri?: string;
+  };
 }
 
 export enum ThredStatus {

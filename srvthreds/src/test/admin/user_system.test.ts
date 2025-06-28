@@ -6,6 +6,7 @@ import {
   Message,
   Events,
   SystemEvents,
+  Thred,
 } from '../../ts/thredlib/index.js';
 import { createDbFixtures, EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
@@ -82,10 +83,16 @@ describe('user functions system test', function () {
       expect(message.event.re).toBe(getThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.user.getThreds);
-      const threds = Events.valueNamed(message.event, 'threds');
+      const threds: any[] = Events.valueNamed(message.event, 'threds');
       expect(threds).length(2);
       expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
       expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
+      threds.every((thred) => {
+        expect(thred.meta.label).toBeDefined();
+      });
+      threds.every((thred) => {
+        expect(thred.lastUpdateTime).toBeGreaterThan(0);
+      });
       expect(
         threds.map((thred: { currentReaction: { reactionName: string } }) => thred.currentReaction.reactionName),
       ).toContain('event1Reaction');

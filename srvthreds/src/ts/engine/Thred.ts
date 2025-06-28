@@ -113,6 +113,11 @@ export class Thred {
     const { id, pattern, thredContext } = thredStore;
     // get the next reaction (if any)
     thredStore.transitionTo(pattern.nextReaction(thredStore.currentReaction, transition));
+    thredStore.updateMeta({
+      label: currentEvent?.data?.title || pattern.name,
+      description: currentEvent?.data?.description || currentEvent?.type,
+      displayUri: currentEvent?.data?.display?.uri,
+    });
     // get the next input event if any
     return thredStore.isActive ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
   }

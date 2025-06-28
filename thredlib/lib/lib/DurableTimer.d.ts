@@ -4,6 +4,7 @@ export declare class DurableTimer {
     private hasFinished;
     private duration;
     private finished;
+    private _onFinished;
     start(duration: number, finished: () => void): void;
     resume(): void;
     stop(): void;

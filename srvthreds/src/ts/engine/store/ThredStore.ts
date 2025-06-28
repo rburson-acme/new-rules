@@ -16,6 +16,12 @@ import { errorCodes, errorKeys, Thred, ThredStatus } from '../../thredlib/index.
 export class ThredStore {
   // @TODO thredContext should become a pointer to a events in a master log (persisted externally)
   private _currentReaction?: Reaction;
+  private lastUpdateTime: number;
+  private meta: {
+    label?: string;
+    description?: string;
+    displayUri?: string;
+  } = {};
 
   private constructor(
     readonly id: string,
@@ -27,6 +33,7 @@ export class ThredStore {
     private endTime?: number,
   ) {
     const { reactionName } = reactionStore;
+    this.lastUpdateTime = startTime;
     this._currentReaction = reactionName ? pattern.reactionByName(reactionName) : pattern.initialReaction;
     if (!this._currentReaction)
       throw Error(`Pattern ${pattern.name} has no reactions or reaction named ${reactionName}. Cannot start Thred.`);
@@ -40,17 +47,26 @@ export class ThredStore {
   }
 
   transitionTo(reaction?: Reaction): void {
+    const now = Date.now();
     // no transition
     if (this._currentReaction === reaction) return;
     this._currentReaction = reaction;
     this.reactionStore = new ReactionStore({ reactionName: reaction?.name });
+    this.lastUpdateTime = now;
     // thred is finished if there is no reaction
     if (!reaction) {
-      this.endTime = Date.now();
+      this.endTime = now;
       this.status = this.shouldTerminate() ? ThredStatus.TERMINATED : ThredStatus.FINISHED;
     }
   }
 
+  updateMeta(params: { label?: string; description?: string; displayUri?: string }): void {
+    if (params.label) this.meta.label = params.label;
+    if (params.description) this.meta.description = params.description;
+    if (params.displayUri) this.meta.displayUri = params.displayUri;
+  }
+
+  // This is the proper way to get the current reaction
   get currentReaction(): Reaction | undefined {
     return this._currentReaction;
   }
@@ -105,6 +121,8 @@ export class ThredStore {
       startTime: this.startTime,
       endTime: this.endTime,
       status: this.status,
+      lastUpdateTime: this.lastUpdateTime,
+      meta: this.meta,
     };
   }
 
@@ -122,6 +140,8 @@ export class ThredStore {
       startTime: this.startTime,
       endTime: this.endTime,
       status: this.status,
+      lastUpdateTime: this.lastUpdateTime,
+      meta: this.meta,
     };
   }
 
@@ -132,7 +152,7 @@ export class ThredStore {
         message: `Pattern ${state.patternId} not loaded for Thred ${state.id}`,
         code: errorCodes[errorKeys.OBJECT_NOT_FOUND].code,
       });
-    return new ThredStore(
+    const thredStore = new ThredStore(
       state.id,
       pattern,
       ReactionStore.fromState(state.reactionStore),
@@ -141,6 +161,9 @@ export class ThredStore {
       state.status,
       state.endTime,
     );
+    thredStore.lastUpdateTime = state.lastUpdateTime;
+    thredStore.updateMeta(state.meta || {});
+    return thredStore;
   }
 
   private shouldTerminate(): boolean {
@@ -157,4 +180,10 @@ export interface ThredStoreState {
   startTime: number;
   status: ThredStatus;
   endTime?: number;
+  lastUpdateTime: number;
+  meta?: {
+    label?: string;
+    description?: string;
+    displayUri?: string;
+  };
 }

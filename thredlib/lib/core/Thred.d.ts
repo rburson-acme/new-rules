@@ -1,4 +1,4 @@
-import { ReactionModel } from "../model/ReactionModel.js";
+import { ReactionModel } from '../model/ReactionModel.js';
 export interface Thred {
     id: string;
     patternId: string;
@@ -9,8 +9,14 @@ export interface Thred {
     };
     broadcastAllowed: boolean;
     startTime: number;
+    lastUpdateTime: number;
     endTime?: number;
     status: ThredStatus;
+    meta: {
+        label?: string;
+        description?: string;
+        displayUri?: string;
+    };
 }
 export declare enum ThredStatus {
     ACTIVE = "a",
