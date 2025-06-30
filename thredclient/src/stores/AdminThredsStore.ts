@@ -54,19 +54,18 @@ export class AdminThredsStore {
   }
 
   get filteredThreds() {
-    //change based on the tab
     switch (this.tab) {
       case 'all':
         return this.threds.filter(thred => {
-          return thred.thred.id.includes(this.searchText);
+          return thred.thred.meta.label?.includes(this.searchText);
         });
       case 'active':
         return this.threds.filter(thred => {
-          return thred.thred.id.includes(this.searchText) && thred.thred.endTime === undefined;
+          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.endTime === undefined;
         });
       case 'inactive':
         return this.threds.filter(thred => {
-          return thred.thred.id.includes(this.searchText) && thred.thred.endTime;
+          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.endTime;
         });
     }
   }

@@ -20,28 +20,29 @@ export const ThredListCard = observer(({ thredStore, thredsStore }: ThredListCar
     fonts: { medium, regular },
   } = useTheme();
 
-  function getLatestEvent() {
-    const eventStores = thredStore.eventsStore?.eventStores;
-    if (!eventStores) return undefined;
-    const latestEvent = eventStores[eventStores?.length - 1]?.event;
+  const thred = thredStore.thred;
 
-    return latestEvent;
+  function getIcon() {
+    if (thred.meta.displayUri) {
+      return thred.meta.displayUri;
+    }
+    return 'https://www.svgrepo.com/show/489126/sensor.svg';
   }
-
-  const latestEvent = getLatestEvent();
-  if (!latestEvent) return null;
-
-  const { source, data, type, time } = latestEvent;
+  function getText() {
+    if (thred.meta.label && thred.meta.description) {
+      return thred.meta.label + ' ' + thred.meta.description;
+    }
+  }
 
   return (
     <Link href={`/threds/${thredStore.thred.id}`}>
       <View style={[styles.containerStyle]}>
-        <ThredIcon uri={data?.display?.uri} />
+        <ThredIcon uri={getIcon()} />
         <View style={styles.textView}>
-          <RegularText style={[styles.dateStyle]}>{time ? formatDateAndTime(time) : ''}</RegularText>
-          <MediumText style={[styles.textStyle]}>
-            {latestEvent.data?.title} {latestEvent.data?.description ? `-- ${latestEvent.data?.description}` : ''}
-          </MediumText>
+          <RegularText style={[styles.dateStyle]}>
+            {thred?.lastUpdateTime ? formatDateAndTime(thred.lastUpdateTime) : ''}
+          </RegularText>
+          <MediumText style={[styles.textStyle]}>{getText()}</MediumText>
         </View>
         {/* Develop some sort of thumbnail to display here when  */}
       </View>

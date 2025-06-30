@@ -8,19 +8,21 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const logo = require('../../assets/initiative-blue.png');
 function SignIn() {
-  const { authStore, connectionStore } = RootStore.get();
+  const { authStore, connectionStore, thredsStore } = RootStore.get();
   const { colors } = useTheme();
 
   const handleMessengerView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('user');
     await connectionStore.connect(authStore.userId);
+    await thredsStore.fetchAllThreds(authStore.userId);
     router.replace('/threds/');
   };
   const handleAdminView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
     await connectionStore.connect(authStore.userId);
+    await thredsStore.fetchAllThreds(authStore.userId);
     router.replace('/threds/');
   };
 
