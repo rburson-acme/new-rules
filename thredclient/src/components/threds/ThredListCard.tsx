@@ -20,24 +20,20 @@ export const ThredListCard = observer(({ thredStore, thredsStore }: ThredListCar
     fonts: { medium, regular },
   } = useTheme();
 
-  const thred = thredStore.thred;
+  const latestEvent = thredStore.eventsStore?.latestEventStore;
 
   function getIcon() {
-    return (
-      thredStore.eventsStore?.eventStores[0]?.event?.data?.display?.uri ||
-      'https://www.svgrepo.com/show/489126/sensor.svg'
-    );
+    return latestEvent?.data?.display?.uri || 'https://www.svgrepo.com/show/489126/sensor.svg';
   }
+
   function getText() {
-    return (
-      thredStore.eventsStore?.eventStores[0]?.event?.data?.title +
-        ' ' +
-        thredStore.eventsStore?.eventStores[0]?.event?.data?.description || thred.id
-    );
+    const description = latestEvent?.data?.description;
+    const title = latestEvent?.data?.title;
+    return title + (description ? ' -- ' + description : '');
   }
 
   function getTime() {
-    return thredStore.eventsStore?.eventStores[0]?.event?.time;
+    return latestEvent?.time;
   }
 
   const time = getTime();
@@ -49,7 +45,6 @@ export const ThredListCard = observer(({ thredStore, thredsStore }: ThredListCar
           <RegularText style={[styles.dateStyle]}>{time ? formatDateAndTime(time) : ''}</RegularText>
           <MediumText style={[styles.textStyle]}>{getText()}</MediumText>
         </View>
-        {/* Develop some sort of thumbnail to display here when  */}
       </View>
     </Link>
   );

@@ -47,6 +47,10 @@ export class EventsStore {
     this.eventStores.push(new EventStore(event, this.rootStore));
   }
 
+  get latestEventStore() {
+    return this.eventStores?.slice(-1)[0]?.event;
+  }
+
   setOpenEventStore(eventStore: EventStore) {
     this.openEventStore = eventStore;
     eventStore.seen = true;

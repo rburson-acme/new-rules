@@ -15,11 +15,12 @@ const ThredView = observer(() => {
   const thredStore = thredsStore.thredStores.find(thredStore => thredStore.thred.id === local.thredId);
 
   const thred = thredStore?.thred;
+  const latestEvent = thredStore?.eventsStore?.eventStores[0]?.event;
 
   useEffect(() => {
     if (!thred) return;
     navigation.setOptions({
-      title: thred.name, // Use the derived name property
+      title: latestEvent?.data?.title,
     });
   }, [navigation, thred]);
 
