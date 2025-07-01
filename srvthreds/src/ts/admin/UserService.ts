@@ -44,6 +44,7 @@ export class UserService {
   /*
     Get threds associated with a given participant 
   */
+  //@TODO this should be done with aggregation support once it's added to the persistence layer
   getThreds = async (args: SystemServiceArgs): Promise<GetUserThredsResult> => {
     const {
       event,
@@ -77,6 +78,8 @@ export class UserService {
         }
       }
     }
+    // sort by last event timestamp
+    results.sort((a, b) => (b.lastEvent?.timestamp ?? 0) - (a.lastEvent?.timestamp ?? 0));
 
     return {
       status: systemEventTypes.successfulStatus,
