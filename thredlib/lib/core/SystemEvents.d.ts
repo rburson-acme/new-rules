@@ -81,7 +81,7 @@ export interface SystemResult {
 export interface GetUserThredsResult extends SystemResult {
     results: Array<{
         thred: Thred;
-        lastEvent: Event | null;
+        lastEvent: EventRecord | null;
     }>;
 }
 export interface GetUserEventsResult extends SystemResult {
