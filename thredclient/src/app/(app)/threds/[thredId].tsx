@@ -6,7 +6,6 @@ import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { observer } from 'mobx-react-lite';
-import { isFullThred } from '@/src/stores/ThredsStore';
 
 const ThredView = observer(() => {
   const local = useLocalSearchParams();
@@ -19,9 +18,10 @@ const ThredView = observer(() => {
 
   useEffect(() => {
     if (!thred) return;
-    const isThredFull = isFullThred(thred);
-    navigation.setOptions({ title: isThredFull ? thred?.meta.label : thred?.name });
-  }, [navigation, thredStore?.eventsStore?.eventStores]);
+    navigation.setOptions({
+      title: thred.name, // Use the derived name property
+    });
+  }, [navigation, thred]);
 
   useEffect(() => {
     if (
