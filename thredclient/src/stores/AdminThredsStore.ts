@@ -61,11 +61,11 @@ export class AdminThredsStore {
         });
       case 'active':
         return this.threds.filter(thred => {
-          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.endTime === undefined;
+          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.status === 'a';
         });
       case 'inactive':
         return this.threds.filter(thred => {
-          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.endTime;
+          return thred.thred.meta.label?.includes(this.searchText) && thred.thred.status === 't';
         });
     }
   }

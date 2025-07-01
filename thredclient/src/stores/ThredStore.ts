@@ -1,14 +1,15 @@
 import { observable, makeObservable, action, runInAction } from 'mobx';
-import { BuiltInEvents, Event, EventHelper, SystemEvents, Thred } from 'thredlib';
+import { BuiltInEvents, Event, EventHelper, SystemEvents } from 'thredlib';
 import { RootStore } from './RootStore';
 import { EventsStore } from './EventsStore';
+import { FlexibleThred } from './ThredsStore';
 
 export class ThredStore {
   eventsStore?: EventsStore = undefined;
   eventsLoaded: boolean = false;
   isLoadingEvents: boolean = false;
 
-  constructor(readonly thred: Thred, readonly rootStore: RootStore) {
+  constructor(readonly thred: FlexibleThred, readonly rootStore: RootStore) {
     makeObservable(this, {
       eventsStore: observable.shallow,
       eventsLoaded: observable,

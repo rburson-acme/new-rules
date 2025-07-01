@@ -1,13 +1,29 @@
 import { observable, action, computed, makeObservable, toJS } from 'mobx';
-import { Event } from 'thredlib';
+import { Event, Thred } from 'thredlib';
 import { RootStore } from './RootStore';
 import { ThredStore } from './ThredStore';
-import { Thred } from '../core/Thred';
 import { SystemEvents } from 'thredlib/lib/core/SystemEvents';
 
+export interface SimpleThred {
+  id: string;
+  name: string;
+}
+
+export type FlexibleThred = SimpleThred | Thred;
+
+export function isFullThred(thred: FlexibleThred): thred is Thred {
+  return 'patternId' in thred && 'status' in thred;
+}
+
+export function isSimpleThred(thred: FlexibleThred): thred is SimpleThred {
+  return !isFullThred(thred);
+}
+
+type ValidTabs = 'active' | 'inactive';
 export class ThredsStore {
   thredStores: ThredStore[] = [];
   searchText: string = '';
+  tab: ValidTabs = 'active';
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -18,6 +34,8 @@ export class ThredsStore {
       searchText: observable,
       setSearchText: action,
       filteredThreds: computed,
+      tab: observable,
+      setTab: action,
     });
   }
 
@@ -35,10 +53,19 @@ export class ThredsStore {
     this.thredStores = threds.map((thred: any) => new ThredStore(thred, this.rootStore));
   }
 
-  addThred(thred: Thred) {
+  setTab(tab: ValidTabs) {
+    this.tab = tab;
+  }
+
+  addThred(thred: FlexibleThred) {
     this.thredStores = [...this.thredStores, new ThredStore(thred, this.rootStore)];
 
     return this.thredStores[this.thredStores.length - 1];
+  }
+
+  addSimpleThred(id: string, name: string) {
+    const simpleThred: SimpleThred = { id, name };
+    return this.addThred(simpleThred);
   }
 
   publish(event: Event) {
@@ -54,9 +81,25 @@ export class ThredsStore {
   }
 
   get filteredThreds() {
-    if (!this.searchText) return this.thredStores;
     return this.thredStores.filter(thredStore => {
-      return thredStore.thred.meta.label?.includes(this.searchText);
+      const thred = thredStore.thred;
+
+      const displayName = isFullThred(thred) ? thred.meta.label || thred.patternName || thred.id : thred.name;
+
+      const matchesSearch = !this.searchText || displayName.toLowerCase().includes(this.searchText.toLowerCase());
+
+      if (isSimpleThred(thred)) {
+        return matchesSearch;
+      }
+
+      switch (this.tab) {
+        case 'active':
+          return matchesSearch && thred.status === 'a';
+        case 'inactive':
+          return matchesSearch && thred.status === 't';
+        default:
+          return matchesSearch;
+      }
     });
   }
 

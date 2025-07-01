@@ -15,14 +15,12 @@ function SignIn() {
     if (!authStore.userId) return;
     authStore.setRole('user');
     await connectionStore.connect(authStore.userId);
-    await thredsStore.fetchAllThreds(authStore.userId);
     router.replace('/threds/');
   };
   const handleAdminView = async () => {
     if (!authStore.userId) return;
     authStore.setRole('admin');
     await connectionStore.connect(authStore.userId);
-    await thredsStore.fetchAllThreds(authStore.userId);
     router.replace('/threds/');
   };
 
