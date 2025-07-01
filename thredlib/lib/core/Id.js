@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-// @TODO get real (fast) ids
+// @TODO get faster ids
 export class Id {
     static get nextEventId() {
         return `evt${this.generate()}`;

@@ -108,13 +108,37 @@ export class SystemController {
     return this.persistence.get({ type: Types.EventRecord, matcher: { thredId, timestamp: { $gt: timestamp } } });
   }
 
-  async getEventsForParticipant(thredId: string, participantId: string): Promise<EventRecord[] | null> {
+  async getEventsForParticipant(participantId: string, thredId: string): Promise<EventRecord[] | null> {
     return this.persistence.get({
       type: Types.EventRecord,
       matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
       collector: { sort: [{ field: 'timestamp' }] },
     });
   }
+
+  async getLastEventForParticipant(participantId: string, thredId: string): Promise<EventRecord | null> {
+    const events = await this.persistence.get<EventRecord>({
+      type: Types.EventRecord,
+      matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
+      collector: { sort: [{ field: 'timestamp', desc: true }], limit: 1 },
+    });
+    return events?.[0] || null;
+  }
+
+  /**
+   * For a given participant, gets the last event for each of the specified threds.
+   *
+   * @param threadIds The IDs of the threds to search.
+   * @param participantId The ID of the participant.
+   * @returns A Promise that resolves to a Map where the key is the thredId and the value is the last EventRecord or undefined if no event was found for that thred.
+   */
+  /*  async getLastEventForEachThreadForParticipant(
+    threadIds: string[],
+    participantId: string,
+  ): Promise<Map<string, EventRecord | undefined>> {
+ 
+    @TODO: Implement after adding aggregation support to persistence layer
+  }*/
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[] | null> {
     return this.persistence.get({

@@ -5,7 +5,16 @@ import { Event, EventTaskParams } from './Event.js';
 import { EventBuilder } from './EventBuilder.js';
 import { Spec } from '../task/Spec.js';
 import { Types } from '../persistence/types.js';
-
+import { Thred } from './Thred.js';
+import { EventRecord } from '../persistence/EventRecord.js';
+/***
+ *     __           _                     __                 _      _____                   _   
+ *    / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    \_   \_ __  _ __  _   _| |_ 
+ *    \ \| | | / __| __/ _ \ '_ ` _ \   /_\ \ \ / / _ \ '_ \| __|    / /\/ '_ \| '_ \| | | | __|
+ *    _\ \ |_| \__ \ ||  __/ | | | | | //__  \ V /  __/ | | | |_  /\/ /_ | | | | |_) | |_| | |_ 
+ *    \__/\__, |___/\__\___|_| |_| |_| \__/   \_/ \___|_| |_|\__| \____/ |_| |_| .__/ \__,_|\__|
+ *        |___/                                                                |_|              
+ */
 export interface SystemEventInputValues {
   readonly op: string;
 }
@@ -44,17 +53,72 @@ export interface ExpireReactionArgs extends SystemEventThredInputValues {
 
 export interface TerminateThreadArgs extends SystemEventThredInputValues {}
 
-export interface GetEventsArgs extends  SystemEventThredInputValues{}
+export interface GetEventsArgs extends SystemEventThredInputValues {}
+
+
+/***
+ *                            __           _                     __                 _      _____                   _   
+ *     /\ /\  ___  ___ _ __  / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    \_   \_ __  _ __  _   _| |_ 
+ *    / / \ \/ __|/ _ \ '__| \ \| | | / __| __/ _ \ '_ ` _ \   /_\ \ \ / / _ \ '_ \| __|    / /\/ '_ \| '_ \| | | | __|
+ *    \ \_/ /\__ \  __/ |    _\ \ |_| \__ \ ||  __/ | | | | | //__  \ V /  __/ | | | |_  /\/ /_ | | | | |_) | |_| | |_ 
+ *     \___/ |___/\___|_|    \__/\__, |___/\__\___|_| |_| |_| \__/   \_/ \___|_| |_|\__| \____/ |_| |_| .__/ \__,_|\__|
+ *                               |___/                                                                |_|              
+ */
+
+export interface GetUserThredsArgs extends SystemEventInputValues {
+  readonly thredIds?: string[] | undefined;
+  // defaults to active
+  readonly status?: 'active' | 'terminated' | 'all';
+  readonly terminatedMatcher?: EventTaskParams['matcher'];
+}
+
+export interface GetUserEventsArgs extends SystemEventThredInputValues {}
+
+
+/***
+ *     __           _                     __                 _       __      _                      _____                       
+ *    / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    /__\ ___| |_ _   _ _ __ _ __   /__   \_   _ _ __   ___  ___ 
+ *    \ \| | | / __| __/ _ \ '_ ` _ \   /_\ \ \ / / _ \ '_ \| __|  / \/// _ \ __| | | | '__| '_ \    / /\/ | | | '_ \ / _ \/ __|
+ *    _\ \ |_| \__ \ ||  __/ | | | | | //__  \ V /  __/ | | | |_  / _  \  __/ |_| |_| | |  | | | |  / /  | |_| | |_) |  __/\__ \
+ *    \__/\__, |___/\__\___|_| |_| |_| \__/   \_/ \___|_| |_|\__| \/ \_/\___|\__|\__,_|_|  |_| |_|  \/    \__, | .__/ \___||___/
+ *        |___/                                                                                           |___/|_|              
+ */
+export interface SystemResult {
+  op: string;
+  status: string;
+}
+
+/***
+ *                            __           _                     __                 _       __      _                      _____                       
+ *     /\ /\  ___  ___ _ __  / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    /__\ ___| |_ _   _ _ __ _ __   /__   \_   _ _ __   ___  ___ 
+ *    / / \ \/ __|/ _ \ '__| \ \| | | / __| __/ _ \ '_ ` _ \   /_\ \ \ / / _ \ '_ \| __|  / \/// _ \ __| | | | '__| '_ \    / /\/ | | | '_ \ / _ \/ __|
+ *    \ \_/ /\__ \  __/ |    _\ \ |_| \__ \ ||  __/ | | | | | //__  \ V /  __/ | | | |_  / _  \  __/ |_| |_| | |  | | | |  / /  | |_| | |_) |  __/\__ \
+ *     \___/ |___/\___|_|    \__/\__, |___/\__\___|_| |_| |_| \__/   \_/ \___|_| |_|\__| \/ \_/\___|\__|\__,_|_|  |_| |_|  \/    \__, | .__/ \___||___/
+ *                               |___/                                                                                           |___/|_|              
+ */
+
+export interface GetUserThredsResult extends SystemResult {
+  results: Array<{
+    thred: Thred;
+    lastEvent: Event | null;
+  }>;
+}
+
+export interface GetUserEventsResult extends SystemResult {
+  op: string;
+  status: string;
+  events: EventRecord[] | null;
+}
 
 export class SystemEvents {
-/***
- *       _       _           _         _____ _                  _     ___            _             _ 
- *      /_\   __| |_ __ ___ (_)_ __   /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
- *     //_\\ / _` | '_ ` _ \| | '_ \    / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
- *    /  _  \ (_| | | | | | | | | | |  / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
- *    \_/ \_/\__,_|_| |_| |_|_|_| |_|  \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
- *                                                                                                   
- */
+  /***
+   *       _       _           _         _____ _                  _     ___            _             _
+   *      /_\   __| |_ __ ___ (_)_ __   /__   \ |__  _ __ ___  __| |   / __\___  _ __ | |_ _ __ ___ | |
+   *     //_\\ / _` | '_ ` _ \| | '_ \    / /\/ '_ \| '__/ _ \/ _` |  / /  / _ \| '_ \| __| '__/ _ \| |
+   *    /  _  \ (_| | | | | | | | | | |  / /  | | | | | |  __/ (_| | / /__| (_) | | | | |_| | | (_) | |
+   *    \_/ \_/\__,_|_| |_| |_|_|_| |_|  \/   |_| |_|_|  \___|\__,_| \____/\___/|_| |_|\__|_|  \___/|_|
+   *
+   */
 
   // request to explicitly transition a thred to a new state
   static getTransitionThredEvent(thredId: string, transition: TransitionModel, source: Event['source']) {
@@ -288,19 +352,19 @@ export class SystemEvents {
   }
 
   /***
- *                              ___            _             _     ___           
- *     /\ /\  ___  ___ _ __    / __\___  _ __ | |_ _ __ ___ | |   /___\_ __  ___ 
- *    / / \ \/ __|/ _ \ '__|  / /  / _ \| '_ \| __| '__/ _ \| |  //  // '_ \/ __|
- *    \ \_/ /\__ \  __/ |    / /__| (_) | | | | |_| | | (_) | | / \_//| |_) \__ \
- *     \___/ |___/\___|_|    \____/\___/|_| |_|\__|_|  \___/|_| \___/ | .__/|___/
- *                                                                    |_|        
- */
+   *                              ___            _             _     ___
+   *     /\ /\  ___  ___ _ __    / __\___  _ __ | |_ _ __ ___ | |   /___\_ __  ___
+   *    / / \ \/ __|/ _ \ '__|  / /  / _ \| '_ \| __| '__/ _ \| |  //  // '_ \/ __|
+   *    \ \_/ /\__ \  __/ |    / /__| (_) | | | | |_| | | (_) | | / \_//| |_) \__ \
+   *     \___/ |___/\___|_|    \____/\___/|_| |_|\__|_|  \___/|_| \___/ | .__/|___/
+   *                                                                    |_|
+   */
   static getGetUserThredsEvent(
     source: Event['source'],
-    status?: GetThredsArgs['status'],
+    status?: GetUserThredsArgs['status'],
     terminatedMatcher?: EventTaskParams['matcher'],
   ) {
-    const values: GetThredsArgs = { op: systemEventTypes.operations.user.getThreds, status, terminatedMatcher };
+    const values: GetUserThredsArgs = { op: systemEventTypes.operations.user.getThreds, status, terminatedMatcher };
     return EventBuilder.create({
       type: eventTypes.control.userControl.type,
       thredId: ThredId.SYSTEM,
@@ -312,11 +376,8 @@ export class SystemEvents {
   }
 
   // yes, this is ridiculous, but it actually means what it says
-  static getGetUserEventsEvent(
-    thredId: string,
-    source: Event['source'],
-  ) {
-    const values: GetEventsArgs = { op: systemEventTypes.operations.user.getEvents, thredId };
+  static getGetUserEventsEvent(thredId: string, source: Event['source']) {
+    const values: GetUserEventsArgs = { op: systemEventTypes.operations.user.getEvents, thredId };
     return EventBuilder.create({
       type: eventTypes.control.userControl.type,
       thredId: ThredId.SYSTEM,
@@ -326,5 +387,4 @@ export class SystemEvents {
       .mergeData({ title: 'Run Get User Events' })
       .build();
   }
-
 }

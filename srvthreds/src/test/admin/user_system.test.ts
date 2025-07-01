@@ -7,6 +7,7 @@ import {
   Events,
   SystemEvents,
   Thred,
+  Id,
 } from '../../ts/thredlib/index.js';
 import { createDbFixtures, EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
@@ -58,22 +59,20 @@ describe('user functions system test', function () {
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       expect(await engineConnMan.engine.numThreds).toBe(1);
       expect(message.event.data?.title).toBe('outbound.event0');
-      expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
       thredId1 = message.event.thredId;
     });
-    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource } });
+    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource }, ...{ id: 'userThredTest1' } });
     return pr;
   });
   test('should start an additional Thred', function () {
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {
       expect(await engineConnMan.engine.numThreds).toBe(2);
       expect(message.event.data?.title).toBe('outbound.event0');
-      expect(message.event.re).toBe('0');
       expect(message.to).toContain('outbound.event0.recipient');
       thredId2 = message.event.thredId;
     });
-    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource } });
+    engineConnMan.eventQ.queue({ ...events.event0, ...{ source: userTestSource }, ...{ id: 'userThredTest2' } });
     return pr;
   });
   test('get All Active Threds', async function () {
@@ -83,19 +82,20 @@ describe('user functions system test', function () {
       expect(message.event.re).toBe(getThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.user.getThreds);
-      const threds: any[] = Events.valueNamed(message.event, 'threds');
-      expect(threds).length(2);
-      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
-      threds.every((thred) => {
-        expect(thred.meta.label).toBeDefined();
+      const results: any[] = Events.valueNamed(message.event, 'results');
+      expect(results).length(2);
+      expect(results.map((result: { thred: any }) => result.thred.id)).toContain(thredId1);
+      expect(results.map((result: { thred: any }) => result.thred.id)).toContain(thredId2);
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('userThredTest1');
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('userThredTest2');
+      results.every((result) => {
+        expect(result.thred.meta.label).toBeDefined();
+        expect(result.thred.lastUpdateTime).toBeGreaterThan(0);
+        expect(result.lastEvent).toBeDefined();
       });
-      threds.every((thred) => {
-        expect(thred.lastUpdateTime).toBeGreaterThan(0);
-      });
-      expect(
-        threds.map((thred: { currentReaction: { reactionName: string } }) => thred.currentReaction.reactionName),
-      ).toContain('event1Reaction');
+      expect(results.map((result: { thred: any }) => result.thred.currentReaction.reactionName)).toContain(
+        'event1Reaction',
+      );
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -107,9 +107,10 @@ describe('user functions system test', function () {
       expect(message.event.re).toBe(getThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
-      const threds = Events.valueNamed(message.event, 'threds');
-      expect(threds).length(1);
-      expect(threds[0].id).toBe(thredId0);
+      const results = Events.valueNamed(message.event, 'results');
+      expect(results).length(1);
+      expect(results[0].thred.id).toBe(thredId0);
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('0');
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;
@@ -121,11 +122,14 @@ describe('user functions system test', function () {
       expect(message.event.re).toBe(getThredsEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.getThreds);
-      const threds = Events.valueNamed(message.event, 'threds');
-      expect(threds).length(3);
-      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId1);
-      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId2);
-      expect(threds.map((thred: { id: any }) => thred.id)).toContain(thredId0);
+      const results = Events.valueNamed(message.event, 'results');
+      expect(results).length(3);
+      expect(results.map((result: { thred: any }) => result.thred.id)).toContain(thredId1);
+      expect(results.map((result: { thred: any }) => result.thred.id)).toContain(thredId2);
+      expect(results.map((result: { thred: any }) => result.thred.id)).toContain(thredId0);
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('userThredTest1');
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('userThredTest2');
+      expect(results.map((result: { lastEvent: any }) => result.lastEvent.id)).toContain('0');
     });
     engineConnMan.eventQ.queue(getThredsEvent);
     return pr;

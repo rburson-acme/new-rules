@@ -10,11 +10,13 @@ import {
   Events,
   eventTypes,
   EventValues,
-  GetEventsArgs,
-  GetThredsArgs,
+  GetUserEventsArgs,
+  GetUserThredsArgs,
+  Series,
   StringMap,
-  SystemEventInputValues,
   systemEventTypes,
+  GetUserThredsResult,
+  GetUserEventsResult,
 } from '../thredlib/index.js';
 import { User } from '../thredlib/persistence/User.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
@@ -42,17 +44,20 @@ export class UserService {
   /*
     Get threds associated with a given participant 
   */
-  getThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
+  getThreds = async (args: SystemServiceArgs): Promise<GetUserThredsResult> => {
     const {
       event,
       args: { op, thredIds, status, terminatedMatcher = {} },
-    } = SystemService.getArgs<GetThredsArgs>(args);
+    } = SystemService.getArgs<GetUserThredsArgs>(args);
     const participantId = event.source.id;
-    let threds: any[] = [];
+    let results: any[] = [];
     // status defaults to active
     if (status !== 'terminated') {
       const thredStores = await this.threds.thredsStore.getThredsForParticipant(participantId, thredIds);
-      threds = thredStores.map((thredStore) => thredStore.toJSON());
+      results = await Series.map(thredStores, async (thredStore) => {
+        const lastEvent = await SystemController.get().getLastEventForParticipant(participantId, thredStore.id);
+        return { thred: thredStore.toJSON(), lastEvent };
+      });
     }
     if (status === 'terminated' || status === 'all') {
       // get participant's terminated threds
@@ -63,7 +68,12 @@ export class UserService {
           ...{ id: { $in: user.threds.archived } },
         });
         if (thredRecords?.length) {
-          threds.push(...thredRecords.map((thredRecord) => thredRecord.thred));
+          results.push(
+            ...(await Series.map(thredRecords, async (thredRecord) => {
+              const lastEvent = await SystemController.get().getLastEventForParticipant(participantId, thredRecord.id);
+              return { thred: thredRecord.thred, lastEvent };
+            })),
+          );
         }
       }
     }
@@ -71,22 +81,22 @@ export class UserService {
     return {
       status: systemEventTypes.successfulStatus,
       op,
-      threds,
+      results,
     };
   };
 
-  getEvents = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
+  getEvents = async (args: SystemServiceArgs): Promise<GetUserEventsResult> => {
     const {
       event,
       args: { op, thredId },
-    } = SystemService.getArgs<GetEventsArgs>(args);
+    } = SystemService.getArgs<GetUserEventsArgs>(args);
     if (!thredId) {
       throw EventThrowable.get({
         message: `No thredId supplied for getEvents operation`,
         code: errorCodes[errorKeys.MISSING_ARGUMENT_ERROR].code,
       });
     }
-    const events = await SystemController.get().getEventsForParticipant(thredId, event.source.id);
+    const events = await SystemController.get().getEventsForParticipant(event.source.id, thredId);
     return {
       status: systemEventTypes.successfulStatus,
       op,
