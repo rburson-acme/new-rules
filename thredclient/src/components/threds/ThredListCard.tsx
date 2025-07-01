@@ -23,25 +23,30 @@ export const ThredListCard = observer(({ thredStore, thredsStore }: ThredListCar
   const thred = thredStore.thred;
 
   function getIcon() {
-    if (thred.meta.displayUri) {
-      return thred.meta.displayUri;
-    }
-    return 'https://www.svgrepo.com/show/489126/sensor.svg';
+    return (
+      thredStore.eventsStore?.eventStores[0]?.event?.data?.display?.uri ||
+      'https://www.svgrepo.com/show/489126/sensor.svg'
+    );
   }
   function getText() {
-    if (thred.meta.label && thred.meta.description) {
-      return thred.meta.label + ' ' + thred.meta.description;
-    }
+    return (
+      thredStore.eventsStore?.eventStores[0]?.event?.data?.title +
+        ' ' +
+        thredStore.eventsStore?.eventStores[0]?.event?.data?.description || thred.id
+    );
   }
 
+  function getTime() {
+    return thredStore.eventsStore?.eventStores[0]?.event?.time;
+  }
+
+  const time = getTime();
   return (
     <Link href={`/threds/${thredStore.thred.id}`}>
       <View style={[styles.containerStyle]}>
         <ThredIcon uri={getIcon()} />
         <View style={styles.textView}>
-          <RegularText style={[styles.dateStyle]}>
-            {thred?.lastUpdateTime ? formatDateAndTime(thred.lastUpdateTime) : ''}
-          </RegularText>
+          <RegularText style={[styles.dateStyle]}>{time ? formatDateAndTime(time) : ''}</RegularText>
           <MediumText style={[styles.textStyle]}>{getText()}</MediumText>
         </View>
         {/* Develop some sort of thumbnail to display here when  */}

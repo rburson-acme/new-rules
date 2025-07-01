@@ -1,23 +1,9 @@
-import { observable, action, computed, makeObservable, toJS } from 'mobx';
-import { Event, Thred } from 'thredlib';
+import { observable, action, computed, makeObservable } from 'mobx';
+import { Event } from 'thredlib';
 import { RootStore } from './RootStore';
 import { ThredStore } from './ThredStore';
-import { SystemEvents } from 'thredlib/lib/core/SystemEvents';
-
-export interface SimpleThred {
-  id: string;
-  name: string;
-}
-
-export type FlexibleThred = SimpleThred | Thred;
-
-export function isFullThred(thred: FlexibleThred): thred is Thred {
-  return 'patternId' in thred && 'status' in thred;
-}
-
-export function isSimpleThred(thred: FlexibleThred): thred is SimpleThred {
-  return !isFullThred(thred);
-}
+import { GetUserThredsResult, SystemEvents } from 'thredlib/lib/core/SystemEvents';
+import { Thred } from '../core/Thred';
 
 type ValidTabs = 'active' | 'inactive';
 export class ThredsStore {
@@ -40,7 +26,7 @@ export class ThredsStore {
   }
 
   async fetchAllThreds(userId: string) {
-    const getThredsEvent = SystemEvents.getGetUserThredsEvent({ id: userId, name: userId }, 'active');
+    const getThredsEvent = SystemEvents.getGetUserThredsEvent({ id: userId, name: userId }, 'all');
 
     const thredsEvent = await new Promise<any>((resolve, reject) => {
       this.rootStore.connectionStore.exchange(getThredsEvent, event => {
@@ -48,24 +34,33 @@ export class ThredsStore {
       });
     });
 
-    const threds = thredsEvent.data?.content?.values?.threds || [];
+    const response = thredsEvent.data?.content?.values as GetUserThredsResult;
 
-    this.thredStores = threds.map((thred: any) => new ThredStore(thred, this.rootStore));
+    this.thredStores = response.results.map(result => {
+      console.log({ result });
+      return new ThredStore(
+        { id: result.thred.id, name: result.thred.id, status: result.thred.status },
+        this.rootStore,
+      );
+    });
+    //add latestEvent to thredStore
+    response.results.forEach(result => {
+      const thredStore = this.thredStores.find(thredStore => thredStore.thred.id === result.thred.id);
+      if (thredStore && result.lastEvent) {
+        console.log({ lastEvent: result.lastEvent });
+        thredStore.addEvent(result.lastEvent);
+      }
+    });
   }
 
   setTab(tab: ValidTabs) {
     this.tab = tab;
   }
 
-  addThred(thred: FlexibleThred) {
+  addThred(thred: Thred) {
     this.thredStores = [...this.thredStores, new ThredStore(thred, this.rootStore)];
 
     return this.thredStores[this.thredStores.length - 1];
-  }
-
-  addSimpleThred(id: string, name: string) {
-    const simpleThred: SimpleThred = { id, name };
-    return this.addThred(simpleThred);
   }
 
   publish(event: Event) {
@@ -83,14 +78,10 @@ export class ThredsStore {
   get filteredThreds() {
     return this.thredStores.filter(thredStore => {
       const thred = thredStore.thred;
+      const lastEvent = thredStore.eventsStore?.eventStores[0]?.event;
 
-      const displayName = isFullThred(thred) ? thred.meta.label || thred.patternName || thred.id : thred.name;
-
-      const matchesSearch = !this.searchText || displayName.toLowerCase().includes(this.searchText.toLowerCase());
-
-      if (isSimpleThred(thred)) {
-        return matchesSearch;
-      }
+      const displayName = lastEvent?.data?.title;
+      const matchesSearch = !this.searchText || displayName?.toLowerCase().includes(this.searchText.toLowerCase());
 
       switch (this.tab) {
         case 'active':

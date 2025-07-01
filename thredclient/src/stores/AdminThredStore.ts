@@ -24,8 +24,6 @@ export class AdminThredStore {
       this.fetchPattern(userId, this.thred.patternId),
       this.fetchEvents(userId, this.thred.id),
       this.fetchThredLogs(userId, this.thred.id),
-      // TODO: GET THIS FASTER...
-      // TODO: Fetch these when clicking into a thred, not on the scree
     ]);
 
     //attach thredLogs to events

@@ -2,14 +2,14 @@ import { observable, makeObservable, action, runInAction } from 'mobx';
 import { BuiltInEvents, Event, EventHelper, SystemEvents } from 'thredlib';
 import { RootStore } from './RootStore';
 import { EventsStore } from './EventsStore';
-import { FlexibleThred } from './ThredsStore';
+import { Thred } from '../core/Thred';
 
 export class ThredStore {
   eventsStore?: EventsStore = undefined;
   eventsLoaded: boolean = false;
   isLoadingEvents: boolean = false;
 
-  constructor(readonly thred: FlexibleThred, readonly rootStore: RootStore) {
+  constructor(readonly thred: Thred, readonly rootStore: RootStore) {
     makeObservable(this, {
       eventsStore: observable.shallow,
       eventsLoaded: observable,
@@ -41,7 +41,7 @@ export class ThredStore {
       name: userId,
     });
 
-    this.rootStore.connectionStore.exchange(terminateThredEvent, event => {
+    this.rootStore.connectionStore.exchange(terminateThredEvent, () => {
       // For now, we just remove the thred from the thredStore and unselect it
       this.rootStore.adminThredsStore.removeThred(this.thred.id);
 

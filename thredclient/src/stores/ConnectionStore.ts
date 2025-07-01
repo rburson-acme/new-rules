@@ -1,4 +1,4 @@
-import { Logger, EventManager, Event } from 'thredlib';
+import { Logger, EventManager, Event, ThredStatus } from 'thredlib';
 import { RootStore } from './RootStore';
 import { Platform } from 'react-native';
 
@@ -17,11 +17,16 @@ export class ConnectionStore {
 
   consume = (event: Event) => {
     const { thredId } = event;
+    console.log({ event });
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
     if (event.data?.title?.includes('System Event')) return;
     if (!thredStore) {
-      const thredStore = this.rootStore.thredsStore.addThred({ id: thredId, name: thredId });
+      const thredStore = this.rootStore.thredsStore.addThred({
+        id: thredId,
+        name: thredId,
+        status: ThredStatus.ACTIVE,
+      });
       thredStore.addEvent(event);
     } else {
       thredStore.addEvent(event);
