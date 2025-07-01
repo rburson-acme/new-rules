@@ -1,29 +1,52 @@
 import { Thred } from '@/src/components/threds/Thred';
+import { Spinner } from '@/src/components/common/Spinner';
 import { RootStore } from '@/src/stores/RootStore';
 import { useNavigation } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { useEffect } from 'react';
+import { View } from 'react-native';
+import { observer } from 'mobx-react-lite';
+import { isFullThred } from '@/src/stores/ThredsStore';
 
-export default function ThredView() {
+const ThredView = observer(() => {
   const local = useLocalSearchParams();
 
   const navigation = useNavigation();
   const { thredsStore } = RootStore.get();
   const thredStore = thredsStore.thredStores.find(thredStore => thredStore.thred.id === local.thredId);
 
-  function getLatestEvent() {
-    const eventStores = thredStore?.eventsStore?.eventStores;
-    if (!eventStores) return undefined;
-    const latestEvent = eventStores[eventStores?.length - 1].event;
-
-    return latestEvent;
-  }
+  const thred = thredStore?.thred;
 
   useEffect(() => {
-    navigation.setOptions({ title: getLatestEvent()?.data?.title });
-  }, [navigation]);
+    if (!thred) return;
+    const isThredFull = isFullThred(thred);
+    navigation.setOptions({ title: isThredFull ? thred?.meta.label : thred?.name });
+  }, [navigation, thredStore?.eventsStore?.eventStores]);
+
+  useEffect(() => {
+    if (
+      thredStore &&
+      !thredStore.eventsLoaded &&
+      !thredStore.isLoadingEvents &&
+      !thredStore.eventsStore?.eventStores.length
+    ) {
+      thredStore.fetchEvents().catch(error => {
+        console.error('Failed to fetch events for thred:', error);
+      });
+    }
+  }, [thredStore]);
 
   if (!thredStore) return null;
 
+  if (thredStore.isLoadingEvents) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Spinner />
+      </View>
+    );
+  }
+
   return <Thred thredStore={thredStore} thredsStore={thredsStore} />;
-}
+});
+
+export default ThredView;

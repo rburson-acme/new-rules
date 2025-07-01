@@ -4,17 +4,27 @@ import { View } from 'react-native';
 import { Button } from '@/src/components/common/Button';
 import SearchBar from '@/src/components/common/SearchBar';
 import { AdminThredList } from './AdminThredList';
-import { AdminListTabs } from './AdminListTabs';
+import { TabItem, Tabs } from '../../common/Tabs';
 
 type AdminThredsView = {
   adminThredsStore: AdminThredsStore;
 };
+const tabs: TabItem[] = [
+  { key: 'active', label: 'Active' },
+  { key: 'inactive', label: 'Inactive' },
+  { key: 'all', label: 'All' },
+];
 
 export const AdminThredsView = observer(({ adminThredsStore }: AdminThredsView) => {
   return (
     <>
       <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, gap: 16 }}>
-        <AdminListTabs adminThredsStore={adminThredsStore} />
+        <Tabs
+          tabs={tabs}
+          activeTab={adminThredsStore.tab}
+          onTabChange={tabKey => adminThredsStore.setTab(tabKey as any)}
+          style={{ justifyContent: 'space-around' }}
+        />
         <SearchBar
           value={adminThredsStore.searchText}
           onChange={value => {

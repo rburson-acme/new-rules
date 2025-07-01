@@ -8,7 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const logo = require('../../assets/initiative-blue.png');
 function SignIn() {
-  const { authStore, connectionStore } = RootStore.get();
+  const { authStore, connectionStore, thredsStore } = RootStore.get();
   const { colors } = useTheme();
 
   const handleMessengerView = async () => {

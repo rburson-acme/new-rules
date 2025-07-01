@@ -1,15 +1,20 @@
-import { observable, makeObservable } from 'mobx';
-import { BuiltInEvents, Event, SystemEvents } from 'thredlib';
+import { observable, makeObservable, action, runInAction } from 'mobx';
+import { BuiltInEvents, Event, EventHelper, SystemEvents } from 'thredlib';
 import { RootStore } from './RootStore';
-import { Thred } from '../core/Thred';
 import { EventsStore } from './EventsStore';
+import { FlexibleThred } from './ThredsStore';
 
 export class ThredStore {
   eventsStore?: EventsStore = undefined;
+  eventsLoaded: boolean = false;
+  isLoadingEvents: boolean = false;
 
-  constructor(readonly thred: Thred, readonly rootStore: RootStore) {
+  constructor(readonly thred: FlexibleThred, readonly rootStore: RootStore) {
     makeObservable(this, {
       eventsStore: observable.shallow,
+      eventsLoaded: observable,
+      isLoadingEvents: observable,
+      fetchEvents: action,
     });
 
     this.eventsStore = new EventsStore(rootStore);
@@ -41,6 +46,45 @@ export class ThredStore {
       this.rootStore.adminThredsStore.removeThred(this.thred.id);
 
       this.rootStore.thredsStore.removeThred(this.thred.id);
+    });
+  };
+
+  // Lazy loading method to fetch events for this thred
+  fetchEvents = async (): Promise<void> => {
+    if (this.eventsLoaded || this.isLoadingEvents) return; // Don't fetch if already loaded or loading
+
+    const userId = this.rootStore.authStore.userId;
+    if (!userId) throw Error('userId not found');
+
+    this.isLoadingEvents = true;
+
+    return new Promise<void>((resolve, reject) => {
+      const getEventsEvent = SystemEvents.getGetUserEventsEvent(this.thred.id, {
+        id: userId,
+        name: userId,
+      });
+
+      this.rootStore.connectionStore.exchange(getEventsEvent, event => {
+        try {
+          const eventHelper = new EventHelper(event);
+          const events = eventHelper.valueNamed('events') || [];
+          events.forEach((eventRecord: any) => {
+            if (eventRecord.event) {
+              this.addEvent(eventRecord.event);
+            }
+          });
+
+          this.eventsLoaded = true;
+          resolve();
+        } catch (error) {
+          console.error('Failed to fetch events for thred:', error);
+          reject(error);
+        } finally {
+          runInAction(() => {
+            this.isLoadingEvents = false;
+          });
+        }
+      });
     });
   };
 }

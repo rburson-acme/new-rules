@@ -27,6 +27,7 @@ function ThredManagerList() {
   }, [navigation]);
 
   const { colors } = useTheme();
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {adminThredsStore.isComplete ? <AdminThredsView adminThredsStore={adminThredsStore} /> : <Spinner />}
