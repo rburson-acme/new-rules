@@ -17,7 +17,6 @@ export class ConnectionStore {
 
   consume = (event: Event) => {
     const { thredId } = event;
-    console.log({ event });
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
     if (event.data?.title?.includes('System Event')) return;
