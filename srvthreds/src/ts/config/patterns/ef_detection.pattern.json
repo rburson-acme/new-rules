@@ -1,0 +1,214 @@
+{
+  "meta": {
+    "active": true
+  },
+  "name": "Enemy Forces Detection",
+  "id": "ef_detect",
+  "reactions": [
+    {
+      "name": "notify_participants",
+      "allowedSources": ["sensor_agent0"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.sensor.detectionEvent'",
+        "onTrue": {
+          "xpr": "$setLocal('sensor_data', { 'sensorId': $valueNamed('sensorId'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Possible Contact Detected",
+            "description": "$xpr( 'Sensor ' & $valueNamed('sensorId') & ' has detected a possible contact at coordinates: ' & $local('sensor_data').latitude & ', ' & $local('sensor_data').longitude )",
+            "display": { "uri": "https://www.svgrepo.com/show/489126/sensor.svg" },
+            "advice": {
+              "title": "Possible Contact Detected",
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "ef_notification",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "Contact Detected",
+                                "latitude": "$xpr( $local('sensor_data').latitude  )",
+                                "longitude": "$xpr( $local('sensor_data').longitude )"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "input": {
+                            "type": "boolean",
+                            "name": "deploy_robot_response",
+                            "display": "Would you like to deploy a robot to investigate?",
+                            "set": [
+                              {
+                                "display": "Yes",
+                                "value": true
+                              },
+                              {
+                                "display": "No",
+                                "value": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$group0"
+        }
+      }
+    },
+    {
+      "name": "dispatch_robot",
+      "allowedSources": "$group0",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('deploy_robot_response') = true",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Deploy Robot",
+            "content": {
+              "tasks": [
+                {
+                  "name": "deploy_robot",
+                  "op": "update",
+                  "params": {
+                    "type": "Param",
+                    "matcher": {
+                      "id": "robot_id_0"
+                    },
+                    "values": {
+                      "routine": "nav_path_1",
+                      "location": {
+                        "latitude": "$xpr( $local('sensor_data').latitude )",
+                        "longitude": "$xpr( $local('sensor_data').longitude )"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "publish": {
+          "to": "org.wt.robot"
+        }
+      }
+    },
+    {
+      "name": "notify_robot_deployed",
+      "allowedSources": ["/org\\.wt\\.robot.*/"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.robot'",
+        "onTrue": {
+          "xpr": "$setLocal('robot_data', { 'robotId': $valueNamed('robotId'), 'videoStreamUrl': $valueNamed('videoStreamUrl'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Robot Deployed",
+            "description": "$xpr( 'Robot ' & $local('robot_data').robotId & ' has been deployed to investigate the contact at coordinates: ' & $local('sensor_data').latitude & ', ' & $local('sensor_data').longitude )",
+            "display": { "uri": "robot.png" },
+            "advice": {
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "ef_notification",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "Robot Location",
+                                "latitude": "$xpr( $local('robot_data').latitude  )",
+                                "longitude": "$xpr( $local('robot_data').longitude )"
+                              },
+                              {
+                                "name": "Contact Detected",
+                                "latitude": "$xpr( $local('sensor_data').latitude  )",
+                                "longitude": "$xpr( $local('sensor_data').longitude )"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "input": {
+                            "type": "boolean",
+                            "name": "video_stream_response",
+                            "display": "Would you like to open the robot's video stream?",
+                            "set": [
+                              {
+                                "display": "Yes",
+                                "value": true
+                              },
+                              {
+                                "display": "No",
+                                "value": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$group0"
+        }
+      }
+    },
+    {
+      "name": "send_video",
+      "allowedSources": "$group0",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('video_stream_response') = true",
+        "transform": {
+          "eventDataTemplate": {
+            "display": { "uri": "https://www.svgrepo.com/show/535721/video-camera.svg" },
+            "title": "Robot Video Stream",
+            "advice": {
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "ef_video",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "video": {
+                            "uri": "https://videos.pexels.com/video-files/3764259/3764259-hd_1280_720_60fps.mp4"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$group0"
+        }
+      }
+    }
+  ]
+}

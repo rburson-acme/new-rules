@@ -126,6 +126,7 @@ Microservices architecture:
 - `src/index.ts`: Main service entry point, demonstrates full system setup
 - `src/ts/engine/Engine.ts`: Core event processing logic
 - `src/ts/engine/Threds.ts`: Multi-thred orchestration and locking
+- `src/ts/engine/Thred.ts`: Applies state transitions to Thred at a time
 - `src/ts/thredlib/core/Event.ts`: Event data structure definitions
 - `src/test/testUtils.ts`: Essential testing utilities and patterns
 

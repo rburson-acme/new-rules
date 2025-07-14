@@ -1,3 +1,4 @@
+import { SystemThreds } from '../../ts/admin/SystemThreds.js';
 import {
   Logger,
   LoggerLevel,
@@ -20,6 +21,7 @@ describe('watch threds admin test', function () {
 
   test('should successfully register for thred notifications using watchThreds', async function () {
     const watchThredsEvent = SystemEvents.getWatchThredsEvent(adminTestSource);
+    watchEventId = watchThredsEvent.id;
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
       expect(message.event.type).toBe('org.wt.tell');
       expect(message.event.re).toBe(watchThredsEvent.id);
@@ -55,6 +57,7 @@ describe('watch threds admin test', function () {
             addressToArray(message.to).includes(adminTestSource.id) &&
             Events.valueNamed(message.event, 'threds')
           ) {
+            expect(message.event.re).toBe(watchEventId);
             const threds = Events.valueNamed(message.event, 'threds');
             expect(threds).toBeDefined();
             expect(threds.length).toBeGreaterThan(0);
@@ -98,6 +101,7 @@ describe('watch threds admin test', function () {
           ) {
             Logger.debug(`Received notification: ${JSON.stringify(message.event)}`);
             // Check for notification event - this is
+            expect(message.event.re).toBe(watchEventId);
             const threds = Events.valueNamed(message.event, 'threds');
             expect(threds).toBeDefined();
             expect(threds).toBeDefined();
@@ -119,6 +123,20 @@ describe('watch threds admin test', function () {
       ];
     });
     engineConnMan.eventQ.queue({ ...events.event1, thredId });
+    return pr;
+  });
+
+  test('should successfully renew thred notifications using watchThreds with renew directive', async function () {
+    const renewEvent = SystemEvents.getWatchThredsEvent(adminTestSource, 'renew');
+    const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, (message: Message) => {
+      expect(message.event.type).toBe('org.wt.tell');
+      expect(message.event.re).toBe(renewEvent.id);
+      expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
+      expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.watchThreds);
+      expect(Events.assertSingleValues(message.event).directive).toBe('renew');
+    });
+
+    engineConnMan.eventQ.queue(renewEvent);
     return pr;
   });
 
@@ -144,3 +162,4 @@ describe('watch threds admin test', function () {
 
 let engineConnMan: EngineConnectionManager;
 let thredId: string | undefined;
+let watchEventId: string | undefined;

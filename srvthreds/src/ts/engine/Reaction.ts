@@ -37,7 +37,6 @@ export class Reaction {
     if (reactionModel.permissions) this.permissions = new Permissions(reactionModel.permissions);
   }
 
-  // @TODO - catch failures here and notify admin and relevant participant(s)
   async apply(event: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
     if (!this.authorize(event)) return undefined;
     const { condition } = this;

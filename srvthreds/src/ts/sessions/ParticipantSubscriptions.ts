@@ -156,6 +156,17 @@ export class ParticipantSubscriptions {
   }
 
   /**
+   * Stops the automatic subscription timeout cleanup timer.
+   * Once stopped, expired subscriptions will no longer be automatically removed.
+   * Useful for shutdown scenarios or when manual cleanup control is needed.
+   *
+   * @public
+   */
+  stopSubscriptionChecks(): void {
+    this.timeoutTimer.stop();
+  }
+
+  /**
    * Internal method called by timeoutTimer to clean up expired subscriptions.
    * Identifies and removes subscriptions older than the specified threshold.
    *
@@ -177,16 +188,5 @@ export class ParticipantSubscriptions {
       // Remove expired subscriptions
       this.removeSubscriptionsOfType(participantId, type);
     }
-  }
-
-  /**
-   * Stops the automatic subscription timeout cleanup timer.
-   * Once stopped, expired subscriptions will no longer be automatically removed.
-   * Useful for shutdown scenarios or when manual cleanup control is needed.
-   *
-   * @public
-   */
-  stopSubscriptionChecks(): void {
-    this.timeoutTimer.stop();
   }
 }

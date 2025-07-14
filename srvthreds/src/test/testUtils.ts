@@ -21,7 +21,7 @@ import SessionAgent from '../ts/agent/session/SessionAgent.js';
 import { SystemController } from '../ts/persistence/controllers/SystemController.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
-import sessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
+import defaultSessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
 import resolverConfig from '../ts/config/simple_test_resolver_config.json';
 import { UserController } from '../ts/persistence/controllers/UserController.js';
 EngineConfig.engineConfig = engineConfig;
@@ -189,14 +189,21 @@ export const createDbFixtures = async () => {
 
 // initializes an engine instance with the given patternModels
 export class EngineConnectionManager {
-  static async newEngineInstance(patternModels: PatternModel[]): Promise<EngineConnectionManager> {
+  static async newEngineInstance(
+    patternModels: PatternModel[],
+    sessionModel?: SessionsModel,
+  ): Promise<EngineConnectionManager> {
     const eventService = await RemoteQService.newInstance<Event>({
       qBroker: new RemoteQBroker(config),
       subName: 'sub_event',
       pubName: 'pub_event',
     });
     const eventQ = new EventQ(eventService);
-    const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(
+      sessionModel || defaultSessionsModel,
+      resolverConfig,
+      new SessionStorage(StorageFactory.getStorage()),
+    );
     if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     const engine = new Engine(eventQ);
     await engine.start({ patternModels });

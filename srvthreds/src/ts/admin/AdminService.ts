@@ -145,7 +145,7 @@ export class AdminService {
     } else if (directive === 'stop') {
       this.notificationHandler.unregisterForNotification(sourceId);
     } else {
-      this.notificationHandler.registerForNotification(sourceId, event.re);
+      this.notificationHandler.registerForNotification(sourceId, event.id);
     }
     return { status: systemEventTypes.successfulStatus, op, directive };
   };
