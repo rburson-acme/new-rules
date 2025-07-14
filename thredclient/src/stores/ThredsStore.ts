@@ -37,18 +37,15 @@ export class ThredsStore {
     const response = thredsEvent.data?.content?.values as GetUserThredsResult;
 
     this.thredStores = response.results.map(result => {
-      console.log({ result });
       return new ThredStore(
         { id: result.thred.id, name: result.thred.id, status: result.thred.status },
         this.rootStore,
       );
     });
-    //add latestEvent to thredStore
     response.results.forEach(result => {
       const thredStore = this.thredStores.find(thredStore => thredStore.thred.id === result.thred.id);
       if (thredStore && result.lastEvent) {
-        console.log({ lastEvent: result.lastEvent });
-        thredStore.addEvent(result.lastEvent);
+        thredStore.addEvent(result.lastEvent.event);
       }
     });
   }
