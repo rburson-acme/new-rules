@@ -1,6 +1,6 @@
 {
   "meta": {
-    "active": false
+    "active": true
   },
   "name": "UAV Detection",
   "id": "uav_detect",
