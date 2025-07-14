@@ -99,7 +99,7 @@ const robotData = {
 
 // create a base builder with the common parameters
 const sensorEvent = EventBuilder.create({
-  type: 'org.wt.sensor.detectionEvent',
+  type: 'org.cmi2.sensor.detectionEvent',
   source: { id: 'sensor_agent0', name: 'Sensor Agent 1' },
 })
   .mergeValues(sensorData)
