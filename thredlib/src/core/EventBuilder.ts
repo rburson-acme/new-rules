@@ -1,4 +1,4 @@
-import { Event, EventData, EventError, EventTask, InlineItem, Resource } from "./Event.js";
+import { Event, EventContent, EventData, EventError, EventTask, InlineItem, Resource } from "./Event.js";
 import { Events, NewEventParams } from "./Events.js";
 
 export class EventBuilder {
@@ -27,8 +27,18 @@ export class EventBuilder {
         return this;
     }
 
+    mergeContent(content: EventContent): EventBuilder {
+        this.event = Events.mergeContent(content, this.event) as NewEventParams;
+        return this;
+    }   
+
     mergeValues(values: Record<string, any> | Record<string, any>[]): EventBuilder {
         this.event = Events.mergeValues(values, this.event) as NewEventParams;
+        return this;
+    }
+
+    mergeValuesType(valuesType: string): EventBuilder {
+        this.event = Events.mergeValuesType(valuesType, this.event) as NewEventParams;
         return this;
     }
 

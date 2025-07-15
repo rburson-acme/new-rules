@@ -32,8 +32,16 @@ export class Events {
     return deepMerge(event, { data });
   }
 
+  static mergeContent(content: EventContent, event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content } });
+  }
+
   static mergeValues(values: Record<string, any> | Record<string, any>[], event: Partial<Event>): Partial<Event> {
     return deepMerge(event, { data: { content: { values } } });
+  }
+  
+  static mergeValuesType(valuesType: string, event: Partial<Event>): Partial<Event> {
+    return deepMerge(event, { data: { content: { valuesType } } });
   }
 
   static mergeTasks(tasks: EventTask | EventTask[], event: Partial<Event>): Partial<Event> {
@@ -68,6 +76,10 @@ export class Events {
 
   static getValues(event: Event): EventContent['values'] | undefined {
     return this.getContent(event)?.values;
+  }
+
+  static getValuesType(event: Event): EventContent['valuesType'] | undefined {
+    return this.getContent(event)?.valuesType;
   }
 
   static getTasks(event: Event): EventContent['tasks'] | undefined {

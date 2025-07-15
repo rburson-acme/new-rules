@@ -19,8 +19,16 @@ export class EventBuilder {
         this.event = Events.mergeData(data, this.event);
         return this;
     }
+    mergeContent(content) {
+        this.event = Events.mergeContent(content, this.event);
+        return this;
+    }
     mergeValues(values) {
         this.event = Events.mergeValues(values, this.event);
+        return this;
+    }
+    mergeValuesType(valuesType) {
+        this.event = Events.mergeValuesType(valuesType, this.event);
         return this;
     }
     mergeTasks(tasks) {

@@ -10,6 +10,7 @@ import { System } from './System.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { ThredsStore } from './store/ThredsStore.js';
 import { BuiltInReaction } from './builtins/BuiltInReaction.js';
+import { Effects } from './effects/Effects.js';
 
 /**
  * The Thred class is responsible for processing an Event through a series of state transitions (reactions).
@@ -44,10 +45,12 @@ export class Thred {
         L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`));
         break transitionLoop;
       }
+      // run any effects
+      await Effects.run(inputEvent, thredStore, threds);
       // attempt state change and retrieve next input
       inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
-      // note thredStore may be updated with a new reaction
+      // log the transition if any - thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug(
         L.h2(

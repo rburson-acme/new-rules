@@ -45,6 +45,8 @@ export abstract class Condition {
       : debug(h2(`${this.constructor.name} for thredId: ${thredStore.id} DID NOT match event: ${event.id}`));
     return result;
   }
+
+  // returns true if the condition is satisfied, otherwise returns undefined
   protected abstract applyCondition(event: Event, thredStore: ThredStore): Promise<ConditionResult | undefined>;
 
   abstract test(event: Event, context: ThredContext): Promise<boolean>;

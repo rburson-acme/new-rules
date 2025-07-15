@@ -32,6 +32,11 @@ export interface PatternModel extends Persistent {
      */
     broadcastAllowed?: boolean;
     /**
+     * Whether or not participants responses are echoed to the Thred
+     * @property {boolean} echoResponses
+     */
+    echoResponses?: boolean;
+    /**
      * Reactions represent thred states
      * @property {ReactionModel[]} reactions
      */

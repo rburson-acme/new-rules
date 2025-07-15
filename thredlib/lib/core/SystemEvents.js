@@ -153,7 +153,6 @@ export class SystemEvents {
             .build();
     }
     static getUpdatePatternEvent(patternId, source, updateValues) {
-        console.log({ updateValues });
         return EventBuilder.create({
             type: eventTypes.control.dataControl.type,
             thredId: ThredId.SYSTEM,

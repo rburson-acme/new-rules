@@ -14,6 +14,7 @@ export class Pattern {
   // @todo needs impl - number of simultaneous thred instances allowed (0 default no limit)
   readonly maxInstances?: number;
   readonly broadcastAllowed: boolean = false;
+  readonly echoResponses: boolean = false;
   private readonly reactionModelByName: StringMap<ReactionModel>;
 
   /*
@@ -26,6 +27,7 @@ export class Pattern {
     this.instanceInterval = patternModel.instanceInterval;
     this.maxInstances = patternModel.maxInstances;
     this.broadcastAllowed = patternModel.broadcastAllowed === true;
+    this.echoResponses = patternModel.echoResponses === true;
     this.reactionModelByName = patternModel.reactions.reduce((accum: StringMap<ReactionModel>, reaction, index) => {
       const name = reaction.name ?? this.getReactionNameForIndex(index);
       if (accum[name]) throw Error('Reactions must have unique names (check for duplicates)');

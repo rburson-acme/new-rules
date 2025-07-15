@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Event, Events, EventThrowable, eventTypes } from '../../thredlib';
+import { BroadcastCastMessage, errorCodes, errorKeys, Event, Events, EventThrowable, eventTypes } from '../../thredlib';
 import { Events as LocalEvents } from '../Events';
 import { MessageTemplate } from '../MessageTemplate';
 import { ReactionResult } from '../Reaction';
@@ -32,13 +32,16 @@ export class BuiltInReaction {
             });
           }
           // make the new event
-          const _values = { ...Events.getValues(event), messageSource: event.source };
+          const content: BroadcastCastMessage = {
+            valuesType: 'broadcastMessage',
+            values: { ...Events.getValues(event), messageSource: event.source },
+          };
           const newEvent = LocalEvents.baseSystemEventBuilder({
             thredId: thredStore.id,
             type: eventTypes.system.broadcast.type,
           })
-            .mergeValues(_values)
             .mergeData({ title: `Message from ${sourceId}` })
+            .mergeContent(content)
             .build();
 
           // don't broadcast to the source of the message

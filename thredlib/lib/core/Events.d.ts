@@ -4,7 +4,9 @@ export declare class Events {
     static newEvent(params: NewEventParams): Event;
     static mergeEvent(params: Partial<Event>, event: Partial<Event>): Partial<Event>;
     static mergeData(data: EventData, event: Partial<Event>): Partial<Event>;
+    static mergeContent(content: EventContent, event: Partial<Event>): Partial<Event>;
     static mergeValues(values: Record<string, any> | Record<string, any>[], event: Partial<Event>): Partial<Event>;
+    static mergeValuesType(valuesType: string, event: Partial<Event>): Partial<Event>;
     static mergeTasks(tasks: EventTask | EventTask[], event: Partial<Event>): Partial<Event>;
     static mergeResources(resources: Resource[], event: Partial<Event>): Partial<Event>;
     static mergeInlineContent(items: InlineItem[], event: Partial<Event>): Partial<Event>;
@@ -13,6 +15,7 @@ export declare class Events {
     static getAdvice(event: Event): EventData['advice'] | undefined;
     static getContent(event: Event): EventContent | undefined;
     static getValues(event: Event): EventContent['values'] | undefined;
+    static getValuesType(event: Event): EventContent['valuesType'] | undefined;
     static getTasks(event: Event): EventContent['tasks'] | undefined;
     static getResources(event: Event): EventContent['resources'] | undefined;
     static getInlineContent(event: Event): EventContent['items'] | undefined;

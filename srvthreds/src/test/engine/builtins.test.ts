@@ -87,10 +87,6 @@ const patternModels: PatternModel[] = [
           publish: {
             to: ['participant3'],
           },
-          // don't terminate the thred because we need it to remain active in order to broadcast
-          transition: {
-            name: '$noTransition',
-          },
         },
       },
     ],

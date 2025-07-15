@@ -26,8 +26,14 @@ export class Events {
     static mergeData(data, event) {
         return deepMerge(event, { data });
     }
+    static mergeContent(content, event) {
+        return deepMerge(event, { data: { content } });
+    }
     static mergeValues(values, event) {
         return deepMerge(event, { data: { content: { values } } });
+    }
+    static mergeValuesType(valuesType, event) {
+        return deepMerge(event, { data: { content: { valuesType } } });
     }
     static mergeTasks(tasks, event) {
         return deepMerge(event, { data: { content: { tasks: [tasks] } } });
@@ -53,6 +59,9 @@ export class Events {
     }
     static getValues(event) {
         return this.getContent(event)?.values;
+    }
+    static getValuesType(event) {
+        return this.getContent(event)?.valuesType;
     }
     static getTasks(event) {
         return this.getContent(event)?.tasks;
