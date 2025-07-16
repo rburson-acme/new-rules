@@ -20,7 +20,7 @@ export interface ConditionModel {
      */
     readonly operands?: (ConditionModel | FilterModel)[];
     /**
-     * A handler to be run if the condition is true.
+     * A expression to be run if the condition is true.
      *  @property {ConsequentModel} [
      */
     readonly onTrue?: ConsequentModel;

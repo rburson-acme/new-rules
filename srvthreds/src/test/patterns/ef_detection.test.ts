@@ -46,6 +46,8 @@ describe('Enemy forces detection test', function () {
       const values = Tasks.getTaskValues(tasks[0]) as Record<string, any>;
       expect(values.location.latitude).toBe(sensorData.latitude);
       expect(values.location.longitude).toBe(sensorData.longitude);
+      // Save the event ID from the 'deploy robot request' for use in the response event in the next test
+      deployRobotEventId = event.id;
     });
     connMan.eventQ.queue({ ...deployResponseEvent, thredId });
     return pr;
@@ -62,7 +64,8 @@ describe('Enemy forces detection test', function () {
       expect(event.data?.title).toBe('Robot Deployed');
       expect(event.data?.description).toContain(`Robot ${robotData.robotId}`);
     });
-    connMan.eventQ.queue({ ...robotDeployedEvent, thredId });
+    // send the 're' value back to the in robot deployed response event, so that the pattern can match it
+    connMan.eventQ.queue({ ...robotDeployedEvent, thredId, re: deployRobotEventId });
     return pr;
   });
   it('test stream video', function () {
@@ -87,6 +90,7 @@ describe('Enemy forces detection test', function () {
 
 let connMan: EngineConnectionManager;
 let thredId: string | undefined;
+let deployRobotEventId: string | undefined;
 
 const sensorId = '1000000001';
 const sensorData = { latitude: 34.0522, longitude: -118.2437, sensorId, certainty: 0.9 };

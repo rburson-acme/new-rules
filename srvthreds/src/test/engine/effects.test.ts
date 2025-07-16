@@ -37,7 +37,7 @@ describe('effects tests', function () {
     connMan.eventQ.queue({ ...events.event1, thredId, source: { id: 'participant1' } });
     return pr;
   });
-  test('send a client response that should be broadcast', function () {
+  test('send a client response that should also broadcast', function () {
     const pr = new Promise<void>((resolve, reject) => {
       let messagesReceived = 0;
       let broadcastResponseReceived = false;

@@ -7,11 +7,18 @@ import { System } from '../System';
 import { Threds } from '../Threds';
 import { Transition } from '../Transition';
 
+/**
+ * Class to handle effects that may be triggered by thred transitions
+ */
 export class Effects {
   static hasEffect(event: Event): boolean {
     return this.isClientTellType(event);
   }
 
+  /*
+   * Client events may be broadcast to all participants in the thred
+   * i.e. client interaction submissions may be shown to all participants
+   */
   static isClientTellType(event: Event): boolean {
     return event.type === eventTypes.client.tell.type;
   }

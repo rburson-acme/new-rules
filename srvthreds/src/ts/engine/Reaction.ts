@@ -44,7 +44,7 @@ export class Reaction {
     if (result) {
       const { transform, publish, transition } = result;
       const newEvent = await transform?.apply(event, thredStore);
-      const to = await publish?.apply(event, thredStore);
+      const to = await publish?.apply(event, thredStore, newEvent);
       const messageTemplate = to && newEvent ? { event: newEvent, to } : undefined;
       return { messageTemplate, transition };
     }

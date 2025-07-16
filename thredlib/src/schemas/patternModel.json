@@ -66,7 +66,7 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A handler to be run if the condition is true."
+          "description": "A expression to be run if the condition is true."
         },
         "operands": {
           "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
@@ -364,7 +364,7 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A handler to be run if the condition is true."
+          "description": "A expression to be run if the condition is true."
         },
         "operands": {
           "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
@@ -622,6 +622,10 @@
           "description": "A description of the pattern",
           "type": "string"
         },
+        "echoResponses": {
+          "description": "Whether or not participants responses are echoed to the Thred",
+          "type": "boolean"
+        },
         "id": {
           "description": "A unique identifier for the pattern. This will be derived from the name if not provided.",
           "type": "string"
@@ -683,6 +687,10 @@
         "description": {
           "description": "A human-readable description of the publish spec",
           "type": "string"
+        },
+        "onPublish": {
+          "$ref": "#/definitions/ConsequentModel",
+          "description": "An expression to be run at publish time with the new, outbound Event as the event paramater."
         },
         "to": {
           "$ref": "#/definitions/AddressModel",

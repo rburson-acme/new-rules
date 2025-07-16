@@ -70,7 +70,7 @@
       }
     },
     {
-      "name": "dispatch_robot",
+      "name": "deploy_robot",
       "allowedSources": "$group0",
       "condition": {
         "type": "filter",
@@ -102,7 +102,10 @@
           }
         },
         "publish": {
-          "to": "org.wt.robot"
+          "to": "org.wt.robot",
+          "onPublish": {
+            "xpr": "$setLocal('deploy_robot_id', $event.id)"
+          }
         }
       }
     },
@@ -111,7 +114,7 @@
       "allowedSources": ["/org\\.wt\\.robot.*/"],
       "condition": {
         "type": "filter",
-        "xpr": "$event.type = 'org.wt.robot'",
+        "xpr": "$event.type = 'org.wt.robot' and $event.re = $local('deploy_robot_id')",
         "onTrue": {
           "xpr": "$setLocal('robot_data', { 'robotId': $valueNamed('robotId'), 'videoStreamUrl': $valueNamed('videoStreamUrl'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
         },
