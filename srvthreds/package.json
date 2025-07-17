@@ -23,8 +23,7 @@
     "generate-schemas": "cd ../thredlib ; npm run generate-event ; npm run generate-pattern",
     "build-lib": "cd ../thredlib ; npm run build-all",
     "start-session-agent": "tsx src/ts/agent/index.ts -n session_agent",
-    "start-persistence-agent": "tsx src/ts/agent/index.ts -n persistence_agent",
-    "prepare": "husky"
+    "start-persistence-agent": "tsx src/ts/agent/index.ts -n persistence_agent"
   },
   "nodemonConfig": {
     "exec": "npm run dev",
@@ -74,6 +73,7 @@
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.0",
+    "typedoc": "^0.28.7",
     "typescript": "^5.5.4",
     "vitest": "^2.1.1"
   },

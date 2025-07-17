@@ -1,0 +1,4 @@
+{
+  "entryPoints": ["./src/ts/thredlib/model/*.ts"],
+  "out": "typedoc"
+}
