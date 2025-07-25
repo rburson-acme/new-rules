@@ -4,7 +4,7 @@ import agentConfig from '../../ts/config/persistence_agent.json';
 import { Agent } from '../../ts/agent/Agent.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
-import { Spec } from '../../ts/thredlib/task/Spec.js';
+import { Operations } from '../../ts/thredlib/task/Operations.js';
 import { AgentConfig } from '../../ts/agent/Config.js';
 
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -185,7 +185,7 @@ const baseBldr = EventBuilder.create({ type: 'org.wt.tell', source: { id: 'SYSTE
 // fork the base builder and merge the tasks and data for the store object event
 const storeObjectEvent = baseBldr
   .fork()
-  .mergeTasks({ name: 'storeObject', op: Spec.PUT_OP, params: { type: 'ObjectModel', values: testObject } })
+  .mergeTasks({ name: 'storeObject', op: Operations.PUT_OP, params: { type: 'ObjectModel', values: testObject } })
   .mergeData({ title: 'Store Object' })
   .build();
 
@@ -195,7 +195,7 @@ const storeObjectEvent = baseBldr
 const findObjectEvent = baseBldr
   .fork()
   .mergeTasks([
-    { name: 'findObject', op: Spec.GET_ONE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
+    { name: 'findObject', op: Operations.GET_ONE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
   ])
   .mergeData({ title: 'Find Object' })
   .build();
@@ -204,7 +204,7 @@ const updateObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'updateObject',
-    op: Spec.UPDATE_OP,
+    op: Operations.UPDATE_OP,
     params: {
       type: 'ObjectModel',
       matcher: { id: 'object_test' },
@@ -218,7 +218,7 @@ const upsertObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'upsertObject',
-    op: Spec.UPSERT_OP,
+    op: Operations.UPSERT_OP,
     params: {
       type: 'ObjectModel',
       matcher: { id: 'replacement_test' },
@@ -232,7 +232,7 @@ const findReplacementObjectEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'findReplacementObject',
-    op: Spec.GET_ONE_OP,
+    op: Operations.GET_ONE_OP,
     params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } },
   })
   .mergeData({ title: 'Find Object' })
@@ -242,8 +242,16 @@ const findReplacementObjectEvent = baseBldr
 const deleteObjectsEvent = baseBldr
   .fork()
   .mergeTasks([
-    { name: 'deleteObjects', op: Spec.DELETE_OP, params: { type: 'ObjectModel', matcher: { id: 'object_test' } } },
-    { name: 'deleteObjects', op: Spec.DELETE_OP, params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } } },
+    {
+      name: 'deleteObjects',
+      op: Operations.DELETE_OP,
+      params: { type: 'ObjectModel', matcher: { id: 'object_test' } },
+    },
+    {
+      name: 'deleteObjects',
+      op: Operations.DELETE_OP,
+      params: { type: 'ObjectModel', matcher: { id: 'replacement_test' } },
+    },
   ])
   .mergeData({ title: 'Delete Objects' })
   .build();
@@ -252,7 +260,7 @@ const findObjectsEvent = baseBldr
   .fork()
   .mergeTasks({
     name: 'findObjects',
-    op: Spec.GET_OP,
+    op: Operations.GET_OP,
     params: { type: 'ObjectModel', matcher: { id: { $in: ['object_test', 'replacement_test'] } } },
   })
   .mergeData({ title: 'Find Object' })

@@ -54,5 +54,7 @@ export * from './persistence/ThredRecord.js';
 export * from './persistence/ThredLogRecord.js';
 export * from './model/interaction/MapModel.js';
 export * from './model/interaction/VideoModel.js';
-export * from './task/Spec.js';
+export * from './task/Operations.js';
 export * from './task/Tasks.js';
+export * from './task/spec/TaskSpec.js';
+export * from './task/spec/PropertySpec.js';

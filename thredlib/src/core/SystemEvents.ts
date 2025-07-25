@@ -3,7 +3,7 @@ import { TransitionModel } from '../model/TransitionModel.js';
 import { PatternModel } from '../model/PatternModel.js';
 import { Event, EventTaskParams } from './Event.js';
 import { EventBuilder } from './EventBuilder.js';
-import { Spec } from '../task/Spec.js';
+import { Operations } from '../task/Operations.js';
 import { Types } from '../persistence/types.js';
 import { Thred } from './Thred.js';
 import { EventRecord } from '../persistence/EventRecord.js';
@@ -235,7 +235,7 @@ export class SystemEvents {
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'storePattern', op: Spec.PUT_OP, params: { type: Types.PatternModel, values: pattern } })
+      .mergeTasks({ name: 'storePattern', op: Operations.PUT_OP, params: { type: Types.PatternModel, values: pattern } })
       .mergeData({ title: `Store Pattern ${pattern.name}` })
       .build();
   }
@@ -248,7 +248,7 @@ export class SystemEvents {
     })
       .mergeTasks({
         name: 'findPattern',
-        op: Spec.GET_ONE_OP,
+        op: Operations.GET_ONE_OP,
         params: { type: Types.PatternModel, matcher: { id: patternId } },
       })
       .mergeData({ title: 'Find Pattern' })
@@ -261,7 +261,7 @@ export class SystemEvents {
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'findAllPatterns', op: Spec.GET_OP, params: { type: Types.PatternModel } })
+      .mergeTasks({ name: 'findAllPatterns', op: Operations.GET_OP, params: { type: Types.PatternModel } })
       .mergeData({ title: 'Find All Patterns' })
       .build();
   }
@@ -272,7 +272,7 @@ export class SystemEvents {
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'findPatterns', op: Spec.GET_OP, params: { type: Types.PatternModel, matcher } })
+      .mergeTasks({ name: 'findPatterns', op: Operations.GET_OP, params: { type: Types.PatternModel, matcher } })
       .mergeData({ title: 'Find Patterns' })
       .build();
   }
@@ -285,7 +285,7 @@ export class SystemEvents {
     })
       .mergeTasks({
         name: 'updatePattern',
-        op: Spec.UPDATE_OP,
+        op: Operations.UPDATE_OP,
         params: {
           type: Types.PatternModel,
           matcher: { id: patternId },
@@ -303,7 +303,7 @@ export class SystemEvents {
       source,
     })
       .mergeTasks([
-        { name: 'deletePattern', op: Spec.DELETE_OP, params: { type: Types.PatternModel, matcher: { id: patternId } } },
+        { name: 'deletePattern', op: Operations.DELETE_OP, params: { type: Types.PatternModel, matcher: { id: patternId } } },
       ])
       .mergeData({ title: 'Delete Pattern' })
       .build();
@@ -317,7 +317,7 @@ export class SystemEvents {
     })
       .mergeTasks({
         name: 'findEvents',
-        op: Spec.GET_OP,
+        op: Operations.GET_OP,
         params: { type: Types.EventRecord, matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
       })
       .mergeData({ title: 'Find Events' })
@@ -330,7 +330,7 @@ export class SystemEvents {
       thredId: ThredId.SYSTEM,
       source,
     })
-      .mergeTasks({ name: 'findEvents', op: Spec.GET_OP, params: { type: Types.EventRecord, matcher } })
+      .mergeTasks({ name: 'findEvents', op: Operations.GET_OP, params: { type: Types.EventRecord, matcher } })
       .mergeData({ title: 'Find Events' })
       .build();
   }
@@ -343,7 +343,7 @@ export class SystemEvents {
     })
       .mergeTasks({
         name: 'getThredLog',
-        op: Spec.GET_OP,
+        op: Operations.GET_OP,
         params: { type: Types.ThredLogRecord, matcher: { thredId }, collector: { sort: [{ field: 'timestamp' }] } },
       })
       .mergeData({ title: 'Get ThredLog' })

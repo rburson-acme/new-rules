@@ -1,10 +1,10 @@
-import { Spec } from '../../thredlib/task/Spec.js';
+import { Operations } from '../../thredlib/task/Operations.js';
 import { EventTask, EventTaskParams, Id, StringMap } from '../../thredlib/index.js';
 
 /**
  * For the 'translation' of WT persistence language to Mongodb querys
  */
-export class MongoSpec {
+export class MongoOperations {
   /*
     Mongodb defs 
   */
@@ -13,85 +13,86 @@ export class MongoSpec {
   static readonly SET_OP = '$set';
 
   static readonly INBOUND_FIELD_MAP: StringMap<any> = {
-    [Spec.ID]: MongoSpec._ID,
+    [Operations.ID]: MongoOperations._ID,
   };
 
   static readonly MATCHER_FIELD_MAP: StringMap<any> = {
-    [Spec.ID]: MongoSpec._ID,
-    [Spec.GTE_OP]: '$gte',
-    [Spec.LT_OP]: '$lt',
-    [Spec.LTE_OP]: '$lte',
-    [Spec.GT_OP]: '$gt',
-    [Spec.NE_OP]: '$ne',
-    [Spec.NOT_OP]: '$not',
-    [Spec.MATCH_OP]: '$regex',
+    [Operations.ID]: MongoOperations._ID,
+    [Operations.GTE_OP]: '$gte',
+    [Operations.LT_OP]: '$lt',
+    [Operations.LTE_OP]: '$lte',
+    [Operations.GT_OP]: '$gt',
+    [Operations.NE_OP]: '$ne',
+    [Operations.NOT_OP]: '$not',
+    [Operations.MATCH_OP]: '$regex',
 
     //array operators
-    [Spec.OR_OP]: '$or',
-    [Spec.IN_OP]: '$in',
-    [Spec.NIN_OP]: '$nin',
+    [Operations.OR_OP]: '$or',
+    [Operations.IN_OP]: '$in',
+    [Operations.NIN_OP]: '$nin',
   };
 
   static readonly OUTBOUND_FIELD_MAP: StringMap<any> = {
-    [MongoSpec._ID]: Spec.ID,
+    [MongoOperations._ID]: Operations.ID,
   };
 
   static readonly UPDATE_FIELD_MAP: StringMap<any> = {};
 
   static readonly UPDATE_OP_MAP: StringMap<any> = {
-    [Spec.ADD_OP]: '$addToSet',
-    [Spec.REMOVE_OP]: '$pull',
-    [Spec.NOW_OP]: '$currentDate',
-    [Spec.INC_OP]: '$inc',
-    [Spec.MIN_OP]: '$min',
-    [Spec.MAX_OP]: '$max',
-    [Spec.MUL_OP]: '$mul',
+    [Operations.ADD_OP]: '$addToSet',
+    [Operations.REMOVE_OP]: '$pull',
+    [Operations.NOW_OP]: '$currentDate',
+    [Operations.INC_OP]: '$inc',
+    [Operations.MIN_OP]: '$min',
+    [Operations.MAX_OP]: '$max',
+    [Operations.MUL_OP]: '$mul',
   };
 
-  static readonly INBOUND_FIELD_BLACKLIST = [MongoSpec._ID, Spec.CREATED, Spec.MODIFIED];
-  static readonly UPDATE_FIELD_BLACKLIST = [...MongoSpec.INBOUND_FIELD_BLACKLIST, Spec.ID];
+  static readonly INBOUND_FIELD_BLACKLIST = [MongoOperations._ID, Operations.CREATED, Operations.MODIFIED];
+  static readonly UPDATE_FIELD_BLACKLIST = [...MongoOperations.INBOUND_FIELD_BLACKLIST, Operations.ID];
   static readonly MATCHER_FIELD_BLACKLIST = [];
   static readonly OUTBOUND_FIELD_BLACKLIST = [];
 
   static mapInputValues(values: StringMap<any> | Array<StringMap<any>>, replace?: boolean): any {
     if (Array.isArray(values)) {
-      return values.map((value) => MongoSpec.mapInputValue(value, replace));
+      return values.map((value) => MongoOperations.mapInputValue(value, replace));
     }
-    return MongoSpec.mapInputValue(values, replace);
+    return MongoOperations.mapInputValue(values, replace);
   }
 
   static mapOutputValues(values: StringMap<any> | Array<StringMap<any>>): any {
     if (Array.isArray(values)) {
-      return values.map(MongoSpec.mapOutputValue);
+      return values.map(MongoOperations.mapOutputValue);
     }
-    return MongoSpec.mapOutputValue(values);
+    return MongoOperations.mapOutputValue(values);
   }
 
   static mapMatcherValues(value: StringMap<any>) {
-    return MongoSpec.mapKeysRecursive({
+    return MongoOperations.mapKeysRecursive({
       values: value,
-      map: MongoSpec.MATCHER_FIELD_MAP,
-      blacklist: MongoSpec.MATCHER_FIELD_BLACKLIST,
+      map: MongoOperations.MATCHER_FIELD_MAP,
+      blacklist: MongoOperations.MATCHER_FIELD_BLACKLIST,
     });
   }
 
   // @TODO - use mongo operator $currentDate for setting the modified date
   static mapUpdateValues(value: StringMap<any>) {
-    const mappedValues = MongoSpec.mapUpdateKeysRecursive({
+    const mappedValues = MongoOperations.mapUpdateKeysRecursive({
       values: value,
-      map: MongoSpec.UPDATE_FIELD_MAP,
-      blacklist: MongoSpec.UPDATE_FIELD_BLACKLIST,
+      map: MongoOperations.UPDATE_FIELD_MAP,
+      blacklist: MongoOperations.UPDATE_FIELD_BLACKLIST,
     });
-    const values = mappedValues[MongoSpec.SET_OP] || {};
+    const values = mappedValues[MongoOperations.SET_OP] || {};
     const now = new Date();
-    values[Spec.MODIFIED] = now;
-    mappedValues[MongoSpec.SET_OP] = values;
+    values[Operations.MODIFIED] = now;
+    mappedValues[MongoOperations.SET_OP] = values;
     return mappedValues;
   }
 
   static mapSortValues(value: { field: string; desc?: boolean }[]) {
     return value.reduce((accum: StringMap<any>, item) => {
-      const field = item.field in MongoSpec.INBOUND_FIELD_MAP ? MongoSpec.INBOUND_FIELD_MAP[item.field] : item.field;
+      const field =
+        item.field in MongoOperations.INBOUND_FIELD_MAP ? MongoOperations.INBOUND_FIELD_MAP[item.field] : item.field;
       accum[field] = item.desc ? -1 : 1;
       return accum;
     }, {});
@@ -110,23 +111,23 @@ export class MongoSpec {
 
   // @TODO - use mongo operator $currentDate for setting these dates
   private static mapInputValue(value: StringMap<any>, replace?: boolean) {
-    const mappedValues = MongoSpec.mapKeys({
+    const mappedValues = MongoOperations.mapKeys({
       values: value,
-      map: MongoSpec.INBOUND_FIELD_MAP,
-      blacklist: MongoSpec.INBOUND_FIELD_BLACKLIST,
+      map: MongoOperations.INBOUND_FIELD_MAP,
+      blacklist: MongoOperations.INBOUND_FIELD_BLACKLIST,
     });
-    if (!replace && !mappedValues[MongoSpec._ID]) mappedValues[MongoSpec._ID] = Id.generate();
+    if (!replace && !mappedValues[MongoOperations._ID]) mappedValues[MongoOperations._ID] = Id.generate();
     const now = new Date();
-    if (!replace) mappedValues[Spec.CREATED] = now;
-    mappedValues[Spec.MODIFIED] = now;
+    if (!replace) mappedValues[Operations.CREATED] = now;
+    mappedValues[Operations.MODIFIED] = now;
     return mappedValues;
   }
 
   private static mapOutputValue(value: StringMap<any>) {
-    return MongoSpec.mapKeys({
+    return MongoOperations.mapKeys({
       values: value,
-      map: MongoSpec.OUTBOUND_FIELD_MAP,
-      blacklist: MongoSpec.OUTBOUND_FIELD_BLACKLIST,
+      map: MongoOperations.OUTBOUND_FIELD_MAP,
+      blacklist: MongoOperations.OUTBOUND_FIELD_BLACKLIST,
     });
   }
 
@@ -160,16 +161,16 @@ export class MongoSpec {
     if (values === undefined || values === null) return values;
 
     if (Array.isArray(values)) {
-      return values.map((item) => MongoSpec.mapKeysRecursive({ ...params, values: item }));
+      return values.map((item) => MongoOperations.mapKeysRecursive({ ...params, values: item }));
     }
 
     if (typeof values === 'object') {
       return Object.keys(values).reduce((accum: StringMap<any>, key: string) => {
         if (!blacklist.includes(key)) {
-          const resultValue = MongoSpec.mapKeysRecursive({ ...params, values: values[key] });
+          const resultValue = MongoOperations.mapKeysRecursive({ ...params, values: values[key] });
           if (key in map) {
             // add case insensitive option if this is a regex
-            if (key === Spec.MATCH_OP) accum['$options'] = 'i';
+            if (key === Operations.MATCH_OP) accum['$options'] = 'i';
             accum[map[key]] = resultValue;
           } else {
             accum[key] = resultValue;
@@ -194,15 +195,15 @@ export class MongoSpec {
     const operators: StringMap<any> = {};
     // seperate the field values from the operators
     Object.keys(values).forEach((key) => {
-      if (key in MongoSpec.UPDATE_OP_MAP) {
-        operators[MongoSpec.UPDATE_OP_MAP[key]] = values[key];
+      if (key in MongoOperations.UPDATE_OP_MAP) {
+        operators[MongoOperations.UPDATE_OP_MAP[key]] = values[key];
       } else {
         fields[key] = values[key];
       }
     });
     const result: StringMap<any> = { ...operators };
     if (Object.keys(fields).length > 0) {
-      result[MongoSpec.SET_OP] = MongoSpec.mapKeysRecursive({ values: fields, map, blacklist });
+      result[MongoOperations.SET_OP] = MongoOperations.mapKeysRecursive({ values: fields, map, blacklist });
     }
     return result;
   }

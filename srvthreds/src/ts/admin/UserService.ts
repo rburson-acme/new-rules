@@ -44,7 +44,7 @@ export class UserService {
   /*
     Get threds associated with a given participant 
   */
-  //@TODO this should be done with aggregation support once it's added to the persistence layer
+  //@TODO this should be done with join/aggregation support once it's added to the persistence layer
   getThreds = async (args: SystemServiceArgs): Promise<GetUserThredsResult> => {
     const {
       event,

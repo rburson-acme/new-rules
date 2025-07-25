@@ -4,18 +4,19 @@ import { MongoPersistenceProvider } from './mongodb/MongoPersistenceProvider.js'
 import { Persistence } from './Persistence.js';
 
 export class PersistenceFactory {
-  private static instanceMap: Record<string, PersistenceProvider> = {};
+  private static instanceMapByHost: Record<string, PersistenceProvider> = {};
 
   private static DEFAULT_HOST_NAME = 'default';
 
   static getPersistenceProvider(hostString?: string): PersistenceProvider {
     const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
-    if (!PersistenceFactory.instanceMap[_hostString]) {
-      PersistenceFactory.instanceMap[_hostString] = hostString
+    if (!PersistenceFactory.instanceMapByHost[_hostString]) {
+      PersistenceFactory.instanceMapByHost[_hostString] = hostString
         ? new MongoPersistenceProvider(hostString)
         : new MongoPersistenceProvider();
+      PersistenceFactory.connect(_hostString);
     }
-    return PersistenceFactory.instanceMap[_hostString];
+    return PersistenceFactory.instanceMapByHost[_hostString];
   }
 
   static getPersistence(params?: { hostString?: string; dbname?: string }): Persistence {
@@ -30,13 +31,13 @@ export class PersistenceFactory {
 
   static async disconnectAll(): Promise<void> {
     try {
-      for (const key in PersistenceFactory.instanceMap) {
-        await PersistenceFactory.instanceMap[key].disconnect();
+      for (const key in PersistenceFactory.instanceMapByHost) {
+        await PersistenceFactory.instanceMapByHost[key].disconnect();
       }
     } catch (e) {
       Logger.error(`disconnectAll: `, e);
     }
-    PersistenceFactory.instanceMap = {};
+    PersistenceFactory.instanceMapByHost = {};
   }
 
   static async removeDatabase(params?: { hostString?: string; dbname?: string }): Promise<void> {

@@ -1,7 +1,8 @@
+export type Operation = 'put' | 'getOne' | 'get' | 'update' | 'upsert' | 'replace' | 'delete' | 'count' | 'run';
 /**
  * Defines the persistence language constants, etc.
  */
-export declare class Spec {
+export declare class Operations {
     static readonly PUT_OP = "put";
     static readonly GET_ONE_OP = "getOne";
     static readonly GET_OP = "get";

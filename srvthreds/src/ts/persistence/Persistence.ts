@@ -1,6 +1,7 @@
 import { Taskable } from '../task/Taskable';
 import { EventTaskParams } from '../thredlib';
 import { Persistent } from '../thredlib/persistence/Persistent';
+import { Transaction } from './Transaction';
 
 export interface Query {
   type: string;
@@ -20,4 +21,6 @@ export interface Persistence extends Taskable {
   get<T>(query: Query, options?: any): Promise<(Persistent & T)[] | null>;
 
   deleteDatabase(): Promise<void>;
+
+  newTransaction(): Transaction;
 }

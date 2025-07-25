@@ -1,0 +1,14 @@
+/**
+ * PropertySpec.ts
+ * Specification for properties used in tasks.
+ * Each property can have a name, type, and a set of possible values (if constrained).
+ */
+export interface PropertySpec {
+    name: string;
+    type: 'string' | 'number' | 'boolean' | 'Date' | 'object' | 'any' | 'array';
+    set: {
+        display: string;
+        value: any;
+    }[];
+    objectType?: string;
+}

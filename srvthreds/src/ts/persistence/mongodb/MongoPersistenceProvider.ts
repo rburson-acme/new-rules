@@ -1,6 +1,6 @@
 import { MongoClient, MongoClientOptions } from 'mongodb';
 import { Persistence, Query } from '../Persistence.js';
-import { MongoSpec } from './MongoSpec.js';
+import { MongoOperations } from './MongoOperations.js';
 import { Persistent } from '../../thredlib/persistence/Persistent.js';
 import { PersistenceProvider } from '../../provider/PersistenceProvider.js';
 import { MongoPersistence } from './MongoPersistence.js';
@@ -20,7 +20,7 @@ export class MongoPersistenceProvider implements PersistenceProvider {
 
   constructor(hostString?: string, config?: { connectOptions?: MongoClientOptions }) {
     const _host = hostString || MongoPersistenceProvider.defaultHost;
-    this.client = new MongoClient(`mongodb://${_host}`, config?.connectOptions);
+    this.client = new MongoClient(`mongodb://${_host}/?replicaSet=rs0`, config?.connectOptions);
   }
 
   async connect(): Promise<void> {
@@ -33,7 +33,10 @@ export class MongoPersistenceProvider implements PersistenceProvider {
   getInstance(dbname?: string): Persistence {
     const _dbname = dbname || MongoPersistenceProvider.DEFAULT_DB_NAME;
     if (!this.dbs[_dbname])
-      this.dbs[_dbname] = new MongoPersistence(this.client.db(dbname || MongoPersistenceProvider.defaultDb));
+      this.dbs[_dbname] = new MongoPersistence(
+        this.client,
+        this.client.db(dbname || MongoPersistenceProvider.defaultDb),
+      );
     return this.dbs[_dbname];
   }
 
