@@ -2,7 +2,6 @@ import { Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 import { Persistence } from '../../ts/persistence/Persistence.js';
 import { MongoPersistenceProvider } from '../../ts/persistence/mongodb/MongoPersistenceProvider.js';
 import { PersistenceProvider } from '../../ts/provider/PersistenceProvider.js';
-import { MongoPersistence } from '../../ts/persistence/mongodb/MongoPersistence.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 

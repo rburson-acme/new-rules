@@ -154,6 +154,71 @@ describe('persistence agent test', function () {
     agent.processMessage({ event: findObjectsEvent, to: ['org.wt.persistence'], id: 'test' });
     return pr;
   });
+
+  test('test store in transaction, both should succeed', async function () {
+    const pr = new Promise((resolve, reject) => {
+      agent.eventPublisher.publishEvent = withPromiseHandlers(
+        (event: Event) => {
+          expect(event.type).toBe('org.wt.persistence');
+          expect(event.data?.content?.values).toBeTruthy();
+          expect(event.data?.content?.error).toBeUndefined();
+          // should return id as result if successful
+          expect(Events.valueNamed(event, 'result')[0].length).toBe(2);
+          expect(Events.valueNamed(event, 'result')[0]).contains('object_test');
+        },
+        resolve,
+        reject,
+      );
+    });
+    // this is an example of a task structured as a transaction - noticed the nested array result
+    // see the event below for more details
+    agent.processMessage({ event: storeObjectTransactionEvent, to: ['org.wt.persistence'], id: 'test' });
+    return pr;
+  });
+  test('test 2nd operation should have succeeded in transaction', async function () {
+    const pr = new Promise((resolve, reject) => {
+      agent.eventPublisher.publishEvent = withPromiseHandlers(
+        (event: Event) => {
+          expect(event.type).toBe('org.wt.persistence');
+          // this is an example of a task structured as a transaction - noticed the nested array result
+          // see the event below for more details
+          expect(Events.valueNamed(event, 'result')[0][0].name).toBe('Object Test');
+          expect(event.data?.content?.error).toBeUndefined();
+        },
+        resolve,
+        reject,
+      );
+    });
+    agent.processMessage({ event: findObject2Event, to: ['org.wt.persistence'], id: 'test' });
+    return pr;
+  });
+
+  test('test transaction should fail because second store op fails', async function () {
+    try {
+      await agent.processMessage({ event: storeObjectTransactionFailureEvent, to: ['org.wt.persistence'], id: 'test' });
+    } catch (e) {
+      expect(e).toBeInstanceOf(EventThrowable);
+      expect((<EventThrowable>e).message).toContain('PersistenceAgent: Error processing message');
+    }
+  });
+
+  test('test transaction should not have executed first step because second failed', async function () {
+    const pr = new Promise((resolve, reject) => {
+      agent.eventPublisher.publishEvent = withPromiseHandlers(
+        (event: Event) => {
+          expect(event.type).toBe('org.wt.persistence');
+          // the first storage operation should not have been committed because the second failed
+          // from the previous transaction test, so the result should be null
+          expect(Events.valueNamed(event, 'result')[0][0]).toBeNull();
+        },
+        resolve,
+        reject,
+      );
+    });
+    agent.processMessage({ event: findObject3Event, to: ['org.wt.persistence'], id: 'test' });
+    return pr;
+  });
+
   // cleanup in case of failure
   afterAll(async () => {
     await connMan.purgeAll();
@@ -263,5 +328,39 @@ const findObjectsEvent = baseBldr
     op: Operations.GET_OP,
     params: { type: 'ObjectModel', matcher: { id: { $in: ['object_test', 'replacement_test'] } } },
   })
+  .mergeData({ title: 'Find Object' })
+  .build();
+
+const storeObjectTransactionEvent = baseBldr
+  .fork()
+  .mergeTasks([
+    { name: 'storeObject', op: Operations.PUT_OP, params: { type: 'ObjectModel', values: testObject } },
+    { name: 'storeObject', op: Operations.PUT_OP, params: { type: 'ObjectModel2', values: testObject } },
+  ])
+  .mergeData({ title: 'Store Object' })
+  .build();
+
+const storeObjectTransactionFailureEvent = baseBldr
+  .fork()
+  .mergeTasks([
+    { name: 'storeObject', op: Operations.PUT_OP, params: { type: 'ObjectModel3', values: testObject } },
+    { name: 'storeObject', op: Operations.PUT_OP, params: { type: 'ObjectModel', values: testObject } },
+  ])
+  .mergeData({ title: 'Store Object' })
+  .build();
+
+const findObject2Event = baseBldr
+  .fork()
+  .mergeTasks([
+    { name: 'findObject', op: Operations.GET_ONE_OP, params: { type: 'ObjectModel2', matcher: { id: 'object_test' } } },
+  ])
+  .mergeData({ title: 'Find Object' })
+  .build();
+
+const findObject3Event = baseBldr
+  .fork()
+  .mergeTasks([
+    { name: 'findObject', op: Operations.GET_ONE_OP, params: { type: 'ObjectModel3', matcher: { id: 'object_test' } } },
+  ])
   .mergeData({ title: 'Find Object' })
   .build();
