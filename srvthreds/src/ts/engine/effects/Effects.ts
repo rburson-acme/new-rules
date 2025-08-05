@@ -24,7 +24,7 @@ export class Effects {
   }
 
   /*
-    The client must set the 're:' field to the id of the event containing the event data template
+    When submitting an interaction, the client must set the 're:' field to the id of the event containing the event data template
     This allows the client to help identify the event for which this is broadcast response
   */
   static async run(event: Event, thredStore: ThredStore, threds: Threds): Promise<void> {

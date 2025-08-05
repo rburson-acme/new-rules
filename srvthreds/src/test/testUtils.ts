@@ -441,7 +441,7 @@ export class AgentQueueConnectionManager {
     await this.agentEventService.deleteAll().catch(Logger.error);
     await this.agentMessageService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
-    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
+    await PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {

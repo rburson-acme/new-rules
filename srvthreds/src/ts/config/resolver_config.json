@@ -11,6 +11,12 @@
       "nodeType": "org.wt.persistence",
       "nodeId": "org.wt.persistence1",
       "address": "org.wt.persistence"
+    },
+    {
+      "name": "Robot Agent",
+      "nodeType": "org.wt.robot",
+      "nodeId": "org.wt.robot1",
+      "address": "org.wt.robot"
     }
   ]
 }

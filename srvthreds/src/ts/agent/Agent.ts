@@ -16,6 +16,7 @@ import { QMessage } from '../queue/QService.js';
 import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
 import { SystemController } from '../persistence/controllers/SystemController.js';
+import { Adapter } from './adapter/Adapter.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -25,6 +26,7 @@ export interface MessageHandler {
 
 export interface MessageHandlerParams {
   config: AgentConfig;
+  adapter?: Adapter;
   eventPublisher: EventPublisher;
   additionalArgs?: StringMap<any>;
 }

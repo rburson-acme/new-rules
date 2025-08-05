@@ -24,37 +24,22 @@ describe.skip('client connection test', function () {
         Logger.error(e);
       });
   });
-  test('Dispatch inception event and match outbound event', function () {
-    const pr = new Promise<void>((resolve, reject) => {
-      eventManager0.subscribe(
-        withPromiseHandlers(
-          (event) => {
-            expect(event.data?.title).toBe('outbound.event0');
-            thredId = event.thredId;
-          },
-          resolve,
-          reject,
-        ),
-      );
-    });
-    eventManager0.publish(events.event0);
-    return pr;
+
+  // pattern sets the "re" value to the event ID of the request allowing for testing with the exchangeWithPromise method
+  test('Dispatch inception event and match outbound event', async function () {
+    const responseEvent = await eventManager0.exchangeWithPromise(events.event0);
+    thredId = responseEvent.thredId;
+    expect(responseEvent.data?.title).toBe('outbound.event0');
   });
-  test('Dispatch event1, receive event1 by participant1', function () {
-    const pr = new Promise<void>((resolve, reject) => {
-      eventManager1.subscribe(
-        withPromiseHandlers(
-          (event) => {
-            expect(event.data?.title).toBe('outbound.event1');
-          },
-          resolve,
-          reject,
-        ),
-      );
-    });
+
+  test('Dispatch event1, receive event1 by participant1', async function () {
+    const pr = eventManager1.subscribeOnceWithPromise({ filter: `$event.data.title = 'outbound.event1'` });
     eventManager0.publish({ ...events.event1, thredId });
+    const responseEvent = await pr;
+    expect(responseEvent.data?.title).toBe('outbound.event1');
     return pr;
   });
+
   test('Dispatch event2, receive event2 by participant0', function () {
     const pr = new Promise<void>((resolve, reject) => {
       eventManager0.subscribe(
@@ -69,6 +54,7 @@ describe.skip('client connection test', function () {
     });
     eventManager1.publish({ ...events.event2, thredId });
   });
+
   // cleanup in case of failure
   afterAll(async () => {
     eventManager0.disconnect();

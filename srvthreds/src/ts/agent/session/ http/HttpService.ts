@@ -1,46 +1,48 @@
 import http from 'http';
 import express from 'express';
-import { Request, Response, Express } from 'express';
-import bcrypt from 'bcrypt';
+import { Express } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import { getHandleLogin } from './LoginHandler.js';
+import { ServiceListener } from '../ServiceListener.js';
+import { EventPublisher } from '../../Agent.js';
+import { getHandleEvent } from './EventHandler.js';
 
 const DEFAULT_PORT = 3000;
 
-// @TODO - implement a real user store in MongoDB
-export const handleLogin = async (req: Request<{}, any>, res: Response<any, any>) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).send('Username and password are required.');
-  }
-  const user = { username: 'temp', password: 'temp' }; // find user
-  if (!user) {
-    return res.status(401).send('Invalid username or password.');
-  }
-  try {
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (passwordMatch) {
-      res.send('temp_token'); // In a real app, you'd set a session or return a token
-    } else {
-      res.status(401).send('Invalid username or password.');
-    }
-  } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).send('Error logging in.');
-  }
-};
+export interface HttpServiceParams {
+  serviceListener: ServiceListener;
+  publisher: EventPublisher;
+  nodeId: string;
+  port?: number;
+}
 
 export class HttpService {
   httpServer: http.Server;
+  private serviceListener: ServiceListener;
+  private publisher: EventPublisher;
+  private nodeId: string;
+  private port?: number;
 
-  constructor(private port?: number) {
+  constructor(serviceParams: HttpServiceParams) {
+    this.serviceListener = serviceParams.serviceListener;
+    this.publisher = serviceParams.publisher;
+    this.nodeId = serviceParams.nodeId;
+    this.port = serviceParams.port;
     const app: Express = express();
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
     // cors needs to be confgured more granularly here
     app.use(cors());
 
-    app.post('/login', handleLogin);
+    app.post(
+      '/login',
+      getHandleLogin({ serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
+    );
+    app.post(
+      '/event',
+      getHandleEvent({ serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
+    );
     this.httpServer = http.createServer(app);
   }
 

@@ -106,6 +106,7 @@ app.post('/sms', (req: Request, res: Response) => {
 class ServiceManager {
   sessionAgent?: Agent;
   persistenceAgent?: Agent;
+  robotAgent?: Agent;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
 
@@ -186,6 +187,26 @@ class ServiceManager {
       },
     });
     await this.persistenceAgent.start();
+
+    // ----------------------------------- Robot Agent Setup -----------------------------------
+    // Note: this is running in process for convenience but will be an independent service
+    // set up the remote Qs for the robot agent
+    const robotEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const robotEventQ: EventQ = new EventQ(robotEventService);
+    const robotMessageService = await RemoteQService.newInstance<Message>({
+      qBroker,
+      subName: 'sub_robot_message',
+    });
+
+    const robotMessageQ: MessageQ = new MessageQ(robotMessageService);
+    this.robotAgent = new Agent({
+      configName: 'robot_agent',
+      // if config is not provided, it will be loaded from persistence (run bootstrap first)
+      // agentConfig: robotAgentConfig,
+      eventQ: robotEventQ,
+      messageQ: robotMessageQ,
+    });
+    await this.robotAgent.start();
   }
 
   /***
@@ -236,6 +257,9 @@ class ServiceManager {
 
     Logger.info(`Shutting down session agent...`);
     await this.sessionAgent?.shutdown();
+    Logger.info(`Agent shutdown successfully.`);
+    Logger.info(`Shutting down robot agent...`);
+    await this.robotAgent?.shutdown();
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down persistence agent...`);
     await this.persistenceAgent?.shutdown();

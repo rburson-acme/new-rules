@@ -12,6 +12,9 @@
         "type": "filter",
         "xpr": "$event.type = 'inbound.event0'",
         "transform": {
+          "meta": {
+            "reXpr": "$event.id"
+          },
           "eventDataTemplate": {
             "title": "outbound.event0"
           }

@@ -39,6 +39,9 @@
         "persistence-message-queue": {
           "assert": true
         },
+        "robot-message-queue": {
+          "assert": true
+        },
         "x-dead-letter-event-queue": {
           "assert": true
         },
@@ -50,6 +53,7 @@
         "event-exchange[#] -> event-queue",
         "message-exchange[org.wt.session1] -> session1-message-queue",
         "message-exchange[org.wt.persistence] -> persistence-message-queue",
+        "message-exchange[org.wt.robot] -> robot-message-queue",
         "x-event-dead-letter[#] -> x-dead-letter-event-queue",
         "x-message-dead-letter[#] -> x-dead-letter-message-queue"
       ],
@@ -74,6 +78,10 @@
         },
         "sub_persistence_message": {
           "queue": "persistence-message-queue",
+          "prefetch": 1
+        },
+        "sub_robot_message": {
+          "queue": "robot-message-queue",
           "prefetch": 1
         }
       }

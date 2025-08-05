@@ -17,6 +17,7 @@
     "removeComments": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "outDir": "./dist-server"
+    "outDir": "./dist-server",
+    "preserveSymlinks": false
   }
 }

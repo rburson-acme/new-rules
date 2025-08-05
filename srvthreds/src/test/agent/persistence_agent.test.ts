@@ -58,7 +58,7 @@ describe('persistence agent test', function () {
       await agent.processMessage({ event: storeObjectEvent, to: ['org.wt.persistence'], id: 'test' });
     } catch (e) {
       expect(e).toBeInstanceOf(EventThrowable);
-      expect((<EventThrowable>e).message).toContain('PersistenceAgent: Error processing message');
+      expect((<EventThrowable>e).message).toContain('Error processing message');
     }
   });
   test('test update object', async function () {
@@ -198,7 +198,7 @@ describe('persistence agent test', function () {
       await agent.processMessage({ event: storeObjectTransactionFailureEvent, to: ['org.wt.persistence'], id: 'test' });
     } catch (e) {
       expect(e).toBeInstanceOf(EventThrowable);
-      expect((<EventThrowable>e).message).toContain('PersistenceAgent: Error processing message');
+      expect((<EventThrowable>e).message).toContain('Error processing message');
     }
   });
 

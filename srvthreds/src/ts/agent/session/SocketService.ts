@@ -6,6 +6,7 @@ import { Auth } from '../../auth/Auth.js';
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Socket } from 'socket.io';
 import { EventPublisher } from '../Agent.js';
+import { ServiceListener } from './ServiceListener.js';
 
 export interface SocketServiceParams {
   serviceListener: ServiceListener;
@@ -13,15 +14,6 @@ export interface SocketServiceParams {
   nodeId: string;
   httpServer: http.Server;
   auth?: Auth;
-}
-
-export interface ServiceListener {
-  newSession(
-    { sessionId, nodeId }: { sessionId: string; nodeId: string },
-    participantId: string,
-    channelId: string,
-  ): Promise<void>;
-  sessionEnded(sessionId: string): Promise<void>;
 }
 
 /**
@@ -65,15 +57,17 @@ export class SocketService {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token'));
     Logger.debug(`session: validation successful for: token ${token}`);
+
+    // @TODO RLS-141 - use basic auth to validate the token here
+
     this.auth.validate(token) ? next() : next(new Error('Authentication error: Invalid token'));
   };
 
   private onConnect = (socket: Socket) => {
     // this.auth.authenticate(token);
+    // @TODO RLS-141 - obtain the participantId from the token here
     const participantId = socket.handshake.auth.token;
-    // @TODO!!!  Research whether or not auth.token is a secure way to send the token in the future for authentication
-    // a valid token should be mapped to a sessionId, which could be retrieved and reused here
-    // i.e. for a given auth token, we need a consistent sessionId
+    // @TODO RLS-141 - token will be the sessionId (or contain it)
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
     Logger.debug(`session: a user connected on channel ${channelId} as ${participantId} session ${sessionId}`);

@@ -49,7 +49,7 @@ describe('Enemy forces detection test', function () {
       // Save the event ID from the 'deploy robot request' for use in the response event in the next test
       deployRobotEventId = event.id;
     });
-    connMan.eventQ.queue({ ...deployResponseEvent, thredId });
+    connMan.eventQ.queue({ ...participantDeployResponseEvent, thredId });
     return pr;
   });
   // should match pattern's first reaction
@@ -93,11 +93,11 @@ let thredId: string | undefined;
 let deployRobotEventId: string | undefined;
 
 const sensorId = '1000000001';
-const sensorData = { latitude: 34.0522, longitude: -118.2437, sensorId, certainty: 0.9 };
+const sensorData = { latitude: 30.094894, longitude: -81.715309, sensorId, certainty: 0.9 };
 const robotData = {
-  latitude: 34.0333,
-  longitude: -118.2445,
-  robotId: 'spot_1',
+  latitude: 30.089052,
+  longitude: -81.725556,
+  robotId: 'robot_id_0',
   videoStreamUrl: 'http://example.com/robot_video',
 };
 
@@ -109,7 +109,7 @@ const sensorEvent = EventBuilder.create({
   .mergeData({ title: 'Aerial Activity Detected' })
   .build();
 
-const deployResponseEvent = EventBuilder.create({
+const participantDeployResponseEvent = EventBuilder.create({
   type: 'org.wt.client.tell',
   source: { id: 'participant0', name: 'Participant 0' },
 })
