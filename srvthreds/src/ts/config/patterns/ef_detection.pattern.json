@@ -3,7 +3,7 @@
     "active": true
   },
   "name": "Enemy Forces Detection",
-  "id": "ef_detect",
+  "id": "ef_detection",
   "reactions": [
     {
       "name": "notify_participants",

@@ -5,6 +5,8 @@
     "agentImpl": "./session/SessionAgent.js",
     "subscriptionName": "sub_session1_message",
     "customConfig": {
-        "port": 3000
+        "port": 3000,
+        "sessionsModelName": "sessions_model",
+        "resolverConfigName": "resolver_config"
     }
 }

@@ -1,13 +1,4 @@
-import {
-  PatternModel,
-  Logger,
-  LoggerLevel,
-  EventManager,
-  EventBuilder,
-  Tasks,
-  Events,
-  EventTask,
-} from '../../ts/thredlib/index.js';
+import { PatternModel, Logger, LoggerLevel, EventManager, EventBuilder, Tasks, Events, EventTask } from '../../ts/thredlib/index.js';
 import { events, withPromiseHandlers } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
@@ -16,7 +7,7 @@ Logger.setLevel(LoggerLevel.INFO);
 // this runs against a running server running 'ef_detection.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
-describe.skip('ef_detection client test', function () {
+describe('ef_detection client test', function () {
   beforeAll(async () => {
     eventManager0 = new EventManager();
     sensorAgentEventManager = new EventManager();
@@ -36,21 +27,21 @@ describe.skip('ef_detection client test', function () {
   test('test sensor event', async function () {
     const pr = eventManager0.subscribeOnceWithPromise({ filter: `$event.type = 'org.wt.tell'` });
     sensorAgentEventManager.publish(sensorEvent);
-    const responseEvent = await pr;
+    const responseEvent  = await pr;
     expect(responseEvent.data?.title).toBe('Possible Contact Detected');
     expect(responseEvent.data?.description).toContain(`Sensor ${sensorId}`);
-    thredId = responseEvent.thredId;
+    thredId =responseEvent.thredId;
   });
   test('test participant deploy response', async function () {
     const pr = eventManager0.subscribeOnceWithPromise({ filter: `$event.type = 'org.wt.tell'` });
     eventManager0.publish({ ...participantDeployResponseEvent, thredId });
-    const responseEvent = await pr;
+    const responseEvent  = await pr;
     expect(responseEvent.data?.title).toBe('Robot Deployed');
   });
   test('test participant stream response', async function () {
     const pr = eventManager0.subscribeOnceWithPromise({ filter: `$event.type = 'org.wt.tell'` });
     eventManager0.publish({ ...streamResponseEvent, thredId });
-    const responseEvent = await pr;
+    const responseEvent  = await pr;
     expect(responseEvent.data?.title).toBe('Robot Video Stream');
   });
   // cleanup in case of failure

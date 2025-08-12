@@ -4,13 +4,11 @@
   "version": "1.0.0",
   "main": "dist-server/index.js",
   "scripts": {
-    "check-all": "npm-run-all build-lib check test-changed format",
-    "build": "npm-run-all clean transpile copy copy-configfiles",
     "start": "node ./dist-server/index.js",
     "start-debug": "node --inspect=0.0.0.0:9229 ./dist-server/index.js",
-    "start-dev": "tsx watch ./src/index.ts",
-    "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/index.ts",
-    "bootstrap": "npx tsx src/test/bootstrap.ts",
+    "start-session-agent": "node ./dist-server/agent/index.ts -c session_agent -d",
+    "check-all": "npm-run-all build-lib check test-changed format",
+    "build": "npm-run-all clean transpile copy copy-configfiles",
     "watch:dev": "nodemon",
     "transpile": "tsc --project tsconfig.prod.json",
     "check": "tsc",
@@ -22,8 +20,14 @@
     "test-changed": "npm test -- --changed",
     "generate-schemas": "cd ../thredlib ; npm run generate-event ; npm run generate-pattern",
     "build-lib": "cd ../thredlib ; npm run build-all",
-    "start-session-agent": "tsx src/ts/agent/index.ts -n session_agent",
-    "start-persistence-agent": "tsx src/ts/agent/index.ts -n persistence_agent"
+    "bootstrap": "npx tsx src/test/bootstrap.ts",
+    "start-dev": "tsx watch ./src/ts/dev-server.ts",
+    "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/dev-server.ts",
+    "start-engine-dev": "tsx watch src/ts/index.ts -d",
+    "start-engine-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/index.ts",
+    "start-session-agent-dev": "tsx src/ts/agent/index.ts -c session_agent -d",
+    "start-persistence-agent-dev": "tsx src/ts/agent/index.ts -c persistence_agent -d",
+    "start-robot-agent-dev": "tsx src/ts/agent/index.ts -c robot_agent -d"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

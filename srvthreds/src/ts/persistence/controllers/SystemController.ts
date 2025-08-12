@@ -1,3 +1,4 @@
+import { ConfigLoader } from '../../config/ConfigLoader.js';
 import { Query } from '../../task/Taskable.js';
 import { EventRecord, Logger, PatternModel, ThredLogRecord, ThredRecord } from '../../thredlib/index.js';
 import { Types } from '../../thredlib/persistence/types.js';
@@ -163,5 +164,15 @@ export class SystemController {
   async getConfig(configName: string): Promise<any | null> {
     const entry = await this.persistence.getOne({ type: Types.Config, matcher: { id: configName } });
     return entry ? entry.config : null;
+  }
+
+  async getFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
+    if (configName) {
+      return this.getConfig(configName);
+    } else {
+      if (configPath) {
+        return ConfigLoader.loadConfigFileFromPath(configPath);
+      }
+    }
   }
 }

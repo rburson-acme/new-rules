@@ -47,37 +47,62 @@ async function loadPatternsIntoStorage() {
 
 // demo
 async function loadDemoObjects() {
-  await PersistenceFactory.connect();
   const persistence = PersistenceFactory.getPersistence({ dbname: 'demo' });
   await persistence.upsert({
     type: 'ContactInfo',
-    values: { id: '0', contactId: 'participant0' },
+    values: { id: '0', contactId: 'participant0', sensorId: '0' },
     matcher: { sensorId: '0' },
   });
   await persistence.upsert({
     type: 'ContactInfo',
-    values: { id: '1', contactId: 'participant1' },
+    values: { id: '1', contactId: 'participant1', sensorId: '1' },
     matcher: { sensorId: '1' },
   });
   await persistence.upsert({
     type: 'ContactInfo',
-    values: { id: '2', contactId: 'participant2' },
+    values: { id: '2', contactId: 'participant2', sensorId: '2' },
     matcher: { sensorId: '2' },
   });
   await persistence.upsert({
     type: 'ContactInfo',
-    values: { id: '3', contactId: 'participant3' },
+    values: { id: '3', contactId: 'participant3', sensorId: '3' },
     matcher: { sensorId: '3' },
   });
-  UserController.get().replaceUser({ id: 'sensor_agent0', password: 'password0' });
+  await UserController.get().replaceUser({ id: 'sensor_agent0', password: 'password0' });
 }
+
+// test
+async function createTestData() {
+  const persistence = PersistenceFactory.getPersistence({ dbname: 'test' });
+  await persistence.upsert({
+    type: 'TestObject',
+    values: { id: '0', participantId: 'participant0', locationId: '0' },
+    matcher: { locationId: '0' },
+  });
+  await persistence.upsert({
+    type: 'TestObject',
+    values: { id: '1', participantId: 'participant1', locationId: '1' },
+    matcher: { locationId: '1' },
+  });
+  await persistence.upsert({
+    type: 'TestObject',
+    values: { id: '2', participantId: 'participant2', locationId: '2' },
+    matcher: { locationId: '2' },
+  });
+  await persistence.upsert({
+    type: 'TestObject',
+    values: { id: '3', participantId: 'participant3', locationId: '3' },
+    matcher: { locationId: '3' },
+  });
+}
+
 
 async function createTestUsers() {
   const uc = UserController.get();
-  uc.replaceUser({ id: 'participant0', password: 'password0' });
-  uc.replaceUser({ id: 'participant1', password: 'password1' });
-  uc.replaceUser({ id: 'participant2', password: 'password2' });
-  uc.replaceUser({ id: 'participant3', password: 'password3' });
+  await uc.replaceUser({ id: 'participant0', password: 'password0' });
+  await uc.replaceUser({ id: 'participant1', password: 'password1' });
+  await uc.replaceUser({ id: 'participant2', password: 'password2' });
+  await uc.replaceUser({ id: 'participant3', password: 'password3' });
 }
 
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)
@@ -85,9 +110,9 @@ async function createTestUsers() {
 async function run() {
   Logger.info('  > Clearing database and storage...');
   await PersistenceFactory.removeDatabase();
+  await PersistenceFactory.removeDatabase({ dbname: 'test' });
+  await PersistenceFactory.removeDatabase({ dbname: 'demo' });
   await StorageFactory.purgeAll();
-  await SystemController.get().connect();
-  await UserController.get().connect();
 
   Logger.info('  > Loading config files in ./run-config into database...');
   const runConfigDirectory = path.join(__dirname, '../../run-config');
@@ -102,6 +127,7 @@ async function run() {
 
   // create test users
   await createTestUsers();
+  await createTestData();
   //demo
   await loadDemoObjects();
 

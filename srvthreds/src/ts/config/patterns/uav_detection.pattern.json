@@ -21,6 +21,9 @@
               "tasks": [
                 {
                   "name": "find_contact",
+                  "options":{
+                    "dbname": "demo"
+                  },
                   "op": "get",
                   "params": {
                     "type": "ContactInfo",

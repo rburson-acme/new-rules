@@ -11,15 +11,15 @@ import { MongoPersistence } from './MongoPersistence.js';
   @TODO - implement selectors
 */
 export class MongoPersistenceProvider implements PersistenceProvider {
-  private static defaultHost = 'localhost:27017';
-  private static defaultDb = 'nr';
+  private static DEFAULT_HOST = 'localhost:27017';
+  private static DEFAULT_DB = 'nr';
   private static DEFAULT_DB_NAME = 'default';
 
   private client: MongoClient;
   private dbs: Record<string, MongoPersistence> = {};
 
   constructor(hostString?: string, config?: { connectOptions?: MongoClientOptions }) {
-    const _host = hostString || MongoPersistenceProvider.defaultHost;
+    const _host = hostString || MongoPersistenceProvider.DEFAULT_HOST;
     this.client = new MongoClient(`mongodb://${_host}/?replicaSet=rs0`, config?.connectOptions);
   }
 
@@ -35,7 +35,7 @@ export class MongoPersistenceProvider implements PersistenceProvider {
     if (!this.dbs[_dbname])
       this.dbs[_dbname] = new MongoPersistence(
         this.client,
-        this.client.db(dbname || MongoPersistenceProvider.defaultDb),
+        this.client.db(dbname || MongoPersistenceProvider.DEFAULT_DB),
       );
     return this.dbs[_dbname];
   }

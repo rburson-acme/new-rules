@@ -3,17 +3,13 @@ import * as path from 'path';
 import { SystemController } from '../persistence/controllers/SystemController';
 import { PatternsStore } from '../engine/store/PatternsStore';
 import { Storage } from '../storage/Storage';
-import { Logger, Series } from '../thredlib';
+import { Logger, Series } from '../thredlib/index.js';
 
 export class ConfigLoader {
   static async loadStorageFromPersistence(persistenceManager: SystemController, storage: Storage): Promise<void> {
     const patternModels = await persistenceManager.getAllActivePatterns();
     const patternsStore = new PatternsStore(storage);
     if (patternModels) await patternsStore.addPatterns(patternModels);
-  }
-
-  static async loadConfig(persistenceManager: SystemController, configName: string): Promise<any | null> {
-    return persistenceManager.getConfig(configName);
   }
 
   static async loadPersistenceWithConfigFiles(persistenceManager: SystemController, directory: string) {
@@ -28,4 +24,24 @@ export class ConfigLoader {
       return persistenceManager.upsertConfig(configName, jsonData);
     });
   }
+
+  static loadConfigFileFromPath(configPath: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(configPath, 'utf-8', (err, data) => {
+        if (err) {
+          Logger.error(`Error loading config from path: ${configPath}`, err);
+          reject(new Error(`Failed to load config from path: ${configPath}`, { cause: err }));
+        } else {
+          try {
+            const config = JSON.parse(data);
+            resolve(config);
+          } catch (parseError) {
+            Logger.error(`Error parsing config file: ${configPath}`, parseError);
+            reject(new Error(`Failed to parse config file: ${configPath}`, { cause: parseError }));
+          }
+        }
+      });
+    });
+  }
+  
 }

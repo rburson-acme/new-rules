@@ -1,10 +1,12 @@
 {
-  "name": "Session Agent",
-  "nodeType": "org.wt.session",
-  "nodeId": "org.wt.session1",
-  "agentImpl": "./session/SessionAgent.js",
-  "subscriptionName": "sub_session1_message",
-  "customConfig": {
-    "port": 3000
-  }
+    "name": "Session Agent",
+    "nodeType": "org.wt.session",
+    "nodeId": "org.wt.session1",
+    "agentImpl": "./session/SessionAgent.js",
+    "subscriptionName": "sub_session1_message",
+    "customConfig": {
+        "port": 3000,
+        "sessionsModelName": "sessions_model",
+        "resolverConfigName": "resolver_config"
+    }
 }

@@ -1,11 +1,11 @@
 import { MessageQ } from '../queue/MessageQ';
-import { Message, Parallel, StringMap } from '../thredlib';
+import { Message, Parallel, StringMap } from '../thredlib/index.js';
 import { Dispatcher } from './Dispatcher';
 import { MessageTemplate } from './MessageTemplate';
-import { System } from './System';
+import { System } from './System.js';
 
 import { Session } from '../sessions/Session';
-import { Logger as L } from '../thredlib';
+import { Logger as L } from '../thredlib/index.js';
 
 /**
  * The QDispatcher is responsible for dispatching messages to the appropriate recipients.

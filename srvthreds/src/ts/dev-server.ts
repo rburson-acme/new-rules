@@ -1,38 +1,32 @@
-import './init.js';
+import '../init.js';
 
 import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
-import { Agent } from './ts/agent/Agent.js';
-import { Config as StaticEngineConfig } from './ts/engine/Config.js';
-import { Server } from './ts/engine/Server.js';
-import { EventQ } from './ts/queue/EventQ.js';
-import { MessageQ } from './ts/queue/MessageQ.js';
-import { RemoteQBroker } from './ts/queue/remote/RemoteQBroker.js';
-import { RemoteQService } from './ts/queue/remote/RemoteQService.js';
-import { Sessions } from './ts/sessions/Sessions.js';
-import { SessionStorage } from './ts/sessions/storage/SessionStorage.js';
-import { StorageFactory } from './ts/storage/StorageFactory.js';
-import { Event, Logger, Message, PatternModel } from './ts/thredlib/index.js';
+import { Agent } from './agent/Agent.js';
+import { Config as StaticEngineConfig } from './engine/Config.js';
+import { Server } from './engine/Server.js';
+import { EventQ } from './queue/EventQ.js';
+import { MessageQ } from './queue/MessageQ.js';
+import { RemoteQBroker } from './queue/remote/RemoteQBroker.js';
+import { RemoteQService } from './queue/remote/RemoteQService.js';
+import { Sessions } from './sessions/Sessions.js';
+import { SessionStorage } from './sessions/storage/SessionStorage.js';
+import { StorageFactory } from './storage/StorageFactory.js';
+import { Event, Logger, Message, PatternModel } from './thredlib/index.js';
 
-import rascal_config from './ts/config/rascal_config.json' with { type: 'json' };
-import sessionsModel from './ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
-//import sessionsModel from './ts/config/sessions/downtime.sessions.json' with { type: 'json' };
-//import sessionsModel from './ts/config/sessions/routing_sessions.json' with { type: 'json' };
-import resolverConfig from './ts/config/resolver_config.json' with { type: 'json' };
-//import patternModel from './ts/config/patterns/downtime_light.pattern.json' with { type: 'json' };
-import engineConfig from './ts/config/engine.json' with { type: 'json' };
-import patternModel from './ts/config/patterns/uav_detection.pattern.json' with { type: 'json' };
-//import { patternModel } from './ts/config/patterns/ts/uav_detection_pattern.js';
-//import patternModel from './ts/config/patterns/echo_test.pattern.json' with { type: 'json' };
+import _rascal_config from './config/rascal_config.json' with { type: 'json' };
+import _sessionsModel from './config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import _resolverConfig from './config/resolver_config.json' with { type: 'json' };
+import _engineConfig from './config/engine.json' with { type: 'json' };
+import patternModel from './config/patterns/uav_detection.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel] as PatternModel[];
-StaticEngineConfig.engineConfig = engineConfig;
 
 import path from 'node:path';
 import url from 'node:url';
-import { SystemController } from './ts/persistence/controllers/SystemController.js';
-import { System } from './ts/engine/System.js';
-import { PubSubFactory } from './ts/pubsub/PubSubFactory.js';
+import { SystemController } from './persistence/controllers/SystemController.js';
+import { System } from './engine/System.js';
+import { PubSubFactory } from './pubsub/PubSubFactory.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,7 +35,7 @@ const DEFAULT_PORT = 3001;
 
 /*
 
-    This service runs all agents in one process for testing purposes
+    This service runs all agents and services in one process for testing purposes
 
 */
 
@@ -81,17 +75,6 @@ app.get('/rms', function (req: Request, res: Response) {
   res.sendFile(__dirname + '/web/rms.html');
 });
 
-//@TEMP sms
-// this should go in the sms agent - left here for reference
-app.post('/sms', (req: Request, res: Response) => {
-  /*
-    const twiml = new twilio.twiml.MessagingResponse();
-    twiml.message('The Robots are coming! Head for the hills!');
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
-    */
-});
-
 /************End Web Server ************************/
 
 /***
@@ -114,14 +97,19 @@ class ServiceManager {
 
   // Start server
   async startServices() {
+    const engineConfig = await SystemController.get().getConfig('engine') || _engineConfig;
+    StaticEngineConfig.engineConfig = engineConfig;
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
+    const rascal_config = await SystemController.get().getConfig('rascal_config') || _rascal_config;
     const qBroker = new RemoteQBroker(rascal_config);
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
+    const sessionsModel = await SystemController.get().getConfig('sessions_model') || _sessionsModel;
+    const resolverConfig = await SystemController.get().getConfig('resolver_config') || _resolverConfig
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
@@ -182,9 +170,7 @@ class ServiceManager {
       // agentConfig: persistenceAgentConfig,
       eventQ: persistenceEventQ,
       messageQ: persistenceMessageQ,
-      additionalArgs: {
-        dbname: 'demo',
-      },
+      //additionalArgs: { dbname: 'demo', },
     });
     await this.persistenceAgent.start();
 
@@ -272,8 +258,6 @@ class ServiceManager {
     Logger.info(`Disconnecting PubSub connections...`);
     await PubSubFactory.disconnectAll();
     Logger.info(`Disconnecting Redis storage...`);
-    await StorageFactory.disconnectAll();
-    Logger.info(`Redis storage disconnected successfuly.`);
   }
 }
 

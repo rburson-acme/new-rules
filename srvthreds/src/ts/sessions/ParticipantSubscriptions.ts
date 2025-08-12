@@ -1,5 +1,5 @@
 import { ThredThrowable } from '../engine/ThredThrowable';
-import { errorCodes, errorKeys, Logger } from '../thredlib';
+import { errorCodes, errorKeys, Logger } from '../thredlib/index.js';
 import { DurableIntervalTimer } from '../thredlib/lib/DurableIntervalTimer';
 
 /**

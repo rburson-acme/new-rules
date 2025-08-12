@@ -1,4 +1,4 @@
-import { Message } from '../thredlib';
+import { Message } from '../thredlib/index.js';
 import { MessageTemplate } from './MessageTemplate';
 import { ThredStore } from './store/ThredStore';
 import { ThredContext } from './ThredContext';

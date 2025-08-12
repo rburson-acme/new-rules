@@ -1,7 +1,5 @@
-import defaultResolverConfig from '../../config/resolver_config.json' with { type: 'json' };
-import defaultSessionsModel from '../../config/sessions/sessions_model.json' with { type: 'json' };
-import { ResolverConfig } from '../../sessions/Config.js';
-import { Event, Logger, Message, SessionsModel } from '../../thredlib/index.js';
+import { SystemController } from '../../persistence/controllers/SystemController';
+import { Event, Logger, Message, SessionsModel, StringMap } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
 import { AgentConfig } from '../Config.js';
 import { HttpService } from './ http/HttpService.js';
@@ -9,15 +7,22 @@ import { SessionService } from './SessionService.js';
 import { SessionServiceListener } from './SessionServiceListener.js';
 import { SocketService } from './SocketService.js';
 
-// Agent specific configuration
+// Agent specific configuration in custom config
 export interface SessionAgentConfig {
   port?: number;
+  sessionsModelName?: string;
+  sessionsModelPath?: string;
+  resolverConfigName?: string;
+  resolverConfigPath?: string;
 }
 
-// Agent specific additional args
+// Agent specific additional args - these override custom config
 export interface SessionAgentArgs {
-  sessionsModel?: SessionsModel;
-  resolverConfig?: ResolverConfig;
+  port?: number;
+  sessionsModelName?: string;
+  sessionsModelPath?: string;
+  resolverConfigName?: string;
+  resolverConfigPath?: string;
 }
 
 /**
@@ -29,10 +34,11 @@ export class SessionAgent implements MessageHandler {
   // publish (inbound) events to the engine
   private eventPublisher: EventPublisher;
   // handles websocket connections, sending and recieveing events to clients
-  private socketService: SocketService;
+  private socketService?: SocketService;
   // handles mapping sessions to external channels (i.e. sockets or rest calls, etc.)
-  private sessionService: SessionService;
-  private httpService: HttpService;
+  private sessionService?: SessionService;
+  private httpService?: HttpService;
+  private sessionAgentArgs: SessionAgentArgs;
 
   // dispatchers for sending events (from Messages) to outbound channels
   dispatchers: ((event: Event, channelId: string) => void)[] = [];
@@ -40,9 +46,41 @@ export class SessionAgent implements MessageHandler {
   constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
     this.eventPublisher = eventPublisher;
-    //use supplied session model or default
-    const sessionsModel = (additionalArgs as SessionAgentArgs)?.sessionsModel || defaultSessionsModel;
-    const resolverConfig = (additionalArgs as SessionAgentArgs)?.resolverConfig || defaultResolverConfig;
+    this.sessionAgentArgs = additionalArgs as SessionAgentArgs;
+  }
+
+  async initialize(): Promise<void> {
+    const sessionsModelName =
+      this.sessionAgentArgs?.sessionsModelName ||
+      (this.agentConfig.customConfig as SessionAgentConfig)?.sessionsModelName;
+    const sessionsModelPath =
+      this.sessionAgentArgs?.sessionsModelPath ||
+      (this.agentConfig.customConfig as SessionAgentConfig)?.sessionsModelPath;
+    const resolverConfigName =
+      this.sessionAgentArgs?.resolverConfigName ||
+      (this.agentConfig.customConfig as SessionAgentConfig)?.resolverConfigName;
+    const resolverConfigPath =
+      this.sessionAgentArgs?.resolverConfigPath ||
+      (this.agentConfig.customConfig as SessionAgentConfig)?.resolverConfigPath;
+
+    if (!(sessionsModelName || sessionsModelPath))
+      throw new Error(
+        'SessionAgent: sessionsModelName or sessionsModelPath must be provided in config or as an argument',
+      );
+    if (!(resolverConfigName || resolverConfigPath))
+      throw new Error(
+        'SessionAgent: resolverConfigName or resolverConfigPath must be provided in config or as an argument',
+      );
+    const sessionsModel = await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath);
+    if (!sessionsModel)
+      throw new Error(
+        `Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`,
+      );
+    const resolverConfig = await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath);
+    if (!resolverConfig)
+      throw new Error(
+        `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
+      );
     this.sessionService = new SessionService(sessionsModel, resolverConfig);
     const serviceListener = new SessionServiceListener(this.sessionService);
 
@@ -60,17 +98,14 @@ export class SessionAgent implements MessageHandler {
       httpServer: this.httpService.httpServer,
     });
     this.dispatchers.push(this.socketService.send);
-  }
-
-  async initialize(): Promise<void> {
     this.httpService.start();
     Logger.info(`SessionAgent is running on port ${this.agentConfig.customConfig?.port}`);
   }
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    const channelIds = await this.sessionService.getChannels(message);
-    channelIds.forEach((channelId) => {
+    const channelIds = await this.sessionService?.getChannels(message);
+    channelIds?.forEach((channelId) => {
       this.dispatchers.forEach((dispatcher) => {
         try {
           dispatcher(message.event, channelId);
@@ -83,9 +118,9 @@ export class SessionAgent implements MessageHandler {
   }
 
   async shutdown(): Promise<void> {
-    await this.socketService.shutdown();
-    await this.httpService.shutdown();
-    return this.sessionService.shutdown();
+    await this.socketService?.shutdown();
+    await this.httpService?.shutdown();
+    return this.sessionService?.shutdown();
   }
 }
 

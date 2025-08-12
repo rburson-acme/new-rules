@@ -90,7 +90,7 @@ export class SocketService {
         // Handle inbound Events
         socket.on('message', (event: Event, fn) => {
           // @TODO - verify event source IS participantId (no spoofing!)
-          this.publisher.publishEvent({ ...event, source: { id: participantId } }, participantId).catch((e) => {
+          this.publisher.publishEvent({ ...event, source: { id: participantId } }).catch((e) => {
             Logger.debug(`session: publish ${event.id} failed for ${participantId}`, e);
           });
         });

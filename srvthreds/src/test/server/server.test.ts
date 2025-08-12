@@ -29,7 +29,7 @@ describe('connMan.sessionServer test', function () {
     });
     sessionService.addSession({ id: 'session0', nodeId: 'org.wt.session1' }, 'participant0', 'channel0');
     sessionService.addSession({ id: 'session1', nodeId: 'org.wt.session1' }, 'participant1', 'channel1');
-    connMan.agent.publishEvent(events.event0, 'participant1');
+    connMan.agent.publishEvent({...events.event0, source: { id: 'participant0' } });
     return pr;
   });
   // progress thred to the next state
@@ -38,7 +38,7 @@ describe('connMan.sessionServer test', function () {
       expect(event.data?.title).toBe('outbound.event1');
       expect(channelId).toBe('channel1');
     });
-    connMan.agent.publishEvent({ ...events.event1, thredId }, 'participant0');
+    connMan.agent.publishEvent({ ...events.event1, thredId, source: { id: 'participant0' } });
     return pr;
   });
   // match the first event and start another thred
@@ -50,7 +50,7 @@ describe('connMan.sessionServer test', function () {
     });
     sessionService.addSession({ id: 'session2', nodeId: 'org.wt.session1' }, 'participant2', 'channel2');
     sessionService.addSession({ id: 'session3', nodeId: 'org.wt.session1' }, 'participant3', 'channel3');
-    connMan.agent.publishEvent(events.event0, 'participant3');
+    connMan.agent.publishEvent({ ...events.event0, source: { id: 'participant3' } });
     return pr;
   });
   // progress thred to the next state
@@ -59,7 +59,7 @@ describe('connMan.sessionServer test', function () {
       expect(event.data?.title).toBe('outbound.event1');
       expect(channelId).toBe('channel1');
     });
-    connMan.agent.publishEvent({ ...events.event1, thredId: thred2Id }, 'participant2');
+    connMan.agent.publishEvent({ ...events.event1, thredId: thred2Id, source: { id: 'participant2' } });
     return pr;
   });
   test('send the next thred event', function () {
@@ -67,7 +67,7 @@ describe('connMan.sessionServer test', function () {
       expect(event.data?.title).toBe('outbound.event2');
       expect(channelId).toBe('channel0');
     });
-    connMan.agent.publishEvent({ ...events.event2, thredId: thred2Id }, 'participant2');
+    connMan.agent.publishEvent({ ...events.event2, thredId: thred2Id, source: { id: 'participant2' } });
     return pr;
   });
   test('send the next thred event, and expect publish to group', function () {
@@ -78,7 +78,7 @@ describe('connMan.sessionServer test', function () {
       expect(channels).toContain(channelId);
       channels.delete(channelId);
     });
-    connMan.agent.publishEvent({ ...events.event3, thredId: thred2Id }, 'participant2');
+    connMan.agent.publishEvent({ ...events.event3, thredId: thred2Id, source: { id: 'participant2' } });
     return pr;
   });
 

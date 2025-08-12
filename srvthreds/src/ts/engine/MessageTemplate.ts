@@ -1,4 +1,4 @@
-import { Address, Event } from '../thredlib';
+import { Address, Event } from '../thredlib/index.js';
 
 export interface MessageTemplate {
   to: Address;

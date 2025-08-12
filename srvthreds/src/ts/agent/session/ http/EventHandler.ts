@@ -20,7 +20,7 @@ export const getHandleEvent = ({
     try {
       if (event) {
         // Process the event - force use of authenticated participantId
-        publisher.publishEvent({ ...event, source: { id: participantId } }, participantId);
+        publisher.publishEvent({ ...event, source: { id: participantId } });
       } else {
         res.status(401).send('No Event payload provided.');
       }

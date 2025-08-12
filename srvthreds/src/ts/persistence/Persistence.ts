@@ -1,5 +1,5 @@
 import { Taskable } from '../task/Taskable';
-import { EventTaskParams } from '../thredlib';
+import { EventTaskParams } from '../thredlib/index.js';
 import { Persistent } from '../thredlib/persistence/Persistent';
 import { Transaction } from './Transaction';
 

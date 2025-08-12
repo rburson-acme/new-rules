@@ -1,4 +1,4 @@
-import { Event, EventBuilder, EventContent, EventError, Events as EventsLib, eventTypes } from '../thredlib';
+import { Event, EventBuilder, EventContent, EventError, Events as EventsLib, eventTypes } from '../thredlib/index.js';
 
 export class Events {
   static newEventFromEvent({

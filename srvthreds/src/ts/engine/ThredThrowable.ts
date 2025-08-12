@@ -1,4 +1,4 @@
-import { EventError, EventThrowable } from '../thredlib';
+import { EventError, EventThrowable } from '../thredlib/index.js';
 import { ThredContext } from './ThredContext';
 
 export class ThredThrowable extends EventThrowable {

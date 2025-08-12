@@ -32,7 +32,7 @@ export interface MessageHandlerParams {
 }
 
 export interface EventPublisher {
-  publishEvent: (event: Event, sourceId?: string) => Promise<void>;
+  publishEvent: (event: Event) => Promise<void>;
   createOutboundEvent: ({
     prevEvent,
     content,
@@ -91,7 +91,7 @@ export class Agent {
         additionalArgs,
       });
       await this.handler?.initialize();
-      Logger.debug(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
+      Logger.info(`Agent.start(): ${this.agentConfig.nodeId} initialized.`);
       this.run();
     } catch (e) {
       Logger.error('Agent.start(): failed to start the agent', e);
@@ -113,9 +113,9 @@ export class Agent {
   }
 
   // publish Events to engine
-  publishEvent = async (event: Event, sourceId?: string): Promise<void> => {
+  publishEvent = async (event: Event): Promise<void> => {
     const { eventQ } = this.params;
-    Logger.debug(Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${sourceId}`));
+    Logger.debug(Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`));
     Logger.logObject(event);
     return eventQ.queue(event);
   };
