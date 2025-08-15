@@ -1,7 +1,7 @@
 import { Logger, LoggerLevel, Event, EventBuilder, Events } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/robot_agent.json';
-import { Agent } from '../../ts/agent/Agent.js';
+import { AgentService } from '../../ts/agent/AgentService.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
 import { AgentConfig } from '../../ts/agent/Config.js';
 import RobotAgent from '../../ts/agent/robot/RobotAgent.js';
@@ -45,7 +45,7 @@ describe('robot agent test', function () {
 });
 
 let connMan: AgentQueueConnectionManager;
-let agent: Agent;
+let agent: AgentService;
 
 // create a base builder with the common parameters
 const baseBldr = EventBuilder.create({ type: 'org.wt.tell', source: { id: 'SYSTEM', name: 'Workthreds Bot' } });

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Event } from '../../../thredlib/index.js';
 import { ServiceListener } from '../ServiceListener.js';
-import { EventPublisher } from '../../Agent.js';
+import { EventPublisher } from '../../AgentService.js';
 
 export const getHandleEvent = ({
   serviceListener,

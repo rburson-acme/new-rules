@@ -9,7 +9,7 @@ import {
   Tasks,
 } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
-import patternModel from '../../ts/config/patterns/ef_detection.pattern.json' assert { type: 'json' };
+import patternModel from '../../ts/config/patterns/ef_detection.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 
 Logger.setLevel(LoggerLevel.DEBUG);

@@ -1,4 +1,13 @@
-import { PatternModel, Logger, LoggerLevel, EventManager, EventBuilder, Tasks, Events, EventTask } from '../../ts/thredlib/index.js';
+import {
+  PatternModel,
+  Logger,
+  LoggerLevel,
+  EventManager,
+  EventBuilder,
+  Tasks,
+  Events,
+  EventTask,
+} from '../../ts/thredlib/index.js';
 import { events, withPromiseHandlers } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
@@ -7,7 +16,7 @@ Logger.setLevel(LoggerLevel.INFO);
 // this runs against a running server running 'system_test.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
-describe('system_test client test', function () {
+describe.skip('system_test client test', function () {
   beforeAll(async () => {
     participant1EventManager = new EventManager();
     locationAgentEventManager = new EventManager();
@@ -27,7 +36,7 @@ describe('system_test client test', function () {
   test('test location event', async function () {
     const pr = participant1EventManager.subscribeOnceWithPromise({ filter: `$event.type = 'org.wt.tell'` });
     locationAgentEventManager.publish(locationEvent);
-    const responseEvent  = await pr;
+    const responseEvent = await pr;
     expect(responseEvent.data?.title).toBe('Location Event Detected');
     expect(responseEvent.data?.description).toContain(`Location ${locationId}`);
     expect(Events.valueNamed(responseEvent, 'locationId')).toBe(locationId);

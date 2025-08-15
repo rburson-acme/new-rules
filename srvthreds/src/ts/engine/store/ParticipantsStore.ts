@@ -1,5 +1,5 @@
-import { Storage, Types } from '../../storage/Storage';
-import { Parallel } from '../../thredlib';
+import { Storage, Types } from '../../storage/Storage.js';
+import { Parallel } from '../../thredlib/index.js';
 
 export class ParticipantsStore {
   constructor(private storage: Storage) {}

@@ -1,4 +1,4 @@
-import { PatternModel } from '../../../thredlib';
+import { PatternModel } from '../../../thredlib/index.js';
 
 export const patternModel: PatternModel = {
   meta: {

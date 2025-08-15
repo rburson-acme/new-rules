@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node ./dist-server/index.js",
     "start-debug": "node --inspect=0.0.0.0:9229 ./dist-server/index.js",
-    "start-session-agent": "node ./dist-server/agent/index.ts -c session_agent -d",
+    "start-session-agent": "node dist-server/agent/local.js -c session_agent",
+    "start-persistence-agent": "node dist-server/agent/local.js -c persistence_agent",
     "check-all": "npm-run-all build-lib check test-changed format",
     "build": "npm-run-all clean transpile copy copy-configfiles",
     "watch:dev": "nodemon",
@@ -25,9 +26,9 @@
     "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/dev-server.ts",
     "start-engine-dev": "tsx watch src/ts/index.ts -d",
     "start-engine-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/index.ts",
-    "start-session-agent-dev": "tsx src/ts/agent/index.ts -c session_agent -d",
-    "start-persistence-agent-dev": "tsx src/ts/agent/index.ts -c persistence_agent -d",
-    "start-robot-agent-dev": "tsx src/ts/agent/index.ts -c robot_agent -d"
+    "start-session-agent-dev": "tsx src/ts/agent/local.ts -c session_agent -d",
+    "start-persistence-agent-dev": "tsx src/ts/agent/local.ts -c persistence_agent -d",
+    "start-robot-agent-dev": "tsx src/ts/agent/local.ts -c robot_agent -d"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

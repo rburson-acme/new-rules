@@ -5,8 +5,8 @@ import { events, ServerConnectionManager, withDispatcherPromise } from '../testU
 
 import patternModel from '../../ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
-import sessionsModel from '../../ts/config/sessions/simple_test_sessions_model.json';
-import resolverConfig from '../../ts/config/simple_test_resolver_config.json';
+import sessionsModel from '../../ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import resolverConfig from '../../ts/config/simple_test_resolver_config.json' with { type: 'json' };
 
 Logger.setLevel(LoggerLevel.INFO);
 
@@ -29,7 +29,7 @@ describe('connMan.sessionServer test', function () {
     });
     sessionService.addSession({ id: 'session0', nodeId: 'org.wt.session1' }, 'participant0', 'channel0');
     sessionService.addSession({ id: 'session1', nodeId: 'org.wt.session1' }, 'participant1', 'channel1');
-    connMan.agent.publishEvent({...events.event0, source: { id: 'participant0' } });
+    connMan.agent.publishEvent({ ...events.event0, source: { id: 'participant0' } });
     return pr;
   });
   // progress thred to the next state

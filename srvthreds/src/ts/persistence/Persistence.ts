@@ -1,7 +1,7 @@
-import { Taskable } from '../task/Taskable';
+import { Taskable } from '../task/Taskable.js';
 import { EventTaskParams } from '../thredlib/index.js';
-import { Persistent } from '../thredlib/persistence/Persistent';
-import { Transaction } from './Transaction';
+import { Persistent } from '../thredlib/persistence/Persistent.js';
+import { Transaction } from './Transaction.js';
 
 export interface Query {
   type: string;

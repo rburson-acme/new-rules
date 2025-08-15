@@ -1,9 +1,9 @@
-import '../init.js';
+import './init.js';
 
 import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
-import { Agent } from './agent/Agent.js';
+import { AgentService } from './agent/AgentService.js';
 import { Config as StaticEngineConfig } from './engine/Config.js';
 import { Server } from './engine/Server.js';
 import { EventQ } from './queue/EventQ.js';
@@ -87,9 +87,9 @@ app.get('/rms', function (req: Request, res: Response) {
  */
 
 class ServiceManager {
-  sessionAgent?: Agent;
-  persistenceAgent?: Agent;
-  robotAgent?: Agent;
+  sessionAgent?: AgentService;
+  persistenceAgent?: AgentService;
+  robotAgent?: AgentService;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
 
@@ -97,19 +97,19 @@ class ServiceManager {
 
   // Start server
   async startServices() {
-    const engineConfig = await SystemController.get().getConfig('engine') || _engineConfig;
+    const engineConfig = (await SystemController.get().getConfig('engine')) || _engineConfig;
     StaticEngineConfig.engineConfig = engineConfig;
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
-    const rascal_config = await SystemController.get().getConfig('rascal_config') || _rascal_config;
+    const rascal_config = (await SystemController.get().getConfig('rascal_config')) || _rascal_config;
     const qBroker = new RemoteQBroker(rascal_config);
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
-    const sessionsModel = await SystemController.get().getConfig('sessions_model') || _sessionsModel;
-    const resolverConfig = await SystemController.get().getConfig('resolver_config') || _resolverConfig
+    const sessionsModel = (await SystemController.get().getConfig('sessions_model')) || _sessionsModel;
+    const resolverConfig = (await SystemController.get().getConfig('resolver_config')) || _resolverConfig;
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
@@ -142,7 +142,7 @@ class ServiceManager {
 
     // create and run a Session Agent
     // if config is not provided, it will be loaded from persistence (run bootstrap first)
-    this.sessionAgent = new Agent({
+    this.sessionAgent = new AgentService({
       configName: 'session_agent',
       //agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
@@ -164,7 +164,7 @@ class ServiceManager {
     });
 
     const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);
-    this.persistenceAgent = new Agent({
+    this.persistenceAgent = new AgentService({
       configName: 'persistence_agent',
       // if config is not provided, it will be loaded from persistence (run bootstrap first)
       // agentConfig: persistenceAgentConfig,
@@ -185,7 +185,7 @@ class ServiceManager {
     });
 
     const robotMessageQ: MessageQ = new MessageQ(robotMessageService);
-    this.robotAgent = new Agent({
+    this.robotAgent = new AgentService({
       configName: 'robot_agent',
       // if config is not provided, it will be loaded from persistence (run bootstrap first)
       // agentConfig: robotAgentConfig,

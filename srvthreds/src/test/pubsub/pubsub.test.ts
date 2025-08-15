@@ -1,7 +1,7 @@
-import { PubSub } from '../../ts/pubsub/PubSub';
-import { PubSubFactory } from '../../ts/pubsub/PubSubFactory';
-import { Logger, LoggerLevel } from '../../ts/thredlib';
-import { delay, withPromiseHandlers } from '../testUtils';
+import { PubSub } from '../../ts/pubsub/PubSub.js';
+import { PubSubFactory } from '../../ts/pubsub/PubSubFactory.js';
+import { Logger, LoggerLevel } from '../../ts/thredlib/index.js';
+import { delay, withPromiseHandlers } from '../testUtils.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 

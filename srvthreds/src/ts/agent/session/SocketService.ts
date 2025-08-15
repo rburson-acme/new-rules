@@ -5,7 +5,7 @@ import { Event, Logger, StringMap } from '../../thredlib/index.js';
 import { Auth } from '../../auth/Auth.js';
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Socket } from 'socket.io';
-import { EventPublisher } from '../Agent.js';
+import { EventPublisher } from '../AgentService.js';
 import { ServiceListener } from './ServiceListener.js';
 
 export interface SocketServiceParams {

@@ -1,10 +1,10 @@
-import { Persistence } from '../../persistence/Persistence';
-import { PersistenceFactory } from '../../persistence/PersistenceFactory';
-import { Transaction } from '../../persistence/Transaction';
-import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib';
-import { EventThrowable } from '../../thredlib/core/Errors';
-import { Operations } from '../../thredlib/task/Operations';
-import { Adapter } from '../adapter/Adapter';
+import { Persistence } from '../../persistence/Persistence.js';
+import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
+import { Transaction } from '../../persistence/Transaction.js';
+import { EventTask, Series, Event, errorCodes, errorKeys, EventValues } from '../../thredlib/index.js';
+import { EventThrowable } from '../../thredlib/core/Errors.js';
+import { Operations } from '../../thredlib/task/Operations.js';
+import { Adapter } from '../adapter/Adapter.js';
 
 export class PersistenceAdapter implements Adapter {
   constructor(private config?: { hostString?: string; dbname?: string }) {}

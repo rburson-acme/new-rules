@@ -1,4 +1,4 @@
-import { Event } from '../../thredlib';
+import { Event } from '../../thredlib/index.js';
 
 export interface Adapter {
   initialize(): Promise<void>;

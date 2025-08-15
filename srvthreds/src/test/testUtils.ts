@@ -1,31 +1,38 @@
-import { Event, PatternModel, Logger, SystemEvents, Message, SessionsModel } from '../ts/thredlib/index.js';
+import { Event, PatternModel, Logger, Message, SessionsModel } from '../ts/thredlib/index.js';
 import { RemoteQService } from '../ts/queue/remote/RemoteQService.js';
 import { EventQ } from '../ts/queue/EventQ.js';
 import { Engine } from '../ts/engine/Engine.js';
 import { StorageFactory } from '../ts/storage/StorageFactory.js';
 import { RemoteQBroker } from '../ts/queue/remote/RemoteQBroker.js';
 import config from './queue/rascal_test_config.json' with { type: 'json' };
-import { Id } from '../ts/thredlib/core/Id.js';
 import { MessageQ } from '../ts/queue/MessageQ.js';
 import { Sessions } from '../ts/sessions/Sessions.js';
 import { Server } from '../ts/engine/Server.js';
 import { SessionStorage } from '../ts/sessions/storage/SessionStorage.js';
-import { Agent } from '../ts/agent/Agent.js';
+import { AgentService } from '../ts/agent/AgentService.js';
 import { Config as EngineConfig } from '../ts/engine/Config.js';
 import { ResolverConfig } from '../ts/sessions/Config.js';
 import { AgentConfig } from '../ts/agent/Config.js';
 import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from '../ts/config/engine.json' with { type: 'json' };
-import agentConfig from '../ts/config/session_agent.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
-import { SystemController } from '../ts/persistence/controllers/SystemController.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
-import defaultSessionsModel from '../ts/config/sessions/simple_test_sessions_model.json';
-import resolverConfig from '../ts/config/simple_test_resolver_config.json';
+import defaultSessionsModel from '../ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import resolverConfig from '../ts/config/simple_test_resolver_config.json' with { type: 'json' };
 import { UserController } from '../ts/persistence/controllers/UserController.js';
 EngineConfig.engineConfig = engineConfig;
-const sessionAgentConfig = agentConfig as AgentConfig;
+const sessionAgentConfig = {
+  name: 'Session Agent',
+  nodeType: 'org.wt.session',
+  nodeId: 'org.wt.session1',
+  subscriptionName: 'sub_session1_message',
+  customConfig: {
+    port: 3000,
+    sessionsModelPath: 'src/ts/config/sessions/sessions_model.json',
+    resolverConfigPath: 'src/ts/config/resolver_config.json',
+  },
+} as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
 sessionAgentConfig.agentImpl = SessionAgent;
 
@@ -268,14 +275,14 @@ export class ServerConnectionManager {
     const sessionMessageQ = new MessageQ(sessionMessageService);
     // standard (default) agent configuration file
     // this location is relative to the 'agent' directory
-    const agent = new Agent({
+    const agent = new AgentService({
       configName: 'session_agent',
       agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
       additionalArgs: additionalArgs,
     });
-    agent.start();
+    await agent.start();
 
     const instance = new ServerConnectionManager(
       engineEventService,
@@ -292,7 +299,7 @@ export class ServerConnectionManager {
     readonly sessionMessageQService: RemoteQService<Message>,
     readonly sessions: Sessions,
     readonly engineServer: Server,
-    readonly agent: Agent,
+    readonly agent: AgentService,
   ) {}
 
   async purgeAll() {
@@ -341,7 +348,7 @@ export class AgentConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent({
+    const agent = new AgentService({
       configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
@@ -358,7 +365,7 @@ export class AgentConnectionManager {
     readonly agentMessageService: RemoteQService<Message>,
     readonly agentEventQ: EventQ,
     readonly agentMessageQ: MessageQ,
-    readonly agent: Agent,
+    readonly agent: AgentService,
   ) {}
 
   async purgeAll() {
@@ -401,7 +408,7 @@ export class AgentQueueConnectionManager {
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
     // create the Agent and start it
-    const agent = new Agent({
+    const agent = new AgentService({
       configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
@@ -432,7 +439,7 @@ export class AgentQueueConnectionManager {
     readonly engineMessageQ: MessageQ,
     readonly agentEventQ: EventQ,
     readonly agentMessageQ: MessageQ,
-    readonly agent: Agent,
+    readonly agent: AgentService,
   ) {}
 
   async purgeAll() {

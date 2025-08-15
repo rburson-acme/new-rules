@@ -1,6 +1,6 @@
-import { PubSub } from '../PubSub';
-import { RedisPub } from './RedisPub';
-import { RedisSub } from './RedisSub';
+import { PubSub } from '../PubSub.js';
+import { RedisPub } from './RedisPub.js';
+import { RedisSub } from './RedisSub.js';
 
 export class RedisPubSub implements PubSub {
   private pub: RedisPub;

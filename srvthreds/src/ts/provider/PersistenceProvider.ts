@@ -1,4 +1,4 @@
-import { Persistence } from '../persistence/Persistence';
+import { Persistence } from '../persistence/Persistence.js';
 
 export interface PersistenceProvider {
   getInstance(dbname?: string): Persistence;

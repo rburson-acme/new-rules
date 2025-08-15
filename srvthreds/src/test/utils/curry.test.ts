@@ -1,4 +1,4 @@
-import { curryObj, Events } from '../../ts/thredlib';
+import { curryObj, Events } from '../../ts/thredlib/index.js';
 
 describe('partial arg application', function () {
   test('should partially apply args', function () {

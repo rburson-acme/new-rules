@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { SystemController } from '../persistence/controllers/SystemController';
-import { PatternsStore } from '../engine/store/PatternsStore';
-import { Storage } from '../storage/Storage';
+import { SystemController } from '../persistence/controllers/SystemController.js';
+import { PatternsStore } from '../engine/store/PatternsStore.js';
+import { Storage } from '../storage/Storage.js';
 import { Logger, Series } from '../thredlib/index.js';
 
 export class ConfigLoader {
@@ -43,5 +43,4 @@ export class ConfigLoader {
       });
     });
   }
-  
 }

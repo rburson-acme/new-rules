@@ -1,5 +1,5 @@
 import { ClientSession } from 'mongodb';
-import { Transaction } from '../Transaction';
+import { Transaction } from '../Transaction.js';
 
 export class MongoTransaction implements Transaction {
   constructor(private session: ClientSession) {}

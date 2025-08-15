@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { get } from 'http';
-import { ServiceListener } from '../ServiceListener';
-import { EventPublisher } from '../../Agent';
+import { ServiceListener } from '../ServiceListener.js';
+import { EventPublisher } from '../../AgentService.js';
 
 export const getHandleLogin = ({
   serviceListener,

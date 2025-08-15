@@ -43,7 +43,12 @@ const args = yargs(hideBin(process.argv))
     description: 'Path to resolver config file. Overrides resolver-config',
     type: 'string',
   })
-  .options('rascal-config', { alias: 'a', description: 'The name of the Rascal config file to use', type: 'string', default: 'rascal_config' })
+  .options('rascal-config', {
+    alias: 'a',
+    description: 'The name of the Rascal config file to use',
+    type: 'string',
+    default: 'rascal_config',
+  })
   .options('rascal-config-path', {
     alias: 'ap',
     description: 'Path to Rascal config file. Overrides rascal-config',

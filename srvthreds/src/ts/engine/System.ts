@@ -1,5 +1,4 @@
-import { P } from 'vitest/dist/chunks/environment.C5eAp3K6';
-import { Sessions } from '../sessions/Sessions';
+import { Sessions } from '../sessions/Sessions.js';
 
 export interface Process {
   shutdown: (delay: number) => Promise<void>;

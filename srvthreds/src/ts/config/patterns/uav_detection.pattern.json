@@ -21,7 +21,7 @@
               "tasks": [
                 {
                   "name": "find_contact",
-                  "options":{
+                  "options": {
                     "dbname": "demo"
                   },
                   "op": "get",

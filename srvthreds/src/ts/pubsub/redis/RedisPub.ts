@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
-import { Logger } from '../../thredlib';
-import { PubSub } from '../PubSub';
-import { Pub } from '../Pub';
+import { Logger } from '../../thredlib/index.js';
+import { PubSub } from '../PubSub.js';
+import { Pub } from '../Pub.js';
 
 export class RedisPub implements Pub {
   private pub;

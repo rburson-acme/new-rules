@@ -1,6 +1,6 @@
 import { Message, errorKeys, EventThrowable } from '../../thredlib/index.js';
 import { Adapter } from '../adapter/Adapter.js';
-import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
+import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../Config.js';
 import { errorCodes } from '../../thredlib/index.js';
 
@@ -28,7 +28,7 @@ export abstract class BaseAgent implements MessageHandler {
   }
 
   /**
-   * Process an inbound message from the Q.
+   * Process an inbound message from the engine.
    * The result should be published to engine using the eventPublisher.
    * An EventThrowable should be thrown if there is an error processing the message.
    * @param message

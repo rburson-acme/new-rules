@@ -1,6 +1,6 @@
-import { ThredThrowable } from '../engine/ThredThrowable';
+import { ThredThrowable } from '../engine/ThredThrowable.js';
 import { errorCodes, errorKeys, Logger } from '../thredlib/index.js';
-import { DurableIntervalTimer } from '../thredlib/lib/DurableIntervalTimer';
+import { DurableIntervalTimer } from '../thredlib/lib/DurableIntervalTimer.js';
 
 /**
  * Singleton class managing participant subscriptions with automatic timestamping and timeout support.

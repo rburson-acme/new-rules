@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { SystemController } from '../ts/persistence/controllers/SystemController';
-import { Logger, LoggerLevel, Series } from '../ts/thredlib';
-import { ConfigLoader } from '../ts/config/ConfigLoader';
-import { StorageFactory } from '../ts/storage/StorageFactory';
-import { PersistenceFactory } from '../ts/persistence/PersistenceFactory';
-import { UserController } from '../ts/persistence/controllers/UserController';
+import { SystemController } from '../ts/persistence/controllers/SystemController.js';
+import { Logger, LoggerLevel, Series } from '../ts/thredlib/index.js';
+import { ConfigLoader } from '../ts/config/ConfigLoader.js';
+import { StorageFactory } from '../ts/storage/StorageFactory.js';
+import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
+import { UserController } from '../ts/persistence/controllers/UserController.js';
 
 Logger.setLevel(LoggerLevel.DEBUG);
 
@@ -95,7 +95,6 @@ async function createTestData() {
     matcher: { locationId: '3' },
   });
 }
-
 
 async function createTestUsers() {
   const uc = UserController.get();

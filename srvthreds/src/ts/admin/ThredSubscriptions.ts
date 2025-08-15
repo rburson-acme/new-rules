@@ -1,8 +1,8 @@
-import { KeySubscriberFactory } from '../pubsub/KeySubscriberFactory';
-import { PubSubFactory } from '../pubsub/PubSubFactory';
-import { Topics } from '../pubsub/Topics';
+import { KeySubscriberFactory } from '../pubsub/KeySubscriberFactory.js';
+import { PubSubFactory } from '../pubsub/PubSubFactory.js';
+import { Topics } from '../pubsub/Topics.js';
 import { Logger } from '../thredlib/index.js';
-import { debounce } from '../thredlib/lib/debounce';
+import { debounce } from '../thredlib/lib/debounce.js';
 
 /*
  * ThredSubscriptions is a singleton class that manages subscriptions to thread changes.

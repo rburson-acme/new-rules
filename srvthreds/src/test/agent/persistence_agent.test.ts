@@ -1,7 +1,7 @@
 import { Logger, LoggerLevel, Event, SMap, EventBuilder, Events, EventThrowable } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
 import agentConfig from '../../ts/config/persistence_agent.json';
-import { Agent } from '../../ts/agent/Agent.js';
+import { AgentService } from '../../ts/agent/AgentService.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
@@ -227,7 +227,7 @@ describe('persistence agent test', function () {
 });
 
 let connMan: AgentQueueConnectionManager;
-let agent: Agent;
+let agent: AgentService;
 
 const testObject = {
   name: 'Object Test',

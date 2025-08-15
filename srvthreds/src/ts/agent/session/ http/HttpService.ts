@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { getHandleLogin } from './LoginHandler.js';
 import { ServiceListener } from '../ServiceListener.js';
-import { EventPublisher } from '../../Agent.js';
+import { EventPublisher } from '../../AgentService.js';
 import { getHandleEvent } from './EventHandler.js';
 
 const DEFAULT_PORT = 3000;

@@ -1,5 +1,5 @@
-import { SessionService } from './SessionService';
-import { ServiceListener } from './ServiceListener';
+import { SessionService } from './SessionService.js';
+import { ServiceListener } from './ServiceListener.js';
 
 export class SessionServiceListener implements ServiceListener {
   constructor(private sessionService: SessionService) {}

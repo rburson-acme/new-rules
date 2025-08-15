@@ -61,7 +61,7 @@ export class AddressResolver {
     const serviceAddresses: string[] = [];
     let participantAddresses: Address = [];
     addresses.forEach((address) => {
-      if (this.isServiceAddress(address)) {
+      if (this.isLocalServiceAddress(address)) {
         serviceAddresses.push(address);
       } else {
         (participantAddresses as string[]).push(address);
@@ -71,7 +71,7 @@ export class AddressResolver {
     return { serviceAddresses, participantAddresses };
   }
 
-  isServiceAddress(address: string): boolean {
+  isLocalServiceAddress(address: string): boolean {
     return address.startsWith('org.wt.');
   }
 
@@ -85,9 +85,6 @@ export class AddressResolver {
   async getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
     const { groups, aliasMap } = this;
     const addresses = Array.isArray(address) ? address : [address];
-    // @TODO @TEMP @DEMO add admin for demo ---
-    //addresses.push('admin');
-    // ---------------------------------------
     let participantIds: string[] = [];
     //intercept $all
     if (addresses.indexOf(AddressResolver.ALL_ALIAS) > -1) {

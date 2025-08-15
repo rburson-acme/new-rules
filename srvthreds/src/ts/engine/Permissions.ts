@@ -1,4 +1,4 @@
-import { PermissionModel } from '../thredlib/model/PermissionModel';
+import { PermissionModel } from '../thredlib/model/PermissionModel.js';
 
 export class Permissions {
   constructor(readonly permissionModel: PermissionModel) {}

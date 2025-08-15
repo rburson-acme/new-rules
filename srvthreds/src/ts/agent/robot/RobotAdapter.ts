@@ -1,5 +1,14 @@
-import { errorCodes, errorKeys, Event, EventTask, EventThrowable, EventValues, Series, Tasks } from '../../thredlib';
-import { Adapter } from '../adapter/Adapter';
+import {
+  errorCodes,
+  errorKeys,
+  Event,
+  EventTask,
+  EventThrowable,
+  EventValues,
+  Series,
+  Tasks,
+} from '../../thredlib/index.js';
+import { Adapter } from '../adapter/Adapter.js';
 
 export class RobotAdapter implements Adapter {
   constructor(private config?: { hostString?: string; dbname?: string }) {}

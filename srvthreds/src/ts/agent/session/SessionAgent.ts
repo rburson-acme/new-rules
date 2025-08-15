@@ -1,6 +1,6 @@
-import { SystemController } from '../../persistence/controllers/SystemController';
+import { SystemController } from '../../persistence/controllers/SystemController.js';
 import { Event, Logger, Message, SessionsModel, StringMap } from '../../thredlib/index.js';
-import { EventPublisher, MessageHandler, MessageHandlerParams } from '../Agent.js';
+import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../Config.js';
 import { HttpService } from './ http/HttpService.js';
 import { SessionService } from './SessionService.js';
@@ -74,12 +74,12 @@ export class SessionAgent implements MessageHandler {
     const sessionsModel = await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath);
     if (!sessionsModel)
       throw new Error(
-        `Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`,
+        `Failed to load sessions model from sessionsModelName: ${sessionsModelName} or sessionsModelPath: ${sessionsModelPath}`,
       );
     const resolverConfig = await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath);
     if (!resolverConfig)
       throw new Error(
-        `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
+        `Failed to load resolver config from resolverConfigName: ${resolverConfigName} or resolverConfigPath: ${resolverConfigPath}`,
       );
     this.sessionService = new SessionService(sessionsModel, resolverConfig);
     const serviceListener = new SessionServiceListener(this.sessionService);

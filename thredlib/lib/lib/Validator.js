@@ -1,5 +1,5 @@
 import { Ajv } from "ajv";
-import eventSchema from '../schemas/event.json';
+import eventSchema from '../schemas/event.json' with { type: 'json' };
 export class Validator {
     ajv = new Ajv();
     isDataValid(data, schema) {

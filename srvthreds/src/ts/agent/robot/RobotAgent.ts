@@ -1,4 +1,4 @@
-import { MessageHandlerParams } from '../Agent.js';
+import { MessageHandlerParams } from '../AgentService.js';
 import { RobotAdapter } from './RobotAdapter.js';
 import BaseAgent from '../base/BaseAgent.js';
 

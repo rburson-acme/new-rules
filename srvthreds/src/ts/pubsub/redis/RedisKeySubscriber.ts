@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
-import { Logger } from '../../thredlib';
-import { KeySubscriber } from '../KeySubscriber';
+import { Logger } from '../../thredlib/index.js';
+import { KeySubscriber } from '../KeySubscriber.js';
 
 export class RedisKeySubscriber implements KeySubscriber {
   private sub;

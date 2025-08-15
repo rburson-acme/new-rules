@@ -1,10 +1,10 @@
-import { MessageQ } from '../queue/MessageQ';
+import { MessageQ } from '../queue/MessageQ.js';
 import { Message, Parallel, StringMap } from '../thredlib/index.js';
-import { Dispatcher } from './Dispatcher';
-import { MessageTemplate } from './MessageTemplate';
+import { Dispatcher } from './Dispatcher.js';
+import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 
-import { Session } from '../sessions/Session';
+import { Session } from '../sessions/Session.js';
 import { Logger as L } from '../thredlib/index.js';
 
 /**

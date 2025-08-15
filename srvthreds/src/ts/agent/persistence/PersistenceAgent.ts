@@ -1,4 +1,4 @@
-import { MessageHandlerParams } from '../Agent.js';
+import { MessageHandlerParams } from '../AgentService.js';
 import { PersistenceAdapter } from './PersistenceAdapter.js';
 import BaseAgent from '../base/BaseAgent.js';
 

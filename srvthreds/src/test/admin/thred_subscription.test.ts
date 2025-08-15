@@ -1,8 +1,8 @@
-import { ThredSubscriptions } from '../../ts/admin/ThredSubscriptions';
-import { PubSubFactory } from '../../ts/pubsub/PubSubFactory';
-import { Logger, LoggerLevel, Message } from '../../ts/thredlib';
-import { EngineConnectionManager, events, withDispatcherPromise, withPromiseHandlers } from '../testUtils';
-import { adminTestPatternModels } from './adminTestUtils';
+import { ThredSubscriptions } from '../../ts/admin/ThredSubscriptions.js';
+import { PubSubFactory } from '../../ts/pubsub/PubSubFactory.js';
+import { Logger, LoggerLevel, Message } from '../../ts/thredlib/index.js';
+import { EngineConnectionManager, events, withDispatcherPromise, withPromiseHandlers } from '../testUtils.js';
+import { adminTestPatternModels } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.DEBUG);
 

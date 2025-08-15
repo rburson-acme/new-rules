@@ -7,9 +7,7 @@
   "reactions": [
     {
       "name": "location_event_detected",
-      "allowedSources": [
-        "location_agent0"
-      ],
+      "allowedSources": ["location_agent0"],
       "condition": {
         "type": "filter",
         "xpr": "$event.type = 'org.location.event'",

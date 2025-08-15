@@ -1,10 +1,18 @@
-import { BroadcastCastMessage, errorCodes, errorKeys, Event, Events, EventThrowable, eventTypes } from '../../thredlib';
-import { Events as LocalEvents } from '../Events';
-import { MessageTemplate } from '../MessageTemplate';
-import { ReactionResult } from '../Reaction';
-import { ThredStore } from '../store/ThredStore';
-import { System } from '../System';
-import { Transition } from '../Transition';
+import {
+  BroadcastCastMessage,
+  errorCodes,
+  errorKeys,
+  Event,
+  Events,
+  EventThrowable,
+  eventTypes,
+} from '../../thredlib/index.js';
+import { Events as LocalEvents } from '../Events.js';
+import { MessageTemplate } from '../MessageTemplate.js';
+import { ReactionResult } from '../Reaction.js';
+import { ThredStore } from '../store/ThredStore.js';
+import { System } from '../System.js';
+import { Transition } from '../Transition.js';
 
 export class BuiltInReaction {
   static isBuiltInOp(event: Event): boolean {

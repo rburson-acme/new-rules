@@ -49,26 +49,32 @@ export class EngineServiceManager {
     resolverConfigName?: string;
     resolverConfigPath?: string;
   }) {
-    StaticEngineConfig.engineConfig =
-      (await SystemController.get().getFromNameOrPath(configName, configPath));
-    if (!StaticEngineConfig.engineConfig) throw new Error(`Failed to load engine config from configName: ${configName} or configPath: ${configPath}`);
+    StaticEngineConfig.engineConfig = await SystemController.get().getFromNameOrPath(configName, configPath);
+    if (!StaticEngineConfig.engineConfig)
+      throw new Error(`Failed to load engine config from configName: ${configName} or configPath: ${configPath}`);
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
-    const rascal_config =
-      (await SystemController.get().getFromNameOrPath(rascalConfigName, rascalConfigPath));
-    if (!rascal_config) throw new Error(`Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`);
+    const rascal_config = await SystemController.get().getFromNameOrPath(rascalConfigName, rascalConfigPath);
+    if (!rascal_config)
+      throw new Error(
+        `Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`,
+      );
     const qBroker = new RemoteQBroker(rascal_config);
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
-    const sessionsModel =
-      (await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath));
-      if (!sessionsModel) throw new Error(`Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`);
-    const resolverConfig =
-      (await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath));
-      if (!resolverConfig) throw new Error(`Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`);
+    const sessionsModel = await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath);
+    if (!sessionsModel)
+      throw new Error(
+        `Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`,
+      );
+    const resolverConfig = await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath);
+    if (!resolverConfig)
+      throw new Error(
+        `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
+      );
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
