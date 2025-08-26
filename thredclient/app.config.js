@@ -6,11 +6,11 @@ export default () => ({
     slug: 'thredclient',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/bot-icon.png',
+    icon: './assets/system.png',
     scheme: 'thredclient',
     userInterfaceStyle: 'automatic',
     splash: {
-      image: './assets/wt_splash.png',
+      image: './assets/initiative-blue.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
@@ -27,7 +27,7 @@ export default () => ({
         },
       },
       adaptiveIcon: {
-        foregroundImage: './assets/bot-icon.png',
+        foregroundImage: './assets/system.png',
         backgroundColor: '#ffffff',
       },
       permissions: ['android.permission.health.READ_BODY_TEMPERATURE'],
@@ -50,8 +50,9 @@ export default () => ({
         {
           android: {
             minSdkVersion: 26,
-            compileSdkVersion: 35,
-            targetSdkVersion: 35,
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
+            kotlinVersion: '1.9.25',
           },
         },
       ],

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image } from 'react-native';
 import { eventTypes } from 'thredlib';
-const systemAvatarImage = require('../../../assets/bot-icon.png');
+const systemAvatarImage = require('../../../assets/system.png');
 const defaultAvatarImage = require('../../../assets/default-icon.png');
 
 type EventSourceAvatarProps = {
