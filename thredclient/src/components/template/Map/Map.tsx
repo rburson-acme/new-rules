@@ -8,6 +8,7 @@ type MapProps = {
 
 export const Map = ({ locations }: MapProps) => {
   const { latitude, longitude, latitudeDelta, longitudeDelta } = getMapCenter(locations);
+  console.log({ latitude, longitude, latitudeDelta, longitudeDelta });
   return (
     <MapView
       initialRegion={{

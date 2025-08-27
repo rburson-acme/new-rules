@@ -1,5 +1,5 @@
 import { useEventManager } from '@/hooks/useEventManager';
-import { EventProvider } from '@/providers/EventProvider';
+import Link from 'next/link';
 import { MouseEvent, useEffect, useState } from 'react';
 import { Event } from 'thredlib';
 
@@ -107,6 +107,9 @@ export default function EchoTest({ user, setUser }: EchoTestProps) {
 
   return (
     <div className="w-full h-full p-5">
+      <div className="">
+        <Link href="/">{'< Return Home'}</Link>
+      </div>
       <form className="bg-black p-1 w-full h-full text-center" action="">
         <div className="h-[70%] m-auto p-2">
           <textarea

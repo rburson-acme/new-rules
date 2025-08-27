@@ -1,5 +1,6 @@
 import { getMapCenter, Location } from '@/src/core/Map';
 import { GoogleMap, Libraries, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { useCallback, useRef } from 'react';
 
 const containerStyle = {
   width: '180px',
@@ -18,6 +19,26 @@ export function Map({ locations }: MapProps) {
     libraries: libraries,
   });
 
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map;
+
+      if (locations.length === 1) {
+        // Single location: center + default zoom
+        map.setCenter({ lat: locations[0].latitude, lng: locations[0].longitude });
+        map.setZoom(12);
+      } else if (locations.length > 1) {
+        // Multiple locations: fit bounds
+        const bounds = new google.maps.LatLngBounds();
+        locations.forEach(loc => bounds.extend(new google.maps.LatLng(loc.latitude, loc.longitude)));
+        map.fitBounds(bounds, 20); // 20px padding
+      }
+    },
+    [locations],
+  );
+
   const { latitude, longitude } = getMapCenter(locations);
 
   if (!isLoaded) {
@@ -27,7 +48,7 @@ export function Map({ locations }: MapProps) {
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={{ lat: latitude, lng: longitude }}
-      zoom={10}
+      onLoad={onLoad}
       options={{
         scaleControl: false,
         cameraControl: false,
