@@ -52,7 +52,7 @@ export class EventStore {
 
     if (this.disposers.template) this.disposers.template();
     this.disposers.template = autorun(reaction => {
-      if (this.openTemplateStore?.interactionsComplete) {
+      if (this.openTemplateStore?.interactionsCompleteByUser ) {
         this.setIsPublishing(true);
         const advice = this.event?.data?.advice;
         const content = this.openTemplateStore.getEventContent();
@@ -68,6 +68,7 @@ export class EventStore {
           data: { title: resolvedTitle, content },
           thredId: this.event?.thredId,
           source: { id: sourceId, name: sourceName },
+          re: this.event?.id,
         });
 
         thredsStore.publish(event);

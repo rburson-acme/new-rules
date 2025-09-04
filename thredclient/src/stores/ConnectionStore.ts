@@ -20,15 +20,29 @@ export class ConnectionStore {
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
     if (event.data?.title?.includes('System Event')) return;
-    if (!thredStore) {
-      const thredStore = this.rootStore.thredsStore.addThred({
+
+    const targetThredStore =
+      thredStore ??
+      this.rootStore.thredsStore.addThred({
         id: thredId,
         name: thredId,
         status: ThredStatus.ACTIVE,
       });
-      thredStore.addEvent(event);
-    } else {
-      thredStore.addEvent(event);
+
+    targetThredStore.addEvent(event);
+
+    // If this is a broadcast response, mark the referenced event as completedExternally
+    const values = event.data?.content?.values;
+    if (values && typeof values === 'object' && 're' in values) {
+      const reId = values.re as string;
+
+      const referenced = targetThredStore.eventsStore?.eventStores.find(evtStore => evtStore.event?.id === reId);
+
+      if (referenced?.openTemplateStore) {
+        referenced.openTemplateStore.interactionStores.forEach(interactionStore => {
+          interactionStore.markCompletedExternally();
+        });
+      }
     }
   };
 
@@ -46,7 +60,7 @@ export class ConnectionStore {
     let url: string;
 
     if (Platform.OS === 'web') {
-      //   Todo: change this to the actual url
+      // Todo: change this to the actual url
       url = 'localhost:3000';
     } else {
       url = 'http://10.0.2.2:3000';

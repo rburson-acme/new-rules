@@ -6,7 +6,6 @@ import { ThredsStore } from '@/src/stores/ThredsStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import React from 'react';
 import { DateStamp } from './DateStamp';
-import { Image } from 'expo-image';
 import { BroadcastInput } from './BroadcastInput';
 
 type ThredProps = {

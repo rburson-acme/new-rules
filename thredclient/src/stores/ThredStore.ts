@@ -4,6 +4,12 @@ import { RootStore } from './RootStore';
 import { EventsStore } from './EventsStore';
 import { Thred } from '../core/Thred';
 
+type EventEntry = {
+  event: any;
+  hasResponse?: boolean;
+  responseValues?: Record<string, any>;
+};
+
 export class ThredStore {
   eventsStore?: EventsStore = undefined;
   eventsLoaded: boolean = false;
@@ -59,6 +65,7 @@ export class ThredStore {
     this.isLoadingEvents = true;
 
     return new Promise<void>((resolve, reject) => {
+      this.eventsStore?.clearEvents();
       const getEventsEvent = SystemEvents.getGetUserEventsEvent(this.thred.id, {
         id: userId,
         name: userId,
@@ -68,11 +75,10 @@ export class ThredStore {
         try {
           const eventHelper = new EventHelper(event);
           const events = eventHelper.valueNamed('events') || [];
-          events.forEach((eventRecord: any) => {
-            if (eventRecord.event) {
-              this.addEvent(eventRecord.event);
-            }
-          });
+
+          const eventMap = this.buildEventMap(events);
+
+          this.processEventMap(eventMap);
 
           this.eventsLoaded = true;
           resolve();
@@ -87,4 +93,94 @@ export class ThredStore {
       });
     });
   };
+
+  private buildEventMap(events: any[]) {
+    const eventMap = new Map<string, EventEntry>();
+    events.forEach((eventRecord: any) => {
+      if (!eventRecord.event) return;
+
+      const evt = eventRecord.event;
+      const values = evt?.data?.content?.values;
+
+      // If this event references another event
+      if (values && typeof values === 'object' && 're' in values) {
+        const reId = values.re as string;
+
+        const referenced = eventMap.get(reId);
+        if (referenced) {
+          eventMap.set(reId, {
+            ...referenced,
+            hasResponse: true,
+            responseValues: values,
+          });
+        }
+      }
+
+      eventMap.set(evt.id, { event: evt });
+    });
+    return eventMap;
+  }
+
+  private processEventMap(eventMap: Map<string, EventEntry>) {
+    const filteredEvents: any[] = [];
+
+    eventMap.forEach(entry => {
+      const evt = entry.event;
+      const values = evt?.data?.content?.values;
+
+      let shouldKeep = true;
+
+      // Case 1: broadcast-style response (re inside values)
+      if (values && typeof values === 'object' && 're' in values) {
+        this.handleBroadcastResponse(evt);
+      }
+
+      // Case 2: user-submitted response (re directly on event)
+      if ('re' in evt) {
+        this.handleUserResponse(evt);
+        shouldKeep = false;
+      }
+
+      if (shouldKeep) {
+        const eventStore = this.addEvent(evt);
+        filteredEvents.push(eventStore);
+      }
+    });
+  }
+
+  private handleBroadcastResponse(event: Event) {
+    const values = event.data?.content?.values;
+    if (values && typeof values === 'object' && 're' in values) {
+      const reId = values.re as string;
+      const referenced = this.eventsStore?.eventStores.find(eventStore => eventStore.event?.id === reId);
+
+      if (referenced) {
+        referenced.openTemplateStore?.interactionStores.forEach(interactionStore => {
+          interactionStore.markCompletedExternally();
+        });
+      }
+    }
+  }
+
+  private handleUserResponse(event: Event) {
+    const reId = event.re as string;
+    const referenced = this.eventsStore?.eventStores.find(eventStore => eventStore.event?.id === reId);
+    const responseValues = event.data?.content?.values;
+
+    if (referenced?.openTemplateStore) {
+      const normalizedValues: Record<string, any>[] = !responseValues
+        ? []
+        : Array.isArray(responseValues)
+        ? responseValues
+        : [responseValues]; // wrap single object into an array
+
+      referenced.openTemplateStore.interactionStores.forEach(interactionStore => {
+        normalizedValues.forEach(obj => {
+          Object.entries(obj).forEach(([key, value]) => {
+            interactionStore.setValueFromHistory(key, value);
+          });
+        });
+      });
+    }
+  }
 }

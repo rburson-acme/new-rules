@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useEffect, useState } from 'react';
 import { EventManager as EventManagerClass, Logger } from 'thredlib';
 
 export const EventContext = createContext<EventManagerClass | null>(null);

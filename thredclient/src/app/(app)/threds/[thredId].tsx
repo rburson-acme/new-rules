@@ -29,13 +29,13 @@ const ThredView = observer(() => {
       thredStore &&
       !thredStore.eventsLoaded &&
       !thredStore.isLoadingEvents &&
-      !thredStore.eventsStore?.eventStores.length
+      thredStore.eventsStore?.eventStores.length
     ) {
       thredStore.fetchEvents().catch(error => {
         console.error('Failed to fetch events for thred:', error);
       });
     }
-  }, [thredStore]);
+  }, []);
 
   if (!thredStore) return null;
 

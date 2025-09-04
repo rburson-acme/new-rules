@@ -1,13 +1,13 @@
-import { SensorMap } from '@/components/maps/SensorMap';
+import { SpotMap } from '@/components/maps/SpotMap';
 import { EventProvider } from '@/providers/EventProvider';
 import { MapProvider } from '@/providers/MapsProvider';
 
-export default function DroneMapPage() {
+export default function SpotPage() {
   return (
-    <EventProvider token="sensor_agent0">
+    <EventProvider token="robot0">
       <MapProvider>
         <div className="items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-          <SensorMap />
+          <SpotMap />
         </div>
       </MapProvider>
     </EventProvider>
