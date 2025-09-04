@@ -20,7 +20,7 @@ const defaultMapCenter = {
   lng: -80.84387312133761,
 };
 
-export function Map() {
+export function SensorMap() {
   const [sensors, setSensors] = useState<google.maps.LatLng[]>([]);
   const [entites, setEntities] = useState<MapEntity[]>([]);
   const [mode, setMode] = useState<MapSetMode>('sensor');
@@ -73,10 +73,10 @@ export function Map() {
           if (!entity.seen) {
             switch (entity.type) {
               case 'drone':
-                sendDrone(entity, sensor, index);
+                sendDrone(entity, index);
                 break;
               case 'enemy':
-                sendEnemy(entity, sensor, index);
+                sendEnemy(entity, index);
                 break;
             }
             entity.seen = true;
@@ -87,7 +87,7 @@ export function Map() {
     });
   }
 
-  function sendDrone(drone: google.maps.LatLng, sensor: google.maps.LatLng, sensorId: number) {
+  function sendDrone(drone: google.maps.LatLng, sensorId: number) {
     const event = EventBuilder.create({
       type: 'org.wt.sensor.detectionEvent',
       source: { id: nanoid(), name: 'Drone Detected' },
@@ -104,7 +104,7 @@ export function Map() {
     EventManager.publish(event);
   }
 
-  function sendEnemy(enemy: google.maps.LatLng, sensor: google.maps.LatLng, sensorId: number) {
+  function sendEnemy(enemy: google.maps.LatLng, sensorId: number) {
     const event = EventBuilder.create({
       type: 'org.cmi2.sensor.detectionEvent',
       source: { id: nanoid(), name: 'Enemy Detected' },

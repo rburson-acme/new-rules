@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { PinIcon } from '@/components/icons/PinIcon';
 import { BeakerIcon } from '@/components/icons/BeakerIcon';
+import { PawprintIcon } from '@/components/icons/PawprintIcon';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,6 +29,12 @@ export default function Home() {
         className="flex flex-col items-center justify-center gap-4 border-2 border-gray-800 p-8 rounded bg-gray-800 w-56">
         <BeakerIcon className="h-16 w-16" />
         <h1 className="text-2xl">Echo Test</h1>
+      </Link>
+      <Link
+        href="/spot"
+        className="flex flex-col items-center justify-center gap-4 border-2 border-gray-800 p-8 rounded bg-gray-800 w-56">
+        <PawprintIcon className="h-16 w-16" />
+        <h1 className="text-2xl">Spot</h1>
       </Link>
     </div>
   );

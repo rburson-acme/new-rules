@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { EventData, Events } from 'thredlib';
+import { EventData, EventHelper, Events } from 'thredlib';
 import { EventStore } from '@/src/stores/EventStore';
 import { Interaction } from '../template/Interaction';
 import { getComponentTypes } from '../template/componentTypes';
@@ -20,17 +20,17 @@ export const Event = ({ data, eventStore }: EventProps) => {
 
   const templateStore = eventStore.openTemplateStore;
   if (!data) return null;
-  const values = data.content?.values;
+  const content = data.content;
   if (!eventStore.event) return null;
   const error = Events.getError(eventStore.event);
 
   if (error) {
     return <ErrorEvent error={error} />;
   }
-  if (eventStore.event.type === 'org.wt.broadcast') {
-    return <IncomingBroadcast values={values} time={eventStore.event.time} />;
-  } else if (eventStore.event.type === 'org.wt.client.broadcast') {
-    return <OutgoingBroadcast values={values} />;
+  if (eventStore.event.type === 'org.wt.broadcast' && content) {
+    return <IncomingBroadcast content={content} time={eventStore.event.time} />;
+  } else if (eventStore.event.type === 'org.wt.client.broadcast' && content) {
+    return <OutgoingBroadcast content={content} />;
   } else {
     return (
       <View style={styles.containerStyle}>

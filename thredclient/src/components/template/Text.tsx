@@ -9,5 +9,15 @@ type TextProps = {
 };
 export const Text = ({ value, style }: TextProps) => {
   const { colors } = useTheme();
-  return <TextBubble text={value} bubbleStyle={{ backgroundColor: colors.lightGrey, maxWidth: '80%' }} />;
+  //only make the text bubble take up as much space as it needs
+  return (
+    <TextBubble
+      text={value}
+      bubbleStyle={{
+        backgroundColor: colors.lightGrey,
+        alignSelf: 'flex-start',
+        maxWidth: '80%',
+      }}
+    />
+  );
 };

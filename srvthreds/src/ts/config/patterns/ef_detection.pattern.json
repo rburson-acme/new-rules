@@ -4,6 +4,8 @@
   },
   "name": "Enemy Forces Detection",
   "id": "ef_detection",
+  "broadcastAllowed": true,
+  "echoResponses": true,
   "reactions": [
     {
       "name": "notify_participants",
@@ -102,7 +104,7 @@
           }
         },
         "publish": {
-          "to": "org.wt.robot",
+          "to": "robot0",
           "onPublish": {
             "xpr": "$setLocal('deploy_robot_id', $event.id)"
           }
@@ -111,10 +113,10 @@
     },
     {
       "name": "notify_robot_deployed",
-      "allowedSources": ["/org\\.wt\\.robot.*/"],
+      "allowedSources": ["robot0"],
       "condition": {
         "type": "filter",
-        "xpr": "$event.type = 'org.wt.robot' and $event.re = $local('deploy_robot_id')",
+        "xpr": "$event.type = 'robot0' and $event.re = $local('deploy_robot_id')",
         "onTrue": {
           "xpr": "$setLocal('robot_data', { 'robotId': $valueNamed('robotId'), 'videoStreamUrl': $valueNamed('videoStreamUrl'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
         },

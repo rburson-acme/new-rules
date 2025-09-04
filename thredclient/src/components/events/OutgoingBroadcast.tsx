@@ -3,19 +3,20 @@ import { TextBubble } from '../common/TextBubble';
 import { turnValueToText } from '@/src/utils/turnValueToText';
 import { Image } from 'expo-image';
 import { useTheme } from '@/src/contexts/ThemeContext';
+import { EventContent } from 'thredlib';
 
 type OutgoingBroadcastProps = {
-  values: Record<string, any> | Record<string, any>[] | undefined;
+  content: EventContent;
 };
-export const OutgoingBroadcast = ({ values }: OutgoingBroadcastProps) => {
+export const OutgoingBroadcast = ({ content }: OutgoingBroadcastProps) => {
   const { colors } = useTheme();
   const avatar = require('../../../assets/avatar.png');
 
-  if (Array.isArray(values)) return null;
+  if (Array.isArray(content.values)) return null;
   return (
     <View style={styles.containerStyle}>
       <TextBubble
-        text={turnValueToText(values?.message)}
+        text={turnValueToText(content.values?.message)}
         bubbleStyle={{ backgroundColor: colors.buttonTertiary, alignSelf: 'center' }}
         textStyle={{ color: '#fff' }}
       />

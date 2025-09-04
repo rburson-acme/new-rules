@@ -35,6 +35,28 @@ export class TemplateStore {
     );
   }
 
+  get interactionsCompleteByUser() {
+    return (
+      this.interactionStores.length > 0 &&
+      this.interactionStores.every(
+        store => store.isComplete && !store.completedExternally && !store.hydratedFromHistory,
+      )
+    );
+  }
+  get interactionsCompleteFromHistory() {
+    return (
+      this.interactionStores.length > 0 &&
+      this.interactionStores.every(store => store.isComplete && store.hydratedFromHistory)
+    );
+  }
+
+  get interactionsCompleteExternally() {
+    return (
+      this.interactionStores.length > 0 &&
+      this.interactionStores.every(store => store.isComplete && store.completedExternally)
+    );
+  }
+
   // content for the new Event
   getEventContent() {
     const values = this.interactionStores.reduce((accum, interactionStore) => {

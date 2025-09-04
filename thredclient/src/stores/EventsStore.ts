@@ -1,4 +1,4 @@
-import { Event, eventTypes } from 'thredlib';
+import { Event } from 'thredlib';
 import { observable, action, computed, makeObservable } from 'mobx';
 import { EventStore } from './EventStore';
 import { RootStore } from './RootStore';
@@ -38,6 +38,11 @@ export class EventsStore {
 
   resetUnseenEvents() {
     this.unseenEvents = 0;
+  }
+
+  clearEvents() {
+    this.eventStores.forEach(eventStore => eventStore.close());
+    this.eventStores = [];
   }
 
   addEvent(event: Event): void {

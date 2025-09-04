@@ -26,7 +26,7 @@ export const InputType = observer(({ name, type, interactionStore, set, multiple
   const value = interactionStore.getValue(name);
 
   const { colors, fonts } = useTheme();
-
+  if (interactionStore.completedExternally) return null;
   if (value) {
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
