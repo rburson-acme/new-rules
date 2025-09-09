@@ -1,3 +1,4 @@
+import { BasicAuth } from '../../auth/BasicAuth.js';
 import { SystemController } from '../../persistence/controllers/SystemController.js';
 import { Event, Logger, Message, SessionsModel, StringMap } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
@@ -41,7 +42,7 @@ export class SessionAgent implements MessageHandler {
   private sessionAgentArgs: SessionAgentArgs;
 
   // dispatchers for sending events (from Messages) to outbound channels
-  dispatchers: ((event: Event, channelId: string) => void)[] = [];
+  dispatchers: ((messageOrEvent: Message | Event, channelId: string) => void)[] = [];
 
   constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
@@ -104,14 +105,14 @@ export class SessionAgent implements MessageHandler {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    const channelIds = await this.sessionService?.getChannels(message);
-    channelIds?.forEach((channelId) => {
+    const channels = await this.sessionService?.getChannels(message);
+    channels?.forEach((channel) => {
       this.dispatchers.forEach((dispatcher) => {
         try {
-          dispatcher(message.event, channelId);
+          channel.isProxy ? dispatcher(message, channel.id) : dispatcher(message.event, channel.id);
         } catch (e) {
           Logger.error(e);
-          Logger.error(`session: Failed to send event to outbound channel ${channelId}`);
+          Logger.error(`session: Failed to send event to outbound channel ${channel}`);
         }
       });
     });

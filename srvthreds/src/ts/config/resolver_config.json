@@ -16,7 +16,8 @@
       "name": "Robot Agent",
       "nodeType": "org.wt.robot",
       "nodeId": "org.wt.robot1",
-      "address": "org.wt.robot"
+      "address": "org.wt.robot",
+      "remote": true
     }
   ]
 }

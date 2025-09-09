@@ -9,11 +9,11 @@ import {
   errorKeys,
   EventContent,
   serializableError,
-  EventManager,
 } from '../thredlib/index.js';
 import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
 import { Adapter } from './adapter/Adapter.js';
+import { RemoteConnectionManager } from './RemoteConnectionManager.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -52,7 +52,7 @@ export class RemoteAgentService {
   private handler?: MessageHandler;
   private agentConfig?: AgentConfig;
   readonly eventPublisher: EventPublisher;
-  private eventManager: EventManager;
+  private connectionManager: RemoteConnectionManager;
 
   constructor(
     private params: {
@@ -61,7 +61,7 @@ export class RemoteAgentService {
     },
   ) {
     this.eventPublisher = { publishEvent: this.publishEvent, createOutboundEvent: this.createOutboundEvent };
-    this.eventManager = new EventManager();
+    this.connectionManager = new RemoteConnectionManager();
   }
 
   async start() {
@@ -86,7 +86,8 @@ export class RemoteAgentService {
       await this.handler?.initialize();
       Logger.info(`RemoteAgent.start(): ${this.agentConfig.nodeId} initialized.`);
 
-      await this.connect('http://localhost:3000', 'remote_agent_auth_token');
+      //await this.connect('http://localhost:3000', 'remote_agent_auth_token');
+      await this.connect('http://localhost:3000', 'org.wt.robot');
     } catch (e) {
       Logger.error('RemoteAgent.start(): failed to start the agent', { cause: e });
       throw e;
@@ -95,10 +96,16 @@ export class RemoteAgentService {
 
   async connect(url: string, token?: string) {
     try {
-      await this.eventManager.connect(url, { transports: ['websocket'], jsonp: false, auth: { token } });
-      this.eventManager.subscribe((event: Event) => {
-        //proxy through the event and recreate the Message
-        this.handleMessage({ event, id: `${event.id}-${this.agentConfig!.nodeId}`, to: [this.agentConfig!.nodeId] });
+      // remote agents should request message proxying so that the message can be further routed if necessary
+      await this.connectionManager.connect(url, {
+        transports: ['websocket'],
+        jsonp: false,
+        auth: { token },
+        extraHeaders: { 'x-proxy-message': true },
+      });
+      this.connectionManager.subscribe((message: Message) => {
+        //proxy the Message through
+        this.handleMessage(message);
       });
     } catch (e) {
       throw new Error(`RemoteAgent: failed to connect to SessionService at : ${url}`, { cause: e });
@@ -126,7 +133,7 @@ export class RemoteAgentService {
       Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
     );
     Logger.logObject(event);
-    this.eventManager.publish(event);
+    this.connectionManager.publish(event);
   };
 
   private async handleMessage(message: Message) {

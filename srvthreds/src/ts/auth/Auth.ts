@@ -1,10 +1,16 @@
 export interface AuthResult {
-  token: string;
-  expires: number;
+  accessResult: { accessToken: string, expires: number }
+  refreshResult: { refreshToken: string, expires: number }
+}
+
+export interface TokenPayload {
+  participantId: string;
+  exp?: number;
+  jti?: string;
 }
 
 export interface Auth {
-  login(username: string, password: string): AuthResult;
-
-  validate(token: string): boolean;
+  login(participantId: string, password: string): Promise<AuthResult>;
+  refresh(refreshToken: string): Promise<{ accessToken: string, expires: number }>;
+  validate(token: string): Promise<TokenPayload>;
 }

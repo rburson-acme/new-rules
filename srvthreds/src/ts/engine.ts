@@ -1,5 +1,3 @@
-import './init.js';
-
 import { Config as StaticEngineConfig } from './engine/Config.js';
 import { Server } from './engine/Server.js';
 import { EventQ } from './queue/EventQ.js';

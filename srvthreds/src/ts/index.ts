@@ -1,3 +1,4 @@
+import './init.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Logger, LoggerLevel } from './thredlib/index.js';

@@ -65,6 +65,14 @@ export class UserController {
     return this.persistence.getOne({ type: Types.User, matcher: { id } });
   }
 
+  async getUserByHandle(handle: string): Promise<User | null> {
+    return this.persistence.getOne({ type: Types.User, matcher: { handle } });
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.persistence.getOne({ type: Types.User, matcher: { email } });
+  } 
+
   async getUserArchivedThredIds(userId: string): Promise<User | null> {
     return this.persistence.getOne({
       type: Types.User,

@@ -3,10 +3,12 @@ import express from 'express';
 import { Express } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { getHandleLogin } from './LoginHandler.js';
+import { getHandleLogin, getHandleRefresh } from './AuthHandler.js';
 import { ServiceListener } from '../ServiceListener.js';
 import { EventPublisher } from '../../AgentService.js';
 import { getHandleEvent } from './EventHandler.js';
+import { BasicAuth } from '../../../auth/BasicAuth.js';
+import { Auth } from '../../../auth/Auth.js';
 
 const DEFAULT_PORT = 3000;
 
@@ -35,9 +37,14 @@ export class HttpService {
     // cors needs to be confgured more granularly here
     app.use(cors());
 
+    const auth: Auth = BasicAuth.getInstance();
     app.post(
       '/login',
-      getHandleLogin({ serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
+      getHandleLogin({ auth, serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
+    );
+    app.post(
+      '/refresh',
+      getHandleRefresh({ auth, serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
     );
     app.post(
       '/event',

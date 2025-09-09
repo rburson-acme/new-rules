@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+.husky/
+
+# node.js
+node_modules
+npm-debug.log
+yarn-error.log
+dist-server
+
+# OSX
+.DS_Store
+
+#-*- emacs -*-
+*#
+.#*
+
+# misc
+.vscode
+*.code-workspace
+.idea
+.docker
+*.tmp
+*.bak
+*.old
+.roo
+.roomodes
+CLAUDE*
+*.log
+*.tmp
+tmp/
+temp/
+.history/
+Dockerfile
+docker-compose*
+.eslint*
+*.md
+.env*
+.prettier*
+sample.env
+*coverage*

@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import express, { Express } from 'express';
 import http from 'http';
-import { Event, Logger, StringMap } from '../../thredlib/index.js';
+import { Event, Logger, Message, StringMap } from '../../thredlib/index.js';
 import { Auth } from '../../auth/Auth.js';
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Socket } from 'socket.io';
@@ -16,6 +16,10 @@ export interface SocketServiceParams {
   auth?: Auth;
 }
 
+export interface SocketData {
+  participantId: string;
+}
+
 /**
  * This service handles websocket connections, sending and recieveing events to clients.
  * It also handles mapping sessions to external channels (i.e. sockets)
@@ -26,26 +30,26 @@ export class SocketService {
   private serviceListener: ServiceListener;
   private publisher: EventPublisher;
   private nodeId: string;
-  private channels: StringMap<(event: Event, channelId: string) => void> = {};
+  private channels: StringMap<(messageOrEvent: any, channelId: string) => void> = {};
   private io: Server;
   private auth: Auth;
 
   constructor(params: SocketServiceParams) {
     this.serviceListener = params.serviceListener;
-    this.auth = params.auth || new BasicAuth();
+    this.auth = params.auth || BasicAuth.getInstance();
     this.publisher = params.publisher;
     this.nodeId = params.nodeId;
     this.httpServer = params.httpServer;
-    this.io = new Server(this.httpServer);
+    this.io = new Server<SocketData>(this.httpServer);
     this.io.use(this.authenticate);
     this.io.on('connection', this.onConnect);
   }
 
   // Handle outbound Messages (event + to)
-  public send = (event: Event, channelId: string) => {
+  public send = (messageOrEvent: Message | Event, channelId: string) => {
     const channel = this.channels[channelId];
     if (channel) {
-      channel(event, channelId);
+      channel(messageOrEvent, channelId);
     } else {
       Logger.debug(`session: channel ${channelId} not found`);
     }
@@ -59,32 +63,36 @@ export class SocketService {
     Logger.debug(`session: validation successful for: token ${token}`);
 
     // @TODO RLS-141 - use basic auth to validate the token here
-
-    this.auth.validate(token) ? next() : next(new Error('Authentication error: Invalid token'));
+    this.auth.validate(token).then((payload) => {
+      socket.data.participantId = payload.participantId;
+      next();
+    }).catch((err) => {
+      Logger.debug(`session: validation failed for: token ${token}`, err);
+      next(new Error('Authentication error: Invalid token'));
+    });
   };
 
   private onConnect = (socket: Socket) => {
-    // this.auth.authenticate(token);
-    // @TODO RLS-141 - obtain the participantId from the token here
-    const participantId = socket.handshake.auth.token;
-    // @TODO RLS-141 - token will be the sessionId (or contain it)
+    const participantId = socket.data.participantId;
+    // check for proxy directive - client can request to proxy messages
+    const isProxy = !!socket.handshake.headers['x-proxy-message'];
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
-    Logger.debug(`session: a user connected on channel ${channelId} as ${participantId} session ${sessionId}`);
+    Logger.debug(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     this.channels[channelId] = this.sendSocket;
     // for websockets, session must include a node id (so that we can route message back here)
     this.serviceListener
-      .newSession({ sessionId, nodeId: this.nodeId }, participantId, channelId)
+      .newSession({ sessionId, nodeId: this.nodeId, data: { isProxy } }, participantId, channelId)
       .then(() => {
         socket.on('disconnect', () => {
           delete this.channels[channelId];
           this.serviceListener
             .sessionEnded(sessionId)
             .then(() => {
-              Logger.debug(`session: user ${participantId} disconnected`);
+              Logger.debug(`session: participant ${participantId} disconnected`);
             })
             .catch((e) => {
-              Logger.debug(`session: user ${participantId}::${sessionId} failed to remove Session`);
+              Logger.debug(`session: participant ${participantId}::${sessionId} failed to remove Session`);
             });
         });
         // Handle inbound Events
@@ -96,14 +104,14 @@ export class SocketService {
         });
       })
       .catch((e) => {
-        Logger.debug(`session: user ${participantId}::${sessionId} failed to add Session`);
+        Logger.debug(`session: participant ${participantId}::${sessionId} failed to add Session`);
       });
   };
 
-  private sendSocket = (event: Event, channelId: string) => {
+  private sendSocket = (messageOrEvent: any, channelId: string) => {
     const toSocket = this.io.of('/').sockets.get(channelId);
     if (toSocket && toSocket.connected) {
-      toSocket.send(event);
+      toSocket.send(messageOrEvent);
     } else {
       Logger.debug(`session: socket ${channelId} is not connected`);
     }

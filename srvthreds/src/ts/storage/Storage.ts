@@ -48,6 +48,10 @@ export interface Storage {
      extend the lock
     */
   removeFromSetWithLock(type: string, item: string, setId: string, ttl?: number): Promise<void>;
+
+  setKey(type: string, key: string, value: string, expSecs: number): Promise<void>;
+  getKey(type: string, key: string): Promise<any>;
+  deleteKey(type: string, key: string): Promise<void>;
 }
 
 export interface Lock {
@@ -61,4 +65,5 @@ export const Types = {
   SessionParticipant: 'SessionParticipant',
   ParticipantSessions: 'ParticipantSession',
   ParticipantThreds: 'ParticipantThreds',
+  RefreshTokens: 'RefreshTokens'
 };

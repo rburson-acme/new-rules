@@ -34,7 +34,9 @@ export class QDispatcher implements Dispatcher {
       // ----- Address any messages to Agents
       const addressResolver = sessions.getAddressResolver();
       // seperate service addresses from participant addresses
-      const { serviceAddresses, participantAddresses } = addressResolver.filterServiceAddresses(to);
+      const { serviceAddresses, remoteServiceAddresses, participantAddresses } = addressResolver.filterServiceAddresses(to);
+      // add the remoteService addresses to the participantAddresses array
+      participantAddresses.push(...remoteServiceAddresses);
       // -------------------------------------------------------------------
       // get a map of participantId to Sessions[] for all addressees
       const sessionsByParticipant: StringMap<Session[]> =
@@ -45,7 +47,7 @@ export class QDispatcher implements Dispatcher {
         return;
       }
 
-      // send messages to agents
+      // send messages to local agents
       await Parallel.forEach(serviceAddresses, async (address, index) => {
         try {
           // get the service address from the supplied nodeId or nodeType to be used as the 'topic'

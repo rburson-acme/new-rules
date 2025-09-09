@@ -1,16 +1,11 @@
 import {
   Logger,
   LoggerLevel,
-  systemEventTypes,
-  PatternModel,
-  Message,
+  systemEventTypes, Message,
   Events,
-  SystemEvents,
-  Thred,
-  Id,
+  SystemEvents
 } from '../../ts/thredlib/index.js';
-import { createDbFixtures, EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
-import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
+import { createDbFixtures, EngineConnectionManager, events, withDispatcherPromise } from '../testUtils.js';
 import { adminTestPatternModels, adminTestSource, userTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);

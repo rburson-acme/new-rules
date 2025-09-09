@@ -45,8 +45,8 @@ async function loadPatternsIntoStorage() {
   await ConfigLoader.loadStorageFromPersistence(SystemController.get(), StorageFactory.getStorage());
 }
 
-// demo
-async function loadDemoObjects() {
+// uav demo
+async function loadUAVDemoObjects() {
   const persistence = PersistenceFactory.getPersistence({ dbname: 'demo' });
   await persistence.upsert({
     type: 'ContactInfo',
@@ -128,7 +128,7 @@ async function run() {
   await createTestUsers();
   await createTestData();
   //demo
-  await loadDemoObjects();
+  await loadUAVDemoObjects();
 
   await StorageFactory.getStorage().disconnect();
   await PersistenceFactory.disconnectAll();
