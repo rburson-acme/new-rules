@@ -10,9 +10,12 @@ export default function Messenger() {
   const userId = authStore.userId;
 
   useEffect(() => {
+    async function fetchThreds() {
+      await thredsStore.fetchAllThreds(userId || '');
+    }
     navigation.setOptions({ headerShown: false });
-    thredsStore.fetchAllThreds(userId || '');
-  }, [navigation]);
+    fetchThreds();
+  }, []);
 
   return <ThredsView rootStore={rootStore} />;
 }

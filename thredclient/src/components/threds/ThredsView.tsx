@@ -1,6 +1,6 @@
 import { RootStore } from '@/src/stores/RootStore';
 import { observer } from 'mobx-react-lite';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import SearchBar from '../common/SearchBar';
 import { ThredList } from './ThredList';
 import { useTheme } from '@/src/contexts/ThemeContext';

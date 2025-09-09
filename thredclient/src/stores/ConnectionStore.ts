@@ -1,6 +1,7 @@
 import { Logger, EventManager, Event, ThredStatus } from 'thredlib';
 import { RootStore } from './RootStore';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 export class ConnectionStore {
   private eventManager: EventManager;
@@ -15,7 +16,7 @@ export class ConnectionStore {
     this.eventManager?.exchange(event, notifyFn);
   };
 
-  consume = (event: Event) => {
+  consume = async (event: Event) => {
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);
     const thredStore = this.rootStore.thredsStore.thredStores.find(thredStore => thredStore.thred.id === thredId);
@@ -43,6 +44,16 @@ export class ConnectionStore {
           interactionStore.markCompletedExternally();
         });
       }
+    }
+    if (AppState.currentState !== 'active' && Platform.OS !== 'web') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: event.data?.title ?? 'New Event',
+          body: this.getNotificationBody(event),
+          data: { eventId: event.id },
+        },
+        trigger: null, // fire immediately
+      });
     }
   };
 
@@ -76,5 +87,12 @@ export class ConnectionStore {
         this.hasConnection = true;
         console.log('connected');
       });
+  }
+
+  private getNotificationBody(event: Event): string {
+    const values = event.data?.content?.values;
+    if (typeof values === 'string') return values;
+    if (values) return JSON.stringify(values);
+    return 'You have a new event.';
   }
 }

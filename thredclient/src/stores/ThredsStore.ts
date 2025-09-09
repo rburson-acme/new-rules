@@ -27,15 +27,18 @@ export class ThredsStore {
 
   async fetchAllThreds(userId: string) {
     const getThredsEvent = SystemEvents.getGetUserThredsEvent({ id: userId, name: userId }, 'all');
-
     const thredsEvent = await new Promise<any>((resolve, reject) => {
-      this.rootStore.connectionStore.exchange(getThredsEvent, event => {
-        resolve(event);
-      });
+      try {
+        this.rootStore.connectionStore.exchange(getThredsEvent, event => {
+          resolve(event);
+        });
+      } catch (err) {
+        console.error('exchange failed:', err);
+        reject(err);
+      }
     });
 
     const response = thredsEvent.data?.content?.values as GetUserThredsResult;
-
     this.thredStores = response.results.map(result => {
       return new ThredStore(
         { id: result.thred.id, name: result.thred.id, status: result.thred.status },
