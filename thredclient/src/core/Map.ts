@@ -1,16 +1,16 @@
-export type Location = {
-  name: string;
-  latitude: number;
-  longitude: number;
-};
+import { MapLocation } from 'thredlib';
 
-export function getMapCenter(locations: Location[]) {
-  let minLat = locations[0].latitude;
-  let maxLat = locations[0].latitude;
-  let minLng = locations[0].longitude;
-  let maxLng = locations[0].longitude;
+export function getMapCenter(locations: MapLocation[]) {
+  const numberLocations = locations.map(({ latitude, longitude }) => ({
+    latitude: Number(latitude),
+    longitude: Number(longitude),
+  }));
+  let minLat = numberLocations[0].latitude;
+  let maxLat = numberLocations[0].latitude;
+  let minLng = numberLocations[0].longitude;
+  let maxLng = numberLocations[0].longitude;
 
-  locations.forEach(({ latitude, longitude }) => {
+  numberLocations.forEach(({ latitude, longitude }) => {
     if (latitude < minLat) minLat = latitude;
     if (latitude > maxLat) maxLat = latitude;
     if (longitude < minLng) minLng = longitude;

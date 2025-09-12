@@ -1,9 +1,11 @@
-import { getMapCenter, Location } from '@/src/core/Map';
+import { getMapCenter } from '@/src/core/Map';
+import { Image } from 'react-native';
 
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { MapLocation } from 'thredlib';
 
 type MapProps = {
-  locations: Location[];
+  locations: MapLocation[];
 };
 
 export const Map = ({ locations }: MapProps) => {
@@ -27,11 +29,18 @@ export const Map = ({ locations }: MapProps) => {
           <Marker
             key={location.name}
             coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
+              latitude: Number(location.latitude),
+              longitude: Number(location.longitude),
             }}
-            title={location.name}
-          />
+            title={location.name}>
+            {location.display && (
+              <Image
+                source={{ uri: location.display }}
+                style={{ width: 50, height: 50 }} // control size here
+                resizeMode="contain"
+              />
+            )}
+          </Marker>
         );
       })}
     </MapView>
