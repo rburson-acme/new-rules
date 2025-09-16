@@ -34,7 +34,8 @@ export class QDispatcher implements Dispatcher {
       // ----- Address any messages to Agents
       const addressResolver = sessions.getAddressResolver();
       // seperate service addresses from participant addresses
-      const { serviceAddresses, remoteServiceAddresses, participantAddresses } = addressResolver.filterServiceAddresses(to);
+      const { serviceAddresses, remoteServiceAddresses, participantAddresses } =
+        addressResolver.filterServiceAddresses(to);
       // add the remoteService addresses to the participantAddresses array
       participantAddresses.push(...remoteServiceAddresses);
       // -------------------------------------------------------------------

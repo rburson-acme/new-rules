@@ -51,7 +51,7 @@ export interface Storage {
 
   setKey(type: string, key: string, value: string, expSecs: number): Promise<void>;
   getKey(type: string, key: string): Promise<any>;
-  deleteKey(type: string, key: string): Promise<void>;
+  deleteKey(type: string, key: string): Promise<number>;
 }
 
 export interface Lock {
@@ -65,5 +65,5 @@ export const Types = {
   SessionParticipant: 'SessionParticipant',
   ParticipantSessions: 'ParticipantSession',
   ParticipantThreds: 'ParticipantThreds',
-  RefreshTokens: 'RefreshTokens'
+  RefreshTokens: 'RefreshTokens',
 };

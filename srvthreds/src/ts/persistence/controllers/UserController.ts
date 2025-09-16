@@ -71,7 +71,7 @@ export class UserController {
 
   async getUserByEmail(email: string): Promise<User | null> {
     return this.persistence.getOne({ type: Types.User, matcher: { email } });
-  } 
+  }
 
   async getUserArchivedThredIds(userId: string): Promise<User | null> {
     return this.persistence.getOne({

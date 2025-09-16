@@ -388,7 +388,7 @@ export class RedisStorage implements Storage {
     Key expiration functions
   */
   async setKey(type: string, key: string, value: string, expSecs?: number): Promise<void> {
-    if(!expSecs) {
+    if (!expSecs) {
       await this.client.set($key(type, key), JSON.stringify(value));
     } else {
       await this.client.setEx($key(type, key), expSecs, JSON.stringify(value));
@@ -396,11 +396,11 @@ export class RedisStorage implements Storage {
   }
 
   async getKey(type: string, key: string): Promise<any> {
-      return await this.client.get($key(type, key)).then((resp) => (resp ? JSON.parse(resp) : undefined));
+    return await this.client.get($key(type, key)).then((resp) => (resp ? JSON.parse(resp) : undefined));
   }
-  
-  async deleteKey(type: string, key: string): Promise<void> {
-      return await this.client.del($key(type, key)); 
+
+  async deleteKey(type: string, key: string): Promise<number> {
+    return await this.client.del($key(type, key));
   }
 
   private async getLock(key: string, ttl?: number): Promise<RLock> {

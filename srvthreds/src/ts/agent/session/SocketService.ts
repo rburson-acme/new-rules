@@ -13,7 +13,7 @@ export interface SocketServiceParams {
   publisher: EventPublisher;
   nodeId: string;
   httpServer: http.Server;
-  auth?: Auth;
+  auth: Auth;
 }
 
 export interface SocketData {
@@ -36,7 +36,7 @@ export class SocketService {
 
   constructor(params: SocketServiceParams) {
     this.serviceListener = params.serviceListener;
-    this.auth = params.auth || BasicAuth.getInstance();
+    this.auth = params.auth;
     this.publisher = params.publisher;
     this.nodeId = params.nodeId;
     this.httpServer = params.httpServer;
@@ -58,18 +58,22 @@ export class SocketService {
   // see this page for client handling of Auth error
   // https://socket.io/docs/v4/middlewares/
   private authenticate = (socket: Socket, next: (err?: any) => void) => {
-    const token = socket.handshake.auth.token;
+    socket.data.participantId = socket.handshake.auth.token;
+    next();
+    // UNCOMMENT TO TURN ON AUTHENTICATION
+    /* const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token'));
     Logger.debug(`session: validation successful for: token ${token}`);
 
     // @TODO RLS-141 - use basic auth to validate the token here
-    this.auth.validate(token).then((payload) => {
+    this.auth.validateAccessToken(token).then((payload) => {
       socket.data.participantId = payload.participantId;
       next();
     }).catch((err) => {
       Logger.debug(`session: validation failed for: token ${token}`, err);
       next(new Error('Authentication error: Invalid token'));
     });
+    */
   };
 
   private onConnect = (socket: Socket) => {

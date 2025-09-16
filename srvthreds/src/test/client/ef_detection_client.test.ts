@@ -1,9 +1,4 @@
-import {
-  Logger,
-  LoggerLevel,
-  EventManager,
-  EventBuilder
-} from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel, EventManager, EventBuilder } from '../../ts/thredlib/index.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 

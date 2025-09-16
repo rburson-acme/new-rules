@@ -1,10 +1,4 @@
-import {
-  Event, Series,
-  Logger,
-  Message,
-  Connection,
-  SocketIOConnection
-} from '../thredlib/index.js';
+import { Event, Series, Logger, Message, Connection, SocketIOConnection } from '../../thredlib/index.js';
 
 interface Subscriber {
   notifyFn: (message: Message) => void;
@@ -74,13 +68,11 @@ export class RemoteConnectionManager {
 
   private connectionListener = async (message: Message): Promise<void> => {
     return Series.forEach([...this.subscribers], async (subscriber) => {
-        try {
-          subscriber.notifyFn(message);
-        } catch (e: any) {
-          Logger.error(`RemoteConnectionManager::Error in subscriber: ${e.message}`, e);
-        }
+      try {
+        subscriber.notifyFn(message);
+      } catch (e: any) {
+        Logger.error(`RemoteConnectionManager::Error in subscriber: ${e.message}`, e);
       }
-    );
+    });
   };
-
 }

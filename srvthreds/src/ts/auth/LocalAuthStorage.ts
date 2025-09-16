@@ -1,30 +1,29 @@
 import { Storage, Types } from '../storage/Storage.js';
 import { AuthStorageOps } from './AuthStorageOps.js';
 
-export class AuthStorage implements AuthStorageOps {
-  constructor(private storage: Storage) {}
+export class LocalAuthStorage implements AuthStorageOps {
+  private authorizedTokens = process.env.AUTHORIZED_TOKENS ? process.env.AUTHORIZED_TOKENS.split(',') : [];
 
   /* 
     JTI = JWT ID, a unique identifier for the token
     Store the refresh token with an expiration time
   */
   async saveRefreshToken(jti: string, participantId: string, expSecs: number): Promise<void> {
-    await this.storage.setKey(Types.RefreshTokens, jti, participantId, expSecs);
+    throw new Error('Method not implemented.');
   }
 
   /*
     Remove the refresh token from storage
   */
   async revokeRefreshToken(jti: string): Promise<void> {
-    await this.storage.deleteKey(Types.RefreshTokens, jti);
+    throw new Error('Method not implemented.');
   }
 
   /*
     Check if the refresh token is revoked and if not, verify it belongs to the participant
   */
   async verifyRefreshToken(jti: string, participantId: string): Promise<boolean> {
-    const _participantId = await this.storage.getKey(Types.RefreshTokens, jti);
-    return _participantId === participantId;
+    return this.authorizedTokens.includes(jti);
   }
 
   /*
