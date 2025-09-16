@@ -1,11 +1,17 @@
+import { BasicAuth } from '../../auth/BasicAuth.js';
 import { SystemController } from '../../persistence/controllers/SystemController.js';
-import { Event, Logger, Message, SessionsModel, StringMap } from '../../thredlib/index.js';
+import { Event, Logger, Message } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../Config.js';
-import { HttpService } from './ http/HttpService.js';
+import { getHandleLogin, getHandleRefresh } from './ http/AuthHandler.js';
+import { getHandleEvent } from './ http/EventHandler.js';
+import { HttpService } from '../http/HttpService.js';
 import { SessionService } from './SessionService.js';
 import { SessionServiceListener } from './SessionServiceListener.js';
 import { SocketService } from './SocketService.js';
+import { getHandleEventValues } from './ http/EventValuesHandler.js';
+import { AuthStorage } from '../../auth/AuthStorage.js';
+import { StorageFactory } from '../../storage/StorageFactory.js';
 
 // Agent specific configuration in custom config
 export interface SessionAgentConfig {
@@ -41,7 +47,7 @@ export class SessionAgent implements MessageHandler {
   private sessionAgentArgs: SessionAgentArgs;
 
   // dispatchers for sending events (from Messages) to outbound channels
-  dispatchers: ((event: Event, channelId: string) => void)[] = [];
+  dispatchers: ((messageOrEvent: Message | Event, channelId: string) => void)[] = [];
 
   constructor({ config, eventPublisher, additionalArgs }: MessageHandlerParams) {
     this.agentConfig = config;
@@ -81,14 +87,37 @@ export class SessionAgent implements MessageHandler {
       throw new Error(
         `Failed to load resolver config from resolverConfigName: ${resolverConfigName} or resolverConfigPath: ${resolverConfigPath}`,
       );
+    BasicAuth.initialize(new AuthStorage(StorageFactory.getStorage()));
     this.sessionService = new SessionService(sessionsModel, resolverConfig);
     const serviceListener = new SessionServiceListener(this.sessionService);
 
     this.httpService = new HttpService({
-      serviceListener,
       publisher: this.eventPublisher,
-      nodeId: this.agentConfig.nodeId,
+      auth: BasicAuth.getInstance(),
+      agentConfig: this.agentConfig,
       port: (this.agentConfig.customConfig as SessionAgentConfig)?.port,
+      routes: [
+        {
+          handler: getHandleLogin,
+          method: 'post',
+          path: '/login',
+        },
+        {
+          handler: getHandleRefresh,
+          method: 'post',
+          path: '/refresh',
+        },
+        {
+          handler: getHandleEvent,
+          method: 'post',
+          path: '/event',
+        },
+        {
+          handler: getHandleEventValues,
+          method: 'post',
+          path: '/values/:thredId?/:re?',
+        },
+      ],
     });
 
     this.socketService = new SocketService({
@@ -96,6 +125,7 @@ export class SessionAgent implements MessageHandler {
       publisher: this.eventPublisher,
       nodeId: this.agentConfig.nodeId,
       httpServer: this.httpService.httpServer,
+      auth: BasicAuth.getInstance(),
     });
     this.dispatchers.push(this.socketService.send);
     this.httpService.start();
@@ -104,14 +134,14 @@ export class SessionAgent implements MessageHandler {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    const channelIds = await this.sessionService?.getChannels(message);
-    channelIds?.forEach((channelId) => {
+    const channels = await this.sessionService?.getChannels(message);
+    channels?.forEach((channel) => {
       this.dispatchers.forEach((dispatcher) => {
         try {
-          dispatcher(message.event, channelId);
+          channel.isProxy ? dispatcher(message, channel.id) : dispatcher(message.event, channel.id);
         } catch (e) {
           Logger.error(e);
-          Logger.error(`session: Failed to send event to outbound channel ${channelId}`);
+          Logger.error(`session: Failed to send event to outbound channel ${channel}`);
         }
       });
     });

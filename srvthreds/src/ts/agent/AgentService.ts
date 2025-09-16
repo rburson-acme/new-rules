@@ -38,8 +38,9 @@ export interface EventPublisher {
     content,
     error,
   }: {
-    prevEvent: Event;
+    prevEvent?: Partial<Event>;
     content?: any;
+    type?: string;
     error?: EventError['error'];
   }) => Event;
 }
@@ -157,7 +158,7 @@ export class AgentService {
     type,
     error,
   }: {
-    prevEvent: Event;
+    prevEvent?: Partial<Event>;
     content?: EventContent;
     type?: string;
     error?: EventError['error'];
@@ -167,13 +168,13 @@ export class AgentService {
     return Events.newEvent({
       id: Id.getNextId(this.agentConfig!.nodeId),
       type: type || `${this.agentConfig!.nodeType}`,
-      re: prevEvent.id,
+      re: prevEvent?.id,
       data: {
         title: `${this.agentConfig!.nodeId} Result`,
         content: _content,
       },
       source: { id: this.agentConfig!.nodeId, name: this.agentConfig!.name },
-      thredId: prevEvent.thredId,
+      thredId: prevEvent?.thredId,
     });
   };
 }

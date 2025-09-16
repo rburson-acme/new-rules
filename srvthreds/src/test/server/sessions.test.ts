@@ -1,8 +1,6 @@
 import { Sessions } from '../../ts/sessions/Sessions.js';
 import { SessionStorage } from '../../ts/sessions/storage/SessionStorage.js';
-import { RedisStorage } from '../../ts/storage/RedisStorage.js';
 import { StorageFactory } from '../../ts/storage/StorageFactory.js';
-import { Address, Logger } from '../../ts/thredlib/index.js';
 import { ResolverConfig } from '../../ts/sessions/Config.js';
 import { Storage } from '../../ts/storage/Storage.js';
 import { ThredContext } from '../../ts/engine/ThredContext.js';
@@ -133,7 +131,7 @@ describe('sessions', function () {
     expect(participantIds.length).toBe(0);
   });
   it('test filtering service addresses and participants', function () {
-    const { serviceAddresses, participantAddresses } = sessions
+    const { serviceAddresses, remoteServiceAddresses, participantAddresses } = sessions
       .getAddressResolver()
       .filterServiceAddresses(['org.wt.test_agent', 'org.wt.test_agent_2', 'bOompa']);
     expect(serviceAddresses.length).toBe(2);
@@ -205,6 +203,12 @@ const resolverConfig: ResolverConfig = {
       nodeType: 'org.wt.test_agent_2',
       nodeId: 'org.wt.test_agent2',
       address: 'org.wt.test_agent_2',
+    },
+    {
+      name: 'Persistence Agent',
+      nodeType: 'org.wt.persistence',
+      nodeId: 'org.wt.persistence1',
+      address: 'org.wt.persistence',
     },
   ],
 };

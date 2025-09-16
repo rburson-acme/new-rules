@@ -5,9 +5,14 @@ import { Sessions } from '../../sessions/Sessions.js';
 import { SessionStorage } from '../../sessions/storage/SessionStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
 
+export interface Channel {
+  id: string;
+  isProxy: boolean;
+}
+
 export class SessionService {
   private sessions: Sessions;
-  private sessionChannelIds: StringMap<string> = {};
+  private sessionChannels: StringMap<Channel> = {};
 
   constructor(sessionsModel: SessionsModel, resolverConfig: ResolverConfig) {
     this.sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
@@ -15,29 +20,29 @@ export class SessionService {
 
   async addSession(session: Session, participantId: string, channelId: string): Promise<void> {
     const { id: sessionId } = session;
-    const { sessions, sessionChannelIds } = this;
-    // if thise session already exists, just map it to the new channel
+    const { sessions, sessionChannels } = this;
+    // if this session already exists, just map it to the new channel
     // this likely means the client has disconnected and reconnected
     if (!(await sessions.exists(sessionId, participantId))) {
       await sessions.addSession(session, participantId);
     }
-    sessionChannelIds[sessionId] = channelId;
+    sessionChannels[sessionId] = { id: channelId, isProxy: session.data?.isProxy || false };
   }
 
   async removeSession(sessionId: string): Promise<void> {
     await this.sessions.removeSession(sessionId);
-    delete this.sessionChannelIds[sessionId];
+    delete this.sessionChannels[sessionId];
   }
 
   async removeParticipant(participantId: string): Promise<void> {
     const sessionIds: string[] = await this.sessions.getSessionIdsFor(participantId);
-    sessionIds.forEach((sessionId) => delete this.sessionChannelIds[sessionId]);
+    sessionIds.forEach((sessionId) => delete this.sessionChannels[sessionId]);
     return this.sessions.removeParticipant(participantId);
   }
 
-  // map recipients to channelIds
-  async getChannels(message: Message): Promise<string[]> {
-    const { sessions, sessionChannelIds } = this;
+  // map recipients to channels
+  async getChannels(message: Message): Promise<Channel[]> {
+    const { sessions, sessionChannels } = this;
     const { event, to } = message;
     //Logger.debug(`SessionService: getChannels for: ${to}`, event);
 
@@ -46,14 +51,14 @@ export class SessionService {
       Logger.warn(`SessionService: No participants are logged in for address ${to}`);
       return [];
     }
-    const channelIds: string[] = [];
+    const channels: Channel[] = [];
     Object.keys(sessionsByParticipant).forEach((participantId) => {
       const sessionIds = sessionsByParticipant[participantId];
       if (sessionIds.length) {
         sessionIds.forEach((sessionId) => {
-          const channelId = sessionChannelIds[sessionId];
-          if (channelId) {
-            channelIds.push(channelId);
+          const channel = sessionChannels[sessionId];
+          if (channel) {
+            channels.push(channel);
           } else {
             // If the sessionId is no longer mapped to a channel, then the session must be an orphan
             this.removeSession(sessionId).catch((e) => `Failed to remove orphaned Session: ${sessionId}`);
@@ -64,7 +69,7 @@ export class SessionService {
         Logger.error(`SessionService: participant ${to} not found`);
       }
     });
-    return channelIds;
+    return channels;
   }
 
   async shutdown() {

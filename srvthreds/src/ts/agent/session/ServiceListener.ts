@@ -1,6 +1,6 @@
 export interface ServiceListener {
   newSession(
-    { sessionId, nodeId }: { sessionId: string; nodeId: string },
+    { sessionId, nodeId, data }: { sessionId: string; nodeId: string; data?: Record<string, any> },
     participantId: string,
     channelId: string,
   ): Promise<void>;

@@ -9,11 +9,17 @@ import {
   errorKeys,
   EventContent,
   serializableError,
-  EventManager,
 } from '../thredlib/index.js';
 import { AgentConfig } from './Config.js';
 import { Id } from '../thredlib/core/Id.js';
 import { Adapter } from './adapter/Adapter.js';
+import { RemoteConnectionManager } from './remote/RemoteConnectionManager.js';
+import { HttpService } from './http/HttpService.js';
+import { BasicAuth } from '../auth/BasicAuth.js';
+import { getHandleEventValues } from './session/ http/EventValuesHandler.js';
+import { getHandleEvent } from './session/ http/EventHandler.js';
+import { getHandleLogin, getHandleRefresh } from './session/ http/AuthHandler.js';
+import { LocalAuthStorage } from '../auth/LocalAuthStorage.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -35,8 +41,9 @@ export interface EventPublisher {
     content,
     error,
   }: {
-    prevEvent: Event;
+    prevEvent?: Partial<Event>;
     content?: any;
+    type?: string;
     error?: EventError['error'];
   }) => Event;
 }
@@ -49,10 +56,12 @@ export interface EventPublisher {
   The 'publisher' provided to the agent implementation is used to send inbound Events to the Engine.
 */
 export class RemoteAgentService {
+  private static LOCAL_HTTP_PORT = 3000;
   private handler?: MessageHandler;
   private agentConfig?: AgentConfig;
   readonly eventPublisher: EventPublisher;
-  private eventManager: EventManager;
+  private connectionManager: RemoteConnectionManager;
+  private httpService?: HttpService;
 
   constructor(
     private params: {
@@ -61,7 +70,7 @@ export class RemoteAgentService {
     },
   ) {
     this.eventPublisher = { publishEvent: this.publishEvent, createOutboundEvent: this.createOutboundEvent };
-    this.eventManager = new EventManager();
+    this.connectionManager = new RemoteConnectionManager();
   }
 
   async start() {
@@ -69,6 +78,9 @@ export class RemoteAgentService {
     // load config from persistence if not provided
     this.agentConfig = this.params.agentConfig;
     if (!this.agentConfig) throw new Error(`RemoteAgent: no config provided`);
+    BasicAuth.initialize(new LocalAuthStorage());
+    // start local http service for login, event posting, etc.
+    this.startHttpService();
     try {
       // agentImpl can be a string (dynamic import) or an object (direct instantiation)
       let Handler;
@@ -86,19 +98,57 @@ export class RemoteAgentService {
       await this.handler?.initialize();
       Logger.info(`RemoteAgent.start(): ${this.agentConfig.nodeId} initialized.`);
 
-      await this.connect('http://localhost:3000', 'remote_agent_auth_token');
+      //await this.connect('http://localhost:3000', 'remote_agent_auth_token');
+      await this.connect('http://localhost:3000', 'org.wt.robot');
     } catch (e) {
       Logger.error('RemoteAgent.start(): failed to start the agent', { cause: e });
       throw e;
     }
   }
 
+  async startHttpService() {
+    this.httpService = new HttpService({
+      publisher: this.eventPublisher,
+      auth: BasicAuth.getInstance(),
+      agentConfig: this.agentConfig!,
+      port: (this.agentConfig!.customConfig as StringMap<any>)?.port || RemoteAgentService.LOCAL_HTTP_PORT,
+      routes: [
+        {
+          handler: getHandleLogin,
+          method: 'post',
+          path: '/login',
+        },
+        {
+          handler: getHandleRefresh,
+          method: 'post',
+          path: '/refresh',
+        },
+        {
+          handler: getHandleEvent,
+          method: 'post',
+          path: '/event',
+        },
+        {
+          handler: getHandleEventValues,
+          method: 'post',
+          path: '/values/:thredId?/:re?',
+        },
+      ],
+    });
+  }
+
   async connect(url: string, token?: string) {
     try {
-      await this.eventManager.connect(url, { transports: ['websocket'], jsonp: false, auth: { token } });
-      this.eventManager.subscribe((event: Event) => {
-        //proxy through the event and recreate the Message
-        this.handleMessage({ event, id: `${event.id}-${this.agentConfig!.nodeId}`, to: [this.agentConfig!.nodeId] });
+      // remote agents should request message proxying so that the message can be further routed if necessary
+      await this.connectionManager.connect(url, {
+        transports: ['websocket'],
+        jsonp: false,
+        auth: { token },
+        extraHeaders: { 'x-proxy-message': true },
+      });
+      this.connectionManager.subscribe((message: Message) => {
+        //proxy the Message through
+        this.handleMessage(message);
       });
     } catch (e) {
       throw new Error(`RemoteAgent: failed to connect to SessionService at : ${url}`, { cause: e });
@@ -126,7 +176,7 @@ export class RemoteAgentService {
       Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
     );
     Logger.logObject(event);
-    this.eventManager.publish(event);
+    this.connectionManager.publish(event);
   };
 
   private async handleMessage(message: Message) {
@@ -153,7 +203,7 @@ export class RemoteAgentService {
     type,
     error,
   }: {
-    prevEvent: Event;
+    prevEvent?: Partial<Event>;
     content?: EventContent;
     type?: string;
     error?: EventError['error'];
@@ -163,13 +213,13 @@ export class RemoteAgentService {
     return Events.newEvent({
       id: Id.getNextId(this.agentConfig!.nodeId),
       type: type || `${this.agentConfig!.nodeType}`,
-      re: prevEvent.id,
+      re: prevEvent?.id,
       data: {
         title: `${this.agentConfig!.nodeId} Result`,
         content: _content,
       },
       source: { id: this.agentConfig!.nodeId, name: this.agentConfig!.name },
-      thredId: prevEvent.thredId,
+      thredId: prevEvent?.thredId,
     });
   };
 }

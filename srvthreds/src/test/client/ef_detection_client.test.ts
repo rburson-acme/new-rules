@@ -1,14 +1,4 @@
-import {
-  PatternModel,
-  Logger,
-  LoggerLevel,
-  EventManager,
-  EventBuilder,
-  Tasks,
-  Events,
-  EventTask,
-} from '../../ts/thredlib/index.js';
-import { events, withPromiseHandlers } from '../testUtils.js';
+import { Logger, LoggerLevel, EventManager, EventBuilder } from '../../ts/thredlib/index.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
@@ -16,7 +6,7 @@ Logger.setLevel(LoggerLevel.INFO);
 // this runs against a running server running 'ef_detection.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
-describe.skip('ef_detection client test', function () {
+describe('ef_detection client test', function () {
   beforeAll(async () => {
     eventManager0 = new EventManager();
     sensorAgentEventManager = new EventManager();

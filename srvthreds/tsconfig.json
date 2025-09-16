@@ -6,8 +6,6 @@
     "include": [
         "./src/ts/**/*.ts",
         "./src/test/**/*.ts",
-        "src/ts/index.ts",
-        "src/ts/init.ts"
     ],
     "compilerOptions": {
         "noEmit": true,

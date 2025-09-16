@@ -1,48 +1,51 @@
 import http from 'http';
 import express from 'express';
+import { Request, Response } from 'express';
 import { Express } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { getHandleLogin } from './LoginHandler.js';
-import { ServiceListener } from '../ServiceListener.js';
-import { EventPublisher } from '../../AgentService.js';
-import { getHandleEvent } from './EventHandler.js';
+import { EventPublisher } from '../AgentService.js';
+import { Auth } from '../../auth/Auth.js';
+import { AgentConfig } from '../Config.js';
 
 const DEFAULT_PORT = 3000;
 
 export interface HttpServiceParams {
-  serviceListener: ServiceListener;
   publisher: EventPublisher;
-  nodeId: string;
+  agentConfig: AgentConfig;
+  auth: Auth;
   port?: number;
+  routes?: { handler: HttpHandlerFactory; method: 'get' | 'post' | 'put' | 'delete'; path: string }[];
 }
 
 export class HttpService {
   httpServer: http.Server;
-  private serviceListener: ServiceListener;
   private publisher: EventPublisher;
-  private nodeId: string;
+  private agentConfig: AgentConfig;
   private port?: number;
+  private routes?: { handler: HttpHandlerFactory; method: 'get' | 'post' | 'put' | 'delete'; path: string }[];
+  private auth: Auth;
 
   constructor(serviceParams: HttpServiceParams) {
-    this.serviceListener = serviceParams.serviceListener;
     this.publisher = serviceParams.publisher;
-    this.nodeId = serviceParams.nodeId;
+    this.agentConfig = serviceParams.agentConfig;
     this.port = serviceParams.port;
+    this.routes = serviceParams.routes;
+    this.auth = serviceParams.auth;
     const app: Express = express();
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
     // cors needs to be confgured more granularly here
     app.use(cors());
 
-    app.post(
-      '/login',
-      getHandleLogin({ serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
-    );
-    app.post(
-      '/event',
-      getHandleEvent({ serviceListener: this.serviceListener, publisher: this.publisher, nodeId: this.nodeId }),
-    );
+    if (this.routes) {
+      this.routes.forEach((route) => {
+        app[route.method](
+          route.path,
+          route.handler({ auth: this.auth, publisher: this.publisher, agentConfig: this.agentConfig }),
+        );
+      });
+    }
     this.httpServer = http.createServer(app);
   }
 
@@ -73,3 +76,13 @@ export class HttpService {
     }
   }
 }
+
+export type HttpHandlerFactory = ({
+  auth,
+  publisher,
+  agentConfig,
+}: {
+  auth: Auth;
+  publisher: EventPublisher;
+  agentConfig: AgentConfig;
+}) => (req: Request<any, any>, res: Response<any, any>) => Promise<any>;

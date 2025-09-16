@@ -1,10 +1,13 @@
 export interface ResolverConfig {
-  agents: {
-    name: string;
-    nodeType: string;
-    nodeId: string;
-    address: string;
-  }[];
+  agents: ServiceConfig[];
+}
+
+export interface ServiceConfig {
+  name: string;
+  nodeType: string;
+  nodeId: string;
+  address: string;
+  remote?: boolean;
 }
 
 export class Config {

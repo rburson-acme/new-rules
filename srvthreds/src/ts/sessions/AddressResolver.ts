@@ -3,7 +3,7 @@ import { GroupModel } from '../thredlib/index.js';
 import { Address } from '../thredlib/index.js';
 import { Parallel } from '../thredlib/index.js';
 import { Group } from './Group.js';
-import { ResolverConfig } from './Config.js';
+import { ResolverConfig, ServiceConfig } from './Config.js';
 import { SessionStorage } from './storage/SessionStorage.js';
 import { ThredContext } from '../engine/ThredContext.js';
 
@@ -19,8 +19,8 @@ export class AddressResolver {
   // all current users on the thred
   public static THRED_ALIAS: string = '$thred';
 
-  private groups: StringMap<Group> | undefined;
-  private serviceAddressMap: StringMap<string> | undefined;
+  private groups: StringMap<Group> = {};
+  private serviceAddressMap: StringMap<ServiceConfig> = {};
 
   private aliasMap: StringMap<(thredContext?: ThredContext) => Promise<string[]>> = {
     [AddressResolver.ALL_ALIAS]: this.getAllParticipantIds,
@@ -45,38 +45,47 @@ export class AddressResolver {
 
   // map both nodeId and nodeType to the service address
   // so the it can be looked up by either
-  setServiceAddressMap(agents: ResolverConfig['agents']) {
+  setServiceAddressMap(agents: ServiceConfig[]) {
     this.serviceAddressMap = agents.reduce((accum, next) => {
-      accum[next.nodeType] = next.address;
-      accum[next.nodeId] = next.address;
+      accum[next.nodeType] = next;
+      accum[next.nodeId] = next;
       return accum;
-    }, {} as StringMap<string>);
+    }, {} as StringMap<ServiceConfig>);
   }
 
   filterServiceAddresses(address: Address): {
     serviceAddresses: string[];
+    remoteServiceAddresses: string[];
     participantAddresses: string[];
   } {
     const addresses = Array.isArray(address) ? address : [address];
     const serviceAddresses: string[] = [];
+    const remoteServiceAddresses: string[] = [];
     let participantAddresses: Address = [];
     addresses.forEach((address) => {
-      if (this.isLocalServiceAddress(address)) {
+      if (this.isRemoteServiceAddress(address)) {
+        remoteServiceAddresses.push(address);
+      } else if (this.isLocalServiceAddress(address)) {
         serviceAddresses.push(address);
       } else {
         (participantAddresses as string[]).push(address);
       }
     });
 
-    return { serviceAddresses, participantAddresses };
+    return { serviceAddresses, remoteServiceAddresses, participantAddresses };
   }
 
   isLocalServiceAddress(address: string): boolean {
-    return address.startsWith('org.wt.');
+    return this.serviceAddressMap?.[address] && this.serviceAddressMap[address].remote !== true;
   }
 
+  isRemoteServiceAddress(address: string): boolean {
+    return this.serviceAddressMap?.[address]?.remote === true;
+  }
+
+  /* The nodeId or nodeType can be used to get the service address */
   getServiceAddressForNode(nodeTypeOrId: string): string | undefined {
-    return this.serviceAddressMap?.[nodeTypeOrId];
+    return this.serviceAddressMap?.[nodeTypeOrId].address;
   }
 
   /*

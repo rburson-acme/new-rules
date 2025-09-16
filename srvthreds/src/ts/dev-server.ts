@@ -19,6 +19,7 @@ import _rascal_config from './config/rascal_config.json' with { type: 'json' };
 import _sessionsModel from './config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 import _resolverConfig from './config/resolver_config.json' with { type: 'json' };
 import _engineConfig from './config/engine.json' with { type: 'json' };
+import _robotConfig from './config/robot_agent.json' with { type: 'json' };
 import patternModel from './config/patterns/uav_detection.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel] as PatternModel[];
 
@@ -27,6 +28,7 @@ import url from 'node:url';
 import { SystemController } from './persistence/controllers/SystemController.js';
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
+import { RemoteAgentService } from './agent/RemoteAgentService.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,7 +91,7 @@ app.get('/rms', function (req: Request, res: Response) {
 class ServiceManager {
   sessionAgent?: AgentService;
   persistenceAgent?: AgentService;
-  robotAgent?: AgentService;
+  robotAgent?: RemoteAgentService;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
 
@@ -175,22 +177,9 @@ class ServiceManager {
     await this.persistenceAgent.start();
 
     // ----------------------------------- Robot Agent Setup -----------------------------------
-    // Note: this is running in process for convenience but will be an independent service
-    // set up the remote Qs for the robot agent
-    const robotEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
-    const robotEventQ: EventQ = new EventQ(robotEventService);
-    const robotMessageService = await RemoteQService.newInstance<Message>({
-      qBroker,
-      subName: 'sub_robot_message',
-    });
-
-    const robotMessageQ: MessageQ = new MessageQ(robotMessageService);
-    this.robotAgent = new AgentService({
-      configName: 'robot_agent',
-      // if config is not provided, it will be loaded from persistence (run bootstrap first)
-      // agentConfig: robotAgentConfig,
-      eventQ: robotEventQ,
-      messageQ: robotMessageQ,
+    // Note: this is running in process for convenience but will be a remote service
+    this.robotAgent = new RemoteAgentService({
+      agentConfig: _robotConfig,
     });
     await this.robotAgent.start();
   }

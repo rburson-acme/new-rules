@@ -1,32 +1,39 @@
 import { Request, Response } from 'express';
 import { Event } from '../../../thredlib/index.js';
-import { ServiceListener } from '../ServiceListener.js';
 import { EventPublisher } from '../../AgentService.js';
+import { Auth } from '../../../auth/Auth.js';
+import { AgentConfig } from '../../Config.js';
 
 export const getHandleEvent = ({
-  serviceListener,
+  auth,
   publisher,
-  nodeId,
+  agentConfig,
 }: {
-  serviceListener: ServiceListener;
+  auth: Auth;
   publisher: EventPublisher;
-  nodeId: string;
+  agentConfig: AgentConfig;
 }) => {
   return async (req: Request<{}, any>, res: Response<any, any>) => {
     const event: Event = req.body;
-    // @TODO RLS-141 - use basic auth to validate the token here and use participantId from the token
-    // @TODO - get token from request headers or path and authenticate user to obtain sourceId and sessionId
-    const participantId = event?.source?.id; // do this temporarily
+
+    const authHeader = req.headers['authorization'] as string;
+    // expecting 'Bearer <token>'
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401); // Unauthorized
+
     try {
       if (event) {
+        const validationResult = await auth.validateAccessToken(token);
+        const participantId = validationResult.participantId;
         // Process the event - force use of authenticated participantId
-        publisher.publishEvent({ ...event, source: { id: participantId } });
+        await publisher.publishEvent({ ...event, source: { id: participantId } });
+        res.status(200).send('Event processed.');
       } else {
         res.status(401).send('No Event payload provided.');
       }
     } catch (error) {
-      console.error('Error during login:', error);
-      res.status(500).send('Error logging in.');
+      console.error('Error during token validation or event processing:', error);
+      res.status(500).send('Error processing request.');
     }
   };
 };

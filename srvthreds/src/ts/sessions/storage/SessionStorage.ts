@@ -17,8 +17,9 @@ export class SessionStorage {
   }
 
   async addSession(session: Session, participantId: string): Promise<void> {
-    const { id: sessionId, nodeId } = session;
-    await this.storage.save(Types.SessionParticipant, { participantId, nodeId }, sessionId);
+    const { id: sessionId, nodeId, data } = session;
+    // @TODO this needs to be a transaction.  add this featre to storage interface
+    await this.storage.save(Types.SessionParticipant, { participantId, nodeId, data }, sessionId);
     await this.storage.addToSet(Types.ParticipantSessions, sessionId, participantId);
   }
 
@@ -40,7 +41,7 @@ export class SessionStorage {
         async (result, sessionId) => {
           if (sessionId) {
             const sp: SessionParticipant = await this.storage.retrieve(Types.SessionParticipant, sessionId);
-            if (sp) result.push({ id: sessionId, nodeId: sp.nodeId });
+            if (sp) result.push({ id: sessionId, nodeId: sp.nodeId, data: sp.data });
             return result;
           }
         },

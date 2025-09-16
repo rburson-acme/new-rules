@@ -2,7 +2,7 @@ import { Persistent } from "./Persistent.js";
 
 export interface User extends Persistent {
     id: string;
-    password?: string;
+    password: string;
     email?: string;
     firstName?: string;
     lastName?: string;

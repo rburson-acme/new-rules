@@ -253,6 +253,18 @@ export class LocalStorage implements Storage {
     return this.setCount(type, indexId);
   }
 
+  async setKey(type: string, key: string, value: string, expSecs?: number): Promise<void> {
+    throw new Error('Method not implemented');
+  }
+
+  async getKey(type: string, key: string): Promise<any> {
+    throw new Error('Method not implemented');
+  }
+
+  async deleteKey(type: string, key: string): Promise<number> {
+    throw new Error('Method not implemented');
+  }
+
   private addToIndex(type: string, id: string): Promise<void> {
     //we don't want to create an index for our 'index' type
     return id !== indexId ? this.addToSet(type, id, indexId) : Promise.resolve();

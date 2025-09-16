@@ -5,11 +5,11 @@ export class SessionServiceListener implements ServiceListener {
   constructor(private sessionService: SessionService) {}
 
   async newSession(
-    { sessionId, nodeId }: { sessionId: string; nodeId: string },
+    { sessionId, nodeId, data = {} }: { sessionId: string; nodeId: string; data?: Record<string, any> },
     participantId: string,
     channelId: string,
   ): Promise<void> {
-    this.sessionService.addSession({ id: sessionId, nodeId }, participantId, channelId);
+    this.sessionService.addSession({ id: sessionId, nodeId, data }, participantId, channelId);
   }
 
   async sessionEnded(sessionId: string): Promise<void> {
