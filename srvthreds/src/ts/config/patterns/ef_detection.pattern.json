@@ -139,7 +139,8 @@
                               {
                                 "name": "Robot Location",
                                 "latitude": "$xpr( $local('robot_data').latitude  )",
-                                "longitude": "$xpr( $local('robot_data').longitude )"
+                                "longitude": "$xpr( $local('robot_data').longitude )",
+                                "display": "https://mfe-is.com/wp-content/uploads/2024/09/Boston-Dynamics-Spot-Featured-Image.png"
                               },
                               {
                                 "name": "Contact Detected",

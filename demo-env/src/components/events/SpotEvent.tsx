@@ -56,7 +56,7 @@ export function SpotEvent({ event, onSelect }: SpotEventProps) {
           <Marker
             position={spotLocation}
             icon={{
-              url: 'https://www.svgrepo.com/show/364732/paw-print-fill.svg',
+              url: 'https://mfe-is.com/wp-content/uploads/2024/09/Boston-Dynamics-Spot-Featured-Image.png',
               scaledSize: new window.google.maps.Size(50, 50),
               anchor: new window.google.maps.Point(25, 25),
             }}

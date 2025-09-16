@@ -13,7 +13,6 @@ export const ThredList = observer(({ thredsStore }: ThredListProps) => {
     <FlatList
       onEndReachedThreshold={0.1}
       data={thredsStore.filteredThreds}
-      contentContainerStyle={{ flex: 1 }}
       style={{ flex: 1 }}
       renderItem={({ item: thredStore }) => {
         return <ThredListCard thredsStore={thredsStore} thredStore={thredStore} />;

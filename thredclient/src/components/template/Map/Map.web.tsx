@@ -1,6 +1,7 @@
-import { getMapCenter, Location } from '@/src/core/Map';
+import { getMapCenter } from '@/src/core/Map';
 import { GoogleMap, Libraries, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { useCallback, useRef } from 'react';
+import { MapLocation } from 'thredlib';
 
 const containerStyle = {
   width: '180px',
@@ -9,7 +10,7 @@ const containerStyle = {
 };
 
 type MapProps = {
-  locations: Location[];
+  locations: MapLocation[];
 };
 
 const libraries: Libraries = ['places', 'drawing', 'geometry', 'marker'];
@@ -27,12 +28,12 @@ export function Map({ locations }: MapProps) {
 
       if (locations.length === 1) {
         // Single location: center + default zoom
-        map.setCenter({ lat: locations[0].latitude, lng: locations[0].longitude });
+        map.setCenter({ lat: Number(locations[0].latitude), lng: Number(locations[0].longitude) });
         map.setZoom(12);
       } else if (locations.length > 1) {
         // Multiple locations: fit bounds
         const bounds = new google.maps.LatLngBounds();
-        locations.forEach(loc => bounds.extend(new google.maps.LatLng(loc.latitude, loc.longitude)));
+        locations.forEach(loc => bounds.extend(new google.maps.LatLng(Number(loc.latitude), Number(loc.longitude))));
         map.fitBounds(bounds, 20); // 20px padding
       }
     },
@@ -59,9 +60,17 @@ export function Map({ locations }: MapProps) {
         return (
           <Marker
             key={location.name}
+            icon={
+              location.display
+                ? {
+                    url: location.display,
+                    scaledSize: new window.google.maps.Size(30, 30),
+                  }
+                : undefined
+            }
             position={{
-              lat: location.latitude,
-              lng: location.longitude,
+              lat: Number(location.latitude),
+              lng: Number(location.longitude),
             }}
             title={location.name}
           />

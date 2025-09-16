@@ -1,6 +1,6 @@
 import { ThredStore } from '@/src/stores/ThredStore';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, SafeAreaView, StyleSheet, View } from 'react-native';
 import { Event } from '../events/Event';
 import { ThredsStore } from '@/src/stores/ThredsStore';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -39,8 +39,6 @@ export const Thred = observer(({ thredStore, thredsStore }: ThredProps) => {
 const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'column',
-    alignItems: 'stretch',
-    flex: 1,
     paddingTop: 16,
     paddingHorizontal: 16,
   },
