@@ -5,7 +5,7 @@ import { ThredStore } from './ThredStore';
 import { GetUserThredsResult, SystemEvents } from 'thredlib/lib/core/SystemEvents';
 import { Thred } from '../core/Thred';
 
-type ValidTabs = 'active' | 'inactive';
+type ValidTabs = 'active' | 'completed' | 'archived';
 export class ThredsStore {
   thredStores: ThredStore[] = [];
   searchText: string = '';
@@ -86,7 +86,9 @@ export class ThredsStore {
       switch (this.tab) {
         case 'active':
           return matchesSearch && thred.status === 'a';
-        case 'inactive':
+        case 'completed':
+          return matchesSearch && thred.status === 'f';
+        case 'archived':
           return matchesSearch && thred.status === 't';
         default:
           return matchesSearch;

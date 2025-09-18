@@ -1,6 +1,5 @@
 import { useEventManager } from '@/hooks/useEventManager';
 import { useEffect, useState } from 'react';
-import { PawprintIcon } from '../icons/PawprintIcon';
 import { Event, EventBuilder } from 'thredlib';
 import { SpotEvent } from '../events/SpotEvent';
 import Image from 'next/image';
@@ -9,9 +8,12 @@ export function SpotMap() {
   const eventManager = useEventManager();
   const [events, setEvents] = useState<Event[]>([]);
   useEffect(() => {
-    eventManager.subscribe(event => {
-      setEvents([...events, event]);
-    });
+    eventManager.subscribe(
+      event => {
+        setEvents([...events, event]);
+      },
+      { filter: "$event.data.title = 'Deploy Robot'" },
+    );
   });
 
   const onMapClick = (event: Event, location: google.maps.LatLng) => {
