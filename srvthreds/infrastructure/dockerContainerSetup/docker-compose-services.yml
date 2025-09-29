@@ -1,25 +1,14 @@
 services:
-  # Bootstrap initialization container
+  # Command runner for environment setup
   srvthreds-bootstrap:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile
-      # dockerfile: srvthreds/Dockerfile
+      dockerfile: srvthreds/infrastructure/dockerContainerSetup/cmdRunnerDockerFile
     container_name: srvthreds-bootstrap
-    entrypoint: []
-    command: ["npm", "run", "container-bootstrap"]
-    # depends_on:
-      # mongo-setup:
-      #   condition: service_completed_successfully
-      # redis:
-      #   condition: service_started
-      # rabbitmq:
-      #   condition: service_started
+    # entrypoint: []
+    command: ["npm", "run", "bootstrap", "--", "-p", "dev"]
     environment:
       - NODE_ENV=development
-      # - MONGO_HOST=mongo-repl-1:27017,mongo-repl-2:27017,mongo-repl-3:27017
-      # - MONGO_HOST=mongo-repl-1:27017
-      # - REDIS_HOST=redis
     restart: "no"  # Run once and exit
     network_mode: "host"
     # networks:
@@ -30,7 +19,6 @@ services:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile
-      # dockerfile: srvthreds/Dockerfile
     container_name: srvthreds-engine
     network_mode: "host"
     command: ["node", "/app/dist-server/index.js", "-d"]

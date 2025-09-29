@@ -11,10 +11,6 @@ import { DeploymentArguments, Composing, deployDatabases, deployServices, Deploy
  * @returns DeploymentArguments
  */
 function parseArguments(args: Array<string>): DeploymentArguments {
-  if (args.length === 0) {
-    console.error("Invalid arguments provided. Please provide DeployTo, composing, deployCommand and (optional) override args: ", args);
-    process.exit(2);
-  }
   const deployTo = args[0];
   const composing = args[1];
   const deployCommand = args[2];
@@ -40,11 +36,13 @@ function askQuestion(query: string): Promise<string> {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  // console.log(args);
-  // const deployTo = await askQuestion(`What environment are you deploying to, options ${JSON.stringify(DeployTo)} ? `);
-  // const composing = await askQuestion(`What are you deploying ${JSON.stringify(Composing)} ? `);
-  // const deployCommand = await askQuestion(`What command do you want to run, options ${ComposeCommandDown}, ${ComposeCommandUp} ? `);
-  // const overrideArgs = await askQuestion(`Add any additional arguments you want: `);
+  if (args.length === 0) {
+    const deployTo = await askQuestion(`What environment are you deploying to, options ${JSON.stringify(Object.values(DeployTo))} ? `);
+    const composing = await askQuestion(`What are you deploying ${JSON.stringify(Object.values(Composing))} ? `);
+    const deployCommand = await askQuestion(`What command do you want to run, options ${ComposeCommandDown}, ${ComposeCommandUp} ? `);
+    const overrideArgs = await askQuestion(`Provide override arguments here to override default configuration which are found in the defaultDeployCommandArgs object: `);
+    args.push(deployTo, composing, deployCommand, overrideArgs);
+  }
 
   const deploymentArgs = parseArguments(args);
   if (deploymentArgs.composing === Composing.Databases) {

@@ -33,7 +33,7 @@
     "start-session-agent-dev": "tsx src/ts/agent/agent.ts -c session_agent -d",
     "start-persistence-agent-dev": "tsx src/ts/agent/agent.ts -c persistence_agent -d",
     "start-robot-agent-dev": "tsx src/ts/agent/remote-agent.ts --cp run-config/robot_agent.json -d",
-    "deployCli": "tsx infrastructure/deploymentCli.ts"
+    "deploymentCli": "tsx infrastructure/deploymentCli.ts"
   },
   "nodemonConfig": {
     "exec": "npm run dev",
