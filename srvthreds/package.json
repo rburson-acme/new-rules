@@ -25,13 +25,15 @@
     "generate-schemas": "cd ../thredlib ; npm run generate-event ; npm run generate-pattern",
     "build-lib": "cd ../thredlib ; npm run build-all",
     "bootstrap": "npx tsx src/test/bootstrap.ts",
+    "container-bootstrap": "npx tsx dist-server/bootstrap.js",
     "start-dev": "tsx watch ./src/ts/dev-server.ts",
     "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/dev-server.ts",
     "start-engine-dev": "tsx watch src/ts/index.ts -d",
     "start-engine-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/index.ts",
     "start-session-agent-dev": "tsx src/ts/agent/agent.ts -c session_agent -d",
     "start-persistence-agent-dev": "tsx src/ts/agent/agent.ts -c persistence_agent -d",
-    "start-robot-agent-dev": "tsx src/ts/agent/remote-agent.ts --cp run-config/robot_agent.json -d"
+    "start-robot-agent-dev": "tsx src/ts/agent/remote-agent.ts --cp run-config/robot_agent.json -d",
+    "deployCli": "tsx infrastructure/deploymentCli.ts"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

@@ -1,0 +1,91 @@
+services:
+  # Config Servers Replica Set
+  mongo-config1:
+    image: mongo:latest
+    command: mongod --configsvr --replSet rs-config --port 27019 --bind_ip_all
+    volumes:
+      - mongo-config1-data:/data/db
+    ports:
+      - "27019:27019"
+    networks:
+      - mongo-sharded-net
+
+  mongo-config2:
+    image: mongo:latest
+    command: mongod --configsvr --replSet rs-config --port 27019 --bind_ip_all
+    volumes:
+      - mongo-config2-data:/data/db
+    networks:
+      - mongo-sharded-net
+
+  mongo-config3:
+    image: mongo:latest
+    command: mongod --configsvr --replSet rs-config --port 27019 --bind_ip_all
+    volumes:
+      - mongo-config3-data:/data/db
+    networks:
+      - mongo-sharded-net
+
+  # Shard 1 Replica Set
+  mongo-shard1-1:
+    image: mongo:latest
+    command: mongod --shardsvr --replSet rs-shard1 --port 27018 --bind_ip_all
+    volumes:
+      - mongo-shard1-1-data:/data/db
+    ports:
+      - "27018:27018"
+    networks:
+      - mongo-sharded-net
+
+  mongo-shard1-2:
+    image: mongo:latest
+    command: mongod --shardsvr --replSet rs-shard1 --port 27018 --bind_ip_all
+    volumes:
+      - mongo-shard1-2-data:/data/db
+    networks:
+      - mongo-sharded-net
+
+  # Shard 2 Replica Set
+  mongo-shard2-1:
+    image: mongo:latest
+    command: mongod --shardsvr --replSet rs-shard2 --port 27018 --bind_ip_all
+    volumes:
+      - mongo-shard2-1-data:/data/db
+    networks:
+      - mongo-sharded-net
+
+  mongo-shard2-2:
+    image: mongo:latest
+    command: mongod --shardsvr --replSet rs-shard2 --port 27018 --bind_ip_all
+    volumes:
+      - mongo-shard2-2-data:/data/db
+    networks:
+      - mongo-sharded-net
+
+  # Mongos Router
+  mongos:
+    image: mongo:latest
+    command: mongos --configdb rs-config/mongo-config1:27019,mongo-config2:27019,mongo-config3:27019 --bind_ip_all
+    ports:
+      - "27017:27017" # Default MongoDB port
+    networks:
+      - mongo-sharded-net
+    depends_on:
+      - mongo-config1
+      - mongo-config2
+      - mongo-config3
+      - mongo-shard1-1 # Depend on at least one from each shard for setup
+      - mongo-shard2-1
+
+volumes:
+  mongo-config1-data:
+  mongo-config2-data:
+  mongo-config3-data:
+  mongo-shard1-1-data:
+  mongo-shard1-2-data:
+  mongo-shard2-1-data:
+  mongo-shard2-2-data:
+
+networks:
+  mongo-sharded-net:
+    driver: bridge
