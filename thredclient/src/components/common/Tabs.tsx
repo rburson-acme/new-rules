@@ -119,7 +119,7 @@ export const Tabs = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 8,
   },
   compactContainer: {
     gap: 8,

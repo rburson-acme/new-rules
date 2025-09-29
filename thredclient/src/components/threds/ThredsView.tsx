@@ -12,7 +12,8 @@ type ThredsLayoutProps = {
 
 const tabs: TabItem[] = [
   { key: 'active', label: 'Active' },
-  { key: 'inactive', label: 'Inactive' },
+  { key: 'completed', label: 'Inactive' },
+  { key: 'archived', label: 'Archived' },
 ];
 
 export const ThredsView = observer(({ rootStore }: ThredsLayoutProps) => {

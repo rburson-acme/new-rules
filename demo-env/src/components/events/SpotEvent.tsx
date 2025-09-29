@@ -22,6 +22,7 @@ export function SpotEvent({ event, onSelect }: SpotEventProps) {
   const onMapClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng || spotLocation) return;
     setSpotLocation(e.latLng);
+    onSelect(event, e.latLng);
   };
 
   return (
@@ -34,15 +35,15 @@ export function SpotEvent({ event, onSelect }: SpotEventProps) {
           View Event
         </button>
       </div>
-      {!spotLocation ? <p>Spot has received the command {event.data?.title} from the {event.source.name}</p> : null}
+      {!spotLocation ? (
+        <p>
+          Spot has received the command {event.data?.title} from the {event.source.name}
+        </p>
+      ) : null}
       <GoogleMap
         mapContainerStyle={defaultMapContainerStyle}
         center={defaultMapCenter}
-        onClick={e => {
-          if (!e.latLng || spotLocation) return;
-          setSpotLocation(e.latLng);
-          onSelect(event, e.latLng);
-        }}
+        onClick={onMapClick}
         zoom={12}
         options={{
           zoomControl: false,
