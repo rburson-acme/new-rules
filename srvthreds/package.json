@@ -25,7 +25,6 @@
     "generate-schemas": "cd ../thredlib ; npm run generate-event ; npm run generate-pattern",
     "build-lib": "cd ../thredlib ; npm run build-all",
     "bootstrap": "npx tsx src/test/bootstrap.ts",
-    "container-bootstrap": "npx tsx dist-server/bootstrap.js",
     "start-dev": "tsx watch ./src/ts/dev-server.ts",
     "start-dev-debug": "tsx --inspect=0.0.0.0:9229 ./src/ts/dev-server.ts",
     "start-engine-dev": "tsx watch src/ts/index.ts -d",
