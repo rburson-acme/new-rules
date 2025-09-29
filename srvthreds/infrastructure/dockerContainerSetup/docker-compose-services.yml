@@ -3,7 +3,7 @@ services:
   srvthreds-bootstrap:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/cmdRunnerDockerFile
+      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile.cmdRunner
     container_name: srvthreds-bootstrap
     # entrypoint: []
     command: ["npm", "run", "bootstrap", "--", "-p", "dev"]

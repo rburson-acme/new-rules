@@ -1,54 +1,51 @@
 #!/usr/bin/env node
 
 import * as readline from 'readline';
-import { DeploymentArguments, Composing, deployDatabases, deployServices, DeployTo, ComposeCommandDown, ComposeCommandUp } from './deployment.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles } from './deployment.js';
 
-/**
- * TODO: This needs to be refined to better define how the constants are used to simplify additions.
- * This function will parse the command arguments and return a DeploymentArguments object
- * that can be used to run the docker process.
- * @param args command line arguments: DeployTo, composing, deployCommand, overrideArgs
- * @returns DeploymentArguments
- */
-function parseArguments(args: Array<string>): DeploymentArguments {
-  const deployTo = args[0];
-  const composing = args[1];
-  const deployCommand = args[2];
-  const overrideArgs = args.length > 3 ? args.slice(3).join(' ') : '';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const configPath = path.join(__dirname, 'dockerContainerSetup', 'containerDeploymentConfig.json');
 
-  if (!Object.values(DeployTo).includes(deployTo)) {
-    console.error(`Invalid 'deployTo' argument: ${deployTo}. Valid options are: ${Object.values(DeployTo).join(', ')}`);
-    process.exit(2);
+interface DeploymentTarget {
+  composing: string;
+  deployCommand: string;
+  composeFile?: string;
+  composeFiles?: ComposeFiles[];
+  defaultArgs?: string;
+  postUpCommands?: PostUpCommand[];
+}
+
+interface Deployment {
+  name: string;
+  description: string;
+  environments: string[];
+  target: DeploymentTarget;
+}
+
+interface DeploymentConfig {
+  deployments: Deployment[];
+}
+
+async function runDeployment(deploymentArgs: DeploymentArguments): Promise<void> {
+  if (deploymentArgs.composeFiles && deploymentArgs.composeFiles.length > 0) {
+    await executeDeployments(deploymentArgs);
+    return Promise.resolve();
   }
-
-  if (!Object.values(Composing).includes(composing)) {
-    console.error(`Invalid 'composing' argument: ${composing}. Valid options are: ${Object.values(Composing).join(', ')}`);
-    process.exit(2);
+  if (deploymentArgs.composeFile) {
+    await executeDeployment(deploymentArgs);
+    return Promise.resolve();
   }
-
-  if (![ComposeCommandUp, ComposeCommandDown].includes(deployCommand)) {
-    console.error(`Invalid 'deployCommand' argument: ${deployCommand}. Valid options are: ${ComposeCommandUp}, ${ComposeCommandDown}`);
-    process.exit(2);
-  }
-
-  console.log('args: ', { composing, deployTo, deployCommand, overrideArgs });
-  return { composing, deployTo, deployCommand, overrideArgs };
+  return Promise.reject('Deployment Args did not contain any deployment files.');
 }
 
 const createRL = () => readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-
-function askQuestion(query: string): Promise<string> {
-  const rl = createRL();
-  return new Promise((resolve) => {
-    rl.question(query, (answer) => {
-      rl.close();
-      resolve(answer);
-    });
-  });
-}
 
 function askQuestionWithSelect(query: string, options: Array<string>): Promise<string> {
   const rl = createRL();
@@ -78,33 +75,59 @@ function askQuestionWithSelect(query: string, options: Array<string>): Promise<s
 }
 
 async function main(): Promise<void> {
+  const config: DeploymentConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   const args = process.argv.slice(2);
-  if (args.length === 0) {
-    const deployTo = await askQuestionWithSelect(`What environment are you deploying to?`, Object.values(DeployTo));
-    const composing = await askQuestionWithSelect(`What are you deploying?`, Object.values(Composing));
-    const deployCommand = await askQuestionWithSelect(`What command do you want to run?`, [ComposeCommandDown, ComposeCommandUp]);
-    const overrideArgs = await askQuestion(`Provide override arguments here to override default configuration which are found in the defaultDeployCommandArgs object: `);
-    args.push(deployTo, composing, deployCommand, overrideArgs);
+
+  let deployTo: string;
+  let deployment: Deployment | undefined;
+
+  if (args.length >= 2) {
+    deployTo = args[0];
+    const deploymentName = args[1];
+    deployment = config.deployments.find(d => d.name === deploymentName);
+
+    if (!deployment) {
+      console.error(`Deployment "${deploymentName}" not found in deploymentConfig.json.`);
+      process.exit(1);
+    }
+    if (!deployment.environments.includes(deployTo)) {
+      console.error(`Environment "${deployTo}" is not valid for the deployment "${deploymentName}".`);
+      process.exit(1);
+    }
+  } else {
+    const allEnvironments = [...new Set(config.deployments.flatMap(d => d.environments))];
+    deployTo = await askQuestionWithSelect('Select an environment:', allEnvironments);
+
+    const availableDeployments = config.deployments.filter(d => d.environments.includes(deployTo));
+    const deploymentName = await askQuestionWithSelect(
+      'Select a deployment:',
+      availableDeployments.map(d => `${d.name} - ${d.description}`)
+    );
+    const selectedName = deploymentName.split(' - ')[0];
+    deployment = availableDeployments.find(d => d.name === selectedName);
   }
 
-  const deploymentArgs = parseArguments(args);
-  if (deploymentArgs.composing === Composing.All) {
-    // This works either way, but would be safer to destroy services then db.
-    if (deploymentArgs.deployCommand === ComposeCommandDown) {
-      await deployServices(deploymentArgs);
-      await deployDatabases(deploymentArgs);
-    } else {
-      await deployDatabases(deploymentArgs);
-      await deployServices(deploymentArgs);
-    }
+  if (!deployment) {
+    console.error('Could not determine a deployment to run.');
+    process.exit(1);
   }
-  if (deploymentArgs.composing === Composing.Databases) {
-    deployDatabases(deploymentArgs);
-  }
-  if (deploymentArgs.composing === Composing.Services) {
-    deployServices(deploymentArgs);
-  }
-  Promise.resolve();
+
+  const deploymentArgs: DeploymentArguments = {
+    deployTo,
+    composing: deployment.target.composing,
+    deployCommand: deployment.target.deployCommand,
+    composeFile: deployment.target.composeFile,
+    composeFiles: deployment.target.composeFiles,
+    args: deployment.target.defaultArgs,
+    postUpCommands: deployment.target.postUpCommands,
+  };
+
+  console.log('Executing deployment:', {
+    deployment: deployment.name,
+    ...deploymentArgs
+  });
+
+  await runDeployment(deploymentArgs).catch((reason: any) => console.error("Failed: ", reason));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

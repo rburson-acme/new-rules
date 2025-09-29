@@ -1,0 +1,122 @@
+{
+  "deployments": [
+    {
+      "name": "Start Databases",
+      "description": "Starts the database containers (Mongo, Redis, RabbitMQ).",
+      "environments": [
+        "local",
+        "dev",
+        "test"
+      ],
+      "target": {
+        "composing": "databases",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-db.yml",
+        "defaultArgs": "-d --wait",
+        "postUpCommands": [
+          {
+            "description": "Setting up MongoDB replica set...",
+            "command": "docker exec mongo-repl-1 mongosh \"mongodb://localhost:27017\" --eval \"rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] })\""
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stop Databases",
+      "description": "Stops and removes the database containers and their volumes.",
+      "environments": [
+        "local",
+        "dev",
+        "test"
+      ],
+      "target": {
+        "composing": "databases",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-db.yml",
+        "defaultArgs": "-v"
+      }
+    },
+    {
+      "name": "Start Services",
+      "description": "Starts the application services.",
+      "environments": [
+        "local",
+        "dev"
+      ],
+      "target": {
+        "composing": "services",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "-d --wait"
+      }
+    },
+    {
+      "name": "Stop Services",
+      "description": "Stops and removes the application services.",
+      "environments": [
+        "local",
+        "dev"
+      ],
+      "target": {
+        "composing": "services",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "-v --rmi local"
+      }
+    },
+    {
+      "name": "Start All",
+      "description": "Starts all databases and application services.",
+      "environments": [
+        "local"
+      ],
+      "target": {
+        "composing": "all",
+        "deployCommand": "up",
+        "composeFiles": [
+          {
+            "composeFile": "docker-compose-db.yml",
+            "defaultArgs": "-d --wait",
+            "postUpCommands": [
+              {
+                "description": "Setting up MongoDB replica set...",
+                "command": "docker exec mongo-repl-1 mongosh \"mongodb://localhost:27017\" --eval \"rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] })\""
+              }
+            ]
+          },
+          {
+            "composeFile": "docker-compose-services.yml",
+            "defaultArgs": "-d --wait"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stop All",
+      "description": "Stops all databases and application services.",
+      "environments": [
+        "local"
+      ],
+      "target": {
+        "composing": "all",
+        "deployCommand": "down",
+        "composeFiles": [
+          {
+            "composeFile": "docker-compose-db.yml",
+            "defaultArgs": "-v",
+            "postUpCommands": [
+              {
+                "description": "Setting up MongoDB replica set...",
+                "command": "docker exec mongo-repl-1 mongosh \"mongodb://localhost:27017\" --eval \"rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] })\""
+              }
+            ]
+          },
+          {
+            "composeFile": "docker-compose-services.yml",
+            "defaultArgs": "-v --rmi local"
+          }
+        ]
+      }
+    }
+  ]
+}
