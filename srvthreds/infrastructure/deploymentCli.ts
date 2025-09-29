@@ -15,6 +15,22 @@ function parseArguments(args: Array<string>): DeploymentArguments {
   const composing = args[1];
   const deployCommand = args[2];
   const overrideArgs = args.length > 3 ? args.slice(3).join(' ') : '';
+
+  if (!Object.values(DeployTo).includes(deployTo)) {
+    console.error(`Invalid 'deployTo' argument: ${deployTo}. Valid options are: ${Object.values(DeployTo).join(', ')}`);
+    process.exit(2);
+  }
+
+  if (!Object.values(Composing).includes(composing)) {
+    console.error(`Invalid 'composing' argument: ${composing}. Valid options are: ${Object.values(Composing).join(', ')}`);
+    process.exit(2);
+  }
+
+  if (![ComposeCommandUp, ComposeCommandDown].includes(deployCommand)) {
+    console.error(`Invalid 'deployCommand' argument: ${deployCommand}. Valid options are: ${ComposeCommandUp}, ${ComposeCommandDown}`);
+    process.exit(2);
+  }
+
   console.log('args: ', { composing, deployTo, deployCommand, overrideArgs });
   return { composing, deployTo, deployCommand, overrideArgs };
 }
