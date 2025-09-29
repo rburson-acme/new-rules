@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 export const ComposeCommandUp = 'up';
 export const ComposeCommandDown = 'down';
 export const Composing = {
+  All: 'all',
   Databases: 'databases',
   Services: 'services',
   Database: 'database',
@@ -111,7 +112,7 @@ export const DeployTo = {
   Production: 'prod'
 };
 
-export function deployDatabases({ deployTo, deployCommand, overrideArgs }: { deployTo: string, deployCommand: string, overrideArgs?: string }) {
+export function deployDatabases({ deployTo, deployCommand, overrideArgs }: { deployTo: string, deployCommand: string, overrideArgs?: string }): Promise<void> {
   const composeFile = fetchComposeFile(deployTo, Composing.Databases);
   const dockerArgs = fetchDockerArgs(deployCommand, Composing.Databases);
 
@@ -131,9 +132,10 @@ export function deployDatabases({ deployTo, deployCommand, overrideArgs }: { dep
 
     console.log('deployDatabases:: Replica set initiated.');
   }
+  return Promise.resolve();
 }
 
-export function deployServices({ deployTo, deployCommand, overrideArgs }: { deployTo: string, deployCommand: string, overrideArgs?: string }) {
+export function deployServices({ deployTo, deployCommand, overrideArgs }: { deployTo: string, deployCommand: string, overrideArgs?: string }): Promise<void> {
   const composeFile = fetchComposeFile(deployTo, Composing.Services);
   const dockerArgs = fetchDockerArgs(deployCommand, Composing.Services);
 
@@ -143,4 +145,5 @@ export function deployServices({ deployTo, deployCommand, overrideArgs }: { depl
   );
 
   console.log('deployServices:: docker compose execution successful...');
+  return Promise.resolve();
 }

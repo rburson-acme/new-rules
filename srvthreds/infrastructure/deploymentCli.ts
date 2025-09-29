@@ -34,17 +34,54 @@ function askQuestion(query: string): Promise<string> {
   });
 }
 
+function askQuestionWithSelect(query: string, options: Array<string>): Promise<string> {
+  const rl = createRL();
+  const fullOptions = [...options, 'Cancel'];
+  return new Promise((resolve) => {
+    const ask = () => {
+      console.log(query);
+      fullOptions.forEach((option, index) => {
+        console.log(`${index + 1}. ${option}`);
+      });
+      rl.question('Please enter the number of your choice: ', (answer) => {
+        const selection = parseInt(answer);
+        if (isNaN(selection) || selection < 1 || selection > fullOptions.length) {
+          console.log('Invalid selection, please try again.');
+          ask();
+        } else if (fullOptions[selection - 1] === 'Cancel') {
+          console.log('Operation cancelled.');
+          process.exit(0);
+        } else {
+          rl.close();
+          resolve(fullOptions[selection - 1]);
+        }
+      });
+    };
+    ask();
+  });
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    const deployTo = await askQuestion(`What environment are you deploying to, options ${JSON.stringify(Object.values(DeployTo))} ? `);
-    const composing = await askQuestion(`What are you deploying ${JSON.stringify(Object.values(Composing))} ? `);
-    const deployCommand = await askQuestion(`What command do you want to run, options ${ComposeCommandDown}, ${ComposeCommandUp} ? `);
+    const deployTo = await askQuestionWithSelect(`What environment are you deploying to?`, Object.values(DeployTo));
+    const composing = await askQuestionWithSelect(`What are you deploying?`, Object.values(Composing));
+    const deployCommand = await askQuestionWithSelect(`What command do you want to run?`, [ComposeCommandDown, ComposeCommandUp]);
     const overrideArgs = await askQuestion(`Provide override arguments here to override default configuration which are found in the defaultDeployCommandArgs object: `);
     args.push(deployTo, composing, deployCommand, overrideArgs);
   }
 
   const deploymentArgs = parseArguments(args);
+  if (deploymentArgs.composing === Composing.All) {
+    // This works either way, but would be safer to destroy services then db.
+    if (deploymentArgs.deployCommand === ComposeCommandDown) {
+      await deployServices(deploymentArgs);
+      await deployDatabases(deploymentArgs);
+    } else {
+      await deployDatabases(deploymentArgs);
+      await deployServices(deploymentArgs);
+    }
+  }
   if (deploymentArgs.composing === Composing.Databases) {
     deployDatabases(deploymentArgs);
   }
