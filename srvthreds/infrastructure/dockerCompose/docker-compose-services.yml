@@ -3,7 +3,7 @@ services:
   srvthreds-bootstrap:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile.cmdRunner
+      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.cmdRunner
     container_name: srvthreds-bootstrap
     # entrypoint: []
     command: ["npm", "run", "bootstrap", "--", "-p", "dev"]
@@ -18,7 +18,7 @@ services:
   srvthreds-engine:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile
+      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
     container_name: srvthreds-engine
     network_mode: "host"
     command: ["node", "/app/dist-server/index.js", "-d"]
@@ -46,7 +46,7 @@ services:
   srvthreds-session-agent:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile
+      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
       # dockerfile: srvthreds/Dockerfile
     container_name: srvthreds-session-agent
     network_mode: "host"
@@ -75,7 +75,7 @@ services:
   srvthreds-persistence-agent:
     build:
       context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerContainerSetup/Dockerfile
+      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
       # dockerfile: srvthreds/Dockerfile
     container_name: srvthreds-persistence-agent
     network_mode: "host"

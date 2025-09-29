@@ -8,7 +8,7 @@ import { executeDeployment, executeDeployments, DeploymentArguments, PostUpComma
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const configPath = path.join(__dirname, 'dockerContainerSetup', 'containerDeploymentConfig.json');
+const configPath = path.join(__dirname, 'configs', 'containerDeploymentConfig.json');
 
 interface DeploymentTarget {
   composing: string;

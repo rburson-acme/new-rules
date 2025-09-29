@@ -3,23 +3,16 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 export const ComposeCommandUp = 'up';
-export const ComposeCommandDown = 'down';
-export const Composing = {
-  All: 'all',
-  Databases: 'databases',
-  Services: 'services',
-};
+// export const ComposeCommandDown = 'down';
+// export const Composing = {
+//   All: 'all',
+//   Databases: 'databases',
+//   Services: 'services',
+// };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-export const ComposeDir = path.join(__dirname, '/dockerContainerSetup');
-// const DeployCommand = [ComposeCommandUp, ComposeCommandDown];
-
-// const defaultDeployCommandArgs = {
-//   UpDeployWait: '-d --wait',
-//   DownVolume: '-v',
-//   DownVolumeRMILocal: '-v --rmi local'
-// };
+export const ComposeDir = path.join(__dirname, '/dockerCompose');
 
 export interface ComposeFiles {
   composeFile: string,

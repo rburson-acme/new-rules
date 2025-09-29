@@ -104,7 +104,7 @@ services:
   srvthreds-bootstrap:
     build:
       context: ../../
-      dockerfile: srvthreds/scripts/development/dockerContainerSetup
+      dockerfile: srvthreds/scripts/development/dockerCompose
       # dockerfile: srvthreds/Dockerfile
     container_name: srvthreds-bootstrap
     entrypoint: []

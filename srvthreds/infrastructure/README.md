@@ -58,7 +58,7 @@ Execute deployments directly by specifying environment and deployment name:
 
 ## Configuration
 
-The deployment configuration is defined in [`containerDeploymentConfig.json`](dockerContainerSetup/containerDeploymentConfig.json). This file specifies:
+The deployment configuration is defined in [`containerDeploymentConfig.json`](dockerCompose/containerDeploymentConfig.json). This file specifies:
 
 - **Deployment definitions** with names, descriptions, and supported environments
 - **Docker Compose files** to use for each deployment
@@ -93,7 +93,7 @@ The deployment configuration is defined in [`containerDeploymentConfig.json`](do
 
 ## Docker Compose Files
 
-The CLI works with these Docker Compose files in the [`dockerContainerSetup/`](dockerContainerSetup/) directory:
+The CLI works with these Docker Compose files in the [`dockerCompose/`](dockerCompose/) directory:
 
 - **docker-compose-db.yml**: Database services (MongoDB, Redis, RabbitMQ)
 - **docker-compose-services.yml**: Application services
@@ -119,7 +119,7 @@ The CLI works with these Docker Compose files in the [`dockerContainerSetup/`](d
 infrastructure/
 ├── deploymentCli.ts              # Main CLI script
 ├── deployment.ts                 # Deployment execution logic
-├── dockerContainerSetup/
+├── dockerCompose/
 │   ├── containerDeploymentConfig.json  # Deployment configuration
 │   ├── docker-compose-db.yml           # Database services
 │   └── docker-compose-services.yml     # Application services
