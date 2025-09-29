@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "active": true
+  },
+  "name": "UAV Detection",
+  "id": "uav_detect",
+  "reactions": [
+    {
+      "name": "lookup_contact",
+      "allowedSources": ["sensor_agent0"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.sensor.detectionEvent'",
+        "onTrue": {
+          "xpr": "$setLocal('coords', { 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Contact Query",
+            "content": {
+              "tasks": [
+                {
+                  "name": "find_contact",
+                  "options": {
+                    "dbname": "demo"
+                  },
+                  "op": "get",
+                  "params": {
+                    "type": "ContactInfo",
+                    "matcher": {
+                      "sensorId": "$xpr( $valueNamed('sensorId') )"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "publish": {
+          "to": "org.wt.persistence"
+        }
+      }
+    },
+    {
+      "name": "notify_contact",
+      "allowedSources": ["/org\\.wt\\.persistence.*/"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.persistence'",
+        "onTrue": {
+          "xpr": "$setLocal('contactId', $valueNamed('contactId'))"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Possible UAV Detected",
+            "description": "$xpr( 'Sensor ' & $valueNamed('sensorId') & ' has detected a possible UAV')",
+            "display": { "uri": "https://www.svgrepo.com/show/489126/sensor.svg" },
+            "advice": {
+              "title": "UAV Notification",
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "uav_notification",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "Detected UAV",
+                                "latitude": "$xpr( $local('coords').latitude  )",
+                                "longitude": "$xpr( $local('coords').longitude )"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "input": {
+                            "type": "boolean",
+                            "name": "video_stream_request",
+                            "display": "Would you like to see a video stream of the area?",
+                            "set": [
+                              {
+                                "display": "Yes",
+                                "value": true
+                              },
+                              {
+                                "display": "No",
+                                "value": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$xpr( $local('contactId') )"
+        }
+      }
+    },
+    {
+      "name": "send_video",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('video_stream_request') = true",
+        "transform": {
+          "eventDataTemplate": {
+            "display": { "uri": "https://www.svgrepo.com/show/535721/video-camera.svg" },
+            "title": "UAV Video",
+            "advice": {
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "uav_video",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "video": {
+                            "uri": "https://videos.pexels.com/video-files/3764259/3764259-hd_1280_720_60fps.mp4"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$xpr( $local('contactId') )"
+        }
+      }
+    }
+  ]
+}

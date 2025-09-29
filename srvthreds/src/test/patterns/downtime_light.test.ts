@@ -1,6 +1,6 @@
 import { PatternModel, Logger, LoggerLevel, Event } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
-import patternModel from '../../ts/config/patterns/downtime_light.pattern.json';
+import patternModel from '../config/patterns/downtime_light.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 
 Logger.setLevel(LoggerLevel.INFO);

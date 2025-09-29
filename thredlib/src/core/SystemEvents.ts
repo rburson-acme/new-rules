@@ -55,6 +55,8 @@ export interface TerminateThreadArgs extends SystemEventThredInputValues {}
 
 export interface GetEventsArgs extends SystemEventThredInputValues {}
 
+export interface GetSystemSpecArgs extends SystemEventInputValues {}
+
 
 /***
  *                            __           _                     __                 _      _____                   _   

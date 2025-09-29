@@ -43,6 +43,8 @@ export interface TerminateThreadArgs extends SystemEventThredInputValues {
 }
 export interface GetEventsArgs extends SystemEventThredInputValues {
 }
+export interface GetSystemSpecArgs extends SystemEventInputValues {
+}
 /***
  *                            __           _                     __                 _      _____                   _
  *     /\ /\  ___  ___ _ __  / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    \_   \_ __  _ __  _   _| |_

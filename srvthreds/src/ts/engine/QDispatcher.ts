@@ -51,12 +51,10 @@ export class QDispatcher implements Dispatcher {
       // send messages to local agents
       await Parallel.forEach(serviceAddresses, async (address, index) => {
         try {
-          // get the service address from the supplied nodeId or nodeType to be used as the 'topic'
-          const resolvedAddress = addressResolver.getServiceAddressForNode(address);
           const id = `${event.id}_agent_${index}`;
           const newMessage: Message = { id, event, to: [address] };
           L.debug(L.h2(`Server.tell(): Message ${id} to Agent ${address}`));
-          if (resolvedAddress) await this.outboundQ.queue(newMessage, [resolvedAddress]);
+          if (address) await this.outboundQ.queue(newMessage, [address]);
         } catch (e) {
           L.error(L.crit(`Engine.tell(): Error sending message to Agent service address ${address}`), e);
         }

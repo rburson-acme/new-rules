@@ -38,6 +38,7 @@ export class UserService {
   }
 
   async handleSystemEvent(args: SystemServiceArgs): Promise<EventValues['values']> {
+    // delegate to SystemService op mapping
     return SystemService.handleSystemEvent(args, this.operations);
   }
 

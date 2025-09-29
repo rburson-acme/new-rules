@@ -1,0 +1,16 @@
+{
+  "agents": [
+    {
+      "name": "Test Agent 1",
+      "nodeType": "org.wt.test_agent",
+      "nodeId": "test_agent",
+      "configName": "test_agent"
+    },
+    {
+      "name": "Test Agent 2 Server",
+      "nodeType": "org.wt.test_agent_2",
+      "nodeId": "test_agent_2",
+      "configName": "test_agent_2"
+    }
+  ]
+}
