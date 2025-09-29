@@ -11,7 +11,7 @@
     "start-session-agent": "node dist-server/agent/agent.js -c session_agent -d",
     "start-persistence-agent": "node dist-server/agent/agent.js -c persistence_agent -d",
     "start-robot-agent": "node dist-server/agent/remote-agent.js --cp run-config/robot_agent.json -d",
-    "check-all": "npm-run-all build-lib check test-changed format",
+    "check-all": "npm-run-all build-lib check test format",
     "build": "npm-run-all build-lib clean transpile copy copy-configfiles",
     "watch:dev": "nodemon",
     "transpile": "tsc --project tsconfig.prod.json",

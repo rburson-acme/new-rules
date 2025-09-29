@@ -3,11 +3,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
-import rascal_config from '../config/rascal_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../queue/remote/RemoteQBroker.js';
 import { RemoteQService } from '../queue/remote/RemoteQService.js';
 import { AgentService } from './AgentService.js';
 import { SystemController } from '../persistence/controllers/SystemController.js';
+import { AgentConfig } from './Config.js';
 
 /***
  *     __                 _                     _
@@ -25,18 +25,22 @@ class Server {
   async start({
     configName,
     configPath,
+    nodeId,
     rascalConfigName,
     rascalConfigPath,
     additionalArgs,
   }: {
     configName: string;
     configPath?: string;
+    nodeId: string;
     rascalConfigName?: string;
     rascalConfigPath?: string;
     additionalArgs?: Record<string, any>;
   }) {
-    const agentConfig = await SystemController.get().getFromNameOrPath(configName, configPath);
+    const agentConfig: AgentConfig = await SystemController.get().getFromNameOrPath(configName, configPath);
     if (!agentConfig) throw new Error(`Agent: failed to load config for ${configName} or configPath: ${configPath}`);
+    if (!nodeId) throw new Error(`Agent: nodeId is required`);
+    agentConfig.nodeId = nodeId;
 
     const rascal_config = await SystemController.get().getFromNameOrPath(rascalConfigName, rascalConfigPath);
     if (!rascal_config)
@@ -56,7 +60,6 @@ class Server {
     // connect to persistence
     await SystemController.get().connect();
     this.agent = new AgentService({
-      configName,
       agentConfig: agentConfig,
       eventQ: eventQ,
       messageQ: messageQ,
@@ -86,6 +89,12 @@ const args = yargs(hideBin(process.argv))
   .options('config-name', {
     alias: 'c',
     description: 'The unique name of the config for this agent. Used for loading config dynamically.',
+    type: 'string',
+    demandOption: true,
+  })
+  .options('node-id', {
+    alias: 'i',
+    description: 'The unique ID of this agent instance.',
     type: 'string',
     demandOption: true,
   })
@@ -119,6 +128,7 @@ const server = new Server();
 server.start({
   configName: args['config-name'],
   configPath: configPath,
+  nodeId: args['node-id'],
   rascalConfigName: args['rascal-config'],
   rascalConfigPath: args['rascal-config-path'],
   additionalArgs,

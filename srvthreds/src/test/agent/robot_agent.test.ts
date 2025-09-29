@@ -1,6 +1,6 @@
 import { Logger, LoggerLevel, Event, EventBuilder, Events } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
-import agentConfig from '../../ts/config/robot_agent.json';
+import agentConfig from '../config/robot_agent.json' with { type: 'json' };
 import { AgentService } from '../../ts/agent/AgentService.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
 import { AgentConfig } from '../../ts/agent/Config.js';
@@ -14,7 +14,7 @@ Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('robot agent test', function () {
   beforeAll(async () => {
-    connMan = await AgentQueueConnectionManager.newAgentInstance('robot_agent', robotAgentConfig);
+    connMan = await AgentQueueConnectionManager.newAgentInstance(robotAgentConfig);
     await connMan.purgeAll();
     agent = connMan.agent;
   });

@@ -1,6 +1,6 @@
 import { PatternModel, Logger, LoggerLevel, Event, EventBuilder, Events, EventTask } from '../../ts/thredlib/index.js';
 import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
-import patternModel from '../../ts/config/patterns/uav_detection.pattern.json';
+import patternModel from '../config/patterns/uav_detection.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 
 Logger.setLevel(LoggerLevel.DEBUG);

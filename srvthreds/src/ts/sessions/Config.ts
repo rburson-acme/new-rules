@@ -6,7 +6,7 @@ export interface ServiceConfig {
   name: string;
   nodeType: string;
   nodeId: string;
-  address: string;
+  configName: string;
   remote?: boolean;
 }
 

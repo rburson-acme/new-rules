@@ -39,6 +39,7 @@ export class AdminService {
   }
 
   async handleSystemEvent(args: SystemServiceArgs): Promise<EventValues['values']> {
+    // delegate to SystemService op mapping
     return SystemService.handleSystemEvent(args, this.operations);
   }
 
@@ -191,6 +192,15 @@ export class AdminService {
     await this.threds.shutdown(delay);
     return { status: systemEventTypes.successfulStatus, op };
   };
+
+  /*
+  getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
+    const {
+      event,
+      args: { op },
+    } = SystemService.getArgs<GetSystemSpecArgs>(args);
+  }
+    */
 
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,

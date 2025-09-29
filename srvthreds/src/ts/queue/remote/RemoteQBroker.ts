@@ -1,5 +1,4 @@
 import rascal, { BrokerAsPromised } from 'rascal';
-import baseConfig from '../../config/rascal_config.json' with { type: 'json' };
 import { Logger } from '../../thredlib/index.js';
 
 /*
@@ -10,11 +9,7 @@ import { Logger } from '../../thredlib/index.js';
 export class RemoteQBroker {
   broker?: BrokerAsPromised;
 
-  constructor(private config?: any) {
-    if (!config) {
-      this.config = baseConfig as any;
-    }
-  }
+  constructor(private config: any) {}
 
   async connect(): Promise<void> {
     const withDefaults = rascal.withDefaultConfig(this.config as any);

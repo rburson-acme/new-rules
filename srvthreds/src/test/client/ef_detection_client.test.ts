@@ -6,7 +6,7 @@ Logger.setLevel(LoggerLevel.INFO);
 // this runs against a running server running 'ef_detection.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
-describe('ef_detection client test', function () {
+describe.skip('ef_detection client test', function () {
   beforeAll(async () => {
     eventManager0 = new EventManager();
     sensorAgentEventManager = new EventManager();

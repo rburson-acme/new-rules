@@ -5,8 +5,7 @@
     ],
     "include": [
         "./src/ts/**/*.ts",
-        "./src/test/**/*.ts",
-        "./infrastructure/deploymentCli.ts",
+        "./src/test/**/*.ts", "dev-boot/patterns/downtime_light.test.ts", "dev-boot/patterns/downtime.test.ts", "dev-boot/patterns/ef_detection.test.ts", "dev-boot/patterns/system_test.test.ts", "dev-boot/patterns/uav_detection.test.ts",
     ],
     "compilerOptions": {
         "noEmit": true,

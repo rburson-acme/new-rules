@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { ThredIcon } from './ThredIcon';
@@ -24,18 +24,18 @@ export const AdminThredListCard = observer(({ thredStore, thredsStore }: AdminTh
   if (!time) return null;
 
   return (
-    <Link href={`/admin-tools/thred-manager/${thredStore.thred.id}`}>
-      <View
-        style={[styles.containerStyle, { backgroundColor: colors.secondaryBackground, borderColor: colors.border }]}>
+    <Link href={`/admin-tools/thred-manager/${thredStore.thred.id}`} asChild>
+      <Pressable
+        style={{ ...styles.containerStyle, backgroundColor: colors.secondaryBackground, borderColor: colors.border }}>
         <ThredIcon />
         <View style={styles.textView}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <RegularText style={[styles.dateStyle]}>{formatDateAndTime(time)}</RegularText>
-            {endTime ? <RegularText style={[styles.dateStyle]}>{formatDateAndTime(endTime)}</RegularText> : null}
+            <RegularText style={styles.dateStyle}>{formatDateAndTime(time)}</RegularText>
+            {endTime ? <RegularText style={styles.dateStyle}>{' | ' + formatDateAndTime(endTime)}</RegularText> : null}
           </View>
-          <MediumText style={[styles.textStyle]}>{thredStore.thred.patternName}</MediumText>
+          <MediumText style={styles.textStyle}>{thredStore.thred.patternName}</MediumText>
         </View>
-      </View>
+      </Pressable>
     </Link>
   );
 });
@@ -44,18 +44,17 @@ const styles = StyleSheet.create({
   containerStyle: {
     flexDirection: 'row',
     display: 'flex',
-    flex: 1,
+    flexGrow: 1,
     borderWidth: 1,
     borderRadius: 4,
     padding: 8,
-    justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
   },
   textView: {
+    width: '100%',
     flexWrap: 'wrap',
-    flex: 1,
   },
-  textStyle: { flexWrap: 'wrap', flexShrink: 1 },
+  textStyle: { flexWrap: 'wrap' },
   dateStyle: {},
 });

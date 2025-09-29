@@ -1,3 +1,5 @@
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,16 +8,19 @@ import { Logger, LoggerLevel, Series } from '../ts/thredlib/index.js';
 import { ConfigLoader } from '../ts/config/ConfigLoader.js';
 import { StorageFactory } from '../ts/storage/StorageFactory.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
-import { UserController } from '../ts/persistence/controllers/UserController.js';
 
 Logger.setLevel(LoggerLevel.DEBUG);
 
+export interface BootstrapHandler {
+  run(): Promise<void>;
+  cleanup(): Promise<void>;
+}
+
 /*
   This utility:
-  - Loads the config files in ./run-config into the database
-  - Loads the patterns in ./src/ts/config/patterns into the database
-  - Loads any 'active' patterns from persistence into storage
-  - Loads demo objects into the database
+  - Loads the config files in run-profiles/<profile>/run-config into the database
+  - Loads any 'active' patterns from persistence into the database and then storage from the directory run-profiles/<profile>/patterns
+  - runs the methods cleanup() and run() from the Handler class in run-profiles/<profile>/Handler.ts
 */
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,94 +50,80 @@ async function loadPatternsIntoStorage() {
   await ConfigLoader.loadStorageFromPersistence(SystemController.get(), StorageFactory.getStorage());
 }
 
-// uav demo
-async function loadUAVDemoObjects() {
-  const persistence = PersistenceFactory.getPersistence({ dbname: 'demo' });
-  await persistence.upsert({
-    type: 'ContactInfo',
-    values: { id: '0', contactId: 'participant0', sensorId: '0' },
-    matcher: { sensorId: '0' },
-  });
-  await persistence.upsert({
-    type: 'ContactInfo',
-    values: { id: '1', contactId: 'participant1', sensorId: '1' },
-    matcher: { sensorId: '1' },
-  });
-  await persistence.upsert({
-    type: 'ContactInfo',
-    values: { id: '2', contactId: 'participant2', sensorId: '2' },
-    matcher: { sensorId: '2' },
-  });
-  await persistence.upsert({
-    type: 'ContactInfo',
-    values: { id: '3', contactId: 'participant3', sensorId: '3' },
-    matcher: { sensorId: '3' },
-  });
-  await UserController.get().replaceUser({ id: 'sensor_agent0', password: 'password0' });
-}
-
-// test
-async function createTestData() {
-  const persistence = PersistenceFactory.getPersistence({ dbname: 'test' });
-  await persistence.upsert({
-    type: 'TestObject',
-    values: { id: '0', participantId: 'participant0', locationId: '0' },
-    matcher: { locationId: '0' },
-  });
-  await persistence.upsert({
-    type: 'TestObject',
-    values: { id: '1', participantId: 'participant1', locationId: '1' },
-    matcher: { locationId: '1' },
-  });
-  await persistence.upsert({
-    type: 'TestObject',
-    values: { id: '2', participantId: 'participant2', locationId: '2' },
-    matcher: { locationId: '2' },
-  });
-  await persistence.upsert({
-    type: 'TestObject',
-    values: { id: '3', participantId: 'participant3', locationId: '3' },
-    matcher: { locationId: '3' },
-  });
-}
-
-async function createTestUsers() {
-  const uc = UserController.get();
-  await uc.replaceUser({ id: 'participant0', password: 'password0' });
-  await uc.replaceUser({ id: 'participant1', password: 'password1' });
-  await uc.replaceUser({ id: 'participant2', password: 'password2' });
-  await uc.replaceUser({ id: 'participant3', password: 'password3' });
-}
-
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)
 
-async function run() {
+async function run(profile: string) {
   Logger.info('  > Clearing database and storage...');
   await PersistenceFactory.removeDatabase();
-  await PersistenceFactory.removeDatabase({ dbname: 'test' });
-  await PersistenceFactory.removeDatabase({ dbname: 'demo' });
   await StorageFactory.purgeAll();
 
-  Logger.info('  > Loading config files in ./run-config into database...');
-  const runConfigDirectory = path.join(__dirname, '../../run-config');
+  // load the supplied handler
+  Logger.info(`  > Initializing Handler from run-profiles/${profile}/Handler.js...`);
+  const handler = await getHandler(path.join(__dirname, `../../run-profiles/${profile}`));
+  Logger.info('  > Running handler cleanup()...');
+  await handler?.cleanup();
+
+  Logger.info(`  > Loading config files in run-profiles/${profile}/run-config into database...`);
+  const runConfigDirectory = path.join(__dirname, `../../run-profiles/${profile}/run-config`);
   await ConfigLoader.loadPersistenceWithConfigFiles(SystemController.get(), runConfigDirectory);
 
-  Logger.info('  > Loading patterns into database...');
-  const relativeDirectory = path.join(__dirname, '../ts/config/patterns');
+  Logger.info(`  > Loading patterns from run-profiles/${profile}/patterns into database...`);
+  const relativeDirectory = path.join(__dirname, `../../run-profiles/${profile}/patterns`);
   const patterns = retrievePatterns(relativeDirectory);
   await persistPatterns(patterns);
-  Logger.info('  > Loading patterns into storage...');
+  Logger.info(`  > Loading patterns from run-profiles/${profile}/patterns into storage...`);
   await loadPatternsIntoStorage();
 
-  // create test users
-  await createTestUsers();
-  await createTestData();
-  //demo
-  await loadUAVDemoObjects();
+  Logger.info('  > Running handler run()...');
+  await handler?.run();
 
   await StorageFactory.getStorage().disconnect();
   await PersistenceFactory.disconnectAll();
   Logger.info('  > Done!');
 }
 
-await run();
+async function cleanup(profile: string) {
+  Logger.info('  > Cleaning up database and storage...');
+  await PersistenceFactory.removeDatabase();
+  await StorageFactory.purgeAll();
+  // load the supplied handler
+  Logger.info(`  > Initializing Handler from run-profiles/${profile}/Handler.js...`);
+  const handler = await getHandler(path.join(__dirname, `../../run-profiles/${profile}`));
+  Logger.info('  > Running handler cleanup()...');
+  await handler?.cleanup();
+}
+
+async function getHandler(handlerDirectory: string): Promise<BootstrapHandler | undefined> {
+  try {
+    let Handler;
+    const module = await import(`${handlerDirectory}/Handler.js`);
+    if (module && module.default) {
+      Handler = module.default;
+      return new Handler();
+    }
+  } catch (e) {
+    Logger.error('Bootstrap: Failed to initialize Handler', e);
+    throw e;
+  }
+}
+
+const argv = yargs(hideBin(process.argv))
+  .usage('$0 [options]')
+  .option('profile', {
+    alias: 'p',
+    type: 'string',
+    description: 'The bootstrap profile that you want to load',
+    demandOption: true,
+  })
+  .option('cleanup', {
+    alias: 'c',
+    type: 'boolean',
+    description: 'Run cleanup only',
+  })
+  .parseSync();
+
+if (argv.cleanup) {
+  await cleanup(argv.profile);
+} else {
+  await run(argv.profile);
+}

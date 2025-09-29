@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 16,
-    flex: 1,
   },
   buttonGroup: {
     flexDirection: 'row',

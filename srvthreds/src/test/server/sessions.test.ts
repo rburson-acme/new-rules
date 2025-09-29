@@ -147,12 +147,6 @@ describe('sessions', function () {
     expect(participantAddresses.length).toBe(1);
     expect(participantAddresses).toContain('bOompa');
   });
-  it('get address for node type', function () {
-    const address = sessions.getAddressResolver().getServiceAddressForNode('org.wt.test_agent');
-    expect(address).toBe('org.wt.test_agent');
-    const nodeType2 = sessions.getAddressResolver().getServiceAddressForNode('org.wt.test_agent_2');
-    expect(nodeType2).toBe('org.wt.test_agent_2');
-  });
   it('get thred participants', async function () {
     const particpantIds = await sessions.getAddressResolver().getParticipantIdsFor(['$thred', 'vSalt'], thredContext);
     expect(particpantIds).toContain('bOompa');
@@ -196,19 +190,19 @@ const resolverConfig: ResolverConfig = {
       name: 'Test Agent 1',
       nodeType: 'org.wt.test_agent',
       nodeId: 'org.wt.test_agent1',
-      address: 'org.wt.test_agent',
+      configName: 'agent1',
     },
     {
       name: 'Test Agent 2 Server',
       nodeType: 'org.wt.test_agent_2',
       nodeId: 'org.wt.test_agent2',
-      address: 'org.wt.test_agent_2',
+      configName: 'agent2',
     },
     {
       name: 'Persistence Agent',
       nodeType: 'org.wt.persistence',
       nodeId: 'org.wt.persistence1',
-      address: 'org.wt.persistence',
+      configName: 'persistence1',
     },
   ],
 };

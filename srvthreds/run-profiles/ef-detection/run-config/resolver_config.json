@@ -1,0 +1,23 @@
+{
+  "agents": [
+    {
+      "name": "Session Server",
+      "nodeType": "org.wt.session",
+      "nodeId": "ort.wt.session1",
+      "configName": "session_agent"
+    },
+    {
+      "name": "Persistence Agent",
+      "nodeType": "org.wt.persistence",
+      "nodeId": "org.wt.persistence1",
+      "configName": "persistence_agent"
+    },
+    {
+      "name": "Robot Agent",
+      "nodeType": "org.wt.robot",
+      "nodeId": "org.wt.robot1",
+      "configName": "robot_agent",
+      "remote": true
+    }
+  ]
+}

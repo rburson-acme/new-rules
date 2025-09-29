@@ -3,10 +3,10 @@ import { SessionAgent } from '../../ts/agent/session/SessionAgent.js';
 import { SessionService } from '../../ts/agent/session/SessionService.js';
 import { events, ServerConnectionManager, withDispatcherPromise } from '../testUtils.js';
 
-import patternModel from '../../ts/config/patterns/simple_test.pattern.json' with { type: 'json' };
+import patternModel from '../config/patterns/simple_test.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
-import sessionsModel from '../../ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
-import resolverConfig from '../../ts/config/simple_test_resolver_config.json' with { type: 'json' };
+import sessionsModel from '../config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import resolverConfig from '../config/simple_test_resolver_config.json' with { type: 'json' };
 
 Logger.setLevel(LoggerLevel.INFO);
 

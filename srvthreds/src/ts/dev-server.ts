@@ -4,7 +4,7 @@ import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
 import { AgentService } from './agent/AgentService.js';
-import { Config as StaticEngineConfig } from './engine/Config.js';
+import { Config, Config as StaticEngineConfig } from './engine/Config.js';
 import { Server } from './engine/Server.js';
 import { EventQ } from './queue/EventQ.js';
 import { MessageQ } from './queue/MessageQ.js';
@@ -15,13 +15,7 @@ import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
 import { Event, Logger, Message, PatternModel } from './thredlib/index.js';
 
-import _rascal_config from './config/rascal_config.json' with { type: 'json' };
-import _sessionsModel from './config/sessions/simple_test_sessions_model.json' with { type: 'json' };
-import _resolverConfig from './config/resolver_config.json' with { type: 'json' };
-import _engineConfig from './config/engine.json' with { type: 'json' };
-import _robotConfig from './config/robot_agent.json' with { type: 'json' };
-import patternModel from './config/patterns/uav_detection.pattern.json' with { type: 'json' };
-const patternModels: PatternModel[] = [patternModel] as PatternModel[];
+const patternModelsOverride: PatternModel[] = [] as PatternModel[];
 
 import path from 'node:path';
 import url from 'node:url';
@@ -29,6 +23,8 @@ import { SystemController } from './persistence/controllers/SystemController.js'
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
 import { RemoteAgentService } from './agent/RemoteAgentService.js';
+import { ConfigLoader } from './config/ConfigLoader.js';
+import { AgentConfig } from './agent/Config.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,19 +95,19 @@ class ServiceManager {
 
   // Start server
   async startServices() {
-    const engineConfig = (await SystemController.get().getConfig('engine')) || _engineConfig;
+    const engineConfig = await SystemController.get().getConfig('engine');
     StaticEngineConfig.engineConfig = engineConfig;
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
-    const rascal_config = (await SystemController.get().getConfig('rascal_config')) || _rascal_config;
+    const rascal_config = await SystemController.get().getConfig('rascal_config');
     const qBroker = new RemoteQBroker(rascal_config);
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
-    const sessionsModel = (await SystemController.get().getConfig('sessions_model')) || _sessionsModel;
-    const resolverConfig = (await SystemController.get().getConfig('resolver_config')) || _resolverConfig;
+    const sessionsModel = await SystemController.get().getConfig('sessions_model');
+    const resolverConfig = await SystemController.get().getConfig('resolver_config');
     const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
@@ -126,7 +122,7 @@ class ServiceManager {
     const engineServer = new Server(engineEventQ, engineMessageQ);
 
     // uncomment for manual testing
-    await engineServer.start({ patternModels });
+    await engineServer.start({ patternModels: patternModelsOverride });
 
     // comment this out for manual testing
     //await engineServer.start();
@@ -142,11 +138,11 @@ class ServiceManager {
     });
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
 
+    const sessionAgentConfig: AgentConfig = await SystemController.get().getFromNameOrPath('session_agent');
     // create and run a Session Agent
     // if config is not provided, it will be loaded from persistence (run bootstrap first)
     this.sessionAgent = new AgentService({
-      configName: 'session_agent',
-      //agentConfig: sessionAgentConfig,
+      agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
       additionalArgs: {
@@ -166,10 +162,9 @@ class ServiceManager {
     });
 
     const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);
+    const persistenceAgentConfig: AgentConfig = await SystemController.get().getFromNameOrPath('persistence_agent');
     this.persistenceAgent = new AgentService({
-      configName: 'persistence_agent',
-      // if config is not provided, it will be loaded from persistence (run bootstrap first)
-      // agentConfig: persistenceAgentConfig,
+      agentConfig: persistenceAgentConfig,
       eventQ: persistenceEventQ,
       messageQ: persistenceMessageQ,
       //additionalArgs: { dbname: 'demo', },
@@ -178,8 +173,9 @@ class ServiceManager {
 
     // ----------------------------------- Robot Agent Setup -----------------------------------
     // Note: this is running in process for convenience but will be a remote service
+    const robotConfig = await SystemController.get().getConfig('robot_agent');
     this.robotAgent = new RemoteAgentService({
-      agentConfig: _robotConfig,
+      agentConfig: robotConfig,
     });
     await this.robotAgent.start();
   }

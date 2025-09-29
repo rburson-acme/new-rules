@@ -83,11 +83,6 @@ export class AddressResolver {
     return this.serviceAddressMap?.[address]?.remote === true;
   }
 
-  /* The nodeId or nodeType can be used to get the service address */
-  getServiceAddressForNode(nodeTypeOrId: string): string | undefined {
-    return this.serviceAddressMap?.[nodeTypeOrId].address;
-  }
-
   /*
    * Translate addresses (aliases, groups, and ids) to participantIds
    */

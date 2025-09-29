@@ -31,7 +31,7 @@ export const ThredEvent = observer(({ event, pattern }: ThredEventsProps) => {
         <View style={{ flexWrap: 'wrap', flex: 1 }}>
           <RegularText style={[fonts.regular]}>{event.timestamp ? formatDateAndTime(event.timestamp) : ''}</RegularText>
           <View style={{ flex: 1, flexWrap: 'wrap' }}>
-            <MediumText>{event.event.data?.title}</MediumText>
+            <MediumText textProps={{ ellipsizeMode: 'clip' }}>{event.event.data?.title}</MediumText>
           </View>
         </View>
       </View>
@@ -71,16 +71,17 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 4,
     borderWidth: 1,
-    flex: 1,
+    display: 'flex',
+    flexGrow: 1,
   },
   innerContainer: {
-    flex: 1,
     flexDirection: 'row',
     gap: 16,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   button: {
-    flex: 1,
+    flexGrow: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

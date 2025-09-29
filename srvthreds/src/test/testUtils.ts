@@ -14,12 +14,12 @@ import { Config as EngineConfig } from '../ts/engine/Config.js';
 import { ResolverConfig } from '../ts/sessions/Config.js';
 import { AgentConfig } from '../ts/agent/Config.js';
 import { Timers } from '../ts/thredlib/index.js';
-import engineConfig from '../ts/config/engine.json' with { type: 'json' };
+import engineConfig from './config/engine.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
-import defaultSessionsModel from '../ts/config/sessions/simple_test_sessions_model.json' with { type: 'json' };
-import resolverConfig from '../ts/config/simple_test_resolver_config.json' with { type: 'json' };
+import defaultSessionsModel from './config/sessions/simple_test_sessions_model.json' with { type: 'json' };
+import resolverConfig from './config/simple_test_resolver_config.json' with { type: 'json' };
 import { UserController } from '../ts/persistence/controllers/UserController.js';
 EngineConfig.engineConfig = engineConfig;
 const sessionAgentConfig = {
@@ -29,8 +29,8 @@ const sessionAgentConfig = {
   subscriptionName: 'sub_session1_message',
   customConfig: {
     port: 3000,
-    sessionsModelPath: 'src/ts/config/sessions/sessions_model.json',
-    resolverConfigPath: 'src/ts/config/resolver_config.json',
+    sessionsModelPath: 'src/test/config/sessions/sessions_model.json',
+    resolverConfigPath: 'src/test/config/resolver_config.json',
   },
 } as AgentConfig;
 // set the agent implementation directly (vitest has a problem with dynamic imports)
@@ -276,7 +276,6 @@ export class ServerConnectionManager {
     // standard (default) agent configuration file
     // this location is relative to the 'agent' directory
     const agent = new AgentService({
-      configName: 'session_agent',
       agentConfig: sessionAgentConfig,
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
@@ -330,11 +329,7 @@ export class ServerConnectionManager {
 }
 
 export class AgentConnectionManager {
-  static async newAgentInstance(
-    agentName: string,
-    sessionAgentConfig: AgentConfig,
-    additionalArgs?: {},
-  ): Promise<AgentConnectionManager> {
+  static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
     const qBroker = new RemoteQBroker(config);
 
     // these are not used for testing with this utility but currently required for the Agent
@@ -349,7 +344,6 @@ export class AgentConnectionManager {
 
     // create the Agent and start it
     const agent = new AgentService({
-      configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
       messageQ: agentMessageQ,
@@ -386,7 +380,6 @@ export class AgentConnectionManager {
 // Allows for testing Agents WITH both Queue connections
 export class AgentQueueConnectionManager {
   static async newAgentInstance(
-    agentName: string,
     sessionAgentConfig: AgentConfig,
     additionalArgs?: {},
   ): Promise<AgentQueueConnectionManager> {
@@ -409,7 +402,6 @@ export class AgentQueueConnectionManager {
 
     // create the Agent and start it
     const agent = new AgentService({
-      configName: agentName,
       agentConfig: sessionAgentConfig,
       eventQ: agentEventQ,
       messageQ: agentMessageQ,

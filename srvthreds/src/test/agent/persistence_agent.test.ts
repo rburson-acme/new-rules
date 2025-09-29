@@ -1,9 +1,8 @@
-import { Logger, LoggerLevel, Event, SMap, EventBuilder, Events, EventThrowable } from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel, Event, EventBuilder, Events, EventThrowable } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
-import agentConfig from '../../ts/config/persistence_agent.json';
+import agentConfig from '../config/persistence_agent.json' with { type: 'json' };
 import { AgentService } from '../../ts/agent/AgentService.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
-import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
 import { AgentConfig } from '../../ts/agent/Config.js';
 
@@ -15,7 +14,7 @@ Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('persistence agent test', function () {
   beforeAll(async () => {
-    connMan = await AgentQueueConnectionManager.newAgentInstance('persistence_agent', persistenceAgentConfig);
+    connMan = await AgentQueueConnectionManager.newAgentInstance(persistenceAgentConfig);
     await connMan.purgeAll();
     agent = connMan.agent;
   });
