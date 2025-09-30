@@ -44,4 +44,4 @@ This app uses expo-router
 
 ### Add environment variables inside `thredclient/.env`
 
-- NEXT_PUBLIC_GOOGLE_MAP_API_KEY=""
+- GOOGLE_MAPS_API=""
