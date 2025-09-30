@@ -11,3 +11,7 @@ cd ../demo-env; npm install; npm link thredlib
 
 npm run dev
 ```
+
+### Add environment variables inside `demo-env/.env`
+
+- NEXT_PUBLIC_GOOGLE_MAP_API_KEY=""
