@@ -5,27 +5,19 @@ services:
     command: redis-server --save 20 1 --loglevel warning --notify-keyspace-events KA
     ports:
       - "6379:6379"
-    # networks:
-    #   - storage-net
+    networks:
+      - srvthreds-net
     volumes:
      - ./.docker/redis-data:/data
-     #- ./.docker/config/redis.conf:/usr/local/etc/redis/redis.conf
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     volumes:
-        #- ./.docker/rabbitmq/etc/:/etc/rabbitmq/
         - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
         - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
-        # uncomment for config
-        # - ./.docker/config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-    #environment:
-        #RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-        #RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-        #RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
-    # networks:
-    #   - storage-net
+    networks:
+      - srvthreds-net
     ports:
         - 5672:5672
         - 15672:15672
@@ -39,8 +31,8 @@ services:
       MONGO_INITDB_DATABASE: admin
     ports:
       - 27017:27017
-    # networks:
-    #   - storage-net
+    networks:
+      - srvthreds-net
     # volumes:
     #   - ~/.docker/mongodb/data/db:/data/db
       # - ./.docker/scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -100,11 +92,10 @@ services:
   #     - ./scripts/setup-repl.sh:/scripts/setup-repl.sh
   #   command: sh -c "chmod +x /scripts/setup-repl.sh && /scripts/setup-repl.sh"
 
-# networks:
-#   storage-net:
-#     driver: bridge
-#   app-net:
-#     driver: bridge
+networks:
+  srvthreds-net:
+    driver: bridge
+    name: srvthreds-net
 
 # volumes:
 #   mongo-data-2:

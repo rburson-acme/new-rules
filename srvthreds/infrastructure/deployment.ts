@@ -11,6 +11,7 @@ export const ComposeDir = path.join(__dirname, '/dockerCompose');
 export interface ComposeFiles {
   composeFile: string,
   defaultArgs?: string,
+  preBuildCommands?: PostUpCommand[],
   postUpCommands?: PostUpCommand[]
 }
 
@@ -26,7 +27,25 @@ export interface DeploymentArguments {
   composeFile?: string;
   composeFiles?: ComposeFiles[];
   args?: string;
+  preBuildCommands?: PostUpCommand[];
   postUpCommands?: PostUpCommand[];
+}
+
+export function processExitError(errorMessage: string, optionalParams?: Object, errorCode: number = 1): never {
+  console.error(errorMessage, optionalParams);
+  process.exit(errorCode);
+}
+
+function createAssets(deployTo: string): void | never {
+  if(!deployTo) processExitError(`Failed to createAssets because the deployTo variable that sets the environment.`, 1);
+  if(deployTo === 'local') {
+    // Create env file asset
+    execCommand('cp ./infrastructure/configs/.env.local.example ./infrastructure/deploymentAssets/.env', 'Copy environment config into assets folder for delivery.');
+  }
+}
+
+function cleanupCreatedAssets() {
+  execCommand('rm -rf ./deploymentAssets/*.*');
 }
 
 function execCommand(command: string, description?: string): void {
@@ -34,15 +53,24 @@ function execCommand(command: string, description?: string): void {
     console.log(description);
   }
   try {
+    console.debug(`executing command: `, { command, dir: `${process.cwd()}` });
     execSync(command, { stdio: 'inherit' });
-  } catch (error) {
-    console.error(`Command failed: ${command}`);
-    process.exit(1);
+  } catch (error: any) {
+    processExitError(`Command failed: ${command}`, error);
   }
 }
 
-function execute(deployCommand: string, composeFile: string, args?: string, postUpCommands?: PostUpCommand[]) {
+function execute(deployCommand: string, composeFile: string, args?: string, preBuildCommands?: PostUpCommand[], postUpCommands?: PostUpCommand[]) {
   const fullComposePath = path.join(ComposeDir, composeFile);
+
+  // Execute pre-build commands if specified (e.g., building dependencies like srvthreds-builder)
+  if (preBuildCommands && preBuildCommands.length > 0) {
+    console.log('Executing pre-build commands...');
+    for (const cmd of preBuildCommands) {
+      execCommand(cmd.command, cmd.description);
+    }
+    console.log('Pre-build commands executed successfully.');
+  }
 
   execCommand(
     `docker compose -f "${fullComposePath}" ${deployCommand} ${args ? args : ''}`,
@@ -60,24 +88,32 @@ function execute(deployCommand: string, composeFile: string, args?: string, post
   }
 }
 
-export function executeDeployment({ deployCommand, composeFile, args, postUpCommands }: DeploymentArguments): Promise<void> {
+export function executeDeployment({ deployTo, deployCommand, composeFile, args, preBuildCommands, postUpCommands }: DeploymentArguments): Promise<void> {
+  createAssets(deployTo);
+
   if (!composeFile) {
-    console.error('executeDeployment:: composeFile or composeFiles is required.');
-    process.exit(1);
+    processExitError(`executeDeployment:: composeFile or composeFiles is required.`);
   }
 
-  execute(deployCommand, composeFile, args, postUpCommands);
+  execute(deployCommand, composeFile, args, preBuildCommands, postUpCommands);
+
+  cleanupCreatedAssets()
+
   return Promise.resolve();
 }
 
-export function executeDeployments({ deployCommand, composeFiles }: DeploymentArguments): Promise<void> {
+export function executeDeployments({ deployTo, deployCommand, composeFiles }: DeploymentArguments): Promise<void> {
+  createAssets(deployTo);
+
   if (!composeFiles || composeFiles.length === 0) {
-    console.error('executeDeployment:: composeFile or composeFiles is required.');
-    process.exit(1);
+    processExitError(`executeDeployment:: composeFile or composeFiles is required.`);
   }
 
   composeFiles.forEach((compose) => {
-    execute(deployCommand, compose.composeFile, compose.defaultArgs, compose.postUpCommands);
-  })
+    execute(deployCommand, compose.composeFile, compose.defaultArgs, compose.preBuildCommands, compose.postUpCommands);
+  });
+
+  cleanupCreatedAssets()
+
   return Promise.resolve();
 }

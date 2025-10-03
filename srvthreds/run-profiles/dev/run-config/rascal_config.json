@@ -3,7 +3,7 @@
   "vhosts": {
     "/": {
       "connection": {
-        "url": "amqp://guest:guest@localhost"
+        "url": "amqp://guest:guest@${RABBITMQ_HOST||localhost}"
       },
       "exchanges": {
         "event-exchange": {

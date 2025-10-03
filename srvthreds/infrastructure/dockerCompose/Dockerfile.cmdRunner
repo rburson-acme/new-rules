@@ -27,8 +27,11 @@ RUN chown -R srvthreds:nodejs /app
 # Switch to non-root user
 USER srvthreds
 
+# Copy env file from assets directory
+COPY srvthreds/infrastructure/deploymentAssets/.env ./.env
+
 # Expose common ports (can be overridden in compose)
-EXPOSE 3000 3001
+# EXPOSE 3000 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

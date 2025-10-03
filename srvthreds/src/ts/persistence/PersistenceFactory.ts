@@ -6,22 +6,24 @@ import { Persistence } from './Persistence.js';
 export class PersistenceFactory {
   private static instanceMapByHost: Record<string, PersistenceProvider> = {};
 
-  private static DEFAULT_HOST_NAME = 'default';
+  private static DEFAULT_HOST_NAME = 'localhost:27017';
 
-  static getPersistenceProvider(hostString?: string): PersistenceProvider {
-    const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
+  static getPersistenceProvider(hostString?: string, directConnection: boolean = false): PersistenceProvider {
+    // TODO: Look at handling the host string farther up the stack
+    const _hostString = hostString || process.env.MONGO_HOST || PersistenceFactory.DEFAULT_HOST_NAME;
+    // const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
     if (!PersistenceFactory.instanceMapByHost[_hostString]) {
-      PersistenceFactory.instanceMapByHost[_hostString] = hostString
-        ? new MongoPersistenceProvider(hostString)
-        : new MongoPersistenceProvider();
+      const _directConnection = directConnection ?? process.env.MONGO_DIRECT_CONNECTION === 'true';
+      const options = { connectOptions: { directConnection: _directConnection } };
+      PersistenceFactory.instanceMapByHost[_hostString] = new MongoPersistenceProvider(_hostString, options);
       PersistenceFactory.connect(_hostString);
     }
     return PersistenceFactory.instanceMapByHost[_hostString];
   }
 
-  static getPersistence(params?: { hostString?: string; dbname?: string }): Persistence {
-    const { hostString, dbname } = params || {};
-    const persistenceProvider = PersistenceFactory.getPersistenceProvider(hostString);
+  static getPersistence(params?: { hostString?: string; dbname?: string; directConnection?: boolean }): Persistence {
+    const { hostString, dbname, directConnection } = params || {};
+    const persistenceProvider = PersistenceFactory.getPersistenceProvider(hostString, directConnection);
     return persistenceProvider.getInstance(dbname);
   }
 

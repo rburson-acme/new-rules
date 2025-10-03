@@ -16,9 +16,9 @@ import { Adapter } from './adapter/Adapter.js';
 import { RemoteConnectionManager } from './remote/RemoteConnectionManager.js';
 import { HttpService } from './http/HttpService.js';
 import { BasicAuth } from '../auth/BasicAuth.js';
-import { getHandleEventValues } from './session/ http/EventValuesHandler.js';
-import { getHandleEvent } from './session/ http/EventHandler.js';
-import { getHandleLogin, getHandleRefresh } from './session/ http/AuthHandler.js';
+import { getHandleEventValues } from './session/http/EventValuesHandler.js';
+import { getHandleEvent } from './session/http/EventHandler.js';
+import { getHandleLogin, getHandleRefresh } from './session/http/AuthHandler.js';
 import { LocalAuthStorage } from '../auth/LocalAuthStorage.js';
 
 export interface MessageHandler {

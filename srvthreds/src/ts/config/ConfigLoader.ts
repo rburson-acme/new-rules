@@ -19,7 +19,9 @@ export class ConfigLoader {
       const configName = file.substring(0, file.indexOf('.json'));
       const filePath = path.join(directory, file);
       const fileContents = fs.readFileSync(filePath, 'utf-8');
-      const jsonData = JSON.parse(fileContents);
+      // Substitute environment variables before parsing
+      const substitutedContents = ConfigLoader.substituteEnvVars(fileContents);
+      const jsonData = JSON.parse(substitutedContents);
       Logger.info(`Persisting config ${configName} from ${filePath}`);
       return persistenceManager.upsertConfig(configName, jsonData);
     });
@@ -33,7 +35,9 @@ export class ConfigLoader {
           reject(new Error(`Failed to load config from path: ${configPath}`, { cause: err }));
         } else {
           try {
-            const config = JSON.parse(data);
+            // Substitute environment variables in the config file
+            const substitutedData = ConfigLoader.substituteEnvVars(data);
+            const config = JSON.parse(substitutedData);
             resolve(config);
           } catch (parseError) {
             Logger.error(`Error parsing config file: ${configPath}`, parseError);
@@ -41,6 +45,20 @@ export class ConfigLoader {
           }
         }
       });
+    });
+  }
+
+  /**
+   * Substitutes environment variables in a string.
+   * Supports syntax: ${VAR_NAME} or ${VAR_NAME||default_value}
+   * Examples:
+   *   ${MONGO_HOST} -> process.env.MONGO_HOST
+   *   ${MONGO_HOST||localhost:27017} -> process.env.MONGO_HOST || 'localhost:27017'
+   */
+  private static substituteEnvVars(content: string): string {
+    return content.replace(/\$\{([^}]+)\}/g, (match, varExpr) => {
+      const [varName, defaultValue] = varExpr.split('||').map((s: string) => s.trim());
+      return process.env[varName] || defaultValue || '';
     });
   }
 }

@@ -1,25 +1,10 @@
-# Multi-stage build for SrvThreds unified container
-# Support for multiple architectures (amd64, arm64)
-FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+# Production build for SrvThreds services
+# Uses pre-built artifacts from srvthreds-builder image
+# This significantly improves build times for multi-service deployments
 
-# Set working directory
-WORKDIR /app
-
-# Copy both repositories from parent context
-COPY thredlib/ ./thredlib/
-COPY srvthreds/ ./srvthreds/
-
-# Build thredlib first
-WORKDIR /app/thredlib
-RUN npm ci && npm run build-all
-
-# Build srvthreds
-WORKDIR /app/srvthreds
-RUN npm ci
-RUN npm run build
-
-# Copy run-config directory which contains additional config files
-COPY srvthreds/run-profiles/ ./run-profiles/
+# Use builder image as source for compiled artifacts
+ARG BUILDER_IMAGE=srvthreds-builder:latest
+FROM ${BUILDER_IMAGE} AS builder
 
 # Production stage
 FROM node:20-alpine AS production

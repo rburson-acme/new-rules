@@ -3,13 +3,13 @@ import { SystemController } from '../../persistence/controllers/SystemController
 import { Event, Logger, Message } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../Config.js';
-import { getHandleLogin, getHandleRefresh } from './ http/AuthHandler.js';
-import { getHandleEvent } from './ http/EventHandler.js';
+import { getHandleLogin, getHandleRefresh } from './http/AuthHandler.js'
+import { getHandleEvent } from './http/EventHandler.js';
 import { HttpService } from '../http/HttpService.js';
 import { SessionService } from './SessionService.js';
 import { SessionServiceListener } from './SessionServiceListener.js';
 import { SocketService } from './SocketService.js';
-import { getHandleEventValues } from './ http/EventValuesHandler.js';
+import { getHandleEventValues } from './http/EventValuesHandler.js';
 import { AuthStorage } from '../../auth/AuthStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
 

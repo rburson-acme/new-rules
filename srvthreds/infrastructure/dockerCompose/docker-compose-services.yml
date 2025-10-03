@@ -1,38 +1,55 @@
 services:
+  # Builder image - contains compiled thredlib and srvthreds artifacts
+  # This is built first and reused by all other services for faster builds
+  srvthreds-builder:
+    build:
+      context: ../../../
+      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.builder
+    image: srvthreds-builder:latest
+    container_name: srvthreds-builder
+    command: ["/bin/true"]  # No-op, this is just for building
+    restart: "no"
+
   # Command runner for environment setup
   srvthreds-bootstrap:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.cmdRunner
     container_name: srvthreds-bootstrap
-    # entrypoint: []
-    command: ["npm", "run", "bootstrap", "--", "-p", "dev"]
+    command: ["npm", "run", "bootstrap", "--", "-p", "ef-detection"]
     environment:
       - NODE_ENV=development
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     restart: "no"  # Run once and exit
-    network_mode: "host"
-    # networks:
-    #   - storage-net
+    networks:
+      - srvthreds-net
 
   # SrvThreds Engine Service
   srvthreds-engine:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
+      args:
+        BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-engine
-    network_mode: "host"
     command: ["node", "/app/dist-server/index.js", "-d"]
+    ports:
+      - "8082:8082"  # Expose engine to host
     depends_on:
+      srvthreds-builder:
+        condition: service_completed_successfully
       srvthreds-bootstrap:
         condition: service_completed_successfully
     environment:
       - NODE_ENV=development
-      # - MONGO_HOST=mongo-repl-1:27017,mongo-repl-2:27017,mongo-repl-3:27017
-      # - REDIS_HOST=redis
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     restart: unless-stopped
-    # networks:
-    #   - storage-net
-    #   - app-net
+    networks:
+      - srvthreds-net
     deploy:
       resources:
         limits:
@@ -47,21 +64,26 @@ services:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
-      # dockerfile: srvthreds/Dockerfile
+      args:
+        BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-session-agent
-    network_mode: "host"
-    command: ["node", "/app/dist-server/agent/agent.js", "-c", "session_agent", "-d"]
+    ports:
+      - '3000:3000'
+    entrypoint: ["node", "/app/dist-server/agent/agent.js"]
+    command: ["-c", "session_agent", "-i", "org.wt.session1", "-d"]
     depends_on:
+      srvthreds-builder:
+        condition: service_completed_successfully
       srvthreds-bootstrap:
         condition: service_completed_successfully
     environment:
       - NODE_ENV=development
-      # - MONGO_HOST=mongo-repl-1:27017,mongo-repl-2:27017,mongo-repl-3:27017
-      # - REDIS_HOST=redis
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     restart: unless-stopped
-    # networks:
-    #   - storage-net
-    #   - app-net
+    networks:
+      - srvthreds-net
     deploy:
       resources:
         limits:
@@ -76,21 +98,23 @@ services:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
-      # dockerfile: srvthreds/Dockerfile
+      args:
+        BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-persistence-agent
-    network_mode: "host"
     command: ["node", "/app/dist-server/agent/agent.js", "-c", "persistence_agent", "-d"]
     depends_on:
+      srvthreds-builder:
+        condition: service_completed_successfully
       srvthreds-bootstrap:
         condition: service_completed_successfully
     environment:
       - NODE_ENV=development
-      # - MONGO_HOST=mongo-repl-1:27017,mongo-repl-2:27017,mongo-repl-3:27017
-      # - REDIS_HOST=redis
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     restart: unless-stopped
-    # networks:
-    #   - storage-net
-    #   - app-net
+    networks:
+      - srvthreds-net
     deploy:
       resources:
         limits:
@@ -100,11 +124,10 @@ services:
           memory: 256M
           cpus: '0.2'
 
-# networks:
-#   storage-net:
-#     driver: bridge
-#   app-net:
-#     driver: bridge
+networks:
+  srvthreds-net:
+    driver: bridge
+    name: srvthreds-net
 
 # volumes:
 #   mongo-data-2:

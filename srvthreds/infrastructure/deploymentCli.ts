@@ -4,7 +4,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles } from './deployment.js';
+import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles, processExitError } from './deployment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,11 +16,13 @@ interface DeploymentTarget {
   composeFile?: string;
   composeFiles?: ComposeFiles[];
   defaultArgs?: string;
+  preBuildCommands?: PostUpCommand[];
   postUpCommands?: PostUpCommand[];
 }
 
 interface Deployment {
   name: string;
+  shortName: string;
   description: string;
   environments: string[];
   target: DeploymentTarget;
@@ -80,19 +82,18 @@ async function main(): Promise<void> {
 
   let deployTo: string;
   let deployment: Deployment | undefined;
-
+  console.debug(`Args: ${args}`);
   if (args.length >= 2) {
     deployTo = args[0];
     const deploymentName = args[1];
-    deployment = config.deployments.find(d => d.name === deploymentName);
+    console.debug(`Deploy To: ${deployTo} Deployment Name: ${deploymentName}`);
+    deployment = config.deployments.find(d => d.name === deploymentName || d.shortName === deploymentName);
 
     if (!deployment) {
-      console.error(`Deployment "${deploymentName}" not found in deploymentConfig.json.`);
-      process.exit(1);
+      processExitError(`Deployment "${deploymentName}" not found in deploymentConfig.json.`);
     }
     if (!deployment.environments.includes(deployTo)) {
-      console.error(`Environment "${deployTo}" is not valid for the deployment "${deploymentName}".`);
-      process.exit(1);
+      processExitError(`Environment "${deployTo}" is not valid for the deployment "${deploymentName}".`);
     }
   } else {
     const allEnvironments = [...new Set(config.deployments.flatMap(d => d.environments))];
@@ -101,15 +102,14 @@ async function main(): Promise<void> {
     const availableDeployments = config.deployments.filter(d => d.environments.includes(deployTo));
     const deploymentName = await askQuestionWithSelect(
       'Select a deployment:',
-      availableDeployments.map(d => `${d.name} - ${d.description}`)
+      availableDeployments.map(d => `${d.name} (${d.shortName}) - ${d.description}`)
     );
-    const selectedName = deploymentName.split(' - ')[0];
+    const selectedName = deploymentName.split(' (')[0];
     deployment = availableDeployments.find(d => d.name === selectedName);
   }
 
   if (!deployment) {
-    console.error('Could not determine a deployment to run.');
-    process.exit(1);
+    processExitError('Could not determine a deployment to run.');
   }
 
   const deploymentArgs: DeploymentArguments = {
@@ -119,6 +119,7 @@ async function main(): Promise<void> {
     composeFile: deployment.target.composeFile,
     composeFiles: deployment.target.composeFiles,
     args: deployment.target.defaultArgs,
+    preBuildCommands: deployment.target.preBuildCommands,
     postUpCommands: deployment.target.postUpCommands,
   };
 
@@ -127,14 +128,14 @@ async function main(): Promise<void> {
     ...deploymentArgs
   });
 
-  await runDeployment(deploymentArgs).catch((reason: any) => console.error("Failed: ", reason));
+  await runDeployment(deploymentArgs)
+    .catch((reason: any) => processExitError("Failed to execute deployment: ", reason) );
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     main();
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+  } catch (e: any) {
+    processExitError('Main execution failure: ', e);
   }
 }
