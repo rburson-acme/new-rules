@@ -37,7 +37,8 @@
     "deploy-dev-down-databases": "npm run deploymentCli -- local d_a_dbs",
     "deploy-dev-services": "npm run deploymentCli -- local s_a_s",
     "deploy-dev-down-services": "npm run deploymentCli -- local d_a_s",
-    "deploy-dev-down-all": "npm run deploymentCli -- local d_a_s && npm run deploymentCli -- local d_a_dbs"
+    "deploy-dev-up-all": "npm run deploymentCli -- local s_a_dbs_s",
+    "deploy-dev-down-all": "npm run deploymentCli -- local d_a_dbs_s"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

@@ -339,12 +339,19 @@ node deploymentCli.ts local s_a_dbs_s
 # Start only databases
 node deploymentCli.ts local s_s_dbs
 
+# Start services in staging environment
+node deploymentCli.ts staging s_a_s
+
 # Stop all
 node deploymentCli.ts local d_a_dbs_s
 
 # View available deployments
 node deploymentCli.ts
 ```
+
+**Environment-Specific Deployments:**
+
+The deployment system supports environment-specific command overrides. When deploying to different environments (local, dev, staging, production), you can configure different pre-build and post-deployment commands. See the [Deployment CLI README](README.md#environment-specific-command-overrides) for details.
 
 **Manual Docker Compose Commands:**
 ```bash

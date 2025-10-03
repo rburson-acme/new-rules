@@ -4,7 +4,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles, processExitError } from './deployment.js';
+import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles, EnvironmentOverrides, processExitError } from './deployment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +18,7 @@ interface DeploymentTarget {
   defaultArgs?: string;
   preBuildCommands?: PostUpCommand[];
   postUpCommands?: PostUpCommand[];
+  environmentOverrides?: Record<string, EnvironmentOverrides>;
 }
 
 interface Deployment {
@@ -121,6 +122,7 @@ async function main(): Promise<void> {
     args: deployment.target.defaultArgs,
     preBuildCommands: deployment.target.preBuildCommands,
     postUpCommands: deployment.target.postUpCommands,
+    environmentOverrides: deployment.target.environmentOverrides,
   };
 
   console.log('Executing deployment:', {

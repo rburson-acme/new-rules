@@ -119,7 +119,23 @@ The deployment configuration is defined in [`configs/containerDeploymentConfig.j
             "description": "Command description",
             "command": "shell command to execute after deployment"
           }
-        ]
+        ],
+        "environmentOverrides": {
+          "staging": {
+            "preBuildCommands": [
+              {
+                "description": "Environment-specific pre-build command",
+                "command": "shell command for staging environment"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Environment-specific post-up command",
+                "command": "shell command for staging environment"
+              }
+            ]
+          }
+        }
       }
     }
   ]
@@ -140,6 +156,7 @@ The CLI works with these Docker Compose files in the [`dockerCompose/`](dockerCo
 - **ShortName Support**: Quick deployment execution using short, memorable aliases
 - **Pre-Build Commands**: Automatic execution of build commands before container startup (e.g., building base images)
 - **Post-Deployment Commands**: Automatic execution of setup commands after container startup
+- **Environment-Specific Overrides**: Override pre-build and post-up commands per environment for flexible deployment strategies
 - **Multi-Compose Support**: Can orchestrate multiple compose files in sequence
 - **Asset Management**: Automatically creates and cleans up deployment assets (e.g., environment files)
 - **Error Handling**: Graceful error handling with informative messages
@@ -194,3 +211,45 @@ docker exec mongo-repl-1 mongosh "mongodb://localhost:27017" --eval "rs.initiate
 ```
 
 These commands ensure that services are properly configured and ready for use after startup.
+
+### Environment-Specific Command Overrides
+
+The deployment system supports environment-specific command overrides, allowing you to define different pre-build and post-up commands for different environments. This is useful when:
+
+- Production builds require different optimization flags (e.g., `--no-cache`)
+- Staging environments need additional setup steps (e.g., database migrations)
+- Development environments need test data bootstrapping
+- Different environments have different validation requirements
+
+**How it works:**
+
+1. Define default `preBuildCommands` and `postUpCommands` at the target level
+2. Add `environmentOverrides` with environment-specific commands
+3. When deploying to a specific environment, the override commands **completely replace** the defaults (if defined)
+4. If no override exists for an environment, the default commands are used
+
+**Example:**
+
+```json
+{
+  "target": {
+    "preBuildCommands": [
+      { "description": "Building with cache...", "command": "docker compose build" }
+    ],
+    "environmentOverrides": {
+      "production": {
+        "preBuildCommands": [
+          { "description": "Building without cache for production...", "command": "docker compose build --no-cache" }
+        ],
+        "postUpCommands": [
+          { "description": "Running migrations...", "command": "npm run migrate" }
+        ]
+      }
+    }
+  }
+}
+```
+
+In this example:
+- **Local/Dev**: Uses cached builds (default `preBuildCommands`), no post-up commands
+- **Production**: Rebuilds from scratch (`--no-cache`), runs migrations after deployment
