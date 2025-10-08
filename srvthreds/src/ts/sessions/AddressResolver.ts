@@ -1,11 +1,10 @@
 import { StringMap } from '../thredlib/index.js';
-import { GroupModel } from '../thredlib/index.js';
 import { Address } from '../thredlib/index.js';
 import { Parallel } from '../thredlib/index.js';
-import { Group } from './Group.js';
-import { ResolverConfig, ServiceConfig } from './Config.js';
 import { SessionStorage } from './storage/SessionStorage.js';
 import { ThredContext } from '../engine/ThredContext.js';
+import { ResolverConfig } from '../config/ResolverConfig.js';
+import { SessionsConfig } from '../config/SessionsConfig.js';
 
 const { forEach } = Parallel;
 
@@ -19,39 +18,16 @@ export class AddressResolver {
   // all current users on the thred
   public static THRED_ALIAS: string = '$thred';
 
-  private groups: StringMap<Group> = {};
-  private serviceAddressMap: StringMap<ServiceConfig> = {};
-
   private aliasMap: StringMap<(thredContext?: ThredContext) => Promise<string[]>> = {
     [AddressResolver.ALL_ALIAS]: this.getAllParticipantIds,
     [AddressResolver.THRED_ALIAS]: this.getThredParticipantIds,
   };
 
   constructor(
-    groupModels: GroupModel[],
-    resolverConfig: ResolverConfig,
+    private resolverConfig: ResolverConfig,
+    private sessionsConfig: SessionsConfig,
     private storage: SessionStorage,
-  ) {
-    this.setGroupModels(groupModels);
-    this.setServiceAddressMap(resolverConfig.agents);
-  }
-
-  setGroupModels(groupModels: GroupModel[]) {
-    this.groups = groupModels.reduce((accum: StringMap<Group>, group) => {
-      accum[group.name] = new Group(group);
-      return accum;
-    }, {});
-  }
-
-  // map both nodeId and nodeType to the service address
-  // so the it can be looked up by either
-  setServiceAddressMap(agents: ServiceConfig[]) {
-    this.serviceAddressMap = agents.reduce((accum, next) => {
-      accum[next.nodeType] = next;
-      accum[next.nodeId] = next;
-      return accum;
-    }, {} as StringMap<ServiceConfig>);
-  }
+  ) {}
 
   filterServiceAddresses(address: Address): {
     serviceAddresses: string[];
@@ -76,18 +52,20 @@ export class AddressResolver {
   }
 
   isLocalServiceAddress(address: string): boolean {
-    return this.serviceAddressMap?.[address] && this.serviceAddressMap[address].remote !== true;
+    return (
+      this.resolverConfig.serviceAddressMap?.[address] && this.resolverConfig.serviceAddressMap[address].remote !== true
+    );
   }
 
   isRemoteServiceAddress(address: string): boolean {
-    return this.serviceAddressMap?.[address]?.remote === true;
+    return this.resolverConfig.serviceAddressMap?.[address]?.remote === true;
   }
 
   /*
    * Translate addresses (aliases, groups, and ids) to participantIds
    */
   async getParticipantIdsFor(address: Address, thredContext?: ThredContext): Promise<string[]> {
-    const { groups, aliasMap } = this;
+    const { aliasMap } = this;
     const addresses = Array.isArray(address) ? address : [address];
     let participantIds: string[] = [];
     //intercept $all
@@ -118,7 +96,7 @@ export class AddressResolver {
 
   getGroupAddresses(groupAddress: string): string[] {
     const group = groupAddress.substring(1);
-    return this.groups?.[group]?.getParticipantIds() || [];
+    return this.sessionsConfig.groups?.[group]?.getParticipantIds() || [];
   }
 
   async getThredParticipantIds(context?: ThredContext): Promise<string[]> {

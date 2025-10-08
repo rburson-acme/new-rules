@@ -42,6 +42,7 @@ export interface TerminateAllThredsArgs extends SystemEventInputValues {}
 export interface ShutdownArgs extends SystemEventInputValues {
   readonly delay: number;
 }
+export interface GetSystemSpecArgs extends SystemEventInputValues {}
 
 export interface TransitionThredArgs extends SystemEventThredInputValues {
   readonly transition: TransitionModel;
@@ -55,7 +56,6 @@ export interface TerminateThreadArgs extends SystemEventThredInputValues {}
 
 export interface GetEventsArgs extends SystemEventThredInputValues {}
 
-export interface GetSystemSpecArgs extends SystemEventInputValues {}
 
 
 /***

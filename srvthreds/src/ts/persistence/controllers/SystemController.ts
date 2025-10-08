@@ -165,14 +165,4 @@ export class SystemController {
     const entry = await this.persistence.getOne({ type: Types.Config, matcher: { id: configName } });
     return entry ? entry.config : null;
   }
-
-  async getFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
-    if (configName) {
-      return this.getConfig(configName);
-    } else {
-      if (configPath) {
-        return ConfigLoader.loadConfigFileFromPath(configPath);
-      }
-    }
-  }
 }

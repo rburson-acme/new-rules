@@ -13,9 +13,8 @@ import {
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
 import { QMessage } from '../queue/QService.js';
-import { AgentConfig } from './Config.js';
+import { AgentConfig } from '../config/AgentConfig.js';
 import { Id } from '../thredlib/core/Id.js';
-import { SystemController } from '../persistence/controllers/SystemController.js';
 import { Adapter } from './adapter/Adapter.js';
 
 export interface MessageHandler {
@@ -71,7 +70,7 @@ export class AgentService {
 
   async start() {
     const { additionalArgs } = this.params;
-    // load config from persistence if not provided
+    // note: the config proxy could be used throughout if we need to dynamically reload config
     this.agentConfig = this.params.agentConfig;
     try {
       // agentImpl can be a string (dynamic import) or an object (direct instantiation)
@@ -124,6 +123,8 @@ export class AgentService {
     const { messageQ } = this.params;
     while (true) {
       // accept anything directed to this agents nodeId or nodeType
+      // @TODO - implement topics
+      // NOTE: this is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
       const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
       const qMessage: QMessage<Message> = await messageQ.pop(topics);
       try {

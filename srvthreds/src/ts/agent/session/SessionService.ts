@@ -1,9 +1,11 @@
 import { Logger, Message, SessionsModel, StringMap } from '../../thredlib/index.js';
-import { ResolverConfig } from '../../sessions/Config.js';
+import { ResolverConfigDef } from '../../config/ConfigDefs.js';
 import { Session } from '../../sessions/Session.js';
 import { Sessions } from '../../sessions/Sessions.js';
 import { SessionStorage } from '../../sessions/storage/SessionStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
+import { ResolverConfig } from '../../config/ResolverConfig.js';
+import { SessionsConfig } from '../../config/SessionsConfig.js';
 
 export interface Channel {
   id: string;
@@ -14,8 +16,8 @@ export class SessionService {
   private sessions: Sessions;
   private sessionChannels: StringMap<Channel> = {};
 
-  constructor(sessionsModel: SessionsModel, resolverConfig: ResolverConfig) {
-    this.sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+  constructor(sessionsModel: SessionsConfig, resolverConfig: ResolverConfig) {
+    this.sessions = new Sessions(resolverConfig, sessionsModel, new SessionStorage(StorageFactory.getStorage()));
   }
 
   async addSession(session: Session, participantId: string, channelId: string): Promise<void> {

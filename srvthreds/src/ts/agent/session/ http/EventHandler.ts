@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Event } from '../../../thredlib/index.js';
 import { EventPublisher } from '../../AgentService.js';
 import { Auth } from '../../../auth/Auth.js';
-import { AgentConfig } from '../../Config.js';
+import { AgentConfig } from '../../../config/AgentConfig.js';
 
 export const getHandleEvent = ({
   auth,

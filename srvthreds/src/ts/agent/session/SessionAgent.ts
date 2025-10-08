@@ -1,8 +1,8 @@
 import { BasicAuth } from '../../auth/BasicAuth.js';
 import { SystemController } from '../../persistence/controllers/SystemController.js';
-import { Event, Logger, Message } from '../../thredlib/index.js';
+import { Event, Logger, Message, SessionsModel } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
-import { AgentConfig } from '../Config.js';
+import { AgentConfig } from '../../config/AgentConfig.js';
 import { getHandleLogin, getHandleRefresh } from './ http/AuthHandler.js';
 import { getHandleEvent } from './ http/EventHandler.js';
 import { HttpService } from '../http/HttpService.js';
@@ -12,6 +12,12 @@ import { SocketService } from './SocketService.js';
 import { getHandleEventValues } from './ http/EventValuesHandler.js';
 import { AuthStorage } from '../../auth/AuthStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
+import { ConfigLoader } from '../../config/ConfigLoader.js';
+import { ConfigManager } from '../../config/ConfigManager.js';
+import { Session } from '../../sessions/Session.js';
+import { ResolverConfigDef, SessionsConfigDef } from '../../config/ConfigDefs.js';
+import { SessionsConfig } from '../../config/SessionsConfig.js';
+import { ResolverConfig } from '../../config/ResolverConfig.js';
 
 // Agent specific configuration in custom config
 export interface SessionAgentConfig {
@@ -77,18 +83,31 @@ export class SessionAgent implements MessageHandler {
       throw new Error(
         'SessionAgent: resolverConfigName or resolverConfigPath must be provided in config or as an argument',
       );
-    const sessionsModel = await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath);
-    if (!sessionsModel)
+
+    const sessionsConfig = await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
+      type: 'sessions-model',
+      config: new SessionsConfig(),
+      configName: sessionsModelName,
+      configPath: sessionsModelPath,
+    });
+    if (!sessionsConfig)
       throw new Error(
-        `Failed to load sessions model from sessionsModelName: ${sessionsModelName} or sessionsModelPath: ${sessionsModelPath}`,
+        `Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`,
       );
-    const resolverConfig = await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath);
+
+    const resolverConfig = await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
+      type: 'resolver-config',
+      config: new ResolverConfig(),
+      configName: resolverConfigName,
+      configPath: resolverConfigPath,
+    });
     if (!resolverConfig)
       throw new Error(
-        `Failed to load resolver config from resolverConfigName: ${resolverConfigName} or resolverConfigPath: ${resolverConfigPath}`,
+        `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
       );
+
     BasicAuth.initialize(new AuthStorage(StorageFactory.getStorage()));
-    this.sessionService = new SessionService(sessionsModel, resolverConfig);
+    this.sessionService = new SessionService(sessionsConfig, resolverConfig);
     const serviceListener = new SessionServiceListener(this.sessionService);
 
     this.httpService = new HttpService({

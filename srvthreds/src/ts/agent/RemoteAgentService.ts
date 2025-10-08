@@ -10,7 +10,7 @@ import {
   EventContent,
   serializableError,
 } from '../thredlib/index.js';
-import { AgentConfig } from './Config.js';
+import { AgentConfig } from '../config/AgentConfig.js';
 import { Id } from '../thredlib/core/Id.js';
 import { Adapter } from './adapter/Adapter.js';
 import { RemoteConnectionManager } from './remote/RemoteConnectionManager.js';
@@ -75,7 +75,7 @@ export class RemoteAgentService {
 
   async start() {
     const { additionalArgs } = this.params;
-    // load config from persistence if not provided
+    // note: the config proxy could be used throughout if we need to dynamically reload config
     this.agentConfig = this.params.agentConfig;
     if (!this.agentConfig) throw new Error(`RemoteAgent: no config provided`);
     BasicAuth.initialize(new LocalAuthStorage());

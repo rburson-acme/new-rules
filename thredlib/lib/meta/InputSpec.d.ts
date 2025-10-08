@@ -6,8 +6,7 @@ export interface InputSpec {
 }
 export interface InputTaskSpec {
     description?: string;
-    type: string;
+    targetTypeName: string;
     allowedOps: Operation[];
-    properties?: PropertySpec[];
     options?: PropertySpec[];
 }

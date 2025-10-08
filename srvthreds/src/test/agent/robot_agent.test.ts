@@ -3,12 +3,13 @@ import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.j
 import agentConfig from '../config/robot_agent.json' with { type: 'json' };
 import { AgentService } from '../../ts/agent/AgentService.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
-import { AgentConfig } from '../../ts/agent/Config.js';
+import { AgentConfig } from '../../ts/config/AgentConfig.js';
 import RobotAgent from '../../ts/agent/robot/RobotAgent.js';
 
 // set the agent implementation directly (vitest has a problem with dynamic imports)
-const robotAgentConfig = agentConfig as AgentConfig;
-robotAgentConfig.agentImpl = RobotAgent;
+const robotAgentConfigDef = agentConfig;
+(robotAgentConfigDef as any).agentImpl = RobotAgent;
+const robotAgentConfig = new AgentConfig('robot-agent1', robotAgentConfigDef);
 
 Logger.setLevel(LoggerLevel.DEBUG);
 

@@ -5,18 +5,19 @@ import { SessionsModel } from '../thredlib/index.js';
 import { SessionStorage } from './storage/SessionStorage.js';
 import { SessionParticipant } from './SessionParticipant.js';
 import { Session } from './Session.js';
-import { ResolverConfig } from './Config.js';
 import { ThredContext } from '../engine/ThredContext.js';
+import { ResolverConfig } from '../config/ResolverConfig.js';
+import { SessionsConfig } from '../config/SessionsConfig.js';
 
 export class Sessions {
   private addressResolver: AddressResolver;
 
   constructor(
-    sessionsModel: SessionsModel,
-    resolverConfig: ResolverConfig,
+    private resolverConfig: ResolverConfig,
+    private sessionsConfig: SessionsConfig,
     private storage: SessionStorage,
   ) {
-    this.addressResolver = new AddressResolver(sessionsModel.groups, resolverConfig, storage);
+    this.addressResolver = new AddressResolver(resolverConfig, sessionsConfig, storage);
   }
 
   getAddressResolver(): AddressResolver {

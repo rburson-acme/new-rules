@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { EventPublisher } from '../AgentService.js';
 import { Auth } from '../../auth/Auth.js';
-import { AgentConfig } from '../Config.js';
+import { AgentConfig } from '../../config/AgentConfig.js';
 
 const DEFAULT_PORT = 3000;
 

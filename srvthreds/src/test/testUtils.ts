@@ -4,15 +4,14 @@ import { EventQ } from '../ts/queue/EventQ.js';
 import { Engine } from '../ts/engine/Engine.js';
 import { StorageFactory } from '../ts/storage/StorageFactory.js';
 import { RemoteQBroker } from '../ts/queue/remote/RemoteQBroker.js';
-import config from './queue/rascal_test_config.json' with { type: 'json' };
+import rascal_config from './queue/rascal_test_config.json' with { type: 'json' };
 import { MessageQ } from '../ts/queue/MessageQ.js';
 import { Sessions } from '../ts/sessions/Sessions.js';
 import { Server } from '../ts/engine/Server.js';
 import { SessionStorage } from '../ts/sessions/storage/SessionStorage.js';
 import { AgentService } from '../ts/agent/AgentService.js';
-import { Config as EngineConfig } from '../ts/engine/Config.js';
-import { ResolverConfig } from '../ts/sessions/Config.js';
-import { AgentConfig } from '../ts/agent/Config.js';
+import { ResolverConfigDef } from '../ts/config/ConfigDefs.js';
+import { AgentConfig } from '../ts/config/AgentConfig.js';
 import { Timers } from '../ts/thredlib/index.js';
 import engineConfig from './config/engine.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
@@ -21,20 +20,24 @@ import { System } from '../ts/engine/System.js';
 import defaultSessionsModel from './config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 import resolverConfig from './config/simple_test_resolver_config.json' with { type: 'json' };
 import { UserController } from '../ts/persistence/controllers/UserController.js';
-EngineConfig.engineConfig = engineConfig;
-const sessionAgentConfig = {
+import { ResolverConfig } from '../ts/config/ResolverConfig.js';
+import { SessionsConfig } from '../ts/config/SessionsConfig.js';
+import { RascalConfig } from '../ts/config/RascalConfig.js';
+const sessionAgentConfigDef = {
   name: 'Session Agent',
   nodeType: 'org.wt.session',
   nodeId: 'org.wt.session1',
   subscriptionName: 'sub_session1_message',
+  // set the agent implementation directly (vitest has a problem with dynamic imports)
+  agentImpl: SessionAgent,
   customConfig: {
     port: 3000,
     sessionsModelPath: 'src/test/config/sessions/sessions_model.json',
     resolverConfigPath: 'src/test/config/resolver_config.json',
   },
 } as AgentConfig;
-// set the agent implementation directly (vitest has a problem with dynamic imports)
-sessionAgentConfig.agentImpl = SessionAgent;
+
+const sessionAgentConfig = new AgentConfig('session-agent1', sessionAgentConfigDef);
 
 export const getEvent = (id: string, type: string, sourceId: string): Event => {
   return {
@@ -201,14 +204,14 @@ export class EngineConnectionManager {
     sessionModel?: SessionsModel,
   ): Promise<EngineConnectionManager> {
     const eventService = await RemoteQService.newInstance<Event>({
-      qBroker: new RemoteQBroker(config),
+      qBroker: new RemoteQBroker(new RascalConfig(rascal_config)),
       subName: 'sub_event',
       pubName: 'pub_event',
     });
     const eventQ = new EventQ(eventService);
     const sessions = new Sessions(
-      sessionModel || defaultSessionsModel,
-      resolverConfig,
+      new ResolverConfig(resolverConfig),
+      new SessionsConfig(sessionModel || defaultSessionsModel),
       new SessionStorage(StorageFactory.getStorage()),
     );
     if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
@@ -248,10 +251,10 @@ export class ServerConnectionManager {
   static async newServerInstance(
     patternModels: PatternModel[],
     sessionsModel: SessionsModel,
-    resolverConfig: ResolverConfig,
+    resolverConfig: ResolverConfigDef,
     additionalArgs?: {},
   ): Promise<ServerConnectionManager> {
-    const qBroker = new RemoteQBroker(config);
+    const qBroker = new RemoteQBroker(new RascalConfig(rascal_config));
 
     // setup the q's for the engine
     const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
@@ -259,7 +262,11 @@ export class ServerConnectionManager {
     const engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ = new MessageQ(engineMessageService);
 
-    const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(
+      new ResolverConfig(resolverConfig),
+      new SessionsConfig(sessionsModel),
+      new SessionStorage(StorageFactory.getStorage()),
+    );
     if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     // engine start engine
     const engineServer = new Server(engineEventQ, engineMessageQ);
@@ -305,7 +312,7 @@ export class ServerConnectionManager {
     await this.engineEventQService.deleteAll().catch(Logger.error);
     await this.sessionMessageQService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
-    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
+    await PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -330,7 +337,7 @@ export class ServerConnectionManager {
 
 export class AgentConnectionManager {
   static async newAgentInstance(sessionAgentConfig: AgentConfig, additionalArgs?: {}): Promise<AgentConnectionManager> {
-    const qBroker = new RemoteQBroker(config);
+    const qBroker = new RemoteQBroker(new RascalConfig(rascal_config));
 
     // these are not used for testing with this utility but currently required for the Agent
     // set up the remote Qs for the Agent
@@ -366,7 +373,7 @@ export class AgentConnectionManager {
     await this.agentEventService.deleteAll().catch(Logger.error);
     await this.agentMessageService.deleteAll().catch(Logger.error);
     await StorageFactory.purgeAll().catch(Logger.error);
-    PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
+    await PersistenceFactory.getPersistence().deleteDatabase().catch(Logger.error);
   }
 
   async disconnectAll() {
@@ -383,7 +390,7 @@ export class AgentQueueConnectionManager {
     sessionAgentConfig: AgentConfig,
     additionalArgs?: {},
   ): Promise<AgentQueueConnectionManager> {
-    const qBroker = new RemoteQBroker(config);
+    const qBroker = new RemoteQBroker(new RascalConfig(rascal_config));
 
     // setup the q's so we can mock (act as) the Engine
     const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });

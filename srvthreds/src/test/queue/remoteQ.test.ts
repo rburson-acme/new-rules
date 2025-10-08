@@ -4,12 +4,13 @@ import { RemoteQService } from '../../ts/queue/remote/RemoteQService.js';
 import { QMessage } from '../../ts/queue/QService.js';
 import config from './rascal_test_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../../ts/queue/remote/RemoteQBroker.js';
+import { RascalConfig } from '../../ts/config/RascalConfig.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
 describe('amqp connection', function () {
   beforeAll(async () => {
-    qBroker = new RemoteQBroker(config);
+    qBroker = new RemoteQBroker(new RascalConfig(config));
     await qBroker.connect();
     await qBroker.deleteAll().catch(Logger.error);
   });

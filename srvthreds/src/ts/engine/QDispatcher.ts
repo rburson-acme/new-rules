@@ -84,7 +84,7 @@ export class QDispatcher implements Dispatcher {
           // route to specific node id if present (websocket sessions require this)
           // if there's no nodeId, assume any session service can retrieve it
           const topicString = nodeId ? nodeId : 'org.wt.session';
-          L.debug(L.h2(`Server.tell(): Message ${id} to ${participants} via ${topicString}`));
+          L.debug(L.h2(`Server.tell(): Message ${id} to ${[...participants]} via ${topicString}`));
           await this.outboundQ.queue(newMessage, [topicString]);
         } catch (e) {
           L.error(L.crit(`Engine.tell(): Error sending message to participants with nodeId ${nodeId}`), e);

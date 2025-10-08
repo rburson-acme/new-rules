@@ -1,4 +1,5 @@
 import { PropertySpec } from './PropertySpec.js';
+import { TargetTypeRef } from './TargetTypeSpec.js';
 
 export interface OutputSpec {
   eventType: string;
@@ -6,14 +7,12 @@ export interface OutputSpec {
   description?: string;
   // right now only values is supported
   eventContentType?: 'values';
-  eventContentSpec?: ContentSpec;
+  eventContentSpecs?: ContentSpec[];
 }
 
 export type ContentSpec = ValuesSpec;
 
 export interface ValuesSpec {
-  valuesType?: string; // optional application level type of the values
-  // this corresponds to the 'values' field in EventValues,
-  // which can be a single object or an array of objects
-  valuesSpec?: PropertySpec | PropertySpec[];
+  // represents the 'valuesType' and the values portion of the event payload
+  targetTypeName: string; // corresponds to a TargetTypeSpec name
 }
