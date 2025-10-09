@@ -197,8 +197,6 @@ export class AdminService {
   };
 
   // @TODO = Use return a system spec based on services in the registry and the sessions_model
-  //  @TODO - Monday - create a service registry from which the service list for pattern dev and also for resolver_config can be derived
-
   /*
   getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
     const {

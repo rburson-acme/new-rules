@@ -25,7 +25,7 @@ export interface AgentConfigDef {
   nodeType: string;
   agentImpl: string | object;
   // the rascal Message topic to use from the rascal.config
-  subscriptionName: string;
+  subscriptionNames: string[];
   // specific agent configuration can go here
   customConfig?: any;
   // types of events that this service may produce

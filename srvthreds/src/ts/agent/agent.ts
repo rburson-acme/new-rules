@@ -66,7 +66,7 @@ class Server {
     const eventQ: EventQ = new EventQ(this.eventService);
     const messageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: agentConfig.subscriptionName,
+      subNames: agentConfig.subscriptionNames,
     });
     const messageQ: MessageQ = new MessageQ(messageService);
     // connect to persistence

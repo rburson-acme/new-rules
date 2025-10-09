@@ -29,9 +29,9 @@ export class AgentConfig implements Config<AgentConfigDef> {
     this.checkInitialized();
     return this.configDef!.agentImpl;
   }
-  get subscriptionName(): string {
+  get subscriptionNames(): string[] {
     this.checkInitialized();
-    return this.configDef!.subscriptionName;
+    return this.configDef!.subscriptionNames;
   }
   get customConfig(): any {
     this.checkInitialized();

@@ -103,7 +103,7 @@ export class EngineServiceManager {
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
     this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);

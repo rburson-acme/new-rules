@@ -2,7 +2,7 @@
     "name": "Persistence Agent",
     "nodeType": "org.wt.persistence",
     "agentImpl": "./persistence/PersistenceAgent.js",
-    "subscriptionName": "sub_persistence_message",
+    "subscriptionNames": ["sub_persistence_message"],
     "customConfig": {
         "hostString": "localhost:27017",
         "dbname": "nr"

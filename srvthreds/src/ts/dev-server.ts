@@ -22,7 +22,6 @@ import { SystemController } from './persistence/controllers/SystemController.js'
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
 import { RemoteAgentService } from './agent/RemoteAgentService.js';
-import { ConfigLoader } from './config/ConfigLoader.js';
 import { AgentConfig } from './config/AgentConfig.js';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ResolverConfig } from './config/ResolverConfig.js';
@@ -146,7 +145,7 @@ class ServiceManager {
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
     this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
@@ -168,7 +167,7 @@ class ServiceManager {
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_session1_message',
+      subNames: ['sub_session1_message', 'sub_session_message'],
     });
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
 
@@ -198,7 +197,7 @@ class ServiceManager {
     const persistenceEventQ: EventQ = new EventQ(persistenceEventService);
     const persistenceMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_persistence_message',
+      subNames: ['sub_persistence_message'],
     });
 
     const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);

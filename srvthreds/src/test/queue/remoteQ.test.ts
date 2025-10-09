@@ -21,7 +21,7 @@ describe('amqp connection', function () {
     });
     eventSubService = await RemoteQService.newInstance<Event>({
       qBroker,
-      subName: 'sub_event',
+      subNames: ['sub_event'],
     });
     messagePubService = await RemoteQService.newInstance<Message>({
       qBroker,
@@ -29,7 +29,7 @@ describe('amqp connection', function () {
     });
     messageSubService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_session1_message',
+      subNames: ['sub_session_message', 'sub_session1_message'],
     });
   });
   test('queue 1000', function () {
@@ -100,7 +100,7 @@ describe('amqp connection', function () {
     });
     eventSubService = await RemoteQService.newInstance<Event>({
       qBroker,
-      subName: 'sub_event',
+      subNames: ['sub_event'],
     });
   });
   test('pop', async function () {

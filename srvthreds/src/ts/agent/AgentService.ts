@@ -125,8 +125,8 @@ export class AgentService {
       // accept anything directed to this agents nodeId or nodeType
       // @TODO - implement topics
       // NOTE: this is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
-      const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
-      const qMessage: QMessage<Message> = await messageQ.pop(topics);
+      //const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
+      const qMessage: QMessage<Message> = await messageQ.pop();
       try {
         await this.processMessage(qMessage.payload);
         await messageQ.delete(qMessage);

@@ -27,7 +27,7 @@ const sessionAgentConfigDef = {
   name: 'Session Agent',
   nodeType: 'org.wt.session',
   nodeId: 'org.wt.session1',
-  subscriptionName: 'sub_session1_message',
+  subscriptionNames: ['sub_session1_message'],
   // set the agent implementation directly (vitest has a problem with dynamic imports)
   agentImpl: SessionAgent,
   customConfig: {
@@ -205,7 +205,7 @@ export class EngineConnectionManager {
   ): Promise<EngineConnectionManager> {
     const eventService = await RemoteQService.newInstance<Event>({
       qBroker: new RemoteQBroker(new RascalConfig(rascal_config)),
-      subName: 'sub_event',
+      subNames: ['sub_event'],
       pubName: 'pub_event',
     });
     const eventQ = new EventQ(eventService);
@@ -257,7 +257,7 @@ export class ServerConnectionManager {
     const qBroker = new RemoteQBroker(new RascalConfig(rascal_config));
 
     // setup the q's for the engine
-    const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ = new EventQ(engineEventService);
     const engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ = new MessageQ(engineMessageService);
@@ -277,7 +277,7 @@ export class ServerConnectionManager {
     const sessionEventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: sessionAgentConfig.subscriptionName,
+      subNames: sessionAgentConfig.subscriptionNames,
     });
     const sessionMessageQ = new MessageQ(sessionMessageService);
     // standard (default) agent configuration file
@@ -345,7 +345,7 @@ export class AgentConnectionManager {
     const agentEventQ: EventQ = new EventQ(agentEventservice);
     const agentMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: sessionAgentConfig.subscriptionName,
+      subNames: sessionAgentConfig.subscriptionNames,
     });
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
@@ -393,7 +393,7 @@ export class AgentQueueConnectionManager {
     const qBroker = new RemoteQBroker(new RascalConfig(rascal_config));
 
     // setup the q's so we can mock (act as) the Engine
-    const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    const engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ = new EventQ(engineEventService);
     const engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ = new MessageQ(engineMessageService);
@@ -403,7 +403,7 @@ export class AgentQueueConnectionManager {
     const agentEventQ: EventQ = new EventQ(agentEventService);
     const agentMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: sessionAgentConfig.subscriptionName,
+      subNames: sessionAgentConfig.subscriptionNames,
     });
     const agentMessageQ: MessageQ = new MessageQ(agentMessageService);
 
