@@ -3,8 +3,10 @@ services:
   # This is built first and reused by all other services for faster builds
   srvthreds-builder:
     build:
-      context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.builder
+      context: ../../
+      dockerfile: infrastructure/dockerCompose/Dockerfile.builder
+      additional_contexts:
+        thredlib: ../../../thredlib
     image: srvthreds-builder:latest
     container_name: srvthreds-builder
     command: ["/bin/true"]  # No-op, this is just for building
@@ -15,6 +17,8 @@ services:
     build:
       context: ../../../
       dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.cmdRunner
+      args:
+        BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-bootstrap
     command: ["npm", "run", "bootstrap", "--", "-p", "ef-detection"]
     environment:
@@ -25,6 +29,9 @@ services:
     restart: "no"  # Run once and exit
     networks:
       - srvthreds-net
+    depends_on:
+      srvthreds-builder:
+        condition: service_completed_successfully
 
   # SrvThreds Engine Service
   srvthreds-engine:

@@ -7,8 +7,8 @@ FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy both repositories from parent context
-COPY thredlib/ ./thredlib/
-COPY srvthreds/ ./srvthreds/
+COPY --from=thredlib . ./thredlib/
+COPY . ./srvthreds/
 
 # Build thredlib first
 WORKDIR /app/thredlib
@@ -20,10 +20,10 @@ RUN npm ci
 RUN npm run build
 
 # Copy run-config directory which contains additional config files
-COPY srvthreds/run-profiles/ ./run-profiles/
+COPY run-profiles/ dist-server/run-profiles/
 
 # Copy env file from assets directory
-COPY srvthreds/infrastructure/deploymentAssets/*.* ./dist-server/
+COPY infrastructure/deploymentAssets/*.* ./dist-server/
 
 # Default command (this image is meant to be used as a base)
 CMD ["/bin/sh"]
