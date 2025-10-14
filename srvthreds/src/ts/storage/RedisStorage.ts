@@ -391,13 +391,26 @@ export class RedisStorage implements Storage {
   }
 
   /*
-    Key expiration functions
+    Simple key with optional expiration
   */
   async setKey(type: string, key: string, value: string, expSecs?: number): Promise<void> {
     if (!expSecs) {
       await this.client.set($key(type, key), JSON.stringify(value));
     } else {
       await this.client.setEx($key(type, key), expSecs, JSON.stringify(value));
+    }
+  }
+
+  /**
+   * Check if a key exists and has not expired.
+   * Returns true if the key exists, false otherwise.
+   */
+  async keyExists(type: string, key: string): Promise<boolean> {
+    try {
+      const exists = await this.client.exists($key(type, key));
+      return exists > 0;
+    } catch (e) {
+      return Promise.reject(e);
     }
   }
 

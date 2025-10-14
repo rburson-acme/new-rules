@@ -1,7 +1,7 @@
 import { BrokerAsPromised } from 'rascal';
 import { QService, QMessage } from '../QService.js';
 import { RemoteQBroker } from './RemoteQBroker.js';
-import { Logger } from '../../thredlib/index.js';
+import { Logger, Series } from '../../thredlib/index.js';
 
 export class RemoteQService<T> implements QService<T> {
   // holds incoming messages, in arrival order
@@ -11,14 +11,14 @@ export class RemoteQService<T> implements QService<T> {
 
   static async newInstance<T>(params: {
     qBroker: RemoteQBroker;
-    subName?: string;
+    subNames?: string[];
     pubName?: string;
   }): Promise<RemoteQService<T>> {
-    const { qBroker, subName, pubName } = params;
+    const { qBroker, subNames, pubName } = params;
     const instance = new RemoteQService<T>(qBroker, pubName);
     await instance.connect();
-    if (subName) {
-      await instance.subscribe(subName);
+    if (subNames?.length) {
+      instance.subscribe(subNames);
     }
     return instance;
   }
@@ -47,7 +47,7 @@ export class RemoteQService<T> implements QService<T> {
     If no meessages are in the Q, return a promise that will resolve when a message is available
     This uses the 'notifyQ' hold callback functions that will resolve the promise when a message arrives
   */
-  async pop(topics?: string[]): Promise<QMessage<T>> {
+  async pop(): Promise<QMessage<T>> {
     const { q } = this;
     if (q.length) {
       const next = this.q.pop();
@@ -80,7 +80,6 @@ export class RemoteQService<T> implements QService<T> {
       // unpause publishing (unblock the queue)
     });
   */
-
   async queue(message: QMessage<T>): Promise<void> {
     if (!this.pubName) {
       throw Error(`No pub_name configued`);
@@ -149,26 +148,28 @@ export class RemoteQService<T> implements QService<T> {
     Incoming messages are added to the local Q
     If there are any listeners waiting for messages, they will be notified via the 'IOU' callback function
   */
-  private async subscribe(subName: string): Promise<void> {
-    const sub = await this.broker.subscribe(subName);
-    sub
-      ?.on('message', (message, content, ackOrNack) => {
-        //Logger.info(`${subName} got ${content.id}`);
-        this.q.unshift({ ...content, replyHandle: { ackOrNack } });
-        const next = this.notifyQ.pop();
-        next && next();
-      })
-      .on('error', (err) => {
-        Logger.error(`${subName}: Subscriber error`, err);
-      })
-      .on('invalid_content', (err, message, ackOrNack) => {
-        Logger.error('RemoteQ: got invalid content', err);
-        ackOrNack(err, { strategy: 'nack' });
-      })
-      .on('redeliveries_exceeded', (err, message, ackOrNack) => {
-        console.error('RemoteQ: redeliveries exceeded', err);
-        ackOrNack(err, { strategy: 'nack' });
-      });
+  private async subscribe(subNames: string[]): Promise<void> {
+    Series.forEach(subNames, async (subName) => {
+      const sub = await this.broker.subscribe(subName);
+      sub
+        ?.on('message', (message, content, ackOrNack) => {
+          //Logger.info(`${subName} got ${content.id}`);
+          this.q.unshift({ ...content, replyHandle: { ackOrNack } });
+          const next = this.notifyQ.pop();
+          next && next();
+        })
+        .on('error', (err) => {
+          Logger.error(`${subName}: Subscriber error`, err);
+        })
+        .on('invalid_content', (err, message, ackOrNack) => {
+          Logger.error('RemoteQ: got invalid content', err);
+          ackOrNack(err, { strategy: 'nack' });
+        })
+        .on('redeliveries_exceeded', (err, message, ackOrNack) => {
+          console.error('RemoteQ: redeliveries exceeded', err);
+          ackOrNack(err, { strategy: 'nack' });
+        });
+    });
   }
 
   private get broker(): BrokerAsPromised {

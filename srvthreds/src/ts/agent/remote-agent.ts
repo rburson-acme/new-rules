@@ -3,6 +3,10 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { SystemController } from '../persistence/controllers/SystemController.js';
 import { RemoteAgentService } from './RemoteAgentService.js';
+import { ConfigLoader } from '../config/ConfigLoader.js';
+import { ConfigManager } from '../config/ConfigManager.js';
+import { AgentConfig } from '../config/AgentConfig.js';
+import { AgentConfigDef } from '../config/ConfigDefs.js';
 
 /***
  *     __                 _                     _
@@ -16,8 +20,20 @@ import { RemoteAgentService } from './RemoteAgentService.js';
 class Server {
   private agent?: RemoteAgentService;
 
-  async start({ configPath, additionalArgs }: { configPath?: string; additionalArgs?: Record<string, any> }) {
-    const agentConfig = await SystemController.get().getFromNameOrPath(undefined, configPath);
+  async start({
+    configPath,
+    nodeId,
+    additionalArgs,
+  }: {
+    configPath: string;
+    nodeId: string;
+    additionalArgs?: Record<string, any>;
+  }) {
+    const agentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      configPath,
+      config: new AgentConfig(nodeId),
+    });
     if (!agentConfig) throw new Error(`Agent: failed to load config for configPath: ${configPath}`);
 
     this.agent = new RemoteAgentService({
@@ -42,7 +58,18 @@ class Server {
 
 const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
-  .options('config-path', { alias: 'cp', description: 'Path to config file. Overrides config-name', type: 'string' })
+  .options('config-path', {
+    alias: 'cp',
+    description: 'Path to config file. Overrides config-name',
+    type: 'string',
+    demandOption: true,
+  })
+  .options('node-id', {
+    alias: 'i',
+    description: 'The unique ID of this agent instance.',
+    type: 'string',
+    demandOption: true,
+  })
   .options('arg', {
     alias: 'a',
     description:
@@ -54,12 +81,14 @@ const args = yargs(hideBin(process.argv))
   .parseSync();
 
 const configPath = args['config-path'];
+const nodeId = args['node-id'];
 const additionalArgs = args.arg as Record<string, any> | undefined;
 args.debug ? Logger.setLevel(LoggerLevel.DEBUG) : Logger.setLevel(LoggerLevel.INFO);
 
 const server = new Server();
 server.start({
-  configPath: configPath,
+  configPath,
+  nodeId,
   additionalArgs,
 });
 

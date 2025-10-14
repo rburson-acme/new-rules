@@ -7,7 +7,10 @@ import { RemoteQBroker } from '../queue/remote/RemoteQBroker.js';
 import { RemoteQService } from '../queue/remote/RemoteQService.js';
 import { AgentService } from './AgentService.js';
 import { SystemController } from '../persistence/controllers/SystemController.js';
-import { AgentConfig } from './Config.js';
+import { AgentConfig } from '../config/AgentConfig.js';
+import { ConfigManager } from '../config/ConfigManager.js';
+import { AgentConfigDef, RascalConfigDef } from '../config/ConfigDefs.js';
+import { RascalConfig } from '../config/RascalConfig.js';
 
 /***
  *     __                 _                     _
@@ -37,24 +40,33 @@ class Server {
     rascalConfigPath?: string;
     additionalArgs?: Record<string, any>;
   }) {
-    const agentConfig: AgentConfig = await SystemController.get().getFromNameOrPath(configName, configPath);
-    if (!agentConfig) throw new Error(`Agent: failed to load config for ${configName} or configPath: ${configPath}`);
     if (!nodeId) throw new Error(`Agent: nodeId is required`);
-    agentConfig.nodeId = nodeId;
+    const agentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      config: new AgentConfig(nodeId),
+      configName,
+      configPath,
+    });
+    if (!agentConfig) throw new Error(`Agent: failed to load config for ${configName} or configPath: ${configPath}`);
 
-    const rascal_config = await SystemController.get().getFromNameOrPath(rascalConfigName, rascalConfigPath);
-    if (!rascal_config)
+    const rascalConfig = await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
+      type: 'rascal-config',
+      config: new RascalConfig(),
+      configName: rascalConfigName,
+      configPath: rascalConfigPath,
+    });
+    if (!rascalConfig)
       throw new Error(
         `Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`,
       );
 
     // set up the remote Qs
-    const qBroker = new RemoteQBroker(rascal_config);
+    const qBroker = new RemoteQBroker(rascalConfig);
     this.eventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const eventQ: EventQ = new EventQ(this.eventService);
     const messageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: agentConfig.subscriptionName,
+      subNames: agentConfig.subscriptionNames,
     });
     const messageQ: MessageQ = new MessageQ(messageService);
     // connect to persistence

@@ -10,6 +10,7 @@ import {
   errorCodes,
   errorKeys,
   EventValues,
+  GetSystemSpecArgs,
   GetThredsArgs,
   ReloadPatternArgs,
   ShutdownArgs,
@@ -22,6 +23,8 @@ import {
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 import { NotificationHandler } from './NotificationHandler.js';
+import { ConfigManager } from '../config/ConfigManager.js';
+import { ResolverConfigDef } from '../config/ConfigDefs.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -193,14 +196,15 @@ export class AdminService {
     return { status: systemEventTypes.successfulStatus, op };
   };
 
+  // @TODO = Use return a system spec based on services in the registry and the sessions_model
   /*
   getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
     const {
       event,
       args: { op },
     } = SystemService.getArgs<GetSystemSpecArgs>(args);
-  }
-    */
+
+  }*/
 
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,

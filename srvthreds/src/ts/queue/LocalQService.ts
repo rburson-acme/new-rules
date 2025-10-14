@@ -6,7 +6,7 @@ export class LocalQService<T> implements QService<T> {
   private delivered: QMessage<T>[] = [];
   private notifyQ: (() => void)[] = [];
 
-  async pop(topics: string[]): Promise<QMessage<T>> {
+  async pop(): Promise<QMessage<T>> {
     const { q } = this;
     if (q.length) {
       const next = this.q.pop();

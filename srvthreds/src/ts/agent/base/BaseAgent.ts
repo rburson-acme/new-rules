@@ -1,7 +1,7 @@
 import { Message, errorKeys, EventThrowable } from '../../thredlib/index.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
-import { AgentConfig } from '../Config.js';
+import { AgentConfig } from '../../config/AgentConfig.js';
 import { errorCodes } from '../../thredlib/index.js';
 
 export abstract class BaseAgent implements MessageHandler {

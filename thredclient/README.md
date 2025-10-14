@@ -40,3 +40,8 @@ Android Health Connect Toolbox is a developer tool that allows you to add data t
 
 This app uses expo-router
 [expo-router](https://docs.expo.dev/router/introduction/)
+
+
+### Add environment variables inside `thredclient/.env`
+
+- GOOGLE_MAPS_API=""

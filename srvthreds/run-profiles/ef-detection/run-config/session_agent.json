@@ -1,9 +1,8 @@
 {
     "name": "Session Agent",
     "nodeType": "org.wt.session",
-    "nodeId": "org.wt.session1",
     "agentImpl": "./session/SessionAgent.js",
-    "subscriptionName": "sub_session1_message",
+    "subscriptionNames": ["sub_session1_message", "sub_session_message"],
     "customConfig": {
         "port": 3000,
         "sessionsModelName": "sessions_model",

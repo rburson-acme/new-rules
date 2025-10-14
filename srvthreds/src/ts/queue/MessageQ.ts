@@ -4,8 +4,7 @@ import { QService, QMessage } from './QService.js';
 export class MessageQ {
   constructor(private messageQ: QService<Message>) {}
 
-  async pop(topics?: string[]): Promise<QMessage<Message>> {
-    // @TODO implement topics
+  async pop(): Promise<QMessage<Message>> {
     return await this.messageQ.pop();
   }
 

@@ -61,4 +61,14 @@ export class ConfigLoader {
       return process.env[varName] || defaultValue || '';
     });
   }
+  
+  static async getFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
+    if (configPath) {
+      return ConfigLoader.loadConfigFileFromPath(configPath);
+    } else {
+      if (configName) {
+        return SystemController.get().getConfig(configName);
+      }
+    }
+  }
 }
