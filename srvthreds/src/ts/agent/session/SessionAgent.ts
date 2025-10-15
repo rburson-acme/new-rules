@@ -1,6 +1,5 @@
 import { BasicAuth } from '../../auth/BasicAuth.js';
-import { SystemController } from '../../persistence/controllers/SystemController.js';
-import { Event, Logger, Message, SessionsModel } from '../../thredlib/index.js';
+import { Event, Logger, Message } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
 import { getHandleLogin, getHandleRefresh } from './http/AuthHandler.js';
@@ -12,9 +11,7 @@ import { SocketService } from './SocketService.js';
 import { getHandleEventValues } from './http/EventValuesHandler.js';
 import { AuthStorage } from '../../auth/AuthStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
-import { ConfigLoader } from '../../config/ConfigLoader.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
-import { Session } from '../../sessions/Session.js';
 import { ResolverConfigDef, SessionsConfigDef } from '../../config/ConfigDefs.js';
 import { SessionsConfig } from '../../config/SessionsConfig.js';
 import { ResolverConfig } from '../../config/ResolverConfig.js';

@@ -21,9 +21,6 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder /app/srvthreds/dist-server ./dist-server
 
-# Copy run-config directory
-COPY --from=builder /app/srvthreds/run-profiles ./dist-server/run-profiles
-
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S srvthreds -u 1001 -G nodejs
