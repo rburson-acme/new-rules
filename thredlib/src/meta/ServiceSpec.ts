@@ -6,6 +6,7 @@ export interface ServiceSpec {
   name: string;
   description?: string;
   nodeType: string;
+  address: string;
   entitySpecs: TargetTypeSpec[];
   outputSpecs: OutputSpec[];
   inputSpecs?: InputSpec[];

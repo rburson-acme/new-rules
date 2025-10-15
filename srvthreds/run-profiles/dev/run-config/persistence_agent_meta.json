@@ -1,17 +1,16 @@
 {
     "name": "Persistent Storage",
     "description": "Service providing simple CRUD operations for data storage and retrieval.",
-    "address": "org.wt.persistence",
-    "nodeType": "org.wt.persistence",
     "entitySpecs": [
         {
-            "name": "TestObject",
+            "type": "TestObject",
             "description": "A test object representing a participant at a specific location.",
             "propertySpecs": [
                 {
                     "name": "id",
                     "description": "Unique identifier for the record.",
-                    "type": "string"
+                    "type": "string",
+                    "readonly": true
                 },
                 {
                     "name": "participantId",

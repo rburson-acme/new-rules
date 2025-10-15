@@ -28,14 +28,14 @@ export class ConfigManager {
     configName?: string;
     configPath?: string;
   }): Promise<T> {
-    const configDef = (await ConfigLoader.getFromNameOrPath(configName, configPath)) as D;
+    const configDef = (await ConfigLoader.loadFromNameOrPath(configName, configPath)) as D;
     await config.updateConfig(configDef);
     this.configs[type] = config;
     return config;
   }
 
-  getConfig<T>(type: ConfigType): Config<T> | undefined {
-    return this.configs[type] as Config<T> | undefined;
+  getConfig<T>(type: ConfigType): T {
+    return this.configs[type] as T;
   }
 }
 

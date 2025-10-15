@@ -13,4 +13,5 @@ export interface PropertySpec {
     set: { display: string; value: any }[];
     // For complex types, define the structure of the object or array elements.
     propertySpec?: PropertySpec[];
+    readonly?: boolean;
 }

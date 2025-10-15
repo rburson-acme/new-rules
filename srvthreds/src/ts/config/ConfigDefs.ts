@@ -13,6 +13,7 @@ export interface ServiceConfigDef {
   nodeId: string;
   configName: string;
   remote?: boolean;
+  internal?: boolean;
 }
 
 export interface RascalConfigDef {}

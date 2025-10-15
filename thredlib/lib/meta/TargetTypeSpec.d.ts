@@ -1,6 +1,6 @@
 import { PropertySpec } from "./PropertySpec.js";
 export interface TargetTypeSpec {
-    name: string;
+    type: string;
     description?: string;
     propertySpecs: PropertySpec[];
 }

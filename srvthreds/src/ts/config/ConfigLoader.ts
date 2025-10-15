@@ -44,7 +44,7 @@ export class ConfigLoader {
     });
   }
 
-  static async getFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
+  static async loadFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
     if (configPath) {
       return ConfigLoader.loadConfigFileFromPath(configPath);
     } else {
