@@ -1,14 +1,15 @@
 import { Logger, LoggerLevel, Event, EventBuilder, Events, EventThrowable } from '../../ts/thredlib/index.js';
 import { AgentQueueConnectionManager, withPromiseHandlers } from '../testUtils.js';
-import agentConfig from '../config/persistence_agent.json' with { type: 'json' };
+import agentConfigDef from '../config/persistence_agent.json' with { type: 'json' };
 import { AgentService } from '../../ts/agent/AgentService.js';
 import { PersistenceAgent } from '../../ts/agent/persistence/PersistenceAgent.js';
 import { Operations } from '../../ts/thredlib/task/Operations.js';
-import { AgentConfig } from '../../ts/agent/Config.js';
+import { AgentConfig } from '../../ts/config/AgentConfig.js';
 
 // set the agent implementation directly (vitest has a problem with dynamic imports)
-const persistenceAgentConfig = agentConfig as AgentConfig;
-persistenceAgentConfig.agentImpl = PersistenceAgent;
+const persistenceAgentConfigDef = agentConfigDef;
+(persistenceAgentConfigDef as any).agentImpl = PersistenceAgent;
+const persistenceAgentConfig = new AgentConfig('persistence-agent1', persistenceAgentConfigDef);
 
 Logger.setLevel(LoggerLevel.DEBUG);
 

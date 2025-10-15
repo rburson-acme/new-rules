@@ -1,4 +1,3 @@
-import { Config as StaticEngineConfig } from './engine/Config.js';
 import { Server } from './engine/Server.js';
 import { EventQ } from './queue/EventQ.js';
 import { MessageQ } from './queue/MessageQ.js';
@@ -7,10 +6,17 @@ import { RemoteQService } from './queue/remote/RemoteQService.js';
 import { Sessions } from './sessions/Sessions.js';
 import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
-import { Event, Logger, Message, PatternModel } from './thredlib/index.js';
+import { Event, Logger, Message, PatternModel, SessionsModel } from './thredlib/index.js';
 import { SystemController } from './persistence/controllers/SystemController.js';
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
+import { ConfigLoader } from './config/ConfigLoader.js';
+import { ConfigManager } from './config/ConfigManager.js';
+import { EngineConfigDef, RascalConfigDef, ResolverConfigDef, SessionsConfigDef } from './config/ConfigDefs.js';
+import { ResolverConfig } from './config/ResolverConfig.js';
+import { SessionsConfig } from './config/SessionsConfig.js';
+import { EngineConfig } from './config/EngineConfig.js';
+import { RascalConfig } from './config/RascalConfig.js';
 
 /***
  *     __                 _                     _
@@ -47,37 +53,57 @@ export class EngineServiceManager {
     resolverConfigName?: string;
     resolverConfigPath?: string;
   }) {
-    StaticEngineConfig.engineConfig = await SystemController.get().getFromNameOrPath(configName, configPath);
-    if (!StaticEngineConfig.engineConfig)
+    const engineConfig = await ConfigManager.get().loadConfig<EngineConfigDef, EngineConfig>({
+      type: 'engine-config',
+      configName,
+      configPath,
+      config: new EngineConfig(),
+    });
+    if (!engineConfig)
       throw new Error(`Failed to load engine config from configName: ${configName} or configPath: ${configPath}`);
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
-    const rascal_config = await SystemController.get().getFromNameOrPath(rascalConfigName, rascalConfigPath);
-    if (!rascal_config)
+    const rascalConfig = await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
+      type: 'rascal-config',
+      config: new RascalConfig(),
+      configName: rascalConfigName,
+      configPath: rascalConfigPath,
+    });
+    if (!rascalConfig)
       throw new Error(
         `Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`,
       );
-    const qBroker = new RemoteQBroker(rascal_config);
+    const qBroker = new RemoteQBroker(rascalConfig);
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
-    const sessionsModel = await SystemController.get().getFromNameOrPath(sessionsModelName, sessionsModelPath);
-    if (!sessionsModel)
+    const sessionsConfig = await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
+      type: 'sessions-model',
+      config: new SessionsConfig(),
+      configName: sessionsModelName,
+      configPath: sessionsModelPath,
+    });
+    if (!sessionsConfig)
       throw new Error(
         `Failed to load sessions model from configName: ${sessionsModelName} or configPath: ${sessionsModelPath}`,
       );
-    const resolverConfig = await SystemController.get().getFromNameOrPath(resolverConfigName, resolverConfigPath);
+    const resolverConfig = await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
+      type: 'resolver-config',
+      config: new ResolverConfig(),
+      configName: resolverConfigName,
+      configPath: resolverConfigPath,
+    });
     if (!resolverConfig)
       throw new Error(
         `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
       );
-    const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(resolverConfig, sessionsConfig, new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
     this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);

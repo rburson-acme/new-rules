@@ -1,7 +1,6 @@
 {
   "name": "Robot Agent",
   "nodeType": "org.wt.robot",
-  "nodeId": "org.wt.robot1",
   "agentImpl": "./robot/RobotAgent.js",
-  "subscriptionName": "sub_robot_message"
+  "subscriptionNames": ["sub_robot_message"]
 }

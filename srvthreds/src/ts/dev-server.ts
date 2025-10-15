@@ -4,7 +4,6 @@ import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
 import { AgentService } from './agent/AgentService.js';
-import { Config, Config as StaticEngineConfig } from './engine/Config.js';
 import { Server } from './engine/Server.js';
 import { EventQ } from './queue/EventQ.js';
 import { MessageQ } from './queue/MessageQ.js';
@@ -23,8 +22,19 @@ import { SystemController } from './persistence/controllers/SystemController.js'
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
 import { RemoteAgentService } from './agent/RemoteAgentService.js';
-import { ConfigLoader } from './config/ConfigLoader.js';
-import { AgentConfig } from './agent/Config.js';
+import { AgentConfig } from './config/AgentConfig.js';
+import { ConfigManager } from './config/ConfigManager.js';
+import { ResolverConfig } from './config/ResolverConfig.js';
+import { SessionsConfig } from './config/SessionsConfig.js';
+import {
+  AgentConfigDef,
+  EngineConfigDef,
+  RascalConfigDef,
+  ResolverConfigDef,
+  SessionsConfigDef,
+} from './config/ConfigDefs.js';
+import { EngineConfig } from './config/EngineConfig.js';
+import { RascalConfig } from './config/RascalConfig.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,24 +105,47 @@ class ServiceManager {
 
   // Start server
   async startServices() {
-    const engineConfig = await SystemController.get().getConfig('engine');
-    StaticEngineConfig.engineConfig = engineConfig;
+    const engineConfig = await ConfigManager.get().loadConfig<EngineConfigDef, EngineConfig>({
+      type: 'engine-config',
+      configName: 'engine',
+      config: new EngineConfig(),
+    });
+    if (!engineConfig) throw new Error(`Failed to load engine config from configName: 'engine'`);
     // global setup - i.e. all services need to do these
     // set up the message broker to be used by all q services in this process
-    const rascal_config = await SystemController.get().getConfig('rascal_config');
-    const qBroker = new RemoteQBroker(rascal_config);
+
+    const rascalConfig = await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
+      type: 'rascal-config',
+      config: new RascalConfig(),
+      configName: 'rascal_config',
+    });
+    if (!rascalConfig) throw new Error(`Failed to load Rascal config from configName: 'rascal_config'`);
+    const qBroker = new RemoteQBroker(rascalConfig);
+
     // connect to persistence
     await SystemController.get().connect();
 
     // ----------------------------------- Engine Setup -----------------------------------
 
-    const sessionsModel = await SystemController.get().getConfig('sessions_model');
-    const resolverConfig = await SystemController.get().getConfig('resolver_config');
-    const sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessionsConfig = await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
+      type: 'sessions-model',
+      config: new SessionsConfig(),
+      configName: 'sessions_model',
+    });
+    if (!sessionsConfig) throw new Error(`Failed to load sessions model from configName: 'sessions_model'`);
+    const resolverConfig = await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
+      type: 'resolver-config',
+      config: new ResolverConfig(),
+      configName: 'resolver_config',
+    });
+    if (!resolverConfig) throw new Error(`Failed to load resolver config from configName: 'resolver_config'`);
+    const sessions = new Sessions(resolverConfig, sessionsConfig, new SessionStorage(StorageFactory.getStorage()));
+
+    // initialize the system with the new sessions model and a shutdown handler
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subName: 'sub_event' });
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
     this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
@@ -134,11 +167,17 @@ class ServiceManager {
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_session1_message',
+      subNames: ['sub_session1_message', 'sub_session_message'],
     });
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
 
-    const sessionAgentConfig: AgentConfig = await SystemController.get().getFromNameOrPath('session_agent');
+    const sessionAgentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      config: new AgentConfig('org.wt.session1'),
+      configName: 'session_agent',
+    });
+    if (!sessionAgentConfig) throw new Error(`Agent: failed to load config for 'session_agent'`);
+
     // create and run a Session Agent
     // if config is not provided, it will be loaded from persistence (run bootstrap first)
     this.sessionAgent = new AgentService({
@@ -146,7 +185,7 @@ class ServiceManager {
       eventQ: sessionEventQ,
       messageQ: sessionMessageQ,
       additionalArgs: {
-        sessionsModel,
+        sessionsModelName: 'sessions_model',
       },
     });
     await this.sessionAgent.start();
@@ -158,11 +197,15 @@ class ServiceManager {
     const persistenceEventQ: EventQ = new EventQ(persistenceEventService);
     const persistenceMessageService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_persistence_message',
+      subNames: ['sub_persistence_message'],
     });
 
     const persistenceMessageQ: MessageQ = new MessageQ(persistenceMessageService);
-    const persistenceAgentConfig: AgentConfig = await SystemController.get().getFromNameOrPath('persistence_agent');
+    const persistenceAgentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      configName: 'persistence_agent',
+      config: new AgentConfig('wt.org.persistence'),
+    });
     this.persistenceAgent = new AgentService({
       agentConfig: persistenceAgentConfig,
       eventQ: persistenceEventQ,
@@ -173,7 +216,12 @@ class ServiceManager {
 
     // ----------------------------------- Robot Agent Setup -----------------------------------
     // Note: this is running in process for convenience but will be a remote service
-    const robotConfig = await SystemController.get().getConfig('robot_agent');
+    const robotConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      configName: 'robot_agent',
+      config: new AgentConfig('wt.org.robot'),
+    });
+    if (!robotConfig) throw new Error(`Agent: failed to load config for 'robot_agent'`);
     this.robotAgent = new RemoteAgentService({
       agentConfig: robotConfig,
     });

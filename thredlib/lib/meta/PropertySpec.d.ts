@@ -5,10 +5,12 @@
  */
 export interface PropertySpec {
     name: string;
-    type: 'string' | 'number' | 'boolean' | 'Date' | 'object' | 'any' | 'array';
+    description: string;
+    type: 'string' | 'number' | 'boolean' | 'Date' | 'object' | 'array';
     set: {
         display: string;
         value: any;
     }[];
     propertySpec?: PropertySpec[];
+    readonly?: boolean;
 }

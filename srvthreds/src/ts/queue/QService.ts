@@ -9,7 +9,7 @@ export interface QMessage<T> {
 
 export interface QMessageReplyHandle {}
 export interface QService<T> {
-  pop(topics?: string[]): Promise<QMessage<T>>;
+  pop(): Promise<QMessage<T>>;
 
   queue(message: QMessage<T>): Promise<void>;
 

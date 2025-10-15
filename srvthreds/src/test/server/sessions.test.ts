@@ -1,15 +1,21 @@
 import { Sessions } from '../../ts/sessions/Sessions.js';
 import { SessionStorage } from '../../ts/sessions/storage/SessionStorage.js';
 import { StorageFactory } from '../../ts/storage/StorageFactory.js';
-import { ResolverConfig } from '../../ts/sessions/Config.js';
+import { ResolverConfigDef } from '../../ts/config/ConfigDefs.js';
 import { Storage } from '../../ts/storage/Storage.js';
 import { ThredContext } from '../../ts/engine/ThredContext.js';
+import { ResolverConfig } from '../../ts/config/ResolverConfig.js';
+import { SessionsConfig } from '../../ts/config/SessionsConfig.js';
 
 describe('sessions', function () {
   beforeAll(async () => {
     StorageFactory.purgeAll();
     storage = StorageFactory.getStorage();
-    sessions = new Sessions(sessionsModel, resolverConfig, new SessionStorage(storage));
+    sessions = new Sessions(
+      new ResolverConfig(resolverConfigDef),
+      new SessionsConfig(sessionsModel),
+      new SessionStorage(storage),
+    );
   });
 
   test('add participants', async function () {
@@ -184,7 +190,7 @@ const sessionsModel = {
 const thredContext = new ThredContext({ thredId: 'testThredId', scope: {} });
 thredContext.addParticipantIds(['bOompa', 'cBucket', 'lLoompa', 'org.wt.persistence']);
 
-const resolverConfig: ResolverConfig = {
+const resolverConfigDef: ResolverConfigDef = {
   agents: [
     {
       name: 'Test Agent 1',

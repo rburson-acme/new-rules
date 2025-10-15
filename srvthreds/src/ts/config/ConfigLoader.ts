@@ -27,6 +27,24 @@ export class ConfigLoader {
     });
   }
 
+  /**
+   * Load configuration either from a specified file path or from the persistence layer using a config name.
+   * If both configPath and configName are provided, configPath takes precedence.
+   * @param configName The name of the configuration to load from persistence.
+   * @param configPath The file path to load the configuration from.
+   * @returns The loaded configuration object or null if not found.
+   */
+
+  static async loadFromNameOrPath(configName?: string, configPath?: string): Promise<any | null> {
+    if (configPath) {
+      return ConfigLoader.loadConfigFileFromPath(configPath);
+    } else {
+      if (configName) {
+        return SystemController.get().getConfig(configName);
+      }
+    }
+  }
+
   static loadConfigFileFromPath(configPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
       fs.readFile(configPath, 'utf-8', (err, data) => {

@@ -4,12 +4,13 @@ import { RemoteQService } from '../../ts/queue/remote/RemoteQService.js';
 import { QMessage } from '../../ts/queue/QService.js';
 import config from './rascal_test_config.json' with { type: 'json' };
 import { RemoteQBroker } from '../../ts/queue/remote/RemoteQBroker.js';
+import { RascalConfig } from '../../ts/config/RascalConfig.js';
 
 Logger.setLevel(LoggerLevel.INFO);
 
 describe('amqp connection', function () {
   beforeAll(async () => {
-    qBroker = new RemoteQBroker(config);
+    qBroker = new RemoteQBroker(new RascalConfig(config));
     await qBroker.connect();
     await qBroker.deleteAll().catch(Logger.error);
   });
@@ -20,7 +21,7 @@ describe('amqp connection', function () {
     });
     eventSubService = await RemoteQService.newInstance<Event>({
       qBroker,
-      subName: 'sub_event',
+      subNames: ['sub_event'],
     });
     messagePubService = await RemoteQService.newInstance<Message>({
       qBroker,
@@ -28,7 +29,7 @@ describe('amqp connection', function () {
     });
     messageSubService = await RemoteQService.newInstance<Message>({
       qBroker,
-      subName: 'sub_session1_message',
+      subNames: ['sub_session_message', 'sub_session1_message'],
     });
   });
   test('queue 1000', function () {
@@ -99,7 +100,7 @@ describe('amqp connection', function () {
     });
     eventSubService = await RemoteQService.newInstance<Event>({
       qBroker,
-      subName: 'sub_event',
+      subNames: ['sub_event'],
     });
   });
   test('pop', async function () {
