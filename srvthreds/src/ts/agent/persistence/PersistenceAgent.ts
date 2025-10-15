@@ -6,10 +6,12 @@ import BaseAgent from '../base/BaseAgent.js';
 export interface PersistenceAgentConfig {
   hostString?: string;
   dbname?: string;
+  directConnection?: boolean;
 }
 export interface PersistenceAgentArgs {
   hostString?: string;
   dbname?: string;
+  directConnection?: boolean;
 }
 
 export class PersistenceAgent extends BaseAgent {
@@ -21,6 +23,7 @@ export class PersistenceAgent extends BaseAgent {
       adapter: new PersistenceAdapter({
         hostString: additionalArgs?.hostString || config.customConfig?.hostString,
         dbname: additionalArgs?.dbname || config.customConfig?.dbname,
+        directConnection: additionalArgs?.directConnection ?? config.customConfig?.directConnection,
       }),
     });
   }

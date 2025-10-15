@@ -41,7 +41,10 @@ export class RedisKeySubscriber implements KeySubscriber {
   }
 
   private newClient() {
+    // TODO: Look at handling the host string farther up the stack
+    const redisHost = process.env.REDIS_HOST || 'localhost:6379';
     const client = createClient({
+      url: `redis://${redisHost}`,
       socket: {
         reconnectStrategy: (retries) => {
           const delay = Math.min(retries * 50, 2000);

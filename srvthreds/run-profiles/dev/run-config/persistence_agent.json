@@ -4,7 +4,8 @@
     "agentImpl": "./persistence/PersistenceAgent.js",
     "subscriptionNames": ["sub_persistence_message"],
     "customConfig": {
-        "hostString": "localhost:27017",
-        "dbname": "nr"
+        "hostString": "${MONGO_HOST||localhost}:27017",
+        "dbname": "nr",
+        "directConnection": true
     }
 }
