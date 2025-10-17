@@ -12,4 +12,5 @@ export interface PropertySpec {
         value: any;
     }[];
     propertySpec?: PropertySpec[];
+    readonly?: boolean;
 }

@@ -25,6 +25,8 @@ import { SystemService, SystemServiceArgs } from './SystemService.js';
 import { NotificationHandler } from './NotificationHandler.js';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ResolverConfigDef } from '../config/ConfigDefs.js';
+import { ResolverConfig } from '../config/ResolverConfig.js';
+import { ConfigLoader } from '../config/ConfigLoader.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -197,14 +199,30 @@ export class AdminService {
   };
 
   // @TODO = Use return a system spec based on services in the registry and the sessions_model
-  /*
-  getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
+  /*getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
     const {
       event,
       args: { op },
     } = SystemService.getArgs<GetSystemSpecArgs>(args);
+    const resolverConfig = ConfigManager.get().getConfig<ResolverConfig>('resolver-config');
+    if(!resolverConfig) {
+      throw EventThrowable.get({
+        message: `Resolver config not loaded for getSystemSpec()`,
+        code: errorCodes[errorKeys.SERVER_ERROR].code,
+      });
+    }
+    const serviceSpecs = [];
+    Object.keys(resolverConfig.configNameServiceMap).forEach((configName) => {
 
-  }*/
+      const serviceSpec = ConfigLo
+      // use to build service specs
+      const serviceConfig = resolverConfig.configNameServiceMap[configName];
+
+      serviceSpecs.push({
+      });
+    });
+  }
+    */
 
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,

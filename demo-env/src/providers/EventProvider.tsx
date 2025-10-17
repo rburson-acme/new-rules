@@ -1,27 +1,44 @@
-import { createContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, ReactNode, useEffect, useRef, useState } from 'react';
 import { EventManager as EventManagerClass, Logger } from 'thredlib';
 
 export const EventContext = createContext<EventManagerClass | null>(null);
 
-export function EventProvider({ children, token }: { children: ReactNode; token: string }) {
-  const eventManager = new EventManagerClass();
+// Singleton instance outside React lifecycle
+let eventManagerInstance: EventManagerClass | null = null;
 
+function getEventManager() {
+  if (!eventManagerInstance) {
+    eventManagerInstance = new EventManagerClass();
+  }
+  return eventManagerInstance;
+}
+
+export function EventProvider({ children, token }: { children: ReactNode; token: string }) {
+  const eventManager = useRef(getEventManager()).current;
   const [successfulConnection, setSuccessfulConnection] = useState<boolean>(false);
 
   useEffect(() => {
-    //connect
+    let cancelled = false;
+
     eventManager
-      .connect('localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token } })
+      .connect('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token } })
       .catch(e => {
-        Logger.error(e);
+        if (!cancelled) {
+          Logger.error(e);
+        }
       })
       .then(() => {
-        setSuccessfulConnection(true);
+        if (!cancelled) {
+          setSuccessfulConnection(true);
+        }
       });
+
     return () => {
-      eventManager.disconnect();
+      cancelled = true;
+      setSuccessfulConnection(false);
+      // Don't disconnect on cleanup - keep connection alive across remounts
     };
-  }, [eventManager]);
+  }, [eventManager, token]);
 
   if (!successfulConnection) return <p>Connecting to the event server...</p>;
 

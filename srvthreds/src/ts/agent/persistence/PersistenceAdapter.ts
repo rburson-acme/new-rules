@@ -7,7 +7,7 @@ import { Operations } from '../../thredlib/task/Operations.js';
 import { Adapter } from '../adapter/Adapter.js';
 
 export class PersistenceAdapter implements Adapter {
-  constructor(private config?: { hostString?: string; dbname?: string }) {}
+  constructor(private config?: { hostString?: string; dbname?: string; directConnection?: boolean }) {}
 
   async initialize(): Promise<void> {
     // nothing to initialize here
@@ -81,7 +81,8 @@ export class PersistenceAdapter implements Adapter {
     // task options can override the adapter config with host and dbname
     const dbname = task?.options?.dbname || this.config?.dbname;
     const hostString = task?.options?.hostString || this.config?.hostString;
-    return PersistenceFactory.getPersistence({ hostString, dbname });
+    const directConnection = task?.options?.directConnection ?? this.config?.directConnection;
+    return PersistenceFactory.getPersistence({ hostString, dbname, directConnection });
   }
 
   private checkTasksForValidTransaction(tasks: EventTask[]): boolean {

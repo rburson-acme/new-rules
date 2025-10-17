@@ -34,9 +34,15 @@ temp/
 .history/
 Dockerfile
 docker-compose*
+docker-bake.hcl
 .eslint*
 *.md
 .env*
 .prettier*
 sample.env
 *coverage*
+
+# Kubernetes and Terraform
+k8s/
+terraform/
+scripts/

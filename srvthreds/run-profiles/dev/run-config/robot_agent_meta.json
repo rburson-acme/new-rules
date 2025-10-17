@@ -1,17 +1,16 @@
 {
     "name": "Boston Dynamics Spot",
     "description": "Automated mobile robot platform",
-    "address": "org.wt.robot",
-    "nodeType": "org.wt.robot",
     "entitySpecs": [
         {
-            "name": "Param",
+            "type": "Param",
             "description": "Configurable parameters for the robot",
             "propertySpecs": [
                 {
                     "name": "id",
                     "description": "Unique identifier for the robot",
-                    "type": "string"
+                    "type": "string",
+                    "readonly": true
                 },
                 {
                     "name": "routine",
@@ -38,7 +37,7 @@
             ]
         },
         {
-            "name": "DeployResponse",
+            "type": "DeployResponse",
             "description": "Response from the robot upon deployment",
             "propertySpecs": [
                 {

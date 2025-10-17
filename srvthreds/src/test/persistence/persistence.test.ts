@@ -7,7 +7,7 @@ Logger.setLevel(LoggerLevel.INFO);
 
 describe('persistence', function () {
   test('connect', async function () {
-    persistenceProvider = new MongoPersistenceProvider();
+    persistenceProvider = new MongoPersistenceProvider(process.env.MONGO_HOST || 'localhost:27017');
     await persistenceProvider.connect();
     persistence = persistenceProvider.getInstance();
   });

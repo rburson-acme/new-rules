@@ -1,0 +1,17 @@
+# Git
+.git
+
+# node.js
+npm-debug.log
+yarn-error.log
+
+# OSX
+#
+.DS_Store
+
+#-*- emacs -*-
+*#
+.#*
+
+# misc
+.vscode

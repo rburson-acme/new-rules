@@ -11,6 +11,7 @@ export class RedisStorage implements Storage {
   // Locks will expire based on this value by default, if not specified explicitly during operations
   // However, they should always be released explicitly
   private static defaultLockTTL = 5000;
+  private static DEFAULT_HOST = 'localhost:6379';
 
   private static redlockDefaults = {
     // the expected clock drift; for more details, see http://redis.io/topics/distlock
@@ -29,8 +30,13 @@ export class RedisStorage implements Storage {
 
   //@TODO - set up sentinel or clustering
 
-  constructor() {
+  constructor(hostString?: string) {
+    // TODO: Look at handling the host string farther up the stack
+    const _host = hostString || process.env.REDIS_HOST || RedisStorage.DEFAULT_HOST;
+    // const _host = hostString || RedisStorage.DEFAULT_HOST;
+    const redisUrl = `redis://${_host}`;
     this.client = createClient({
+      url: redisUrl,
       socket: {
         reconnectStrategy: (retries) => {
           const delay = Math.min(retries * 50, 2000);
