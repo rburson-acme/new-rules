@@ -288,7 +288,7 @@ kubectl exec -it <pod-name> -- env | grep -E "MONGO|REDIS|RABBITMQ"
 **Solution:** MongoDB needs to be initialized as a replica set:
 ```bash
 # Run the setup script
-./infrastructure/scripts/setup-repl.sh
+./infrastructure/local/scripts/setup-repl.sh
 
 # Or manually
 docker exec mongo-repl-1 mongosh "mongodb://localhost:27017" --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo-repl-1:27017' }] })"
@@ -355,7 +355,7 @@ The deployment system supports environment-specific command overrides. When depl
 
 **Manual Docker Compose Commands:**
 ```bash
-cd infrastructure/dockerCompose
+cd infrastructure/local/compose
 
 # Start all services
 docker compose -f docker-compose-db.yml -f docker-compose-services.yml up -d

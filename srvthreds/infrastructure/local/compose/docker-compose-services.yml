@@ -3,10 +3,10 @@ services:
   # This is built first and reused by all other services for faster builds
   srvthreds-builder:
     build:
-      context: ../../
-      dockerfile: infrastructure/dockerCompose/Dockerfile.builder
+      context: ../../../
+      dockerfile: infrastructure/local/dockerfiles/Dockerfile.builder
       additional_contexts:
-        thredlib: ../../../thredlib
+        thredlib: ../../../../thredlib
     image: srvthreds-builder:latest
     container_name: srvthreds-builder
     command: ["/bin/true"]  # No-op, this is just for building
@@ -15,8 +15,8 @@ services:
   # Command runner for environment setup
   srvthreds-bootstrap:
     build:
-      context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile.cmdRunner
+      context: ../../../../
+      dockerfile: srvthreds/infrastructure/local/dockerfiles/Dockerfile.cmdRunner
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-bootstrap
@@ -36,8 +36,8 @@ services:
   # SrvThreds Engine Service
   srvthreds-engine:
     build:
-      context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
+      context: ../../../../
+      dockerfile: srvthreds/infrastructure/local/dockerfiles/Dockerfile
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-engine
@@ -69,8 +69,8 @@ services:
   # SrvThreds Session Agent
   srvthreds-session-agent:
     build:
-      context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
+      context: ../../../../
+      dockerfile: srvthreds/infrastructure/local/dockerfiles/Dockerfile
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-session-agent
@@ -103,8 +103,8 @@ services:
   # SrvThreds Persistence Agent
   srvthreds-persistence-agent:
     build:
-      context: ../../../
-      dockerfile: srvthreds/infrastructure/dockerCompose/Dockerfile
+      context: ../../../../
+      dockerfile: srvthreds/infrastructure/local/dockerfiles/Dockerfile
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-persistence-agent

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: srvthreds
+
+resources:
+- ../../base/namespace.yaml
+- ../../base/configmap.yaml
+- ../../base/srvthreds-bootstrap.yaml
+- ../../base/srvthreds-engine.yaml
+- ../../base/srvthreds-session-agent.yaml
+- ../../base/srvthreds-persistence-agent.yaml
+
+images:
+- name: srvthreds
+  newTag: latest
+
+patchesStrategicMerge:
+- configmap-prod.yaml
+
+replicas:
+- name: srvthreds-engine
+  count: 3
+- name: srvthreds-session-agent
+  count: 2
+- name: srvthreds-persistence-agent
+  count: 2
+
+commonLabels:
+  environment: production
+  version: stable

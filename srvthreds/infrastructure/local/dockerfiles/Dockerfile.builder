@@ -20,10 +20,10 @@ RUN npm ci
 RUN npm run build
 
 # Copy run-config directory which contains additional config files
-COPY run-profiles/ dist-server/run-profiles/
+COPY run-profiles/ ./dist-server/run-profiles/
 
 # Copy env file from assets directory
-COPY infrastructure/deploymentAssets/*.* ./dist-server/
+COPY infrastructure/deployment/assets/*.* ./dist-server/
 
 # Default command (this image is meant to be used as a base)
 CMD ["/bin/sh"]

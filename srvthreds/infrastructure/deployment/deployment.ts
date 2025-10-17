@@ -6,7 +6,7 @@ export const ComposeCommandUp = 'up';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-export const ComposeDir = path.join(__dirname, '/dockerCompose');
+export const ComposeDir = path.join(__dirname, '../local/compose');
 
 export interface EnvironmentOverrides {
   preBuildCommands?: PostUpCommand[];

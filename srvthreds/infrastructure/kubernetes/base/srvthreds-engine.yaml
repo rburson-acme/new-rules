@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srvthreds-engine
+  namespace: srvthreds
+  labels:
+    app.kubernetes.io/name: srvthreds-engine
+    app.kubernetes.io/component: engine
+    app.kubernetes.io/part-of: srvthreds
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: srvthreds-engine
+      app.kubernetes.io/component: engine
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: srvthreds-engine
+        app.kubernetes.io/component: engine
+    spec:
+      containers:
+      - name: engine
+        image: srvthreds:latest
+        command: ["node", "/app/dist-server/index.js", "-d"]
+        envFrom:
+        - configMapRef:
+            name: srvthreds-config
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - "console.log('Health check')"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - node
+            - -e
+            - "console.log('Ready check')"
+          initialDelaySeconds: 5
+          periodSeconds: 10

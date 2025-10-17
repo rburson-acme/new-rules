@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: srvthreds-bootstrap
+  namespace: srvthreds
+  labels:
+    app.kubernetes.io/name: srvthreds-bootstrap
+    app.kubernetes.io/component: bootstrap
+    app.kubernetes.io/part-of: srvthreds
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: srvthreds-bootstrap
+        app.kubernetes.io/component: bootstrap
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: bootstrap
+        image: srvthreds:latest
+        command: ["npm", "run", "bootstrap"]
+        envFrom:
+        - configMapRef:
+            name: srvthreds-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+  backoffLimit: 3

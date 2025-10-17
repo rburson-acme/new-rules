@@ -1,23 +1,21 @@
-# Use builder image as source for compiled artifacts
-ARG BUILDER_IMAGE=srvthreds-builder:latest
-FROM ${BUILDER_IMAGE} AS builder
-
 # Multi-stage build for SrvThreds unified container
 # Support for multiple architectures (amd64, arm64)
-FROM --platform=$BUILDPLATFORM node:20-alpine AS cmdRunner
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Copy srvthreds repositories
+# Copy both repositories from parent context
+COPY thredlib/ ./thredlib/
 COPY srvthreds/ ./srvthreds/
 
-# Copy built thredlib from builder
-COPY --from=builder /app/thredlib/ ./thredlib/
+# Build thredlib first
+WORKDIR /app/thredlib
+RUN npm ci && npm run build-all
 
 # Build srvthreds
 WORKDIR /app/srvthreds
-RUN npm ci
+RUN npm i
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -30,7 +28,7 @@ RUN chown -R srvthreds:nodejs /app
 USER srvthreds
 
 # Copy env file from assets directory
-COPY srvthreds/infrastructure/deploymentAssets/.env ./.env
+COPY srvthreds/infrastructure/deployment/assets/.env ./.env
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
