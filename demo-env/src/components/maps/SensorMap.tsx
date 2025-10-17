@@ -223,7 +223,7 @@ export function SensorMap() {
                 url:
                   marker.type === 'drone'
                     ? 'https://www.svgrepo.com/show/521818/robot.svg'
-                    : 'https://www.svgrepo.com/show/479064/caution-mark.svg',
+                    : "https://cdn.svgrepo.com/show/479064/caution-mark.svg",
                 scaledSize: new window.google.maps.Size(50, 50),
                 anchor: new window.google.maps.Point(25, 25),
               }}
