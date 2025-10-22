@@ -52,6 +52,7 @@ export const systemEventTypes = {
         user: {
             getThreds: 'getThreds',
             getEvents: 'getEvents',
+            getSystemSpec: 'getSystemSpec',
         }
     },
 };

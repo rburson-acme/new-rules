@@ -16,6 +16,6 @@ export interface ParticipantSpec {
     uri?: string;
 }
 export interface GroupSpec {
-    name?: string;
-    memberIds: string[];
+    name: string;
+    participants: { participantId: string }[];
 }

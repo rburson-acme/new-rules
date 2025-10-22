@@ -3,6 +3,7 @@ import { PatternModel } from '../model/PatternModel.js';
 import { Event, EventTaskParams } from './Event.js';
 import { Thred } from './Thred.js';
 import { EventRecord } from '../persistence/EventRecord.js';
+import { SystemSpec } from '../index.js';
 /***
  *     __           _                     __                 _      _____                   _
  *    / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    \_   \_ __  _ __  _   _| |_
@@ -33,8 +34,6 @@ export interface TerminateAllThredsArgs extends SystemEventInputValues {
 export interface ShutdownArgs extends SystemEventInputValues {
     readonly delay: number;
 }
-export interface GetSystemSpecArgs extends SystemEventInputValues {
-}
 export interface TransitionThredArgs extends SystemEventThredInputValues {
     readonly transition: TransitionModel;
 }
@@ -59,6 +58,8 @@ export interface GetUserThredsArgs extends SystemEventInputValues {
     readonly terminatedMatcher?: EventTaskParams['matcher'];
 }
 export interface GetUserEventsArgs extends SystemEventThredInputValues {
+}
+export interface GetSystemSpecArgs extends SystemEventInputValues {
 }
 /***
  *     __           _                     __                 _       __      _                      _____
@@ -90,6 +91,11 @@ export interface GetUserEventsResult extends SystemResult {
     op: string;
     status: string;
     events: EventRecord[] | null;
+}
+export interface GetSystemSpecResult extends SystemResult {
+    op: string;
+    status: string;
+    systemSpec: SystemSpec;
 }
 export declare class SystemEvents {
     /***
@@ -142,4 +148,5 @@ export declare class SystemEvents {
      */
     static getGetUserThredsEvent(source: Event['source'], status?: GetUserThredsArgs['status'], terminatedMatcher?: EventTaskParams['matcher']): Event;
     static getGetUserEventsEvent(thredId: string, source: Event['source']): Event;
+    static getGetSystemSpecEvent(source: Event['source']): Event;
 }

@@ -7,7 +7,7 @@ export interface PropertySpec {
     name: string;
     description: string;
     type: 'string' | 'number' | 'boolean' | 'Date' | 'object' | 'array';
-    set: {
+    set?: {
         display: string;
         value: any;
     }[];

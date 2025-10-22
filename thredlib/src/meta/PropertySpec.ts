@@ -10,7 +10,7 @@ export interface PropertySpec {
     // The type of the property, which can be a primitive type or a complex type.
     type: 'string' | 'number' | 'boolean' | 'Date' | 'object' | 'array';
     // A set of possible values for this property, if the property is not free-form.
-    set: { display: string; value: any }[];
+    set?: { display: string; value: any }[];
     // For complex types, define the structure of the object or array elements.
     propertySpec?: PropertySpec[];
     readonly?: boolean;

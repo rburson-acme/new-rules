@@ -251,4 +251,15 @@ export class SystemEvents {
             .mergeData({ title: 'Run Get User Events' })
             .build();
     }
+    static getGetSystemSpecEvent(source) {
+        const values = { op: systemEventTypes.operations.user.getSystemSpec };
+        return EventBuilder.create({
+            type: eventTypes.control.userControl.type,
+            thredId: ThredId.SYSTEM,
+            source,
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Get System Spec' })
+            .build();
+    }
 }
