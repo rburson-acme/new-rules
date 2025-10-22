@@ -16,6 +16,17 @@ export class ConnectionStore {
     this.eventManager?.exchange(event, notifyFn);
   };
 
+  subscribeToWatchThreds = (notifyFn: (event: Event) => void, watchThredsEventId: string): (() => void) => {
+    // Subscribe to events with filter for the watch threds event ID
+    this.eventManager?.subscribe(notifyFn, {
+      filter: `$event.re = '${watchThredsEventId}'`,
+    });
+    // Return a cleanup function
+    return () => {
+      // EventManager will handle cleanup internally
+    };
+  };
+
   consume = async (event: Event) => {
     const { thredId } = event;
     if (!thredId) throw Error(`Event missing thredId ${event}`);

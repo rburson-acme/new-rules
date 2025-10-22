@@ -14,15 +14,17 @@ function ThredManagerList() {
   const { adminThredsStore } = RootStore.get();
 
   const { startInterval, stopInterval } = useRunOnInterval(() => {
-    adminThredsStore.getAllThreds();
-  }, 30000);
+    adminThredsStore.renewWatchThreds();
+  }, 50000); //every 50 seconds
 
   useEffect(() => {
     navigation.setOptions({ title: 'Thred Manager' });
+    adminThredsStore.watchThreds();
     adminThredsStore.getAllThreds();
     startInterval();
     return () => {
       stopInterval();
+      adminThredsStore.stopWatchThreds();
     };
   }, [navigation]);
 
