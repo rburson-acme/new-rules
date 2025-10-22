@@ -12,10 +12,16 @@ import {
   EventValues,
   GetSystemSpecArgs,
   GetThredsArgs,
+  GroupSpec,
+  Parallel,
+  ParticipantSpec,
   ReloadPatternArgs,
+  Series,
+  ServiceSpec,
   ShutdownArgs,
   StringMap,
   systemEventTypes,
+  SystemSpec,
   TerminateAllThredsArgs,
   TerminateThreadArgs,
   TransitionThredArgs,
@@ -27,6 +33,9 @@ import { ConfigManager } from '../config/ConfigManager.js';
 import { ResolverConfigDef } from '../config/ConfigDefs.js';
 import { ResolverConfig } from '../config/ResolverConfig.js';
 import { ConfigLoader } from '../config/ConfigLoader.js';
+import { S } from 'vitest/dist/chunks/config.CHuotKvS.js';
+import { SessionsConfig } from '../config/SessionsConfig.js';
+import { UserController } from '../persistence/controllers/UserController.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -197,32 +206,6 @@ export class AdminService {
     await this.threds.shutdown(delay);
     return { status: systemEventTypes.successfulStatus, op };
   };
-
-  // @TODO = Use return a system spec based on services in the registry and the sessions_model
-  /*getSystemSpec = (args: SystemServiceArgs): EventValues['values'] => {
-    const {
-      event,
-      args: { op },
-    } = SystemService.getArgs<GetSystemSpecArgs>(args);
-    const resolverConfig = ConfigManager.get().getConfig<ResolverConfig>('resolver-config');
-    if(!resolverConfig) {
-      throw EventThrowable.get({
-        message: `Resolver config not loaded for getSystemSpec()`,
-        code: errorCodes[errorKeys.SERVER_ERROR].code,
-      });
-    }
-    const serviceSpecs = [];
-    Object.keys(resolverConfig.configNameServiceMap).forEach((configName) => {
-
-      const serviceSpec = ConfigLo
-      // use to build service specs
-      const serviceConfig = resolverConfig.configNameServiceMap[configName];
-
-      serviceSpecs.push({
-      });
-    });
-  }
-    */
 
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.transitionThred]: this.transitionThred,

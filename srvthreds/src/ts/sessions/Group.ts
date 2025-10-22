@@ -2,7 +2,7 @@ import { GroupModel } from '../thredlib/index.js';
 
 export class Group {
   readonly name: string;
-  private readonly participants: { participantId: string }[];
+  readonly participants: { participantId: string }[];
 
   constructor(groupModel: GroupModel) {
     this.name = groupModel.name;

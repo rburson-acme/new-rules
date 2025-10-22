@@ -5,6 +5,10 @@ import { PatternsStore } from '../engine/store/PatternsStore.js';
 import { Storage } from '../storage/Storage.js';
 import { Logger, Series } from '../thredlib/index.js';
 
+/*
+ This class loads but does not cache configuration files.  See ConfigManager for caching configs.
+  */
+
 export class ConfigLoader {
   static async loadStorageFromPersistence(persistenceManager: SystemController, storage: Storage): Promise<void> {
     const patternModels = await persistenceManager.getAllActivePatterns();

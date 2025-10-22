@@ -1,5 +1,5 @@
 import { Logger, LoggerLevel, systemEventTypes, Message, Events, SystemEvents } from '../../ts/thredlib/index.js';
-import { createDbFixtures, EngineConnectionManager, events, withDispatcherPromise } from '../testUtils.js';
+import { createUserDbFixtures, EngineConnectionManager, events, withDispatcherPromise } from '../testUtils.js';
 import { adminTestPatternModels, adminTestSource, userTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);
@@ -8,7 +8,7 @@ describe('user functions system test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
     await engineConnMan.purgeAll();
-    await createDbFixtures();
+    await createUserDbFixtures();
   });
   test('should start a new thred', function () {
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {

@@ -1,6 +1,5 @@
-import { Persistence } from '../Persistence.js';
+import { Persistence, Query } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
-import { Query } from '../../task/Taskable.js';
 import {
   PatternModel,
   Logger,
@@ -63,6 +62,19 @@ export class UserController {
 
   async getUser(id: string): Promise<User | null> {
     return this.persistence.getOne({ type: Types.User, matcher: { id } });
+  }
+
+  async getUsers(
+    matcher?: Query['matcher'],
+    selector?: Query['selector'],
+    collector?: Query['collector'],
+  ): Promise<User[] | null> {
+    return this.persistence.get<User>({
+      type: Types.User,
+      matcher,
+      selector,
+      collector,
+    });
   }
 
   async getUserByHandle(handle: string): Promise<User | null> {

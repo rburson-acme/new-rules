@@ -1,8 +1,7 @@
 import { ConfigLoader } from '../../config/ConfigLoader.js';
-import { Query } from '../../task/Taskable.js';
 import { EventRecord, Logger, PatternModel, ThredLogRecord, ThredRecord } from '../../thredlib/index.js';
 import { Types } from '../../thredlib/persistence/types.js';
-import { Persistence } from '../Persistence.js';
+import { Persistence, Query } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
 
 export class SystemController {

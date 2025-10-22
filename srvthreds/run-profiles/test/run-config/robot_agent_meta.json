@@ -1,0 +1,88 @@
+{
+  "name": "Boston Dynamics Spot",
+  "description": "Automated mobile robot platform",
+  "entitySpecs": [
+    {
+      "type": "Param",
+      "description": "Configurable parameters for the robot",
+      "propertySpecs": [
+        {
+          "name": "id",
+          "description": "Unique identifier for the robot",
+          "type": "string",
+          "readonly": true
+        },
+        {
+          "name": "routine",
+          "description": "Routine to invoke on the robot",
+          "type": "string"
+        },
+        {
+          "name": "location",
+          "description": "The target location to which to send the robot",
+          "type": "object",
+          "propertySpec": [
+            {
+              "name": "latitude",
+              "description": "Latitude of the target location.",
+              "type": "string"
+            },
+            {
+              "name": "longitude",
+              "description": "Longitude of the target location.",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "DeployResponse",
+      "description": "Response from the robot upon deployment",
+      "propertySpecs": [
+        {
+          "name": "robotId",
+          "description": "Unique identifier for the robot",
+          "type": "string"
+        },
+        {
+          "name": "videoStreamUrl",
+          "description": "URL of the video stream from the robot",
+          "type": "string"
+        },
+        {
+          "name": "latitude",
+          "description": "Latitude of the robot's current location.",
+          "type": "string"
+        },
+        {
+          "name": "longitude",
+          "description": "Longitude of the robot's current location.",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "inputSpecs": [
+    {
+      "inputContentType": "tasks",
+      "inputContentSpec": {
+        "description": "Allows for robot parameters to be retrieved or updated.",
+        "targetTypeName": "Param",
+        "allowedOps": ["get", "update"]
+      }
+    }
+  ],
+  "outputSpecs": [
+    {
+      "eventType": "org.wt.robot",
+      "description": "Responses and notifications sent by the robot.",
+      "eventContentType": "values",
+      "eventContentSpecs": [
+        {
+          "targetTypeName": "DeployResponse"
+        }
+      ]
+    }
+  ]
+}

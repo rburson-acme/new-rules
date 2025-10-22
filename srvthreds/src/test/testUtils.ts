@@ -13,7 +13,6 @@ import { AgentService } from '../ts/agent/AgentService.js';
 import { ResolverConfigDef } from '../ts/config/ConfigDefs.js';
 import { AgentConfig } from '../ts/config/AgentConfig.js';
 import { Timers } from '../ts/thredlib/index.js';
-import engineConfig from './config/engine.json' with { type: 'json' };
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
 import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
 import { System } from '../ts/engine/System.js';
@@ -23,6 +22,9 @@ import { UserController } from '../ts/persistence/controllers/UserController.js'
 import { ResolverConfig } from '../ts/config/ResolverConfig.js';
 import { SessionsConfig } from '../ts/config/SessionsConfig.js';
 import { RascalConfig } from '../ts/config/RascalConfig.js';
+import { ConfigLoader } from '../ts/config/ConfigLoader.js';
+import { SystemController } from '../ts/persistence/controllers/SystemController.js';
+import { run as runBootstrap } from './Bootstrapper.js';
 const sessionAgentConfigDef = {
   name: 'Session Agent',
   nodeType: 'org.wt.session',
@@ -186,7 +188,11 @@ export const getDispatcherPromise = (server: any): Promise<any> => {
   });
 };
 
-export const createDbFixtures = async () => {
+export const bootstrap = async () => {
+  await runBootstrap('test');
+};
+
+export const createUserDbFixtures = async () => {
   await PersistenceFactory.connect();
   const uc = UserController.get();
   await Promise.all([

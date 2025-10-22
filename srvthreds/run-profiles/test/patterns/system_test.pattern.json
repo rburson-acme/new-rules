@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "active": true
+  },
+  "name": "System Test Pattern",
+  "id": "system_test",
+  "reactions": [
+    {
+      "name": "location_event_detected",
+      "allowedSources": ["location_agent0"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.location.event'",
+        "onTrue": {
+          "xpr": "$setLocal('location_data', { 'locationId': $valueNamed('locationId'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude') })"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Location Event Detected",
+            "description": "$xpr( 'Location ' & $valueNamed('locationId') & ' has detected an event at coordinates: ' & $local('location_data').latitude & ', ' & $local('location_data').longitude )",
+            "content": {
+              "tasks": [
+                {
+                  "name": "find_participant",
+                  "options": {
+                    "dbname": "test"
+                  },
+                  "op": "get",
+                  "params": {
+                    "type": "TestObject",
+                    "matcher": {
+                      "locationId": "$xpr( $valueNamed('locationId') )"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "publish": {
+          "to": "org.wt.persistence"
+        }
+      }
+    },
+    {
+      "name": "notify_participant",
+      "allowedSources": ["/org\\.wt\\.persistence.*/"],
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.persistence'",
+        "onTrue": {
+          "xpr": "$setLocal('participantId', $valueNamed('participantId'))"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Location Event Detected",
+            "description": "$xpr( 'Location ' & $valueNamed('locationId') & ' has detected an Event')",
+            "content": {
+              "values": {
+                "locationId": "$xpr( $local('location_data').locationId )",
+                "latitude": "$xpr( $local('location_data').latitude )",
+                "longitude": "$xpr( $local('location_data').longitude )"
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "$xpr( $local('participantId') )"
+        }
+      }
+    }
+  ]
+}

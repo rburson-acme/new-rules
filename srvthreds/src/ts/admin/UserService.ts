@@ -1,3 +1,7 @@
+import { ConfigLoader } from '../config/ConfigLoader.js';
+import { ConfigManager } from '../config/ConfigManager.js';
+import { ResolverConfig } from '../config/ResolverConfig.js';
+import { SessionsConfig } from '../config/SessionsConfig.js';
 import { ParticipantsStore } from '../engine/store/ParticipantsStore.js';
 import { Threds } from '../engine/Threds.js';
 import { SystemController } from '../persistence/controllers/SystemController.js';
@@ -17,6 +21,13 @@ import {
   systemEventTypes,
   GetUserThredsResult,
   GetUserEventsResult,
+  GetSystemSpecResult,
+  GetSystemSpecArgs,
+  ServiceSpec,
+  Parallel,
+  ParticipantSpec,
+  GroupSpec,
+  SystemSpec,
 } from '../thredlib/index.js';
 import { User } from '../thredlib/persistence/User.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
@@ -108,8 +119,55 @@ export class UserService {
     };
   };
 
+  getSystemSpec = async (args: SystemServiceArgs): Promise<GetSystemSpecResult> => {
+    const {
+      event,
+      args: { op },
+    } = SystemService.getArgs<GetSystemSpecArgs>(args);
+    const resolverConfig = ConfigManager.get().getConfig<ResolverConfig>('resolver-config');
+    const sessionModel = ConfigManager.get().getConfig<SessionsConfig>('sessions-model');
+    if (!resolverConfig || !sessionModel) {
+      throw EventThrowable.get({
+        message: `Resolver config or session model not loaded for getSystemSpec()`,
+        code: errorCodes[errorKeys.SERVER_ERROR].code,
+      });
+    }
+    const serviceSpecs: ServiceSpec[] = [];
+    await Parallel.forEach(resolverConfig.configNames, async (configName) => {
+      // use to build service specs
+      const serviceConfig = resolverConfig.getServiceConfigDefForName(configName);
+      const serviceSpec: ServiceSpec = await ConfigLoader.loadFromNameOrPath(`${configName}_meta`);
+      // servicespec can override nodeType and address but they default to the resolver config nodeType
+      serviceSpecs.push({ ...{ nodeType: serviceConfig!.nodeType, address: serviceConfig!.nodeType }, ...serviceSpec });
+    });
+
+    const users = await UserController.get().getUsers();
+    const participants: ParticipantSpec[] = users?.map((user) => ({ id: user.id })) || [];
+
+    const groups: GroupSpec[] = Object.values(sessionModel.groups).map((group) => ({
+      name: group.name,
+      // select the items we want to expose for participant
+      participants: group.participants.map((participant) => ({ participantId: participant.participantId })),
+    }));
+
+    const systemSpec: SystemSpec = {
+      serviceSpecs,
+      addressSpec: {
+        participants,
+        groups,
+      },
+    };
+
+    return {
+      status: systemEventTypes.successfulStatus,
+      op,
+      systemSpec,
+    };
+  };
+
   private operations: StringMap<(args: SystemServiceArgs) => Promise<EventValues['values']>> = {
     [systemEventTypes.operations.user.getThreds]: this.getThreds,
     [systemEventTypes.operations.user.getEvents]: this.getEvents,
+    [systemEventTypes.operations.user.getSystemSpec]: this.getSystemSpec,
   };
 }
