@@ -76,9 +76,14 @@ export async function run(profile: string) {
   Logger.info('  > Running handler run()...');
   await handler?.run();
 
+  Logger.info('  > Done!');
+}
+
+export async function disconnect() {
+  Logger.info('  > Disconnecting from storage and persistence...');
   await StorageFactory.getStorage().disconnect();
   await PersistenceFactory.disconnectAll();
-  Logger.info('  > Done!');
+  Logger.info('  > Disconnected.');
 }
 
 export async function cleanup(profile: string) {

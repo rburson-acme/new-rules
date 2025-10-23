@@ -104,7 +104,7 @@ export class SessionAgent implements MessageHandler {
       );
 
     BasicAuth.initialize(new AuthStorage(StorageFactory.getStorage()));
-    this.sessionService = new SessionService(sessionsConfig, resolverConfig);
+    this.sessionService = new SessionService();
     const serviceListener = new SessionServiceListener(this.sessionService);
 
     this.httpService = new HttpService({

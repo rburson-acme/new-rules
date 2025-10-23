@@ -73,7 +73,7 @@ export class EngineServiceManager {
       throw new Error(
         `Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`,
       );
-    const qBroker = new RemoteQBroker(rascalConfig);
+    const qBroker = new RemoteQBroker();
     // connect to persistence
     await SystemController.get().connect();
 
@@ -99,7 +99,7 @@ export class EngineServiceManager {
       throw new Error(
         `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
       );
-    const sessions = new Sessions(resolverConfig, sessionsConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine

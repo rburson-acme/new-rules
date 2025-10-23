@@ -120,7 +120,7 @@ class ServiceManager {
       configName: 'rascal_config',
     });
     if (!rascalConfig) throw new Error(`Failed to load Rascal config from configName: 'rascal_config'`);
-    const qBroker = new RemoteQBroker(rascalConfig);
+    const qBroker = new RemoteQBroker();
 
     // connect to persistence
     await SystemController.get().connect();
@@ -139,7 +139,7 @@ class ServiceManager {
       configName: 'resolver_config',
     });
     if (!resolverConfig) throw new Error(`Failed to load resolver config from configName: 'resolver_config'`);
-    const sessions = new Sessions(resolverConfig, sessionsConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(new SessionStorage(StorageFactory.getStorage()));
 
     // initialize the system with the new sessions model and a shutdown handler
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });

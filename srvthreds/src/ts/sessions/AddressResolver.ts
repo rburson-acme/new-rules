@@ -5,6 +5,7 @@ import { SessionStorage } from './storage/SessionStorage.js';
 import { ThredContext } from '../engine/ThredContext.js';
 import { ResolverConfig } from '../config/ResolverConfig.js';
 import { SessionsConfig } from '../config/SessionsConfig.js';
+import { ConfigManager } from '../config/ConfigManager.js';
 
 const { forEach } = Parallel;
 
@@ -22,12 +23,17 @@ export class AddressResolver {
     [AddressResolver.ALL_ALIAS]: this.getAllParticipantIds,
     [AddressResolver.THRED_ALIAS]: this.getThredParticipantIds,
   };
+  private resolverConfig: ResolverConfig;
+  private sessionsConfig: SessionsConfig;
 
   constructor(
-    private resolverConfig: ResolverConfig,
-    private sessionsConfig: SessionsConfig,
     private storage: SessionStorage,
-  ) {}
+    resolverConfig?: ResolverConfig,
+    sessionsConfig?: SessionsConfig,
+  ) {
+    this.resolverConfig = resolverConfig || ConfigManager.get().getConfig<ResolverConfig>('resolver-config');
+    this.sessionsConfig = sessionsConfig || ConfigManager.get().getConfig<SessionsConfig>('sessions-model');
+  }
 
   filterServiceAddresses(address: Address): {
     serviceAddresses: string[];

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Logger, LoggerLevel } from '../ts/thredlib/index.js';
-import { cleanup, run } from './Bootstrapper.js';
+import { cleanup, disconnect, run } from './Bootstrapper.js';
 
 /*
   This utility:
@@ -33,3 +33,4 @@ if (argv.cleanup) {
 } else {
   await run(argv.profile);
 }
+await disconnect();

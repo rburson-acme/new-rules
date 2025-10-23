@@ -50,8 +50,12 @@ export class ConfigManager {
     return config;
   }
 
-  getConfig<T>(type: ConfigType): T {
+  getConfig<T extends Config<any>>(type: ConfigType): T {
     return this.configs[type] as T;
+  }
+
+  unloadAll() {
+    this.configs = {} as Record<ConfigType, Config<any>>;
   }
 }
 

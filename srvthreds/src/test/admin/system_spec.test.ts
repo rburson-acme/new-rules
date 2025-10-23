@@ -1,14 +1,13 @@
 import { Logger, LoggerLevel, systemEventTypes, Message, Events, SystemEvents } from '../../ts/thredlib/index.js';
-import { bootstrap, EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
+import { EngineConnectionManager, withDispatcherPromise } from '../testUtils.js';
 import { adminTestPatternModels, userTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);
 
-describe.skip('system spec retrieval tests', function () {
+describe('system spec retrieval tests', function () {
   beforeAll(async () => {
-    //await bootstrap();
-    await engineConnMan.purgeAll();
-    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
+    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
+    engineConnMan.initBootstrapped();
   });
   test('get system spec', async function () {
     const getSystemSpecEvent = SystemEvents.getGetSystemSpecEvent(userTestSource);
@@ -17,6 +16,12 @@ describe.skip('system spec retrieval tests', function () {
       expect(message.event.re).toBe(getSystemSpecEvent.id);
       expect(Events.assertSingleValues(message.event).status).toBe(systemEventTypes.successfulStatus);
       expect(Events.assertSingleValues(message.event).op).toBe(systemEventTypes.operations.user.getSystemSpec);
+      const systemSpec = Events.valueNamed(message.event, 'systemSpec');
+      expect(systemSpec).toBeDefined();
+      expect(systemSpec.serviceSpecs.length).toBeGreaterThan(0);
+      expect(systemSpec.addressSpec).toBeDefined();
+      expect(systemSpec.addressSpec.participants.length).toBeGreaterThan(0);
+      expect(systemSpec.addressSpec.groups.length).toBeGreaterThan(0);
     });
     engineConnMan.eventQ.queue(getSystemSpecEvent);
     return pr;

@@ -61,7 +61,7 @@ class Server {
       );
 
     // set up the remote Qs
-    const qBroker = new RemoteQBroker(rascalConfig);
+    const qBroker = new RemoteQBroker();
     this.eventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
     const eventQ: EventQ = new EventQ(this.eventService);
     const messageService = await RemoteQService.newInstance<Message>({

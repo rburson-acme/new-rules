@@ -12,9 +12,9 @@ describe('sessions', function () {
     StorageFactory.purgeAll();
     storage = StorageFactory.getStorage();
     sessions = new Sessions(
+      new SessionStorage(storage),
       new ResolverConfig(resolverConfigDef),
       new SessionsConfig(sessionsModel),
-      new SessionStorage(storage),
     );
   });
 
