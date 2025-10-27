@@ -1,6 +1,6 @@
 # SrvThreds Infrastructure Roadmap
 
-**Status**: Phase 1 Complete ✅ | Phase 2 Ready 🚀 | Phase 3 Planned 📋
+**Status**: Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 Planned 📋
 
 ---
 
@@ -48,15 +48,15 @@ npm run deploymentCli local bootstrap    # Run bootstrap
 
 ---
 
-## Phase 2: Minikube Development Environment (Next 🚀)
+## Phase 2: Minikube Development Environment (Complete ✅)
 
-### Objectives
+### What Was Built
 
-Create a **production-like Kubernetes environment** on your local machine using Minikube that:
-- Mirrors production architecture
-- Maintains separation between compute and data layers
-- Allows testing of Kubernetes manifests before cloud deployment
-- Provides realistic scaling and networking scenarios
+Successfully created a **production-like Kubernetes environment** on local machine using Minikube that:
+- ✅ Mirrors production architecture
+- ✅ Maintains separation between compute and data layers
+- ✅ Allows testing of Kubernetes manifests before cloud deployment
+- ✅ Provides realistic scaling and networking scenarios
 
 ### Architecture Overview
 
@@ -130,7 +130,7 @@ npm run deploymentCli local s_a_dbs
 
 **Directory Structure**:
 ```
-infrastructure/k8s/
+infrastructure/kubernetes/
 ├── base/                           # Base manifests (DRY)
 │   ├── namespace.yaml
 │   ├── configmap.yaml
@@ -161,7 +161,7 @@ infrastructure/k8s/
 
 #### Step 2: Minikube Setup Script
 
-Create `infrastructure/k8s/scripts/setup-minikube.sh`:
+Create `infrastructure/kubernetes/scripts/setup-minikube.sh`:
 
 ```bash
 #!/bin/bash
@@ -188,7 +188,7 @@ docker compose -f infrastructure/local/compose/docker-compose-services.yml build
 npm run deploymentCli local s_a_dbs
 
 # 5. Deploy to Minikube
-kubectl apply -k infrastructure/k8s/overlays/minikube/
+kubectl apply -k infrastructure/kubernetes/overlays/minikube/
 
 # 6. Wait for deployment
 kubectl wait --for=condition=available --timeout=300s \
@@ -240,18 +240,37 @@ data:
     "preBuildCommands": [
       {
         "description": "Setup Minikube environment...",
-        "command": "infrastructure/k8s/scripts/setup-minikube.sh"
+        "command": "infrastructure/kubernetes/scripts/setup-minikube.sh"
       }
     ]
   }
 }
 ```
 
+### Implementation Summary
+
+**Completed Features**:
+1. ✅ Kubernetes base manifests (namespace, deployments, services, jobs)
+2. ✅ Kustomize overlays for minikube environment
+3. ✅ Automated setup script (`setup-minikube.sh`)
+4. ✅ ConfigMap-based configuration (no `.env` files in K8s)
+5. ✅ RabbitMQ running in cluster as StatefulSet
+6. ✅ Host Docker databases (MongoDB, Redis) accessed via `host.minikube.internal`
+7. ✅ Bootstrap job for database initialization
+8. ✅ Integration with deployment CLI (`npm run minikube-create`)
+9. ✅ MongoDB direct connection mode for host database access
+
+**Key Files Created**:
+- `infrastructure/kubernetes/base/` - Base Kubernetes manifests
+- `infrastructure/kubernetes/overlays/minikube/` - Minikube-specific configs
+- `infrastructure/kubernetes/scripts/setup-minikube.sh` - Setup automation
+- `infrastructure/kubernetes/README.md` - Documentation
+
 ### Testing the Minikube Environment
 
 ```bash
-# Deploy to Minikube
-npm run deploymentCli local k8s_minikube
+# Deploy to Minikube (one command)
+npm run minikube-create
 
 # Check status
 kubectl get pods -n srvthreds
@@ -264,7 +283,8 @@ kubectl port-forward svc/session-agent 3000:3000 -n srvthreds
 kubectl scale deployment srvthreds-engine --replicas=3 -n srvthreds
 
 # Cleanup
-kubectl delete namespace srvthreds
+npm run minikube-destroy
+# or manually: kubectl delete namespace srvthreds
 ```
 
 ---
@@ -365,7 +385,7 @@ terraform apply
 aws eks update-kubeconfig --region us-west-2 --name srvthreds-prod
 
 # 3. Deploy applications
-kubectl apply -k infrastructure/k8s/overlays/prod/
+kubectl apply -k infrastructure/kubernetes/overlays/prod/
 
 # 4. Verify deployment
 kubectl get pods -n srvthreds
@@ -410,8 +430,8 @@ From `infrastructure/clusters/`:
 - ❌ nginx configurations (removed from architecture)
 - ❌ Some service configurations (replaced by your Docker Compose)
 
-From `k8s/` (old location):
-- ❌ Move to `infrastructure/k8s/` for consistency
+From `kubernetes/` (old location):
+- ❌ Move to `infrastructure/kubernetes/` for consistency
 - ❌ docker-bake.hcl (your builder pattern is better)
 - ❌ Multi-platform build scripts (integrated into deployment CLI)
 

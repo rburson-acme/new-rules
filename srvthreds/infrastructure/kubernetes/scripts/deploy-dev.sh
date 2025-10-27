@@ -30,7 +30,7 @@ fi
 
 # Deploy using Kustomize
 echo "📦 Deploying applications..."
-kubectl apply -k k8s/dev/
+kubectl apply -k kubernetes/overlays/dev/
 
 # Wait for deployments
 echo "⏳ Waiting for deployments to be ready..."

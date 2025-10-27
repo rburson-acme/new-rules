@@ -22,7 +22,7 @@ spec:
       containers:
       - name: engine
         image: srvthreds:latest
-        command: ["node", "/app/dist-server/index.js", "-d"]
+        command: ["node", "/app/srvthreds/dist-server/index.js", "-d"]
         envFrom:
         - configMapRef:
             name: srvthreds-config

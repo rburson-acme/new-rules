@@ -34,7 +34,7 @@ echo "Building multi-platform images..."
 # docker push ${REGISTRY}/srvthreds:${IMAGE_TAG}
 
 # Update image in kustomization
-cd k8s/prod
+cd kubernetes/overlays/prod
 kustomize edit set image srvthreds=srvthreds:${IMAGE_TAG}
 
 # Apply Terraform changes first
@@ -52,7 +52,7 @@ if [[ $terraform_confirm == "yes" ]]; then
     # RABBITMQ_URL=$(terraform output -raw rabbitmq_connection_string)
 
     # Update Kubernetes ConfigMap with connection strings
-    cd ../../../k8s/prod
+    cd ../../../kubernetes/overlays/prod
     kubectl create configmap srvthreds-config \
         --from-literal=NODE_ENV=production \
         --from-literal=MONGO_URL="${MONGO_URL}" \
@@ -63,7 +63,7 @@ fi
 
 # Deploy using Kustomize
 echo "📦 Deploying applications..."
-cd ../../k8s/prod
+cd ../../kubernetes/overlays/prod
 kubectl apply -k .
 
 # Wait for deployments

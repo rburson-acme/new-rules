@@ -8,12 +8,12 @@ export class PersistenceFactory {
 
   private static DEFAULT_HOST_NAME = 'localhost:27017';
 
-  static getPersistenceProvider(hostString?: string, directConnection: boolean = false): PersistenceProvider {
+  static getPersistenceProvider(hostString?: string, directConnection?: boolean): PersistenceProvider {
     // TODO: Look at handling the host string farther up the stack
     const _hostString = hostString || process.env.MONGO_HOST || PersistenceFactory.DEFAULT_HOST_NAME;
     // const _hostString = hostString || PersistenceFactory.DEFAULT_HOST_NAME;
     if (!PersistenceFactory.instanceMapByHost[_hostString]) {
-      const _directConnection = directConnection ?? process.env.MONGO_DIRECT_CONNECTION === 'true';
+      const _directConnection = directConnection ?? (process.env.MONGO_DIRECT_CONNECTION === 'true');
       const options = { connectOptions: { directConnection: _directConnection } };
       PersistenceFactory.instanceMapByHost[_hostString] = new MongoPersistenceProvider(_hostString, options);
       PersistenceFactory.connect(_hostString);

@@ -4,23 +4,17 @@ kind: Kustomization
 namespace: srvthreds
 
 resources:
-- ../../base/namespace.yaml
-- ../../base/configmap.yaml
-- mongo.yaml
-- redis.yaml
+- ../../base
 - rabbitmq.yaml
-- ../../base/srvthreds-bootstrap.yaml
-- ../../base/srvthreds-engine.yaml
-- ../../base/srvthreds-session-agent.yaml
-- ../../base/srvthreds-persistence-agent.yaml
 
 images:
 - name: srvthreds
   newTag: dev
 
-patchesStrategicMerge:
-- configmap-dev.yaml
+patches:
+- path: configmap-minikube.yaml
 
-commonLabels:
-  environment: development
-  version: dev
+labels:
+- pairs:
+    environment: development
+    version: dev

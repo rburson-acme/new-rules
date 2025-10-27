@@ -22,7 +22,7 @@ spec:
       containers:
       - name: session-agent
         image: srvthreds:latest
-        command: ["node", "/app/dist-server/agent/agent.js", "-c", "session_agent", "-d"]
+        command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "session_agent", "-i", "session-agent", "-d"]
         envFrom:
         - configMapRef:
             name: srvthreds-config
@@ -38,19 +38,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "300m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service

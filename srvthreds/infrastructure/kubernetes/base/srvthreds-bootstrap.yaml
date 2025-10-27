@@ -19,7 +19,7 @@ spec:
       containers:
       - name: bootstrap
         image: srvthreds:latest
-        command: ["npm", "run", "bootstrap"]
+        command: ["npm", "run", "bootstrap", "--", "-p", "ef-detection"]
         envFrom:
         - configMapRef:
             name: srvthreds-config

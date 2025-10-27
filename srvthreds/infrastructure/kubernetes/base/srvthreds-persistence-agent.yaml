@@ -22,7 +22,7 @@ spec:
       containers:
       - name: persistence-agent
         image: srvthreds:latest
-        command: ["node", "/app/dist-server/agent/agent.js", "-c", "persistence_agent", "-d"]
+        command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "persistence_agent", "-i", "persistence-agent-1", "-d"]
         envFrom:
         - configMapRef:
             name: srvthreds-config

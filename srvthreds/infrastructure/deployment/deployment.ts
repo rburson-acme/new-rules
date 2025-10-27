@@ -26,7 +26,10 @@ export interface PostUpCommand {
   command: string;
 }
 
+export type DeploymentType = 'docker-compose' | 'sh' | 'kubectl';
+
 export interface DeploymentArguments {
+  type?: DeploymentType;
   composing: string;
   deployTo: string;
   deployCommand: string;
@@ -103,7 +106,7 @@ function execute(
   }
 }
 
-export function executeDeployment({ deployTo, deployCommand, composeFile, args, preBuildCommands, postUpCommands, environmentOverrides }: DeploymentArguments): Promise<void> {
+export function executeDockerComposeDeployment({ deployTo, deployCommand, composeFile, args, preBuildCommands, postUpCommands, environmentOverrides }: DeploymentArguments): Promise<void> {
   if (!composeFile) {
     processExitError(`executeDeployment:: composeFile or composeFiles is required.`);
   }
@@ -113,7 +116,7 @@ export function executeDeployment({ deployTo, deployCommand, composeFile, args, 
   return Promise.resolve();
 }
 
-export function executeDeployments({ deployTo, deployCommand, composeFiles }: DeploymentArguments): Promise<void> {
+export function executeDockerComposeDeployments({ deployTo, deployCommand, composeFiles }: DeploymentArguments): Promise<void> {
   if (!composeFiles || composeFiles.length === 0) {
     processExitError(`executeDeployment:: composeFile or composeFiles is required.`);
   }
@@ -121,6 +124,84 @@ export function executeDeployments({ deployTo, deployCommand, composeFiles }: De
   composeFiles.forEach((compose) => {
     execute(deployCommand, compose.composeFile, deployTo, compose.defaultArgs, compose.preBuildCommands, compose.postUpCommands, compose.environmentOverrides);
   });
+
+  return Promise.resolve();
+}
+
+export function executeShellDeployment({ deployCommand, args, preBuildCommands, postUpCommands, deployTo, environmentOverrides }: DeploymentArguments): Promise<void> {
+  if (!deployCommand) {
+    processExitError(`executeShellDeployment:: deployCommand is required.`);
+  }
+
+  // Apply environment-specific overrides if they exist
+  const envOverride = environmentOverrides?.[deployTo];
+  const finalPreBuildCommands = mergeCommandsWithOverrides(preBuildCommands, envOverride?.preBuildCommands);
+  const finalPostUpCommands = mergeCommandsWithOverrides(postUpCommands, envOverride?.postUpCommands);
+
+  // Execute pre-build commands
+  if (finalPreBuildCommands.length > 0) {
+    console.log('Executing pre-build commands...');
+    for (const cmd of finalPreBuildCommands) {
+      execCommand(cmd.command, cmd.description);
+    }
+    console.log('Pre-build commands executed successfully.');
+  }
+
+  // Execute the main shell command
+  execCommand(
+    `${deployCommand} ${args ? args : ''}`,
+    `Executing shell command: ${deployCommand} ${args ? args : ''}`
+  );
+
+  console.log(`Shell command "${deployCommand}" executed successfully.`);
+
+  // Execute post-up commands
+  if (finalPostUpCommands.length > 0) {
+    console.log('Executing post-up commands...');
+    for (const cmd of finalPostUpCommands) {
+      execCommand(cmd.command, cmd.description);
+    }
+    console.log('Post-up commands executed successfully.');
+  }
+
+  return Promise.resolve();
+}
+
+export function executeKubectlDeployment({ deployCommand, args, preBuildCommands, postUpCommands, deployTo, environmentOverrides }: DeploymentArguments): Promise<void> {
+  if (!deployCommand) {
+    processExitError(`executeKubectlDeployment:: deployCommand is required.`);
+  }
+
+  // Apply environment-specific overrides if they exist
+  const envOverride = environmentOverrides?.[deployTo];
+  const finalPreBuildCommands = mergeCommandsWithOverrides(preBuildCommands, envOverride?.preBuildCommands);
+  const finalPostUpCommands = mergeCommandsWithOverrides(postUpCommands, envOverride?.postUpCommands);
+
+  // Execute pre-build commands
+  if (finalPreBuildCommands.length > 0) {
+    console.log('Executing pre-build commands...');
+    for (const cmd of finalPreBuildCommands) {
+      execCommand(cmd.command, cmd.description);
+    }
+    console.log('Pre-build commands executed successfully.');
+  }
+
+  // Execute kubectl command
+  execCommand(
+    `kubectl ${deployCommand} ${args ? args : ''}`,
+    `Executing kubectl command: kubectl ${deployCommand} ${args ? args : ''}`
+  );
+
+  console.log(`Kubectl command "${deployCommand}" executed successfully.`);
+
+  // Execute post-up commands
+  if (finalPostUpCommands.length > 0) {
+    console.log('Executing post-up commands...');
+    for (const cmd of finalPostUpCommands) {
+      execCommand(cmd.command, cmd.description);
+    }
+    console.log('Post-up commands executed successfully.');
+  }
 
   return Promise.resolve();
 }

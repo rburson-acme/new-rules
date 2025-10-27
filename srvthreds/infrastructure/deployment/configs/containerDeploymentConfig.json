@@ -6,20 +6,26 @@
       "description": "Starts the database containers (Mongo, Redis, RabbitMQ).",
       "environments": [
         "local",
+        "minikube",
         "dev",
         "test"
       ],
       "target": {
+        "type": "docker-compose",
         "composing": "databases",
         "deployCommand": "up",
         "composeFile": "docker-compose-db.yml",
         "defaultArgs": "-d --wait",
-        "postUpCommands": [
-          {
-            "description": "Setting up MongoDB replica set...",
-            "command": "infrastructure/local/scripts/setup-repl.sh"
+        "environmentOverrides": {
+          "local": {
+            "postUpCommands": [
+              {
+                "description": "Setting up MongoDB replica set...",
+                "command": "infrastructure/local/scripts/setup-repl.sh"
+              }
+            ]
           }
-        ]
+        }
       }
     },
     {
@@ -66,8 +72,12 @@
                 "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
               },
               {
+                "description": "Log out assets pushed to deployment assets folder",
+                "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/deployment/assets/ && cat ./infrastructure/deployment/assets/.env"
+              },
+              {
                 "description": "Building production-optimized builder image...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
               }
             ],
             "postUpCommands": [
@@ -122,7 +132,7 @@
             "preBuildCommands": [
               {
                 "description": "Building base builder image (uses cache if available)...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
               }
             ],
             "environmentOverrides": {
@@ -133,8 +143,12 @@
                     "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
                   },
                   {
+                    "description": "Log out assets pushed to deployment assets folder",
+                    "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/deployment/assets/ && cat ./infrastructure/deployment/assets/.env"
+                  },
+                  {
                     "description": "Building production-optimized builder image...",
-                    "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+                    "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
                   }
                 ],
                 "postUpCommands": [
@@ -338,17 +352,119 @@
     },
     {
       "name": "Create Base Image",
-      "shortName": "build",
+      "shortName": "build_server",
       "description": "Creates the base image used by all services.",
       "environments": [
         "local",
-        "dev"
+        "minikube"
       ],
       "target": {
         "composing": "service",
-        "deployCommand": "up",
+        "deployCommand": "build",
         "composeFile": "docker-compose-services.yml",
-        "defaultArgs": "srvthreds-builder -d --wait"
+        "defaultArgs": "--progress=plain srvthreds-builder",
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
+                "command": "touch ./infrastructure/deployment/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Deploy to Minikube",
+      "shortName": "k8s_minikube",
+      "description": "Deploy services to Minikube Kubernetes cluster",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "sh",
+        "composing": "kubernetes",
+        "deployCommand": "infrastructure/kubernetes/scripts/setup-minikube.sh"
+      }
+    },
+    {
+      "name": "Apply Kubernetes Manifests to Minikube",
+      "shortName": "k8s_apply",
+      "description": "Apply Kubernetes manifests using kubectl (Minikube must be running)",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "kubectl",
+        "composing": "kubernetes",
+        "deployCommand": "apply",
+        "defaultArgs": "-k infrastructure/kubernetes/overlays/minikube/",
+        "preBuildCommands": [
+          {
+            "description": "Switching kubectl context to Minikube...",
+            "command": "infrastructure/kubernetes/scripts/switch-to-minikube.sh"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Set Kubernetes Context to Minikube",
+      "shortName": "set_context",
+      "description": "Set Kubernetes Context to Minikube",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "sh",
+        "composing": "kubernetes",
+         "deployCommand": "infrastructure/kubernetes/scripts/switch-to-minikube.sh"
+      }
+    },
+    {
+      "name": "Reset Minikube Deployment",
+      "shortName": "k8s_reset",
+      "description": "Reset Minikube deployment (deletes namespace, keeps cluster running)",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "sh",
+        "composing": "kubernetes",
+        "deployCommand": "infrastructure/kubernetes/scripts/reset-minikube.sh"
+      }
+    },
+    {
+      "name": "Full Cleanup Minikube",
+      "shortName": "k8s_cleanup",
+      "description": "Complete cleanup: deletes cluster, resources, and optionally databases",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "sh",
+        "composing": "kubernetes",
+        "deployCommand": "infrastructure/kubernetes/scripts/cleanup-minikube.sh"
       }
     }
   ]

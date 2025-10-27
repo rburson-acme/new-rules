@@ -34,11 +34,11 @@ spec:
           value: "guest"
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
             cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         volumeMounts:
         - name: rabbitmq-data
           mountPath: /var/lib/rabbitmq
@@ -50,14 +50,16 @@ spec:
             - ping
           initialDelaySeconds: 60
           periodSeconds: 30
+          timeoutSeconds: 5
         readinessProbe:
           exec:
             command:
             - rabbitmq-diagnostics
             - -q
             - check_port_connectivity
-          initialDelaySeconds: 10
+          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 5
       volumes:
       - name: rabbitmq-data
         emptyDir: {}

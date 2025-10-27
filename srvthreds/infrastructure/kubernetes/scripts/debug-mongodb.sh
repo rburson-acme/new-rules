@@ -7,8 +7,10 @@ echo "======================"
 # Check if running in Docker Compose or Kubernetes
 if docker-compose ps mongo > /dev/null 2>&1; then
     echo "📦 Detected Docker Compose environment"
-    MONGO_CONTAINER="mongo"
-    MONGO_CMD="docker-compose exec $MONGO_CONTAINER"
+    MONGO_CONTAINER="mongo-repl-1"
+    MONGO_COMPOSE_PATH="./infrastructure/local/compose/docker-compose-db.yml"
+    # -f $MONGO_COMPOSE_PATH 
+    MONGO_CMD="docker compose exec $MONGO_CONTAINER"
 elif kubectl get pod -l app.kubernetes.io/name=mongo -n srvthreds > /dev/null 2>&1; then
     echo "☸️  Detected Kubernetes environment"
     MONGO_POD=$(kubectl get pod -l app.kubernetes.io/name=mongo -n srvthreds -o jsonpath='{.items[0].metadata.name}')

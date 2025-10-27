@@ -38,12 +38,19 @@
     "deploy-dev-services": "npm run deploymentCli -- local s_a_s",
     "deploy-dev-down-services": "npm run deploymentCli -- local d_a_s",
     "deploy-dev-up-all": "npm run deploymentCli -- local s_a_dbs_s",
-    "deploy-dev-down-all": "npm run deploymentCli -- local d_a_dbs_s"
+    "deploy-dev-down-all": "npm run deploymentCli -- local d_a_dbs_s",
+    "minikube-create": "npm run deploymentCli -- minikube k8s_minikube",
+    "minikube-apply": "npm run deploymentCli -- minikube k8s_apply",
+    "minikube-reset": "npm run deploymentCli -- minikube k8s_reset",
+    "minikube-set-context": "npm run deploymentCli -- minikube set_context",
+    "minikube-validate": "kubectl get pods -n srvthreds && kubectl logs -f deployment/srvthreds-engine -n srvthreds",
+    "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup"
   },
   "nodemonConfig": {
     "exec": "npm run dev",
     "watch": [
-      "src/*"
+      "src/*",
+      "infrastructure"
     ],
     "ext": "ts, js, html, css",
     "ignore": [

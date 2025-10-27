@@ -4,13 +4,16 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { executeDeployment, executeDeployments, DeploymentArguments, PostUpCommand, ComposeFiles, EnvironmentOverrides, processExitError } from './deployment.js';
+import { executeDockerComposeDeployment, executeDockerComposeDeployments, executeShellDeployment, executeKubectlDeployment, DeploymentArguments, PostUpCommand, ComposeFiles, EnvironmentOverrides, processExitError } from './deployment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const configPath = path.join(__dirname, 'configs', 'containerDeploymentConfig.json');
 
+export type DeploymentType = 'docker-compose' | 'sh' | 'kubectl';
+
 interface DeploymentTarget {
+  type?: DeploymentType;  // Deployment execution type (defaults to 'docker-compose')
   composing: string;
   deployCommand: string;
   composeFile?: string;
@@ -34,15 +37,32 @@ interface DeploymentConfig {
 }
 
 async function runDeployment(deploymentArgs: DeploymentArguments): Promise<void> {
-  if (deploymentArgs.composeFiles && deploymentArgs.composeFiles.length > 0) {
-    await executeDeployments(deploymentArgs);
-    return Promise.resolve();
+  const deploymentType = deploymentArgs.type || 'docker-compose';
+
+  switch (deploymentType) {
+    case 'docker-compose':
+      if (deploymentArgs.composeFiles && deploymentArgs.composeFiles.length > 0) {
+        await executeDockerComposeDeployments(deploymentArgs);
+      } else if (deploymentArgs.composeFile) {
+        await executeDockerComposeDeployment(deploymentArgs);
+      } else {
+        return Promise.reject('Docker-compose deployment requires composeFile or composeFiles.');
+      }
+      break;
+    
+    case 'sh':
+      await executeShellDeployment(deploymentArgs);
+      break;
+
+    case 'kubectl':
+      await executeKubectlDeployment(deploymentArgs);
+      break;
+
+    default:
+      return Promise.reject(`Unknown deployment type: ${deploymentType}`);
   }
-  if (deploymentArgs.composeFile) {
-    await executeDeployment(deploymentArgs);
-    return Promise.resolve();
-  }
-  return Promise.reject('Deployment Args did not contain any deployment files.');
+
+  return Promise.resolve();
 }
 
 const createRL = () => readline.createInterface({
@@ -114,6 +134,7 @@ async function main(): Promise<void> {
   }
 
   const deploymentArgs: DeploymentArguments = {
+    type: deployment.target.type,
     deployTo,
     composing: deployment.target.composing,
     deployCommand: deployment.target.deployCommand,

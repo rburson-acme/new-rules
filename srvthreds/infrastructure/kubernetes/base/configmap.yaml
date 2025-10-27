@@ -4,7 +4,8 @@ metadata:
   name: srvthreds-config
   namespace: srvthreds
 data:
-  NODE_ENV: "development"
-  MONGO_URL: "mongodb://mongo:27017"
-  REDIS_URL: "redis://redis:6379"
-  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+  NODE_ENV: development
+  MONGO_HOST: localhost:27017
+  REDIS_HOST: localhost:6379
+  RABBITMQ_HOST: localhost:5672
+  LOG_LEVEL: INFO
