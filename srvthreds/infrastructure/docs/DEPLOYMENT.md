@@ -499,13 +499,13 @@ LOG_LEVEL=DEBUG
 
 ```bash
 # MongoDB Atlas
-MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/database
+MONGO_URL=mongodb+srv://${username}:${password}@cluster.mongodb.net/database
 
 # Redis Cloud
-REDIS_URL=rediss://username:password@host:port
+REDIS_URL=rediss://${username}:${password}@host:port
 
 # CloudAMQP
-RABBITMQ_URL=amqps://username:password@host/vhost
+RABBITMQ_URL=amqps://${username}:${password}@host/vhost
 
 # Application
 NODE_ENV=production
