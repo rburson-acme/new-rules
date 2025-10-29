@@ -24,11 +24,20 @@ kubectl config use-context minikube
 CURRENT_CONTEXT=$(kubectl config current-context)
 echo "✓ kubectl context is now: $CURRENT_CONTEXT"
 
+# Wait for Kubernetes API server to be ready
+echo "⏳ Waiting for Kubernetes API server to be ready..."
+kubectl wait --for=condition=Ready node/minikube --timeout=120s || {
+  echo "⚠️  Warning: Node readiness check timed out, but continuing..."
+}
+
+# Give the API server a few extra seconds to stabilize
+sleep 5
+
 # 3. Enable addons
 echo "📦 Enabling Minikube addons..."
-minikube addons enable ingress
-minikube addons enable metrics-server
-minikube addons enable dashboard
+minikube addons enable ingress || echo "⚠️  Warning: ingress addon failed, continuing..."
+minikube addons enable metrics-server || echo "⚠️  Warning: metrics-server addon failed, continuing..."
+minikube addons enable dashboard || echo "⚠️  Warning: dashboard addon failed, continuing..."
 # minikube tunnel
 
 # 4. Build and load Docker images into Minikube
