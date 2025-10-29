@@ -250,7 +250,7 @@ git clone <repository>
 cd srvthreds
 
 # One-command deployment
-./scripts/deploy-dev.sh
+npm run minikube-create
 ```
 
 ### Manual Development Setup
@@ -377,13 +377,11 @@ export REGISTRY=ghcr.io/your-org
 #### 2. Deploy Application
 
 ```bash
-# Automated deployment
-./scripts/deploy-prod.sh
+# Production deployment via CI/CD
+# See INFRASTRUCTURE-ROADMAP.md Phase 3 for CI/CD setup
 
-# Or manual deployment
-cd k8s/prod
-terraform output -raw kubernetes_config > config.env
-source config.env
+# Manual deployment (if needed)
+kubectl apply -k infrastructure/kubernetes/overlays/prod/
 
 # Update ConfigMap with connection strings
 kubectl create configmap srvthreds-config \
@@ -785,14 +783,14 @@ docker-compose up --build                       # Start all services
 docker-compose logs -f                          # View all logs
 docker-compose down                             # Stop and remove containers
 
-# Kubernetes Development
-./scripts/deploy-dev.sh                          # Deploy to Minikube
+# Kubernetes Development (Minikube)
+npm run minikube-create                          # Deploy to Minikube
 kubectl get pods -n srvthreds                    # Check pod status
 kubectl logs -f deployment/srvthreds-engine -n srvthreds  # View logs
 
-# Production
-./scripts/deploy-prod.sh                         # Deploy to production
-terraform apply -chdir=terraform/environments/prod  # Update infrastructure
+# Production (Phase 3 - CI/CD)
+# See INFRASTRUCTURE-ROADMAP.md for Phase 3 cloud deployment plans
+kubectl apply -k infrastructure/kubernetes/overlays/prod/  # Manual prod deploy
 kubectl rollout restart deployment/srvthreds-engine -n srvthreds  # Restart service
 
 # Multi-platform builds

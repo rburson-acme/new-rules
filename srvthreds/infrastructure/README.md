@@ -33,16 +33,16 @@ npm run deploymentCli
 - Local scripts: [`local/scripts/`](local/scripts/)
 - Environment configs: [`local/configs/`](local/configs/)
 
-### Kubernetes Deployment (Minikube/Cloud)
+### Kubernetes Deployment (Minikube)
 
-Deploy to Kubernetes environments:
+Deploy to Minikube for local Kubernetes testing:
 
 ```bash
-# Deploy to Minikube (local)
-./kubernetes/scripts/deploy-dev.sh minikube
+# Deploy to Minikube (full setup)
+npm run minikube-create
 
-# Deploy to cloud dev environment
-./kubernetes/scripts/deploy-dev.sh dev
+# Or just apply manifests (if Minikube already running)
+npm run minikube-apply
 ```
 
 **Where to find Kubernetes resources:**
@@ -113,16 +113,19 @@ npm run deploymentCli -- local bootstrap
 
 **Common tasks:**
 ```bash
-# Deploy to Minikube
-./kubernetes/scripts/deploy-dev.sh minikube
+# Deploy to Minikube (local K8s testing)
+npm run minikube-create
 
-# Deploy to cloud dev
-./kubernetes/scripts/deploy-dev.sh dev
+# Apply manifest changes
+npm run minikube-apply
 
-# Deploy to production
-./kubernetes/scripts/deploy-prod.sh
+# Reset deployment
+npm run minikube-reset
 
-# Debug MongoDB in K8s
+# Full cleanup
+npm run minikube-cleanup
+
+# Debug MongoDB connection
 ./kubernetes/scripts/debug-mongodb.sh
 ```
 
