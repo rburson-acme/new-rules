@@ -67,3 +67,7 @@ web-build/
 
 .roomodes
 .env*
+
+# Infrastructure runtime data
+infrastructure/local/compose/.docker/
+infrastructure/deployment/assets/

@@ -1,0 +1,19 @@
+{
+  "name": "Persistence Agent",
+  "description": "Handles data persistence operations",
+  "command": {
+    "entrypoint": "node",
+    "args": ["/app/dist-server/agent/agent.js", "-c", "persistence_agent", "-d"]
+  },
+  "ports": {},
+  "resources": {
+    "memory": {
+      "request": "256Mi",
+      "limit": "512Mi"
+    },
+    "cpu": {
+      "request": "200m",
+      "limit": "400m"
+    }
+  }
+}

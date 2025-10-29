@@ -1,3 +1,4 @@
+# Config source: infrastructure/deployment/configs/agents/persistence-agent.config.json
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,10 +23,12 @@ spec:
       containers:
       - name: persistence-agent
         image: srvthreds:latest
+        # Command from persistence-agent.config.json
         command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "persistence_agent", "-i", "persistence-agent-1", "-d"]
         envFrom:
         - configMapRef:
             name: srvthreds-config
+        # Resources from persistence-agent.config.json
         resources:
           requests:
             memory: "256Mi"

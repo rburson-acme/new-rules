@@ -1,0 +1,137 @@
+{
+  "_comment": "Template for cloud environment configuration. Copy and customize for dev/staging/prod environments.",
+  "name": "cloud-environment-name",
+  "description": "Description of this cloud environment",
+  "cloud": {
+    "provider": "aws | gcp | azure",
+    "region": "us-west-2",
+    "cluster": {
+      "type": "eks | gke | aks",
+      "name": "srvthreds-cluster-name"
+    }
+  },
+  "images": {
+    "registry": "container-registry-url",
+    "imagePrefix": "srvthreds",
+    "tag": "latest",
+    "pullPolicy": "Always"
+  },
+  "resources": {
+    "_comment": "Resource overrides from infrastructure/deployment/configs/agents/*.config.json",
+    "engine": {
+      "replicas": 2,
+      "resources": {
+        "requests": {
+          "memory": "512Mi",
+          "cpu": "500m"
+        },
+        "limits": {
+          "memory": "1Gi",
+          "cpu": "1000m"
+        }
+      }
+    },
+    "session-agent": {
+      "replicas": 2,
+      "resources": {
+        "requests": {
+          "memory": "256Mi",
+          "cpu": "200m"
+        },
+        "limits": {
+          "memory": "512Mi",
+          "cpu": "500m"
+        }
+      }
+    },
+    "persistence-agent": {
+      "replicas": 2,
+      "resources": {
+        "requests": {
+          "memory": "512Mi",
+          "cpu": "400m"
+        },
+        "limits": {
+          "memory": "1Gi",
+          "cpu": "800m"
+        }
+      }
+    }
+  },
+  "databases": {
+    "_comment": "Managed database service connection strings",
+    "mongodb": {
+      "type": "managed",
+      "provider": "atlas | aws-documentdb",
+      "connectionString": "${MONGODB_CONNECTION_STRING}",
+      "secretRef": "srvthreds/database/mongodb"
+    },
+    "redis": {
+      "type": "managed",
+      "provider": "redis-cloud | aws-elasticache",
+      "connectionString": "${REDIS_CONNECTION_STRING}",
+      "secretRef": "srvthreds/database/redis"
+    },
+    "rabbitmq": {
+      "type": "managed",
+      "provider": "cloudamqp | aws-amazonmq",
+      "connectionString": "${RABBITMQ_CONNECTION_STRING}",
+      "secretRef": "srvthreds/database/rabbitmq"
+    }
+  },
+  "secrets": {
+    "provider": "aws-secrets-manager | gcp-secret-manager | azure-keyvault",
+    "region": "us-west-2",
+    "secretNames": {
+      "mongodb": "srvthreds/${ENVIRONMENT}/mongodb",
+      "redis": "srvthreds/${ENVIRONMENT}/redis",
+      "rabbitmq": "srvthreds/${ENVIRONMENT}/rabbitmq",
+      "jwt": "srvthreds/${ENVIRONMENT}/jwt"
+    }
+  },
+  "networking": {
+    "ingress": {
+      "enabled": true,
+      "className": "nginx | alb",
+      "domain": "api.example.com",
+      "tls": {
+        "enabled": true,
+        "certManager": true
+      }
+    },
+    "serviceMesh": {
+      "enabled": false,
+      "provider": "istio | linkerd"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "prometheus": {
+      "enabled": true,
+      "retention": "30d"
+    },
+    "grafana": {
+      "enabled": true
+    },
+    "logging": {
+      "provider": "elk | cloudwatch | stackdriver",
+      "retention": "90d"
+    },
+    "tracing": {
+      "enabled": true,
+      "provider": "jaeger | x-ray"
+    }
+  },
+  "autoscaling": {
+    "enabled": true,
+    "minReplicas": 2,
+    "maxReplicas": 10,
+    "targetCPUUtilization": 70,
+    "targetMemoryUtilization": 80
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "0 2 * * *",
+    "retention": "30d"
+  }
+}

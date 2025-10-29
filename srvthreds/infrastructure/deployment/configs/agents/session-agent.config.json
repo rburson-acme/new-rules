@@ -1,0 +1,21 @@
+{
+  "name": "Session Agent",
+  "description": "Manages user sessions and participant interactions",
+  "command": {
+    "entrypoint": "node",
+    "args": ["/app/dist-server/agent/agent.js", "-c", "session_agent", "-i", "org.wt.session1", "-d"]
+  },
+  "ports": {
+    "http": 3000
+  },
+  "resources": {
+    "memory": {
+      "request": "128Mi",
+      "limit": "256Mi"
+    },
+    "cpu": {
+      "request": "100m",
+      "limit": "300m"
+    }
+  }
+}

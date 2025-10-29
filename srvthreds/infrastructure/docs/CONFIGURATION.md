@@ -50,8 +50,7 @@ cp .env.local.example .env
 brew install mongodb-community redis rabbitmq
 
 # Option 2: Run only databases in Docker, app on host
-cd infrastructure
-node deploymentCli.ts local s_s_dbs
+npm run deploy-dev-databases
 
 # Start your application
 npm run start-dev
@@ -79,12 +78,12 @@ All services run on the `srvthreds-net` bridge network, enabling service-to-serv
 
 **Starting Services:**
 ```bash
-cd infrastructure
-node deploymentCli.ts local s_a_dbs_s
+# Start all (databases + services)
+npm run deploy-dev-up-all
 
 # Or start databases and services separately:
-node deploymentCli.ts local s_s_dbs
-node deploymentCli.ts local s_a_s
+npm run deploy-dev-databases
+npm run deploy-dev-services
 ```
 
 **Environment Variables in docker-compose-services.yml:**
@@ -332,21 +331,20 @@ When adding a new external service:
 
 **Using the Deployment CLI (Recommended):**
 ```bash
-# Start all services
-cd infrastructure
-node deploymentCli.ts local s_a_dbs_s
+# Start all services (databases + application)
+npm run deploy-dev-up-all
 
 # Start only databases
-node deploymentCli.ts local s_s_dbs
+npm run deploy-dev-databases
 
-# Start services in staging environment
-node deploymentCli.ts staging s_a_s
+# Start only services
+npm run deploy-dev-services
 
 # Stop all
-node deploymentCli.ts local d_a_dbs_s
+npm run deploy-dev-down-all
 
 # View available deployments
-node deploymentCli.ts
+npm run deploymentCli
 ```
 
 **Environment-Specific Deployments:**

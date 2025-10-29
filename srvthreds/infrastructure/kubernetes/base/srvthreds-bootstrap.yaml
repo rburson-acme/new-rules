@@ -1,3 +1,4 @@
+# Config source: infrastructure/deployment/configs/agents/bootstrap.config.json
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -19,10 +20,12 @@ spec:
       containers:
       - name: bootstrap
         image: srvthreds:latest
+        # Command from bootstrap.config.json
         command: ["npm", "run", "bootstrap", "--", "-p", "ef-detection"]
         envFrom:
         - configMapRef:
             name: srvthreds-config
+        # Resources from bootstrap.config.json
         resources:
           requests:
             memory: "128Mi"

@@ -13,6 +13,7 @@ services:
     restart: "no"
 
   # Command runner for environment setup
+  # Config source: infrastructure/deployment/configs/agents/bootstrap.config.json
   srvthreds-bootstrap:
     build:
       context: ../../../../
@@ -20,12 +21,14 @@ services:
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-bootstrap
+    # Command from bootstrap.config.json
     command: ["npm", "run", "bootstrap", "--", "-p", "ef-detection"]
     environment:
       - NODE_ENV=development
       - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
       - REDIS_HOST=${REDIS_HOST:-redis:6379}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+    # runOnce: true in bootstrap.config.json
     restart: "no"  # Run once and exit
     networks:
       - srvthreds-net
@@ -34,6 +37,7 @@ services:
         condition: service_completed_successfully
 
   # SrvThreds Engine Service
+  # Config source: infrastructure/deployment/configs/agents/engine.config.json
   srvthreds-engine:
     build:
       context: ../../../../
@@ -41,6 +45,7 @@ services:
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-engine
+    # Command and ports from engine.config.json
     command: ["node", "/app/dist-server/index.js", "-d"]
     ports:
       - "8082:8082"  # Expose engine to host
@@ -58,6 +63,7 @@ services:
     networks:
       - srvthreds-net
     deploy:
+      # Resources from engine.config.json
       resources:
         limits:
           memory: 512M
@@ -67,6 +73,7 @@ services:
           cpus: '0.2'
 
   # SrvThreds Session Agent
+  # Config source: infrastructure/deployment/configs/agents/session-agent.config.json
   srvthreds-session-agent:
     build:
       context: ../../../../
@@ -74,6 +81,7 @@ services:
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-session-agent
+    # Command and ports from session-agent.config.json
     ports:
       - '3000:3000'
     entrypoint: ["node", "/app/dist-server/agent/agent.js"]
@@ -92,6 +100,7 @@ services:
     networks:
       - srvthreds-net
     deploy:
+      # Resources from session-agent.config.json
       resources:
         limits:
           memory: 256M
@@ -101,6 +110,7 @@ services:
           cpus: '0.1'
 
   # SrvThreds Persistence Agent
+  # Config source: infrastructure/deployment/configs/agents/persistence-agent.config.json
   srvthreds-persistence-agent:
     build:
       context: ../../../../
@@ -108,6 +118,7 @@ services:
       args:
         BUILDER_IMAGE: srvthreds-builder:latest
     container_name: srvthreds-persistence-agent
+    # Command from persistence-agent.config.json
     command: ["node", "/app/dist-server/agent/agent.js", "-c", "persistence_agent", "-d"]
     depends_on:
       srvthreds-builder:
@@ -123,6 +134,7 @@ services:
     networks:
       - srvthreds-net
     deploy:
+      # Resources from persistence-agent.config.json
       resources:
         limits:
           memory: 512M

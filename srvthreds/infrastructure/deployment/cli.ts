@@ -8,7 +8,8 @@ import { executeDockerComposeDeployment, executeDockerComposeDeployments, execut
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const configPath = path.join(__dirname, 'configs', 'containerDeploymentConfig.json');
+const configsDir = path.join(__dirname, 'configs', 'deployments');
+const legacyConfigPath = path.join(__dirname, 'configs', 'containerDeploymentConfig.json');
 
 export type DeploymentType = 'docker-compose' | 'sh' | 'kubectl';
 
@@ -97,8 +98,52 @@ function askQuestionWithSelect(query: string, options: Array<string>): Promise<s
   });
 }
 
+/**
+ * Load deployment configurations from multiple JSON files in the deployments directory
+ * Falls back to legacy containerDeploymentConfig.json if new structure doesn't exist
+ */
+function loadDeploymentConfigs(): DeploymentConfig {
+  // Check if new modular config directory exists
+  if (fs.existsSync(configsDir)) {
+    console.debug(`Loading deployment configs from: ${configsDir}`);
+    const allDeployments: Deployment[] = [];
+
+    // Read all JSON files in the deployments directory
+    const configFiles = fs.readdirSync(configsDir)
+      .filter(file => file.endsWith('.json'))
+      .sort(); // Ensure consistent loading order
+
+    for (const file of configFiles) {
+      const filePath = path.join(configsDir, file);
+      try {
+        const fileConfig: DeploymentConfig = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        if (fileConfig.deployments && Array.isArray(fileConfig.deployments)) {
+          console.debug(`Loaded ${fileConfig.deployments.length} deployments from ${file}`);
+          allDeployments.push(...fileConfig.deployments);
+        }
+      } catch (error: any) {
+        console.warn(`Warning: Failed to load config from ${file}:`, error.message);
+      }
+    }
+
+    if (allDeployments.length === 0) {
+      processExitError('No deployments found in config files.');
+    }
+
+    return { deployments: allDeployments };
+  }
+
+  // Fallback to legacy config file
+  if (fs.existsSync(legacyConfigPath)) {
+    console.debug(`Using legacy config file: ${legacyConfigPath}`);
+    return JSON.parse(fs.readFileSync(legacyConfigPath, 'utf-8'));
+  }
+
+  processExitError(`No deployment configuration found. Expected either:\n  - ${configsDir}/*.json\n  - ${legacyConfigPath}`);
+}
+
 async function main(): Promise<void> {
-  const config: DeploymentConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  const config: DeploymentConfig = loadDeploymentConfigs();
   const args = process.argv.slice(2);
 
   let deployTo: string;

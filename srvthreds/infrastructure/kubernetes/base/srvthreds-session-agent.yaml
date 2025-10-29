@@ -1,3 +1,4 @@
+# Config source: infrastructure/deployment/configs/agents/session-agent.config.json
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,15 +23,19 @@ spec:
       containers:
       - name: session-agent
         image: srvthreds:latest
-        command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "session_agent", "-i", "session-agent", "-d"]
+        # Command from session-agent.config.json
+        # IMPORTANT: -i must match nodeId in resolver_config.json (org.wt.session1)
+        command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "session_agent", "-i", "org.wt.session1", "-d"]
         envFrom:
         - configMapRef:
             name: srvthreds-config
+        # Ports from session-agent.config.json
         ports:
         - containerPort: 3000
           name: http
         - containerPort: 3001
           name: websocket
+        # Resources from session-agent.config.json
         resources:
           requests:
             memory: "128Mi"

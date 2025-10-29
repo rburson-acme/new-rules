@@ -10,10 +10,10 @@
 
 You've successfully implemented a **Docker-based local development environment** with a sophisticated deployment CLI:
 
-#### 1. **Deployment CLI** (`infrastructure/deploymentCli.ts`)
+#### 1. **Deployment CLI** (`infrastructure/deployment/cli.ts`)
 - Interactive menu-driven deployment system
 - Supports multiple environments: `local`, `dev`, `test`, `staging`
-- Configuration-driven via `containerDeploymentConfig.json`
+- Configuration-driven via modular JSON configs in `configs/deployments/`
 - Handles pre/post build commands and environment-specific overrides
 
 #### 2. **Container Architecture**
@@ -423,17 +423,14 @@ kubectl get svc -n srvthreds
 4. **✅ Managed Databases**: Still the production strategy
 5. **✅ Multi-environment**: local → dev → staging → prod
 
-### What's Obsolete
+### Recent Improvements (October 2025)
 
-From `infrastructure/clusters/`:
-- ❌ Local MongoDB/Redis Kubernetes manifests (use Docker instead)
-- ❌ nginx configurations (removed from architecture)
-- ❌ Some service configurations (replaced by your Docker Compose)
-
-From `kubernetes/` (old location):
-- ❌ Move to `infrastructure/kubernetes/` for consistency
-- ❌ docker-bake.hcl (your builder pattern is better)
-- ❌ Multi-platform build scripts (integrated into deployment CLI)
+**Configuration Refactoring Complete** ✅:
+- Split monolithic `containerDeploymentConfig.json` (471 lines) into modular structure
+- Created agent-specific configs in `configs/agents/` directory
+- Organized deployments by concern: databases, services, kubernetes, build
+- Added cloud environment templates for future Terraform integration
+- See [REFACTORING-SUMMARY.md](deployment/REFACTORING-SUMMARY.md) for details
 
 ---
 
