@@ -37,7 +37,7 @@ npm run start-dev-debug  # Debug on port 9229
 **Typical Workflow**:
 ```bash
 # Terminal 1: Start databases
-npm run deploy-dev-databases
+npm run deploy-local-databases
 
 # Terminal 2: Start dev server with hot reload
 npm run start-dev
@@ -65,19 +65,19 @@ npm run start-dev
 **Commands**:
 ```bash
 # Start everything (databases + services)
-npm run deploy-dev-up-all
+npm run deploy-local-up-all
 
 # Start only databases (useful for Pattern 1)
-npm run deploy-dev-databases
+npm run deploy-local-databases
 
 # Start only services (if databases already running)
-npm run deploy-dev-services
+npm run deploy-local-services
 
 # Stop everything
-npm run deploy-dev-down-all
+npm run deploy-local-down-all
 
 # Stop only services (keep databases running)
-npm run deploy-dev-down-services
+npm run deploy-local-down-services
 
 # Interactive deployment menu
 npm run deploymentCli
@@ -94,14 +94,14 @@ npm run deploymentCli
 **Typical Workflow**:
 ```bash
 # Start all services for testing
-npm run deploy-dev-up-all
+npm run deploy-local-up-all
 
 # Run your test client (e.g., demo-env, thredclient)
 cd demo-env
 npm start
 
 # Stop when done
-npm run deploy-dev-down-all
+npm run deploy-local-down-all
 ```
 
 ---
@@ -242,13 +242,13 @@ kubectl exec -it -n srvthreds <pod-name> -- /bin/bash
 **Pattern 1 → Pattern 2**:
 ```bash
 # Stop dev server (Ctrl+C)
-npm run deploy-dev-up-all
+npm run deploy-local-up-all
 ```
 
 **Pattern 2 → Pattern 3**:
 ```bash
 # Stop Docker services
-npm run deploy-dev-down-services
+npm run deploy-local-down-services
 
 # Keep databases running (minikube uses them)
 # Start Minikube
@@ -284,7 +284,7 @@ See [INFRASTRUCTURE-ROADMAP.md](../INFRASTRUCTURE-ROADMAP.md) Phase 3 for detail
 
 ### Pattern 1 Issues
 - **Port conflicts**: Check if Pattern 2 services are still running
-- **Database connection errors**: Start databases with `npm run deploy-dev-databases`
+- **Database connection errors**: Start databases with `npm run deploy-local-databases`
 
 ### Pattern 2 Issues
 - **Port conflicts**: Stop Pattern 1 dev server or existing containers
@@ -306,8 +306,8 @@ See [INFRASTRUCTURE-ROADMAP.md](../INFRASTRUCTURE-ROADMAP.md) Phase 3 for detail
 npm run start-dev
 
 # Pattern 2: Docker containers
-npm run deploy-dev-up-all
-npm run deploy-dev-down-all
+npm run deploy-local-up-all
+npm run deploy-local-down-all
 
 # Pattern 3: Minikube K8s
 npm run minikube-create

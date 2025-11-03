@@ -10,6 +10,11 @@ SrvThreds uses environment variables for all external service connections, makin
 - **Redis**: Caching and distributed locking
 - **RabbitMQ**: Message queue for inter-service communication
 
+**Related Documentation:**
+- [Test Configuration Guide](../../src/test/README.md) - Test-specific configuration
+- [Developer Deployment Patterns](./DEVELOPER-DEPLOYMENT-PATTERNS.md) - Common development scenarios
+- [Deployment Guide](./DEPLOYMENT.md) - Production deployment
+
 ## Environment Variable Substitution
 
 All JSON configuration files support environment variable substitution using the syntax:
@@ -50,7 +55,7 @@ cp .env.local.example .env
 brew install mongodb-community redis rabbitmq
 
 # Option 2: Run only databases in Docker, app on host
-npm run deploy-dev-databases
+npm run deploy-local-databases
 
 # Start your application
 npm run start-dev
@@ -79,11 +84,11 @@ All services run on the `srvthreds-net` bridge network, enabling service-to-serv
 **Starting Services:**
 ```bash
 # Start all (databases + services)
-npm run deploy-dev-up-all
+npm run deploy-local-up-all
 
 # Or start databases and services separately:
-npm run deploy-dev-databases
-npm run deploy-dev-services
+npm run deploy-local-databases
+npm run deploy-local-services
 ```
 
 **Environment Variables in docker-compose-services.yml:**
@@ -321,27 +326,42 @@ When adding a new external service:
 | Variable | Description | Local Default | Docker Default | K8s Default |
 |----------|-------------|---------------|----------------|-------------|
 | `MONGO_HOST` | MongoDB connection string | `localhost:27017` | `mongo-repl-1:27017` | `mongodb-service:27017` |
+| `MONGO_DIRECT_CONNECTION` | MongoDB direct connection mode | `true` | `true` | `false` |
 | `REDIS_HOST` | Redis connection string | `localhost:6379` | `redis:6379` | `redis-service:6379` |
 | `RABBITMQ_HOST` | RabbitMQ hostname | `localhost` | `rabbitmq` | `rabbitmq-service` |
 | `NODE_ENV` | Node environment | `development` | `development` | `production` |
 | `JWT_SECRET` | JWT signing secret | (required) | (required) | (from Secret) |
 | `REFRESH_TOKEN_SECRET` | Refresh token secret | (required) | (required) | (from Secret) |
 
+**MongoDB Connection Modes:**
+
+- `MONGO_DIRECT_CONNECTION=true`: Direct connection to a single MongoDB instance. Required for:
+  - Local development with single-node replica sets
+  - Testing environments
+  - Docker Compose with single MongoDB container
+
+- `MONGO_DIRECT_CONNECTION=false`: Replica set discovery mode. Required for:
+  - Production multi-node replica sets
+  - Kubernetes StatefulSet deployments
+  - MongoDB clusters with multiple replicas
+
+See the [Test Configuration Guide](../../src/test/README.md#mongodb-connection-configuration) for detailed explanation.
+
 ### Docker Compose Commands
 
 **Using the Deployment CLI (Recommended):**
 ```bash
 # Start all services (databases + application)
-npm run deploy-dev-up-all
+npm run deploy-local-up-all
 
 # Start only databases
-npm run deploy-dev-databases
+npm run deploy-local-databases
 
 # Start only services
-npm run deploy-dev-services
+npm run deploy-local-services
 
 # Stop all
-npm run deploy-dev-down-all
+npm run deploy-local-down-all
 
 # View available deployments
 npm run deploymentCli
