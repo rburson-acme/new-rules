@@ -14,6 +14,25 @@
       }
     },
     {
+      "name": "Validate Minikube Deployment",
+      "shortName": "k8s_validate",
+      "description": "Validate minikube is setup correctly by evaluating pods and running tests",
+      "environments": [
+        "minikube"
+      ],
+      "target": {
+        "type": "sh",
+        "composing": "kubernetes",
+        "deployCommand": "infrastructure/kubernetes/scripts/validate-minikube.sh",
+        "preBuildCommands": [
+          {
+            "description": "Get running pods and recent logs for engine service...",
+            "command": "kubectl get pods -n srvthreds && kubectl logs deployment/srvthreds-engine -n srvthreds --tail=50"
+          }
+        ]
+      }
+    },
+    {
       "name": "Apply Kubernetes Manifests to Minikube",
       "shortName": "k8s_apply",
       "description": "Apply Kubernetes manifests using kubectl (Minikube must be running)",

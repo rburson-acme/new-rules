@@ -43,7 +43,7 @@
     "minikube-apply": "npm run deploymentCli -- minikube k8s_apply",
     "minikube-reset": "npm run deploymentCli -- minikube k8s_reset",
     "minikube-set-context": "npm run deploymentCli -- minikube set_context",
-    "minikube-validate": "kubectl get pods -n srvthreds && kubectl logs -f deployment/srvthreds-engine -n srvthreds",
+    "minikube-validate": "npm run deploymentCli -- minikube k8s_validate",
     "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup"
   },
   "nodemonConfig": {

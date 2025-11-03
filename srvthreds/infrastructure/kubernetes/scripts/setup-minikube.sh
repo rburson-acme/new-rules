@@ -16,6 +16,11 @@ minikube start --driver=docker \
   --memory=7836 \
   --disk-size=20g
 
+# Set restart policy for Minikube container to survive Docker restarts
+echo "🔄 Configuring Minikube container restart policy..."
+docker update --restart=unless-stopped minikube
+echo "✓ Minikube will now restart automatically with Docker"
+
 # 2. Switch kubectl context to Minikube
 echo "🔄 Switching kubectl context to Minikube..."
 kubectl config use-context minikube
