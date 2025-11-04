@@ -2,7 +2,10 @@ import { SessionsModel } from '../thredlib/index.js';
 
 export interface ConfigDef {}
 
-export interface EngineConfigDef {}
+export interface EngineConfigDef {
+  eventProcessingWait?: number;
+  shutdownDelay?: number;
+}
 export interface ResolverConfigDef {
   agents: ServiceConfigDef[];
 }
@@ -32,4 +35,8 @@ export interface AgentConfigDef {
   // types of events that this service may produce
   // if not defined the event type defaults to the nodeType
   eventTypes?: [{ type: string }];
+  eventProcessingWait?: number;
+  shutdownDelay?: number;
+  authToken?: string;
+  authorizedTokens?: string;
 }

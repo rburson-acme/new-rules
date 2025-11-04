@@ -19,7 +19,7 @@ export * from './io/EventManager.js';
 export * from './io/SocketIOConnection.js';
 export * from './lib/Async.js';
 export * from './lib/DurableTimer.js';
-export * from './lib/Timers.js'; 
+export * from './lib/Timers.js';
 export * from './lib/types.js';
 export * from './lib/lib.js';
 export * from './lib/Logger.js';

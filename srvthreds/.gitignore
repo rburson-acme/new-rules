@@ -67,3 +67,4 @@ web-build/
 
 .roomodes
 .env*
+env/

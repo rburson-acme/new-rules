@@ -120,31 +120,33 @@ export class AgentService {
         Begin pulling Messages from the Q (from the Engine)
     */
   private async run() {
+    while (true) await this.nextMessage();
+  }
+
+  private async nextMessage(): Promise<void> {
     const { messageQ } = this.params;
-    while (true) {
-      // accept anything directed to this agents nodeId or nodeType
-      // @TODO - implement topics
-      // NOTE: this is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
-      //const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
-      const qMessage: QMessage<Message> = await messageQ.pop();
+    // accept anything directed to this agents nodeId or nodeType
+    // @TODO - implement topics
+    // NOTE: this is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
+    //const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
+    const qMessage: QMessage<Message> = await messageQ.pop();
+    try {
+      await this.processMessage(qMessage.payload);
+      await messageQ.delete(qMessage);
+    } catch (e: any) {
+      Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
+      const cause = serializableError(e.eventError ? e.eventError.cause : e);
       try {
-        await this.processMessage(qMessage.payload);
-        await messageQ.delete(qMessage);
-      } catch (e: any) {
-        Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
-        const cause = serializableError(e.eventError ? e.eventError.cause : e);
-        try {
-          const outboundEvent = this.eventPublisher.createOutboundEvent({
-            error: e.eventError ? { ...e.eventError, cause } : { ...errorCodes[errorKeys.TASK_ERROR], cause },
-            prevEvent: qMessage.payload.event,
-          });
-          await this.eventPublisher.publishEvent(outboundEvent);
-          await messageQ.reject(qMessage, e as Error).catch(Logger.error);
-          // @TODO figure out on what types of Errors it makes sense to requeue
-          // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
-        } catch (e) {
-          Logger.error(`Agent: failed to publish error event for message ${qMessage.payload?.id}`, e);
-        }
+        const outboundEvent = this.eventPublisher.createOutboundEvent({
+          error: e.eventError ? { ...e.eventError, cause } : { ...errorCodes[errorKeys.TASK_ERROR], cause },
+          prevEvent: qMessage.payload.event,
+        });
+        await this.eventPublisher.publishEvent(outboundEvent);
+        await messageQ.reject(qMessage, e as Error).catch(Logger.error);
+        // @TODO figure out on what types of Errors it makes sense to requeue
+        // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
+      } catch (e) {
+        Logger.error(`Agent: failed to publish error event for message ${qMessage.payload?.id}`, e);
       }
     }
   }

@@ -2,7 +2,7 @@ import { Storage, Types } from '../storage/Storage.js';
 import { AuthStorageOps } from './AuthStorageOps.js';
 
 export class LocalAuthStorage implements AuthStorageOps {
-  private authorizedTokens = process.env.AUTHORIZED_TOKENS ? process.env.AUTHORIZED_TOKENS.split(',') : [];
+  constructor(private authorizedTokens: string[]) {}
 
   /* 
     JTI = JWT ID, a unique identifier for the token

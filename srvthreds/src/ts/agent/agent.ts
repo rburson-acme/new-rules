@@ -1,4 +1,4 @@
-import { Event, Logger, LoggerLevel, Message } from '../thredlib/index.js';
+import { Event, Logger, LoggerLevel, Message, Timers } from '../thredlib/index.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { EventQ } from '../queue/EventQ.js';
@@ -82,7 +82,16 @@ class Server {
 
   async shutdown(): Promise<void> {
     try {
-      Logger.info(`Disconnecting RemoteQ broker...`);
+      const agentConfig = ConfigManager.get().getConfig<AgentConfig>('agent-config');
+      const delay = agentConfig?.shutdownDelay ?? 0;
+      Logger.info(`Waiting ${delay}ms before shutting down...`);
+      await Timers.wait(delay);
+      Logger.info(`Stopping message consumption...`);
+      await this.eventService?.unsubscribeAll().catch(Logger.error);
+      const eventProcessingWait = agentConfig?.eventProcessingWait ?? 3000;
+      Logger.info(`Waiting ${eventProcessingWait}ms for message processing to complete...`);
+      await Timers.wait(eventProcessingWait);
+      Logger.info(`Disconnecting RemoteQ...`);
       await this.eventService?.disconnect().catch(Logger.error);
       Logger.info(`RemoteQ Broker disconnected successfully.`);
       Logger.info(`Shutting down session agent...`);

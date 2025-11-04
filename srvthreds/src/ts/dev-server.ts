@@ -12,7 +12,7 @@ import { RemoteQService } from './queue/remote/RemoteQService.js';
 import { Sessions } from './sessions/Sessions.js';
 import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
-import { Event, Logger, Message, PatternModel } from './thredlib/index.js';
+import { Event, Logger, Message, PatternModel, Timers } from './thredlib/index.js';
 
 const patternModelsOverride: PatternModel[] = [] as PatternModel[];
 
@@ -145,9 +145,9 @@ class ServiceManager {
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
+    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker: qBroker, subNames: ['sub_event'] });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
-    this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
+    this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker: qBroker, pubName: 'pub_message' });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
 
     // @TODO separate service
@@ -163,10 +163,10 @@ class ServiceManager {
     // ----------------------------------- Session Service Setup -----------------------------------
     // Note: this is running in process for convenience but will be an independent service
     // set up the remote Qs for the session service agent
-    const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const sessionEventService = await RemoteQService.newInstance<Event>({ qBroker: qBroker, pubName: 'pub_event' });
     const sessionEventQ: EventQ = new EventQ(sessionEventService);
     const sessionMessageService = await RemoteQService.newInstance<Message>({
-      qBroker,
+      qBroker: qBroker,
       subNames: ['sub_session1_message', 'sub_session_message'],
     });
     const sessionMessageQ: MessageQ = new MessageQ(sessionMessageService);
@@ -193,10 +193,10 @@ class ServiceManager {
     // ----------------------------------- Persistence Agent Setup -----------------------------------
     // Note: this is running in process for convenience but will be an independent service
     // set up the remote Qs for the persistence agent
-    const persistenceEventService = await RemoteQService.newInstance<Event>({ qBroker, pubName: 'pub_event' });
+    const persistenceEventService = await RemoteQService.newInstance<Event>({ qBroker: qBroker, pubName: 'pub_event' });
     const persistenceEventQ: EventQ = new EventQ(persistenceEventService);
     const persistenceMessageService = await RemoteQService.newInstance<Message>({
-      qBroker,
+      qBroker: qBroker,
       subNames: ['sub_persistence_message'],
     });
 
@@ -241,11 +241,15 @@ class ServiceManager {
   //
   // quit on ctrl-c when running docker in terminal
   // shut down server
-  async shutdown() {
+  async shutdown({ exitCode = 0, delay }: { exitCode?: number; delay?: number }): Promise<void> {
+    const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
+    delay = delay ?? engineConfig?.shutdownDelay ?? 0;
+    Logger.info(`Waiting ${delay}ms before shutting down...`);
+    await Timers.wait(delay);
     return this.disconnectAll()
       .then(() => {
-        Logger.info('Shutdown completed successfully.', new Date().toISOString());
-        process.exit(0);
+        Logger.info('Shutdown completed.', new Date().toISOString());
+        process.exit(exitCode);
       })
       .catch((err) => {
         Logger.error(`Shutdown error:`, err);
@@ -254,26 +258,30 @@ class ServiceManager {
   }
 
   async disconnectAll() {
-    // await eventService.deleteAll().catch(Logger.error);
+    const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
     // these disconnect the underlying broker,
     // so we don't have to also disconnect this.messageService
-
     /*
-            Order is important here.
-            1) Finish serving Q messages (if any)
-               The rascal config value 'deferCloseChannel' determines how long
-               to keep the channel open to finish processing messages (that have already been taken)
-            2) Shutdown the Agent so that disconnects can prompt session removals
-            3) Shutdown the storage and persistence connections
-        */
+        Order is important here.
+        1) Stop consuming events from the Q
+        2) Finish processing consumed events and publishing messages
+        3) Stop publishing messages
+        4) Shutdown the storage and persistence connections
+    */
     Logger.info(`Disconnecting RemoteQ broker...`);
     // @TODO
     // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
     // need to set them up for redelivery
-    // these use the same broker so only need to disconnect one queue
-    await this.engineEventService?.disconnect().catch(Logger.error);
+    // stop consuming events
+    Logger.info(`Stopping event consumption...`);
+    await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     Logger.info(`RemoteQ Broker disconnected successfully.`);
-
+    // wait for processing to complete
+    Logger.info(`Waiting ${engineConfig?.eventProcessingWait ?? 2000}ms for event processing to complete...`);
+    await Timers.wait(engineConfig?.eventProcessingWait ?? 2000);
+    // stop publishing messages
+    Logger.info(`Disconnecting RemoteQ...`);
+    await this.engineMessageService?.disconnect().catch(Logger.error);
     Logger.info(`Shutting down session agent...`);
     await this.sessionAgent?.shutdown();
     Logger.info(`Agent shutdown successfully.`);
@@ -304,7 +312,7 @@ process.on('SIGINT', async function onSigint() {
   } else {
     shuttingDown = true;
     Logger.info('Got SIGINT (aka ctrl-c ). Waiting for shutdown...', new Date().toISOString());
-    await serviceManager.shutdown();
+    await serviceManager.shutdown({});
   }
 });
 
@@ -315,7 +323,7 @@ process.on('SIGTERM', async function onSigterm() {
   } else {
     shuttingDown = true;
     Logger.info('Got SIGTERM (docker container stop). Graceful shutdown ', new Date().toISOString());
-    await serviceManager.shutdown();
+    await serviceManager.shutdown({});
   }
 });
 

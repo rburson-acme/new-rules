@@ -54,7 +54,7 @@ export class Engine implements MessageHandler {
   }
 
   public async shutdown(delay: number = 0): Promise<void> {
-    return System.getPROC().shutdown(delay);
+    return System.getPROC().shutdown({ delay });
   }
 
   // @TODO Messages should also be routed to archival service here for failover and latent delivery
@@ -78,27 +78,30 @@ export class Engine implements MessageHandler {
 
   /*
         Begin pulling events from the Q
-        Currently, logic depends on this being on 1 event at a time
-        This could, in the future, be changed to 1 event per Thred at a time
-    */
+        Currently rascal is configured to only deliver 1 message at a time
+        To process multiple events in parallel rascal setting will need to be configured
+        Also the 'await' needs to be removed from the 'processEvent' method
+  */
   private async run() {
-    while (true) {
-      const message: QMessage<Event> = await this.inboundQ.pop();
-      const timestamp = Date.now();
-      try {
-        // handle the event
-        await this.consider(message.payload);
-        // remove the message from the queue
-        await this.inboundQ.delete(message);
-      } catch (e) {
-        error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
-        await this.inboundQ.reject(message, e as Error).catch(error);
-        // update the event with the error
-        await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
-        await this.handleError(e, message.payload);
-        // @TODO figure out on what types of Errors it makes sense to requeue
-        // await this.inboundQ.requeue(message, e).catch(Logger.error);
-      }
+    while (true) await this.processEvent();
+  }
+
+  private async processEvent() {
+    const message: QMessage<Event> = await this.inboundQ.pop();
+    const timestamp = Date.now();
+    try {
+      // handle the event
+      await this.consider(message.payload);
+      // remove the message from the queue
+      await this.inboundQ.delete(message);
+    } catch (e) {
+      error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
+      await this.inboundQ.reject(message, e as Error).catch(error);
+      // update the event with the error
+      await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
+      await this.handleError(e, message.payload);
+      // @TODO figure out on what types of Errors it makes sense to requeue
+      // await this.inboundQ.requeue(message, e).catch(Logger.error);
     }
   }
 

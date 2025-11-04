@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Event, Events, EventValues, Id } from '../../../thredlib/index.js';
-import { EventPublisher } from '../../AgentService.js';
-import { AgentConfig } from '../../../config/AgentConfig.js';
-import { Auth } from '../../../auth/Auth.js';
+import { Event, Events, EventValues, Id } from '../../thredlib/index.js';
+import { EventPublisher } from '../AgentService.js';
+import { AgentConfig } from '../../config/AgentConfig.js';
+import { Auth } from '../../auth/Auth.js';
 
 /**
  * Allows for POSTING of the 'values' payload for an event

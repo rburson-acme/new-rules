@@ -65,7 +65,7 @@ export class SocketService {
     if (!token) return next(new Error('Authentication error: No token'));
     Logger.debug(`session: validation successful for: token ${token}`);
 
-    // @TODO RLS-141 - use basic auth to validate the token here
+    // use auth to validate the token here
     this.auth.validateAccessToken(token).then((payload) => {
       socket.data.participantId = payload.participantId;
       next();

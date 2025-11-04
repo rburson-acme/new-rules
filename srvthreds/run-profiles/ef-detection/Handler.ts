@@ -1,4 +1,4 @@
-import { BootstrapHandler } from '../../src/test/Bootstrapper.js';
+import { BootstrapHandler } from '../../src/ts/tools/bootstrap/Bootstrapper.js';
 import { UserController } from '../../src/ts/persistence/controllers/UserController.js';
 import { PersistenceFactory } from '../../src/ts/persistence/PersistenceFactory.js';
 import { Logger } from '../../src/ts/thredlib/index.js';

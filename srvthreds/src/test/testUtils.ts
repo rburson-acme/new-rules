@@ -23,7 +23,7 @@ import { SessionsConfig } from '../ts/config/SessionsConfig.js';
 import { RascalConfig } from '../ts/config/RascalConfig.js';
 import { ConfigLoader } from '../ts/config/ConfigLoader.js';
 import { SystemController } from '../ts/persistence/controllers/SystemController.js';
-import { run as runBootstrap } from './Bootstrapper.js';
+import { run as runBootstrap } from '../ts/tools/bootstrap/Bootstrapper.js';
 import { ConfigManager } from '../ts/config/ConfigManager.js';
 const sessionAgentConfigDef = {
   name: 'Session Agent',

@@ -2,13 +2,13 @@ import { BasicAuth } from '../../auth/BasicAuth.js';
 import { Event, Logger, Message } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
-import { getHandleLogin, getHandleRefresh } from './http/AuthHandler.js';
-import { getHandleEvent } from './http/EventHandler.js';
+import { getHandleLogin, getHandleRefresh } from '../http/AuthHandler.js';
+import { getHandleEvent } from '../http/EventHandler.js';
 import { HttpService } from '../http/HttpService.js';
 import { SessionService } from './SessionService.js';
 import { SessionServiceListener } from './SessionServiceListener.js';
 import { SocketService } from './SocketService.js';
-import { getHandleEventValues } from './http/EventValuesHandler.js';
+import { getHandleEventValues } from '../http/EventValuesHandler.js';
 import { AuthStorage } from '../../auth/AuthStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
@@ -154,6 +154,7 @@ export class SessionAgent implements MessageHandler {
     channels?.forEach((channel) => {
       this.dispatchers.forEach((dispatcher) => {
         try {
+          // if the channel is a proxy, send the full message so that it can be further routed, otherwise just the event
           channel.isProxy ? dispatcher(message, channel.id) : dispatcher(message.event, channel.id);
         } catch (e) {
           Logger.error(e);

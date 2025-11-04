@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { Logger, LoggerLevel } from '../ts/thredlib/index.js';
+import { Logger, LoggerLevel } from '../../thredlib/index.js';
 import { cleanup, disconnect, run } from './Bootstrapper.js';
 
 /*

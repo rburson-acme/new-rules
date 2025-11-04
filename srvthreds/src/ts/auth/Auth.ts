@@ -5,7 +5,6 @@ export interface AuthResult {
 
 export interface TokenPayload {
   participantId: string;
-  exp?: number;
   jti?: string;
 }
 

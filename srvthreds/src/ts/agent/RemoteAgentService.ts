@@ -16,9 +16,9 @@ import { Adapter } from './adapter/Adapter.js';
 import { RemoteConnectionManager } from './remote/RemoteConnectionManager.js';
 import { HttpService } from './http/HttpService.js';
 import { BasicAuth } from '../auth/BasicAuth.js';
-import { getHandleEventValues } from './session/http/EventValuesHandler.js';
-import { getHandleEvent } from './session/http/EventHandler.js';
-import { getHandleLogin, getHandleRefresh } from './session/http/AuthHandler.js';
+import { getHandleEventValues } from './http/EventValuesHandler.js';
+import { getHandleEvent } from './http/EventHandler.js';
+import { getHandleLogin, getHandleRefresh } from './http/AuthHandler.js';
 import { LocalAuthStorage } from '../auth/LocalAuthStorage.js';
 
 export interface MessageHandler {
@@ -78,7 +78,13 @@ export class RemoteAgentService {
     // note: the config proxy could be used throughout if we need to dynamically reload config
     this.agentConfig = this.params.agentConfig;
     if (!this.agentConfig) throw new Error(`RemoteAgent: no config provided`);
-    BasicAuth.initialize(new LocalAuthStorage());
+    // Get the authToken from the config to connect to the SessionService
+    const authToken = this.agentConfig.authToken;
+    if (!authToken) throw new Error(`RemoteAgent: no auth found in config`);
+    // Get the authorizedTokens from the config to validate incoming requests
+    const authorizedTokens = this.agentConfig.authorizedTokens ? this.agentConfig.authorizedTokens.split(',') : [];
+
+    BasicAuth.initialize(new LocalAuthStorage(authorizedTokens));
     // start local http service for login, event posting, etc.
     this.startHttpService();
     try {
@@ -98,7 +104,7 @@ export class RemoteAgentService {
       await this.handler?.initialize();
       Logger.info(`RemoteAgent.start(): ${this.agentConfig.nodeId} initialized.`);
 
-      //await this.connect('http://localhost:3000', 'remote_agent_auth_token');
+      //await this.connect('http://localhost:3000', authToken);
       await this.connect('http://localhost:3000', 'org.wt.robot');
     } catch (e) {
       Logger.error('RemoteAgent.start(): failed to start the agent', { cause: e });

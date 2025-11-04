@@ -1,7 +1,7 @@
 import { Sessions } from '../sessions/Sessions.js';
 
 export interface Process {
-  shutdown: (delay: number) => Promise<void>;
+  shutdown: ({ delay, exitCode }: { delay?: number; exitCode?: number }) => Promise<void>;
 }
 
 export class System {
