@@ -15,6 +15,50 @@ SrvThreds uses environment variables for all external service connections, makin
 - [Developer Deployment Patterns](./DEVELOPER-DEPLOYMENT-PATTERNS.md) - Common development scenarios
 - [Deployment Guide](./DEPLOYMENT.md) - Production deployment
 
+## Configuration Strategy
+
+SrvThreds uses **different configuration approaches** for different deployment environments to follow best practices for each platform.
+
+### Why Different Approaches?
+
+**Docker Compose**: Uses `.env` files embedded in Docker images
+- ✅ Self-contained and simple
+- ✅ Works without external dependencies
+- ✅ Quick local development
+
+**Kubernetes**: Uses ConfigMaps (no `.env` file)
+- ✅ Kubernetes-native approach
+- ✅ Can change config without rebuilding images
+- ✅ Supports Secrets for sensitive data
+- ✅ Environment-specific overlays via Kustomize
+
+### Configuration Hierarchy
+
+Application reads configuration in this order (last wins):
+
+1. **Defaults in code** (e.g., `DEFAULT_HOST = 'localhost:27017'`)
+2. **`.env` file** (if present in `dist-server/`)
+3. **Environment variables** (from ConfigMap in Kubernetes)
+
+For Kubernetes deployments: Only #1 and #3 apply (no `.env` file)
+
+### Best Practices
+
+#### ✅ DO
+
+- Use `.env` for local Docker Compose development
+- Use ConfigMap for Kubernetes deployments
+- Use Secrets for sensitive data in production
+- Keep environment-specific configs in separate overlay files
+- Document which environment variables are required
+
+#### ❌ DON'T
+
+- Don't mix `.env` files and ConfigMaps in Kubernetes
+- Don't commit `.env` files with real secrets to git
+- Don't hardcode environment-specific values in the Dockerfile
+- Don't use the same configuration for all environments
+
 ## Environment Variable Substitution
 
 All JSON configuration files support environment variable substitution using the syntax:
@@ -28,6 +72,52 @@ ${VARIABLE_NAME||default_value}
 - `${REDIS_HOST}` - Uses `REDIS_HOST` env var, empty string if not set
 
 This substitution is handled automatically by `ConfigLoader.ts` when loading config files.
+
+## How Configuration Works by Environment
+
+### Docker Compose Configuration Flow
+
+**Method**: `.env` file embedded in Docker image
+
+**How it works:**
+1. Build step copies `.env.local.example` → `local/configs/.env`
+2. Dockerfile copies `local/configs/.env` → `dist-server/.env`
+3. Application reads from `dist-server/.env` at runtime
+4. Cleanup step removes `local/configs/.env` after build
+
+**Files:**
+- Source: `infrastructure/local/configs/.env.local.example`
+- Copied to: `dist-server/.env` (inside image)
+- Used by: Docker Compose services
+
+### Kubernetes Configuration Flow
+
+**Method**: ConfigMap (no `.env` file in image)
+
+**How it works:**
+1. Build creates empty `.env` placeholder (satisfies Dockerfile COPY)
+2. ConfigMap created with environment-specific values
+3. ConfigMap injected as environment variables at pod startup
+4. Application reads from `process.env.*` (not from `.env` file)
+
+**Files:**
+- Base: `infrastructure/kubernetes/base/configmap.yaml`
+- Overlays: `infrastructure/kubernetes/overlays/{minikube,dev,prod}/configmap.yaml`
+
+**ConfigMap Structure:**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: srvthreds-config
+  namespace: srvthreds
+data:
+  NODE_ENV: development
+  MONGO_HOST: host.minikube.internal:27017
+  MONGO_DIRECT_CONNECTION: "true"
+  REDIS_HOST: host.minikube.internal:6379
+  RABBITMQ_HOST: rabbitmq:5672
+```
 
 ## Deployment Scenarios
 
@@ -309,6 +399,20 @@ If you're migrating from `network_mode: "host"` to bridge networking:
 3. Update any hardcoded `localhost` references in config files
 4. Test connectivity between services
 
+### Adding New Configuration Variables
+
+#### For Docker Compose
+
+1. Add to `infrastructure/local/configs/.env.local.example`
+2. Rebuild image: `npm run deploymentCli local build_server`
+3. Update docker-compose files if needed
+
+#### For Kubernetes
+
+1. Add to base ConfigMap: `infrastructure/kubernetes/base/configmap.yaml`
+2. Override in environment overlay if needed (e.g., `infrastructure/kubernetes/overlays/minikube/configmap.yaml`)
+3. Apply changes: `kubectl apply -k infrastructure/kubernetes/overlays/minikube/`
+
 ### Adding New Services
 
 When adding a new external service:
@@ -318,6 +422,7 @@ When adding a new external service:
 3. Add default value as fallback
 4. Update this documentation
 5. Update docker-compose files with the new variable
+6. Update Kubernetes ConfigMaps
 
 ## Reference
 
