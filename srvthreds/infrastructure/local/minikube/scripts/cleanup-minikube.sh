@@ -51,9 +51,13 @@ read -p "Stop host databases now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "💾 Stopping host databases..."
-  cd "$(git rev-parse --show-toplevel)" 2>/dev/null || cd ../../../
-  npm run deploymentCli local d_a_dbs 2>/dev/null || echo "⚠️  Could not stop databases via CLI"
-  echo "✓ Databases stopped"
+  cd "$(git rev-parse --show-toplevel)" 2>/dev/null || cd ../../../../
+  if npm run deploymentCli local d_a_dbs 2>/dev/null; then
+    echo "✓ Databases stopped successfully"
+  else
+    echo "⚠️  Could not stop databases via CLI"
+    echo "   You may need to stop them manually: docker compose -f infrastructure/local/docker/compose/docker-compose-db.yml down -v"
+  fi
 else
   echo "⚠️  Databases left running - you may need to manually fix replica set on next startup"
   echo "   To stop databases later: npm run deploymentCli local d_a_dbs"

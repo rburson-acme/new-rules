@@ -10,10 +10,10 @@
 
 You've successfully implemented a **Docker-based local development environment** with a sophisticated deployment CLI:
 
-#### 1. **Deployment CLI** (`infrastructure/deployment/cli.ts`)
+#### 1. **Deployment CLI** (`infrastructure/tools/deployment-cli/cli.ts`)
 - Interactive menu-driven deployment system
-- Supports multiple environments: `local`, `dev`, `test`, `staging`
-- Configuration-driven via modular JSON configs in `configs/deployments/`
+- Supports multiple environments: `local`, `minikube`
+- Configuration-driven via modular JSON configs in `shared/configs/deployments/`
 - Handles pre/post build commands and environment-specific overrides
 
 #### 2. **Container Architecture**
@@ -23,8 +23,8 @@ You've successfully implemented a **Docker-based local development environment**
 - **Bootstrap Container**: Initializes databases with patterns and config
 
 #### 3. **Docker Compose Files**
-- `docker-compose-db.yml`: Database services (MongoDB, Redis, RabbitMQ)
-- `docker-compose-services.yml`: Application services (Engine, Agents)
+- `local/docker/compose/docker-compose-db.yml`: Database services (MongoDB, Redis, RabbitMQ)
+- `local/docker/compose/docker-compose-services.yml`: Application services (Engine, Agents)
 - Separate files allow independent database and service management
 
 #### 4. **Key Features**
@@ -130,38 +130,36 @@ npm run deploymentCli local s_a_dbs
 
 **Directory Structure**:
 ```
-infrastructure/kubernetes/
-├── base/                           # Base manifests (DRY)
-│   ├── namespace.yaml
-│   ├── configmap.yaml
-│   ├── srvthreds-engine.yaml
-│   ├── srvthreds-session-agent.yaml
-│   ├── srvthreds-persistence-agent.yaml
-│   ├── srvthreds-bootstrap-job.yaml
-│   └── rabbitmq.yaml
-├── overlays/
+infrastructure/local/minikube/
+├── manifests/
+│   ├── base/                       # Base manifests (DRY)
+│   │   ├── namespace.yaml
+│   │   ├── configmap.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── srvthreds-engine.yaml
+│   │   ├── srvthreds-session-agent.yaml
+│   │   ├── srvthreds-persistence-agent.yaml
+│   │   └── srvthreds-bootstrap.yaml
 │   ├── minikube/                   # Minikube-specific
 │   │   ├── kustomization.yaml
 │   │   ├── configmap-minikube.yaml
-│   │   └── ingress.yaml
-│   ├── dev/                        # Cloud dev environment
-│   │   ├── kustomization.yaml
-│   │   └── configmap-dev.yaml
-│   ├── staging/                    # Cloud staging
-│   │   ├── kustomization.yaml
-│   │   └── configmap-staging.yaml
-│   └── prod/                       # Cloud production
+│   │   ├── rabbitmq.yaml
+│   │   ├── mongo.yaml
+│   │   └── redis.yaml
+│   └── prod/                       # Production overlay
 │       ├── kustomization.yaml
 │       └── configmap-prod.yaml
 └── scripts/
-    ├── deploy-minikube.sh
-    ├── deploy-cloud.sh
-    └── setup-databases.sh
+    ├── setup-minikube.sh
+    ├── cleanup-minikube.sh
+    ├── reset-minikube.sh
+    ├── validate-minikube.sh
+    └── debug-mongodb.sh
 ```
 
 #### Step 2: Minikube Setup Script
 
-Create `infrastructure/kubernetes/scripts/setup-minikube.sh`:
+Created `infrastructure/local/minikube/scripts/setup-minikube.sh`:
 
 ```bash
 #!/bin/bash
@@ -182,13 +180,13 @@ minikube addons enable dashboard
 eval $(minikube docker-env)
 
 # Build builder image
-docker compose -f infrastructure/local/compose/docker-compose-services.yml build srvthreds-builder
+docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build srvthreds-builder
 
 # 4. Start host databases (if using Docker)
-npm run deploymentCli local s_a_dbs
+npm run deploy-local-databases
 
 # 5. Deploy to Minikube
-kubectl apply -k infrastructure/kubernetes/overlays/minikube/
+kubectl apply -k infrastructure/local/minikube/manifests/minikube/
 
 # 6. Wait for deployment
 kubectl wait --for=condition=available --timeout=300s \
@@ -261,10 +259,10 @@ data:
 9. ✅ MongoDB direct connection mode for host database access
 
 **Key Files Created**:
-- `infrastructure/kubernetes/base/` - Base Kubernetes manifests
-- `infrastructure/kubernetes/overlays/minikube/` - Minikube-specific configs
-- `infrastructure/kubernetes/scripts/setup-minikube.sh` - Setup automation
-- `infrastructure/kubernetes/README.md` - Documentation
+- `infrastructure/local/minikube/manifests/base/` - Base Kubernetes manifests
+- `infrastructure/local/minikube/manifests/minikube/` - Minikube-specific configs
+- `infrastructure/local/minikube/scripts/setup-minikube.sh` - Setup automation
+- `infrastructure/local/minikube/scripts/cleanup-minikube.sh` - Cleanup automation
 
 ### Testing the Minikube Environment
 
@@ -336,39 +334,26 @@ Deploy to **cloud Kubernetes (EKS/GKE/AKS)** with:
 ### Terraform Structure
 
 ```
-infrastructure/terraform/
+infrastructure/cloud/terraform/
+├── bootstrap/              # Azure subscription setup
+│   ├── main.tf
+│   ├── variables.tf
+│   └── README.md
 ├── modules/
 │   ├── eks/
 │   │   ├── main.tf
-│   │   ├── variables.tf
 │   │   └── outputs.tf
 │   ├── networking/
-│   │   ├── main.tf (VPC, Subnets, NAT)
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   ├── mongodb-atlas/
 │   │   ├── main.tf
-│   │   ├── variables.tf
 │   │   └── outputs.tf
-│   └── redis-cloud/
+│   └── mongodb-atlas/
 │       ├── main.tf
 │       ├── variables.tf
 │       └── outputs.tf
 └── environments/
-    ├── dev/
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   ├── terraform.tfvars
-    │   └── outputs.tf
-    ├── staging/
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   ├── terraform.tfvars
-    │   └── outputs.tf
     └── prod/
         ├── main.tf
         ├── variables.tf
-        ├── terraform.tfvars
         └── outputs.tf
 ```
 
@@ -376,16 +361,16 @@ infrastructure/terraform/
 
 ```bash
 # 1. Provision infrastructure
-cd infrastructure/terraform/environments/prod
+cd infrastructure/cloud/terraform/environments/prod
 terraform init
 terraform plan
 terraform apply
 
 # 2. Configure kubectl
-aws eks update-kubeconfig --region us-west-2 --name srvthreds-prod
+az aks get-credentials --resource-group srvthreds-prod --name srvthreds-aks
 
 # 3. Deploy applications
-kubectl apply -k infrastructure/kubernetes/overlays/prod/
+kubectl apply -k infrastructure/local/minikube/manifests/prod/
 
 # 4. Verify deployment
 kubectl get pods -n srvthreds
@@ -425,12 +410,12 @@ kubectl get svc -n srvthreds
 
 ### Recent Improvements (October 2025)
 
-**Configuration Refactoring Complete** ✅:
-- Split monolithic `containerDeploymentConfig.json` (471 lines) into modular structure
-- Created agent-specific configs in `configs/agents/` directory
-- Organized deployments by concern: databases, services, kubernetes, build
-- Added cloud environment templates for future Terraform integration
-- See [REFACTORING-SUMMARY.md](deployment/REFACTORING-SUMMARY.md) for details
+**Infrastructure Reorganization Complete** ✅:
+- Reorganized infrastructure into clear `local/` vs `cloud/` separation
+- Split monolithic `containerDeploymentConfig.json` into modular structure
+- Created agent-specific configs in `local/configs/agents/` directory
+- Organized deployments by concern in `shared/configs/deployments/`
+- Moved deployment CLI to `tools/deployment-cli/`
 
 ---
 

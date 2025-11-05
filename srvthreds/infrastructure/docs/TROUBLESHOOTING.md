@@ -322,7 +322,7 @@ docker update --restart=unless-stopped minikube
 minikube update-context
 
 # 4. Deploy applications
-kubectl apply -k infrastructure/kubernetes/overlays/minikube/
+kubectl apply -k infrastructure/local/minikube/manifests/minikube/
 
 # 5. Wait for pods
 kubectl wait --for=condition=ready --timeout=300s pod -l app.kubernetes.io/part-of=srvthreds -n srvthreds
@@ -403,7 +403,7 @@ docker exec mongo-repl-1 mongosh --quiet --eval "rs.status()"
 docker exec mongo-repl-1 mongosh --quiet --eval "rs.status().members.filter(m => m.stateStr === 'PRIMARY')"
 
 # Re-initialize replica set if needed
-bash infrastructure/local/scripts/setup-repl.sh
+bash infrastructure/local/minikube/scripts/setup-repl.sh
 ```
 
 **MongoDB Won't Start:**
@@ -417,7 +417,7 @@ docker logs mongo-repl-1 --tail=100
 # Remove and recreate
 docker rm -f mongo-repl-1
 npm run deploymentCli -- local s_a_dbs
-bash infrastructure/local/scripts/setup-repl.sh
+bash infrastructure/local/minikube/scripts/setup-repl.sh
 ```
 
 ### Redis Issues
@@ -493,7 +493,7 @@ npm run deploymentCli -- local s_a_dbs
 ps aux | grep -E "kubectl logs -f|bootstrap|minikube-validate"
 
 # Check deployment config
-cat infrastructure/deployment/configs/deployments/kubernetes.json | grep -A5 preBuildCommands
+cat infrastructure/shared/configs/deployments/kubernetes.json | grep -A5 preBuildCommands
 ```
 
 **Cause:**
@@ -644,7 +644,7 @@ docker network prune -f
 
 # 5. Recreate environment
 npm run deploymentCli -- local s_a_dbs
-bash infrastructure/local/scripts/setup-repl.sh
+bash infrastructure/local/minikube/scripts/setup-repl.sh
 npm run bootstrap -- -p ef-detection
 ```
 
@@ -681,7 +681,7 @@ docker rm mongo-repl-1
 npm run deploymentCli -- local s_a_dbs
 
 # 4. Re-initialize replica set
-bash infrastructure/local/scripts/setup-repl.sh
+bash infrastructure/local/minikube/scripts/setup-repl.sh
 
 # 5. Verify
 docker exec mongo-repl-1 mongosh --quiet --eval "rs.status().ok"

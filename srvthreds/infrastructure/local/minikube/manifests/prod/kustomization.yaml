@@ -4,12 +4,12 @@ kind: Kustomization
 namespace: srvthreds
 
 resources:
-- ../../base/namespace.yaml
-- ../../base/configmap.yaml
-- ../../base/srvthreds-bootstrap.yaml
-- ../../base/srvthreds-engine.yaml
-- ../../base/srvthreds-session-agent.yaml
-- ../../base/srvthreds-persistence-agent.yaml
+- ../base/namespace.yaml
+- ../base/configmap.yaml
+- ../base/srvthreds-bootstrap.yaml
+- ../base/srvthreds-engine.yaml
+- ../base/srvthreds-session-agent.yaml
+- ../base/srvthreds-persistence-agent.yaml
 
 images:
 - name: srvthreds

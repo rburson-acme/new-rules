@@ -13,7 +13,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Copy package files from srvthreds
-COPY srvthreds/package*.json ./
+COPY package*.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force

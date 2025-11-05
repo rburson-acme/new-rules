@@ -21,10 +21,10 @@ SrvThreds uses **different configuration approaches** for different deployment e
 - Used by: Docker Compose services
 
 **How it works**:
-1. Build step copies `.env.local.example` → `deployment/assets/.env`
-2. Dockerfile copies `deployment/assets/.env` → `dist-server/.env`
+1. Build step copies `.env.local.example` → `local/configs/.env`
+2. Dockerfile copies `local/configs/.env` → `dist-server/.env`
 3. Application reads from `dist-server/.env`
-4. Cleanup step removes `deployment/assets/.env` after build
+4. Cleanup step removes `local/configs/.env` after build
 
 **Example**:
 ```bash
@@ -44,9 +44,9 @@ npm run deploymentCli local s_a_s
 - ✅ Environment-specific overlays via Kustomize
 
 **Files**:
-- Base: `infrastructure/kubernetes/base/configmap.yaml`
-- Minikube overlay: `infrastructure/kubernetes/overlays/minikube/configmap-minikube.yaml`
-- Production overlay: `infrastructure/kubernetes/overlays/prod/configmap-prod.yaml`
+- Base: `infrastructure/local/minikube/manifests/base/configmap.yaml`
+- Minikube overlay: `infrastructure/local/minikube/manifests/minikube/configmap-minikube.yaml`
+- Production overlay: `infrastructure/local/minikube/manifests/prod/configmap-prod.yaml`
 
 **How it works**:
 1. Build creates empty `.env` placeholder (satisfies Dockerfile COPY)
@@ -69,7 +69,7 @@ data:
 
 **Example Deployment**:
 ```bash
-npm run deploymentCli minikube k8s_minikube
+npm run minikube-create
 ```
 
 ---
@@ -114,9 +114,9 @@ For Kubernetes: Only #1 and #3 apply (no `.env` file)
 
 ### For Kubernetes
 
-1. Add to base ConfigMap: `infrastructure/kubernetes/base/configmap.yaml`
-2. Override in environment overlay if needed (e.g., `overlays/minikube/configmap-minikube.yaml`)
-3. Apply: `npm run deploymentCli minikube k8s_apply`
+1. Add to base ConfigMap: `infrastructure/local/minikube/manifests/base/configmap.yaml`
+2. Override in environment overlay if needed (e.g., `manifests/minikube/configmap-minikube.yaml`)
+3. Apply: `npm run minikube-apply`
 
 ---
 

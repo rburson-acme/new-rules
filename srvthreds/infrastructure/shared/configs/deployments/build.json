@@ -18,13 +18,13 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/local/configs/ -mindepth 1 -delete"
               }
             ]
           },
@@ -32,13 +32,13 @@
             "preBuildCommands": [
               {
                 "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
-                "command": "touch ./infrastructure/deployment/assets/.env"
+                "command": "touch ./infrastructure/tools/deployment-cli/assets/.env"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }

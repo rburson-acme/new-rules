@@ -292,7 +292,7 @@ kubectl exec -it <pod-name> -- env | grep -E "MONGO|REDIS|RABBITMQ"
 **Solution:** MongoDB needs to be initialized as a replica set:
 ```bash
 # Run the setup script
-./infrastructure/local/scripts/setup-repl.sh
+./infrastructure/local/minikube/scripts/setup-repl.sh
 
 # Or manually
 docker exec mongo-repl-1 mongosh "mongodb://localhost:27017" --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo-repl-1:27017' }] })"

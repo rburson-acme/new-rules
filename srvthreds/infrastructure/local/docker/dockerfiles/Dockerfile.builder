@@ -24,7 +24,7 @@ COPY run-profiles/ ./dist-server/run-profiles/
 RUN echo "--- Files under dist-server run-profiles directory ---" && ls -aF ./dist-server/run-profiles/
 
 # Copy env file from assets directory
-COPY infrastructure/deployment/assets/*.* ./dist-server/
+COPY infrastructure/tools/deployment-cli/assets/*.* ./dist-server/
 RUN echo "--- Files under dist-server ---" && ls -aF ./dist-server/
 RUN cat ./dist-server/.env
 

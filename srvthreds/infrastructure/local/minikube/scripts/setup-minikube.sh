@@ -83,7 +83,7 @@ RS_HEALTHY=$(docker exec mongo-repl-1 mongosh --quiet --eval "
 if [ "$RS_HEALTHY" != "1" ]; then
   echo "⚠️  MongoDB replica set needs initialization or repair"
   echo "🔧 Running replica set setup script..."
-  bash infrastructure/local/scripts/setup-repl.sh
+  bash infrastructure/local/docker/scripts/setup-repl.sh
 
   # Verify it's now healthy
   RS_HEALTHY=$(docker exec mongo-repl-1 mongosh --quiet --eval "
@@ -112,7 +112,7 @@ fi
 
 # 6. Deploy to Minikube
 echo "☸️  Deploying to Minikube..."
-kubectl apply -k infrastructure/kubernetes/overlays/minikube/
+kubectl apply -k infrastructure/local/minikube/manifests/minikube/
 
 # 7. Wait for deployment
 echo "⏳ Waiting for deployments to be ready..."
