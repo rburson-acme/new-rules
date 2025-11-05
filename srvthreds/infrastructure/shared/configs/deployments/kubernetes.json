@@ -10,7 +10,7 @@
       "target": {
         "type": "sh",
         "composing": "kubernetes",
-        "deployCommand": "infrastructure/kubernetes/scripts/setup-minikube.sh"
+        "deployCommand": "infrastructure/local/minikube/scripts/setup-minikube.sh"
       }
     },
     {
@@ -23,7 +23,7 @@
       "target": {
         "type": "sh",
         "composing": "kubernetes",
-        "deployCommand": "infrastructure/kubernetes/scripts/validate-minikube.sh",
+        "deployCommand": "infrastructure/local/minikube/scripts/validate-minikube.sh",
         "preBuildCommands": [
           {
             "description": "Get running pods and recent logs for engine service...",
@@ -43,11 +43,11 @@
         "type": "kubectl",
         "composing": "kubernetes",
         "deployCommand": "apply",
-        "defaultArgs": "-k infrastructure/kubernetes/overlays/minikube/",
+        "defaultArgs": "-k infrastructure/local/minikube/manifests/minikube/",
         "preBuildCommands": [
           {
             "description": "Switching kubectl context to Minikube...",
-            "command": "infrastructure/kubernetes/scripts/switch-to-minikube.sh"
+            "command": "infrastructure/local/minikube/scripts/switch-to-minikube.sh"
           }
         ]
       }
@@ -62,7 +62,7 @@
       "target": {
         "type": "sh",
         "composing": "kubernetes",
-         "deployCommand": "infrastructure/kubernetes/scripts/switch-to-minikube.sh"
+         "deployCommand": "infrastructure/local/minikube/scripts/switch-to-minikube.sh"
       }
     },
     {
@@ -75,7 +75,7 @@
       "target": {
         "type": "sh",
         "composing": "kubernetes",
-        "deployCommand": "infrastructure/kubernetes/scripts/reset-minikube.sh"
+        "deployCommand": "infrastructure/local/minikube/scripts/reset-minikube.sh"
       }
     },
     {
@@ -88,7 +88,7 @@
       "target": {
         "type": "sh",
         "composing": "kubernetes",
-        "deployCommand": "infrastructure/kubernetes/scripts/cleanup-minikube.sh"
+        "deployCommand": "infrastructure/local/minikube/scripts/cleanup-minikube.sh"
       }
     }
   ]

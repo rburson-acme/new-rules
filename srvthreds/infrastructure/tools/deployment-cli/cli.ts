@@ -8,8 +8,8 @@ import { executeDockerComposeDeployment, executeDockerComposeDeployments, execut
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const configsDir = path.join(__dirname, 'configs', 'deployments');
-const legacyConfigPath = path.join(__dirname, 'configs', 'containerDeploymentConfig.json');
+const configsDir = path.join(__dirname, '..', '..', 'shared', 'configs', 'deployments');
+const legacyConfigPath = path.join(__dirname, '..', '..', 'shared', 'configs', 'containerDeploymentConfig.json');
 
 export type DeploymentType = 'docker-compose' | 'sh' | 'kubectl';
 

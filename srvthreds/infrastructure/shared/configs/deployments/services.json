@@ -17,7 +17,7 @@
         "preBuildCommands": [
           {
             "description": "Building base builder image (uses cache if available)...",
-            "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build srvthreds-builder"
+            "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build srvthreds-builder"
           }
         ],
         "environmentOverrides": {
@@ -25,21 +25,21 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Log out assets pushed to deployment assets folder",
-                "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/deployment/assets/ && cat ./infrastructure/deployment/assets/.env"
+                "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Building production-optimized builder image...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }
@@ -78,7 +78,7 @@
             "postUpCommands": [
               {
                 "description": "Setting up MongoDB replica set...",
-                "command": "chmod +x ./infrastructure/local/scripts/setup-repl.sh && ./infrastructure/local/scripts/setup-repl.sh"
+                "command": "chmod +x ./infrastructure/local/docker/scripts/setup-repl.sh && ./infrastructure/local/docker/scripts/setup-repl.sh"
               }
             ]
           },
@@ -88,7 +88,7 @@
             "preBuildCommands": [
               {
                 "description": "Building base builder image (uses cache if available)...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
               }
             ],
             "environmentOverrides": {
@@ -96,21 +96,21 @@
                 "preBuildCommands": [
                   {
                     "description": "Copy environment config into assets folder for delivery.",
-                    "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                    "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
                   },
                   {
                     "description": "Log out assets pushed to deployment assets folder",
-                    "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/deployment/assets/ && cat ./infrastructure/deployment/assets/.env"
+                    "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
                   },
                   {
                     "description": "Building production-optimized builder image...",
-                    "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+                    "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
                   }
                 ],
                 "postUpCommands": [
                   {
                     "description": "Cleanup deployment assets directory",
-                    "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                    "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
                   }
                 ]
               }
@@ -159,17 +159,17 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Building production-optimized builder image...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }
@@ -209,17 +209,17 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Building production-optimized builder image...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }
@@ -259,17 +259,17 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/deployment/assets/.env"
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Building production-optimized builder image...",
-                "command": "docker compose -f infrastructure/local/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+                "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/deployment/assets/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }
