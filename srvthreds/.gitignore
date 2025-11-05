@@ -67,4 +67,25 @@ web-build/
 
 .roomodes
 .env*
+
+# Infrastructure runtime data
+infrastructure/local/compose/.docker/
+infrastructure/deployment/assets/
+
+# Terraform
+**/.terraform/*
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
 env/

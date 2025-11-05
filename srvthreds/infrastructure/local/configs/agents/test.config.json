@@ -1,0 +1,20 @@
+{
+  "name": "Test Execution",
+  "description": "Execute test to verify environment setup.",
+  "command": {
+    "entrypoint": "npm",
+    "args": ["run", "test"]
+  },
+  "ports": {},
+  "resources": {
+    "memory": {
+      "request": "256Mi",
+      "limit": "512Mi"
+    },
+    "cpu": {
+      "request": "100m",
+      "limit": "300m"
+    }
+  },
+  "runOnce": true
+}

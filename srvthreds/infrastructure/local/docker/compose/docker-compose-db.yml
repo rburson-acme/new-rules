@@ -1,0 +1,116 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: redis-server --save 20 1 --loglevel warning --notify-keyspace-events KA
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - srvthreds-net
+    volumes:
+     - ./.docker/redis-data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    volumes:
+        - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    networks:
+      - srvthreds-net
+    ports:
+        - 5672:5672
+        - 15672:15672
+
+  mongo-repl-1:
+    image: mongo:latest
+    container_name: mongo-repl-1
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    environment:
+      MONGO_INITDB_DATABASE: admin
+    ports:
+      - 27017:27017
+    networks:
+      - srvthreds-net
+    # volumes:
+    #   - ~/.docker/mongodb/data/db:/data/db
+      # - ./.docker/scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      # test: echo 'db.runCommand("ping").ok' | mongosh mongo-repl-1:27017/admin --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # mongo-repl-2:
+  #   image: mongo:latest
+  #   container_name: mongo-repl-2
+  #   restart: always
+  #   command: mongod --replSet rs0 --bind_ip_all
+  #   networks:
+  #     - storage-net
+  #   # volumes:
+  #   #   - mongo-data-2:/data/db # Use different volume paths
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh --host mongo-repl-2:27017/admin --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 30s
+
+  # mongo-repl-3:
+  #   image: mongo:latest
+  #   container_name: mongo-repl-3
+  #   restart: always
+  #   command: mongod --replSet rs0 --bind_ip_all
+  #   networks:
+  #     - storage-net
+  #   # volumes:
+  #   #   - mongo-data-3:/data/db # Use different volume paths
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh --host mongo-repl-3:27017/admin --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 30s
+
+  # mongo-setup:
+  #   image: mongo:latest
+  #   container_name: mongo-setup
+  #   depends_on:
+  #     mongo-repl-1:
+  #       condition: service_healthy
+  #     # mongo-repl-2:
+  #     #   condition: service_started
+  #     # mongo-repl-3:
+  #     #   condition: service_started
+  #   # networks:
+  #   #   - storage-net
+  #   volumes:
+  #     - ./scripts/setup-repl.sh:/scripts/setup-repl.sh
+  #   command: sh -c "chmod +x /scripts/setup-repl.sh && /scripts/setup-repl.sh"
+
+networks:
+  srvthreds-net:
+    driver: bridge
+    name: srvthreds-net
+
+# volumes:
+#   mongo-data-2:
+#   mongo-data-3:
+  # nginx-session:
+  #   # running in host mode because we're not running the node server in a container for demo purposes...
+  #   network_mode: host
+  #   container_name: nginx-session
+  #   hostname: nginx-session
+  #   image: nginx:latest
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   volumes:
+  #     - ./.docker/config/nginx-session:/etc/nginx
+  #     - ./.docker/config/ssl:/etc/ssl

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: srvthreds-config
+  namespace: srvthreds
+data:
+  NODE_ENV: development
+  MONGO_HOST: localhost:27017
+  REDIS_HOST: localhost:6379
+  RABBITMQ_HOST: localhost:5672
+  LOG_LEVEL: INFO
