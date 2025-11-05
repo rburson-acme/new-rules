@@ -1,0 +1,101 @@
+{
+  "$schema": "../../../node_modules/rascal/lib/config/schema.json",
+  "vhosts": {
+    "/": {
+      "connection": {
+        "url": "amqp://guest:guest@localhost"
+      },
+      "exchanges": {
+        "event-exchange": {
+          "assert": true,
+          "type": "topic"
+        },
+        "message-exchange": {
+          "assert": true,
+          "type": "topic"
+        },
+        "x-event-dead-letter": {
+          "assert": true,
+          "type": "topic"
+        },
+        "x-message-dead-letter": {
+          "assert": true,
+          "type": "topic"
+        }
+      },
+      "queues": {
+        "event-queue": {
+          "assert": true,
+          "options": {
+            "deadLetter": "x-event-dead-letter"
+          }
+        },
+        "session1-message-queue": {
+          "assert": true,
+          "options": {
+            "deadLetter": "x-message-dead-letter"
+          }
+        },
+        "session-message-queue": {
+          "assert": true,
+          "options": {
+            "deadLetter": "x-message-dead-letter"
+          }
+        },
+        "persistence-message-queue": {
+          "assert": true
+        },
+        "robot-message-queue": {
+          "assert": true
+        },
+        "x-dead-letter-event-queue": {
+          "assert": true
+        },
+        "x-dead-letter-message-queue": {
+          "assert": true
+        }
+      },
+      "bindings": [
+        "event-exchange[#] -> event-queue",
+        "message-exchange[org.wt.session1] -> session1-message-queue",
+        "message-exchange[org.wt.session] -> session-message-queue",
+        "message-exchange[org.wt.persistence] -> persistence-message-queue",
+        "message-exchange[org.wt.robot] -> robot-message-queue",
+        "x-event-dead-letter[#] -> x-dead-letter-event-queue",
+        "x-message-dead-letter[#] -> x-dead-letter-message-queue"
+      ],
+      "publications": {
+        "pub_event": {
+          "exchange": "event-exchange",
+          "routingKey": ""
+        },
+        "pub_message": {
+          "exchange": "message-exchange",
+          "routingKey": ""
+        }
+      },
+      "subscriptions": {
+        "sub_event": {
+          "queue": "event-queue",
+          "prefetch": 1
+        },
+        "sub_session1_message": {
+          "queue": "session1-message-queue",
+          "prefetch": 1
+        },
+        "sub_session_message": {
+          "queue": "session-message-queue",
+          "prefetch": 1
+        },
+        "sub_persistence_message": {
+          "queue": "persistence-message-queue",
+          "prefetch": 1
+        },
+        "sub_robot_message": {
+          "queue": "robot-message-queue",
+          "prefetch": 1
+        }
+      }
+    }
+  }
+}

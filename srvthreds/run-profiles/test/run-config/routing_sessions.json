@@ -1,0 +1,16 @@
+{
+  "nodeId": "org.wt.session1",
+  "groups": [
+    {
+      "name": "technicians",
+      "participants": [
+        {
+          "participantId": "pat"
+        },
+        {
+          "participantId": "rob"
+        }
+      ]
+    }
+  ]
+}

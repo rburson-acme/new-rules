@@ -5,7 +5,7 @@
       "nodeType": "org.wt.session",
       "nodeId": "org.wt.session1",
       "configName": "session_agent",
-      "internal": true
+      "hidden": true
     },
     {
       "name": "Persistence Agent",

@@ -5,6 +5,10 @@ import { PatternsStore } from '../engine/store/PatternsStore.js';
 import { Storage } from '../storage/Storage.js';
 import { Logger, Series } from '../thredlib/index.js';
 
+/*
+ This class loads but does not cache configuration files.  See ConfigManager for caching configs.
+  */
+
 export class ConfigLoader {
   static async loadStorageFromPersistence(persistenceManager: SystemController, storage: Storage): Promise<void> {
     const patternModels = await persistenceManager.getAllActivePatterns();
@@ -19,9 +23,7 @@ export class ConfigLoader {
       const configName = file.substring(0, file.indexOf('.json'));
       const filePath = path.join(directory, file);
       const fileContents = fs.readFileSync(filePath, 'utf-8');
-      // Substitute environment variables before parsing
-      const substitutedContents = ConfigLoader.substituteEnvVars(fileContents);
-      const jsonData = JSON.parse(substitutedContents);
+      const jsonData = JSON.parse(fileContents);
       Logger.info(`Persisting config ${configName} from ${filePath}`);
       return persistenceManager.upsertConfig(configName, jsonData);
     });
@@ -40,7 +42,7 @@ export class ConfigLoader {
       return ConfigLoader.loadConfigFileFromPath(configPath);
     } else {
       if (configName) {
-        return SystemController.get().getConfig(configName);
+        return this.substituteEnvVarsForObject(await SystemController.get().getConfig(configName));
       }
     }
   }
@@ -78,5 +80,19 @@ export class ConfigLoader {
       const [varName, defaultValue] = varExpr.split('||').map((s: string) => s.trim());
       return process.env[varName] || defaultValue || '';
     });
+  }
+
+  /**
+   * Recursively substitute environment variables in an object.
+   */
+  private static substituteEnvVarsForObject(obj: any): any {
+    if (typeof obj === 'string') {
+      return ConfigLoader.substituteEnvVars(obj);
+    } else if (typeof obj === 'object') {
+      for (const key in obj) {
+        obj[key] = ConfigLoader.substituteEnvVarsForObject(obj[key]);
+      }
+    }
+    return obj;
   }
 }

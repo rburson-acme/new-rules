@@ -422,6 +422,9 @@
     "MapLocation": {
       "additionalProperties": false,
       "properties": {
+        "display": {
+          "type": "string"
+        },
         "latitude": {
           "type": "string"
         },

@@ -13,11 +13,11 @@ export class Sessions {
   private addressResolver: AddressResolver;
 
   constructor(
-    private resolverConfig: ResolverConfig,
-    private sessionsConfig: SessionsConfig,
     private storage: SessionStorage,
+    resolverConfig?: ResolverConfig,
+    sessionsConfig?: SessionsConfig,
   ) {
-    this.addressResolver = new AddressResolver(resolverConfig, sessionsConfig, storage);
+    this.addressResolver = new AddressResolver(storage, resolverConfig, sessionsConfig);
   }
 
   getAddressResolver(): AddressResolver {

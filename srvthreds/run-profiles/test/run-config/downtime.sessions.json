@@ -1,0 +1,30 @@
+{
+  "nodeId": "org.wt.session1",
+  "groups": [
+    {
+      "name": "operators",
+      "participants": [
+        {
+          "participantId": "bOompa"
+        },
+        {
+          "participantId": "cBucket"
+        }
+      ]
+    },
+    {
+      "name": "technicians",
+      "participants": [
+        {
+          "participantId": "lLoompa"
+        },
+        {
+          "participantId": "vSalt"
+        },
+        {
+          "participantId": "cBucket"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,19 @@
+/**
+ * Caches configuration instances for different configuration types within the application.
+ *
+ * This class implements the singleton pattern to ensure a single instance is used throughout the app.
+ * It provides methods to load, update, and retrieve configuration objects, supporting dynamic reloading.
+ *
+ * @remarks
+ * - Use {@link ConfigManager.get} to obtain the singleton instance.
+ * - Configurations are stored and accessed by their {@link ConfigType}.
+ *
+ * @example
+ * ```typescript
+ * const configManager = ConfigManager.get();
+ * const engineConfig = configManager.getConfig<EngineConfig>('engine-config');
+ * ```
+ */
 import { Config } from './Config.js';
 import { ConfigLoader } from './ConfigLoader.js';
 
@@ -34,8 +50,12 @@ export class ConfigManager {
     return config;
   }
 
-  getConfig<T>(type: ConfigType): T {
+  getConfig<T extends Config<any>>(type: ConfigType): T {
     return this.configs[type] as T;
+  }
+
+  unloadAll() {
+    this.configs = {} as Record<ConfigType, Config<any>>;
   }
 }
 

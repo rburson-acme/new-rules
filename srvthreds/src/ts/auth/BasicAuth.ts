@@ -27,7 +27,6 @@ export class BasicAuth implements Auth {
     return BasicAuth.instance;
   }
 
-  // @TODO RLS-141 - generate a signed token and encode participantId
   async login(participantId: string, password: string): Promise<AuthResult> {
     const user = await UserController.get().getUserByHandle(participantId);
     if (!user) {
@@ -58,7 +57,7 @@ export class BasicAuth implements Auth {
 
   async refresh(refreshToken: string): Promise<{ accessToken: string; expires: number }> {
     try {
-      const { participantId, jti, exp } = await this.decodeAndVerifyRefreshToken(refreshToken);
+      const { participantId, jti } = await this.decodeAndVerifyRefreshToken(refreshToken);
       if (await this.isKnownRefreshToken(jti!, participantId)) {
         throw new Error('Refresh token does not match participant or has been revoked');
       }
@@ -75,7 +74,7 @@ export class BasicAuth implements Auth {
 
   async logout(refreshToken: string): Promise<void> {
     try {
-      const { participantId, jti, exp } = await this.decodeAndVerifyRefreshToken(refreshToken);
+      const { participantId, jti } = await this.decodeAndVerifyRefreshToken(refreshToken);
       await this.revokeRefreshToken(jti!, participantId);
     } catch (err: any) {
       if (err.name === 'TokenExpiredError') {

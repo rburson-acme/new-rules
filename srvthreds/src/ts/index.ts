@@ -77,7 +77,7 @@ try {
   });
 } catch (error) {
   Logger.error('Failed to start Engine Service Manager:', error);
-  await serviceManager.shutdown(1);
+  await serviceManager.shutdown({ exitCode: 1 });
 }
 
 /***
@@ -96,7 +96,7 @@ process.on('SIGINT', async function onSigint() {
   } else {
     shuttingDown = true;
     Logger.info('Got SIGINT (aka ctrl-c ). Waiting for shutdown...', new Date().toISOString());
-    await serviceManager.shutdown();
+    await serviceManager.shutdown({});
   }
 });
 
@@ -107,6 +107,6 @@ process.on('SIGTERM', async function onSigterm() {
   } else {
     shuttingDown = true;
     Logger.info('Got SIGTERM (docker container stop). Graceful shutdown ', new Date().toISOString());
-    await serviceManager.shutdown();
+    await serviceManager.shutdown({});
   }
 });

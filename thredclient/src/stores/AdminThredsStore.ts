@@ -1,4 +1,4 @@
-import { SystemEvents, EventHelper, Thred } from 'thredlib';
+import { SystemEvents, EventHelper, Thred, Event, EventManager, Events } from 'thredlib';
 import { RootStore } from './RootStore';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { AdminThredStore } from './AdminThredStore';
@@ -9,6 +9,8 @@ export class AdminThredsStore {
   searchText: string = '';
   isComplete: boolean = false;
   tab: ValidTabs = 'active';
+  private watchThredsEventId: string | null = null;
+  private watchUnsubscribe: (() => void) | null = null;
 
   constructor(readonly rootStore: RootStore) {
     makeObservable(this, {
@@ -27,6 +29,68 @@ export class AdminThredsStore {
 
   removeThred(thredId: string) {
     this.threds = this.threds.filter(thred => thred.thred.id !== thredId);
+  }
+
+  addThred(thred: Thred) {
+    const adminThredStore = new AdminThredStore(thred, this.rootStore);
+    this.threds = [...this.threds, adminThredStore];
+    return adminThredStore;
+  }
+
+  attachEventToThred(thredId: string, event: Event) {
+    const adminThredStore = this.threds.find(thred => thred.thred.id === thredId);
+    if (adminThredStore) {
+      adminThredStore.events = [...adminThredStore.events, event as any];
+    }
+  }
+
+  watchThreds() {
+    const userId = this.rootStore.authStore.userId;
+    if (!userId) throw Error('userId not found');
+    const watchThredsEvent = SystemEvents.getWatchThredsEvent({ id: userId, name: userId }, 'start');
+    this.watchThredsEventId = watchThredsEvent.id;
+    this.rootStore.connectionStore.publish(watchThredsEvent);
+    // Subscribe to watch threds events with filter for the watch event ID
+    this.watchUnsubscribe = this.rootStore.connectionStore.subscribeToWatchThreds(
+      this.handleWatchThredsEvent,
+      watchThredsEvent.id,
+    );
+  }
+
+  private handleWatchThredsEvent = (event: Event) => {
+    const values = event.data?.content?.values as Record<string, any>;
+    const threds = values.threds as Thred[];
+    if (!threds) return;
+    const thred = threds[0];
+    //does thred already exist?
+    const adminThredStore = this.threds.find(thredStore => thredStore.thred.id === thred.id);
+    if (adminThredStore) {
+      //remove from store
+      this.removeThred(thred.id);
+      this.addThred(thred);
+    } else {
+      this.addThred(thred);
+    }
+  };
+
+  renewWatchThreds() {
+    const userId = this.rootStore.authStore.userId;
+    if (!userId) throw Error('userId not found');
+    const watchThredsEvent = SystemEvents.getWatchThredsEvent({ id: userId, name: userId }, 'renew');
+    this.rootStore.connectionStore.publish(watchThredsEvent);
+  }
+
+  stopWatchThreds() {
+    const userId = this.rootStore.authStore.userId;
+    if (!userId) throw Error('userId not found');
+    const stopWatchThredsEvent = SystemEvents.getWatchThredsEvent({ id: userId, name: userId }, 'stop');
+    this.rootStore.connectionStore.publish(stopWatchThredsEvent);
+
+    // Clean up subscription
+    if (this.watchUnsubscribe) {
+      this.watchUnsubscribe();
+      this.watchUnsubscribe = null;
+    }
   }
 
   terminateAllThreds() {

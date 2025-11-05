@@ -6,7 +6,7 @@ import { RemoteQService } from './queue/remote/RemoteQService.js';
 import { Sessions } from './sessions/Sessions.js';
 import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
-import { Event, Logger, Message, PatternModel, SessionsModel } from './thredlib/index.js';
+import { Event, Logger, Message, PatternModel, SessionsModel, Timers } from './thredlib/index.js';
 import { SystemController } from './persistence/controllers/SystemController.js';
 import { System } from './engine/System.js';
 import { PubSubFactory } from './pubsub/PubSubFactory.js';
@@ -30,6 +30,9 @@ import { RascalConfig } from './config/RascalConfig.js';
 export class EngineServiceManager {
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
+
+  private static DEFAULT_SHUTDOWN_DELAY = 0;
+  private static DEFAULT_EVENT_PROCESSING_WAIT = 3000;
 
   constructor() {}
 
@@ -73,7 +76,7 @@ export class EngineServiceManager {
       throw new Error(
         `Failed to load Rascal config from configName: ${rascalConfigName} or configPath: ${rascalConfigPath}`,
       );
-    const qBroker = new RemoteQBroker(rascalConfig);
+    const qBroker = new RemoteQBroker();
     // connect to persistence
     await SystemController.get().connect();
 
@@ -99,13 +102,19 @@ export class EngineServiceManager {
       throw new Error(
         `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
       );
-    const sessions = new Sessions(resolverConfig, sessionsConfig, new SessionStorage(StorageFactory.getStorage()));
+    const sessions = new Sessions(new SessionStorage(StorageFactory.getStorage()));
     System.initialize(sessions, { shutdown: this.shutdown.bind(this) });
 
     // set up the remote Qs for the engine
-    this.engineEventService = await RemoteQService.newInstance<Event>({ qBroker, subNames: ['sub_event'] });
+    this.engineEventService = await RemoteQService.newInstance<Event>({
+      qBroker: qBroker,
+      subNames: ['sub_event'],
+    });
     const engineEventQ: EventQ = new EventQ(this.engineEventService);
-    this.engineMessageService = await RemoteQService.newInstance<Message>({ qBroker, pubName: 'pub_message' });
+    this.engineMessageService = await RemoteQService.newInstance<Message>({
+      qBroker: qBroker,
+      pubName: 'pub_message',
+    });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
     //  setup the engine server
     const engineServer = new Server(engineEventQ, engineMessageQ);
@@ -124,7 +133,11 @@ export class EngineServiceManager {
   //
   // quit on ctrl-c when running docker in terminal
   // shut down server
-  async shutdown(exitCode = 0): Promise<void> {
+  async shutdown({ exitCode = 0, delay }: { exitCode?: number; delay?: number }): Promise<void> {
+    const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
+    delay = delay ?? engineConfig?.shutdownDelay ?? EngineServiceManager.DEFAULT_SHUTDOWN_DELAY;
+    Logger.info(`Waiting ${delay}ms before shutting down...`);
+    await Timers.wait(delay);
     return this.disconnectAll()
       .then(() => {
         Logger.info('Shutdown completed.', new Date().toISOString());
@@ -137,25 +150,32 @@ export class EngineServiceManager {
   }
 
   async disconnectAll() {
-    // await eventService.deleteAll().catch(Logger.error);
+    const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
     // these disconnect the underlying broker,
     // so we don't have to also disconnect this.messageService
-
     /*
-            Order is important here.
-            1) Finish serving Q messages (if any)
-               The rascal config value 'deferCloseChannel' determines how long
-               to keep the channel open to finish processing messages (that have already been taken)
-            3) Shutdown the storage and persistence connections
-        */
+        Order is important here.
+        1) Stop consuming events from the Q
+        2) Finish processing consumed events and publishing messages
+        3) Stop publishing messages
+        4) Shutdown the storage and persistence connections
+    */
     Logger.info(`Disconnecting RemoteQ broker...`);
     // @TODO
     // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
     // need to set them up for redelivery
-    // these use the same broker so only need to disconnect one queue
-    await this.engineEventService?.disconnect().catch(Logger.error);
-    Logger.info(`RemoteQ Broker disconnected successfully.`);
 
+    // stop consuming events
+    Logger.info(`Stopping event consumption...`);
+    await this.engineEventService?.unsubscribeAll().catch(Logger.error);
+    // wait for processing to complete
+    const eventProcessingWait = engineConfig?.eventProcessingWait ?? EngineServiceManager.DEFAULT_EVENT_PROCESSING_WAIT;
+    Logger.info(`Waiting ${eventProcessingWait}ms for event processing to complete...`);
+    await Timers.wait(eventProcessingWait);
+    // Disconnect the q broker
+    Logger.info(`Disconnecting RemoteQ...`);
+    await this.engineMessageService?.disconnect().catch(Logger.error);
+    Logger.info(`RemoteQ Broker disconnected successfully.`);
     Logger.info(`Disconnecting PersistenceManager..`);
     await SystemController.get().disconnect();
     Logger.info(`Disconnecting all Storage connections...`);

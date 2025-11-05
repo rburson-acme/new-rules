@@ -1,0 +1,40 @@
+{
+    "name": "McQ Unattended Ground Sensor",
+    "description": "Ground sensor for detecting presence and movement of entities",
+    "entitySpecs": [
+        {
+            "type": "DetectedEntity",
+            "description": "Data describing an entity detected by the sensor.",
+            "propertySpecs": [
+                {
+                    "name": "sensorId",
+                    "description": "Unique identifier for the sensor",
+                    "type": "string"
+                },
+                {
+                    "name": "latitude",
+                    "description": "Latitude of the detected entity's current location.",
+                    "type": "string"
+                },
+                {
+                    "name": "longitude",
+                    "description": "Longitude of the detected entity's current location.",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "inputSpecs": [],
+    "outputSpecs": [
+        {
+            "eventType": "org.cmi2.sensor.detectionEvent",
+            "description": "Notifications sent by the sensor.",
+            "eventContentType": "values",
+            "eventContentSpecs": [
+                {
+                    "targetTypeName": "DetectedEntity"
+                }
+            ]
+        }
+    ]
+}

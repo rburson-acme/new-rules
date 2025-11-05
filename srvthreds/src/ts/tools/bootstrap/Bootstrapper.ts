@@ -4,13 +4,11 @@ import { hideBin } from 'yargs/helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { SystemController } from '../ts/persistence/controllers/SystemController.js';
-import { Logger, LoggerLevel, Series } from '../ts/thredlib/index.js';
-import { ConfigLoader } from '../ts/config/ConfigLoader.js';
-import { StorageFactory } from '../ts/storage/StorageFactory.js';
-import { PersistenceFactory } from '../ts/persistence/PersistenceFactory.js';
-
-Logger.setLevel(LoggerLevel.DEBUG);
+import { SystemController } from '../../persistence/controllers/SystemController.js';
+import { Logger, LoggerLevel, Series } from '../../thredlib/index.js';
+import { ConfigLoader } from '../../config/ConfigLoader.js';
+import { StorageFactory } from '../../storage/StorageFactory.js';
+import { PersistenceFactory } from '../../persistence/PersistenceFactory.js';
 
 export interface BootstrapHandler {
   run(): Promise<void>;
@@ -53,24 +51,25 @@ async function loadPatternsIntoStorage() {
 
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)
 
-async function run(profile: string) {
+export async function run(profile: string) {
+  const profileDirectory = path.join(__dirname, `../../../../run-profiles/${profile}`);
   Logger.info('  > Clearing database and storage...');
   await PersistenceFactory.removeDatabase();
   await StorageFactory.purgeAll();
 
   // load the supplied handler
   Logger.info(`  > Initializing Handler from run-profiles/${profile}/Handler.js...`);
-  const handler = await getHandler(path.join(__dirname, `../../run-profiles/${profile}`));
+  const handler = await getHandler(profileDirectory);
   Logger.info('  > Running handler cleanup()...');
   await handler?.cleanup();
 
   Logger.info(`  > Loading config files in run-profiles/${profile}/run-config into database...`);
-  const runConfigDirectory = path.join(__dirname, `../../run-profiles/${profile}/run-config`);
+  const runConfigDirectory = `${profileDirectory}/run-config`;
   await ConfigLoader.loadPersistenceWithConfigFiles(SystemController.get(), runConfigDirectory);
 
   Logger.info(`  > Loading patterns from run-profiles/${profile}/patterns into database...`);
-  const relativeDirectory = path.join(__dirname, `../../run-profiles/${profile}/patterns`);
-  const patterns = retrievePatterns(relativeDirectory);
+  const patternDirectory = `${profileDirectory}/patterns`;
+  const patterns = retrievePatterns(patternDirectory);
   await persistPatterns(patterns);
   Logger.info(`  > Loading patterns from run-profiles/${profile}/patterns into storage...`);
   await loadPatternsIntoStorage();
@@ -78,18 +77,24 @@ async function run(profile: string) {
   Logger.info('  > Running handler run()...');
   await handler?.run();
 
-  await StorageFactory.getStorage().disconnect();
-  await PersistenceFactory.disconnectAll();
   Logger.info('  > Done!');
 }
 
-async function cleanup(profile: string) {
+export async function disconnect() {
+  Logger.info('  > Disconnecting from storage and persistence...');
+  await StorageFactory.getStorage().disconnect();
+  await PersistenceFactory.disconnectAll();
+  Logger.info('  > Disconnected.');
+}
+
+export async function cleanup(profile: string) {
+  const profileDirectory = path.join(__dirname, `../../../../run-profiles/${profile}`);
   Logger.info('  > Cleaning up database and storage...');
   await PersistenceFactory.removeDatabase();
   await StorageFactory.purgeAll();
   // load the supplied handler
   Logger.info(`  > Initializing Handler from run-profiles/${profile}/Handler.js...`);
-  const handler = await getHandler(path.join(__dirname, `../../run-profiles/${profile}`));
+  const handler = await getHandler(profileDirectory);
   Logger.info('  > Running handler cleanup()...');
   await handler?.cleanup();
 }
@@ -106,25 +111,4 @@ async function getHandler(handlerDirectory: string): Promise<BootstrapHandler | 
     Logger.error('Bootstrap: Failed to initialize Handler', e);
     throw e;
   }
-}
-
-const argv = yargs(hideBin(process.argv))
-  .usage('$0 [options]')
-  .option('profile', {
-    alias: 'p',
-    type: 'string',
-    description: 'The bootstrap profile that you want to load',
-    demandOption: true,
-  })
-  .option('cleanup', {
-    alias: 'c',
-    type: 'boolean',
-    description: 'Run cleanup only',
-  })
-  .parseSync();
-
-if (argv.cleanup) {
-  await cleanup(argv.profile);
-} else {
-  await run(argv.profile);
 }

@@ -7,4 +7,12 @@ export class EngineConfig implements Config<EngineConfigDef> {
   async updateConfig(configDef: EngineConfigDef): Promise<void> {
     this.configDef = configDef;
   }
+
+  get eventProcessingWait(): number | undefined {
+    return this.configDef?.eventProcessingWait;
+  }
+
+  get shutdownDelay(): number | undefined {
+    return this.configDef?.shutdownDelay;
+  }
 }

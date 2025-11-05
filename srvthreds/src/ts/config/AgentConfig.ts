@@ -41,6 +41,22 @@ export class AgentConfig implements Config<AgentConfigDef> {
     this.checkInitialized();
     return this.configDef!.eventTypes;
   }
+  get eventProcessingWait(): number | undefined {
+    this.checkInitialized();
+    return this.configDef!.eventProcessingWait;
+  }
+  get shutdownDelay(): number | undefined {
+    this.checkInitialized();
+    return this.configDef!.shutdownDelay;
+  }
+  get authToken(): string | undefined {
+    this.checkInitialized();
+    return this.configDef!.authToken;
+  }
+  get authorizedTokens(): string | undefined {
+    this.checkInitialized();
+    return this.configDef!.authorizedTokens;
+  }
 
   private checkInitialized() {
     if (!this.configDef) {

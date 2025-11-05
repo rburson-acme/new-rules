@@ -19,7 +19,7 @@ export * from './io/EventManager.js';
 export * from './io/SocketIOConnection.js';
 export * from './lib/Async.js';
 export * from './lib/DurableTimer.js';
-export * from './lib/Timers.js'; 
+export * from './lib/Timers.js';
 export * from './lib/types.js';
 export * from './lib/lib.js';
 export * from './lib/Logger.js';
@@ -34,6 +34,7 @@ export * from './meta/ServiceSpec.js';
 export * from './meta/PropertySpec.js';
 export * from './meta/InputSpec.js';
 export * from './meta/OutputSpec.js'
+export * from './meta/TargetTypeSpec.js'
 export * from './model/ConditionModel.js';
 export * from './model/ConsequentModel.js';
 export * from './model/FilterModel.js';

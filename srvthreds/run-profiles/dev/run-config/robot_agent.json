@@ -3,5 +3,7 @@
   "nodeType": "org.wt.robot",
   "remote": true,
   "agentImpl": "./robot/RobotAgent.js",
-  "subscriptionNames": ["sub_robot_message"]
+  "subscriptionNames": ["sub_robot_message"],
+  "authToken": "${ROBOT_AGENT_AUTH_TOKEN}",
+  "authorizedTokens": "${ROBOT_AGENT_AUTHORIZED_TOKENS}"
 }

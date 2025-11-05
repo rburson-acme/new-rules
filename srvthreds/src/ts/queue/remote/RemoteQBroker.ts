@@ -1,6 +1,7 @@
 import rascal, { BrokerAsPromised } from 'rascal';
-import { Logger } from '../../thredlib/index.js';
+import { errorCodes, EventThrowable, Logger } from '../../thredlib/index.js';
 import { RascalConfig } from '../../config/RascalConfig.js';
+import { ConfigManager } from '../../config/ConfigManager.js';
 
 /*
     Allow 1 message at a time (via current rascal config 'prefetch').
@@ -10,10 +11,12 @@ import { RascalConfig } from '../../config/RascalConfig.js';
 export class RemoteQBroker {
   broker?: BrokerAsPromised;
 
-  constructor(private config: RascalConfig) {}
+  constructor() {}
 
   async connect(): Promise<void> {
-    const withDefaults = rascal.withDefaultConfig(this.config.configDef!);
+    const config = ConfigManager.get().getConfig<RascalConfig>('rascal-config');
+    if (!config || !config.configDef) throw Error('Rascal config not loaded by ConfigurationManager');
+    const withDefaults = rascal.withDefaultConfig(config.configDef);
     await rascal.BrokerAsPromised.create(withDefaults).then((broker) => {
       this.broker = broker;
       this.broker.on('error', Logger.error);

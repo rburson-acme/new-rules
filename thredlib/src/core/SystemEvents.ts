@@ -7,6 +7,7 @@ import { Operations } from '../task/Operations.js';
 import { Types } from '../persistence/types.js';
 import { Thred } from './Thred.js';
 import { EventRecord } from '../persistence/EventRecord.js';
+import { SystemSpec } from '../index.js';
 /***
  *     __           _                     __                 _      _____                   _   
  *    / _\_   _ ___| |_ ___ _ __ ___     /__\_   _____ _ __ | |_    \_   \_ __  _ __  _   _| |_ 
@@ -42,8 +43,6 @@ export interface TerminateAllThredsArgs extends SystemEventInputValues {}
 export interface ShutdownArgs extends SystemEventInputValues {
   readonly delay: number;
 }
-export interface GetSystemSpecArgs extends SystemEventInputValues {}
-
 export interface TransitionThredArgs extends SystemEventThredInputValues {
   readonly transition: TransitionModel;
 }
@@ -76,6 +75,7 @@ export interface GetUserThredsArgs extends SystemEventInputValues {
 
 export interface GetUserEventsArgs extends SystemEventThredInputValues {}
 
+export interface GetSystemSpecArgs extends SystemEventInputValues {}
 
 /***
  *     __           _                     __                 _       __      _                      _____                       
@@ -110,6 +110,12 @@ export interface GetUserEventsResult extends SystemResult {
   op: string;
   status: string;
   events: EventRecord[] | null;
+}
+
+export interface GetSystemSpecResult extends SystemResult {
+  op: string;
+  status: string;
+  systemSpec: SystemSpec;
 }
 
 export class SystemEvents {
@@ -386,6 +392,18 @@ export class SystemEvents {
     })
       .mergeValues(values)
       .mergeData({ title: 'Run Get User Events' })
+      .build();
+  }
+
+  static getGetSystemSpecEvent(source: Event['source']) {
+    const values: GetSystemSpecArgs = { op: systemEventTypes.operations.user.getSystemSpec };
+    return EventBuilder.create({
+      type: eventTypes.control.userControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeValues(values)
+      .mergeData({ title: 'Run Get System Spec' })
       .build();
   }
 }

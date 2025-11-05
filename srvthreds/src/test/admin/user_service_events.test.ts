@@ -13,7 +13,7 @@ import {
   events,
   withDispatcherPromise,
   delay,
-  createDbFixtures,
+  createUserDbFixtures,
   eventWith,
 } from '../testUtils.js';
 import { adminTestPatternModels, adminTestSource, userTestPatternModels, userTestSource } from './adminTestUtils.js';
@@ -31,7 +31,7 @@ describe('UserService getEvents method test', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(userTestPatternModels);
     await engineConnMan.purgeAll();
-    await createDbFixtures();
+    await createUserDbFixtures();
   });
 
   describe('Setup test data', () => {
