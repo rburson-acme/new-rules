@@ -1,38 +1,10 @@
-# Multi-stage build for SrvThreds unified container
-# Support for multiple architectures (amd64, arm64)
-FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+# Command runner for SrvThreds bootstrap and utilities
+# Uses the builder image directly - no copying needed
+ARG BUILDER_IMAGE=srvthreds/builder:latest
+FROM ${BUILDER_IMAGE}
 
-# Set working directory
-WORKDIR /app
-
-# Copy both repositories from parent context
-COPY --from=thredlib . ./thredlib/
-COPY --from=srvthreds . ./srvthreds/
-
-# Build thredlib first
-WORKDIR /app/thredlib
-RUN npm ci && npm run build-all
-
-# Build srvthreds
+# Set working directory to srvthreds (where everything is already built)
 WORKDIR /app/srvthreds
-RUN npm i
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S srvthreds -u 1001 -G nodejs
-
-# Change ownership of app directory
-RUN chown -R srvthreds:nodejs /app
-
-# Switch to non-root user
-USER srvthreds
-
-# Copy env file from assets directory
-COPY infrastructure/local/configs/.env.local.example ./.env
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "console.log('Health check')" || exit 1
-
-# Default service type - can be overridden in docker-compose
+# Default command - can be overridden in docker-compose
 CMD ["npm", "run", "bootstrap", "--", "-p", "dev"]

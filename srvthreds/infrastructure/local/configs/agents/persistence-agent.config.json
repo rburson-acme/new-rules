@@ -1,9 +1,16 @@
 {
-  "name": "Persistence Agent",
+  "name": "Handles data persistence operations",
   "description": "Handles data persistence operations",
   "command": {
     "entrypoint": "node",
-    "args": ["/app/dist-server/agent/agent.js", "-c", "persistence_agent", "-d"]
+    "args": [
+      "dist-server/agent/agent.js",
+      "-c",
+      "persistence_agent",
+      "-i",
+      "org.wt.persistence1",
+      "-d"
+    ]
   },
   "ports": {},
   "resources": {

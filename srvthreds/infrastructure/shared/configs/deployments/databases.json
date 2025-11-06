@@ -16,6 +16,16 @@
         "deployCommand": "up",
         "composeFile": "docker-compose-db.yml",
         "defaultArgs": "-d --wait",
+        "preBuildCommands": [
+          {
+            "description": "Generating database configurations from config-registry.yaml...",
+            "command": "tsx infrastructure/tools/config-generator/index.ts docker-compose"
+          },
+          {
+            "description": "Validating configuration consistency...",
+            "command": "tsx infrastructure/tools/config-validator/index.ts"
+          }
+        ],
         "environmentOverrides": {
           "local": {
             "postUpCommands": [

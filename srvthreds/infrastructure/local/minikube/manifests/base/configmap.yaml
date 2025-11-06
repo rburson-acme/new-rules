@@ -1,11 +1,15 @@
+# Auto-generated from config-registry.yaml
+# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: srvthreds-config
   namespace: srvthreds
 data:
-  NODE_ENV: development
-  MONGO_HOST: localhost:27017
-  REDIS_HOST: localhost:6379
-  RABBITMQ_HOST: localhost:5672
-  LOG_LEVEL: INFO
+  MONGO_HOST: mongodb-service:27017
+  REDIS_HOST: redis-service:6379
+  RABBITMQ_HOST: rabbitmq-service
+  MONGO_DIRECT_CONNECTION: 'false'
+  JWT_EXPIRE_TIME: 1h
+  REFRESH_TOKEN_EXPIRE_TIME: 7d

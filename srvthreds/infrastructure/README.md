@@ -34,6 +34,36 @@ infrastructure/
 └── docs/               # Infrastructure documentation
 ```
 
+## ⚙️ Configuration Management
+
+**IMPORTANT**: All infrastructure configurations are managed through a centralized registry system with **automatic generation and validation** built into the deployment pipeline.
+
+### Making Configuration Changes
+
+1. **Edit the single source of truth:**
+   ```bash
+   vim infrastructure/config-registry.yaml
+   ```
+
+2. **Deploy (configs auto-generate and validate):**
+   ```bash
+   npm run deploy-local-up-all
+   ```
+
+That's it! The deployment pipeline automatically:
+- ✅ Generates all config files from the registry
+- ✅ Validates consistency across all targets
+- ✅ Fails fast if configuration is invalid
+- ✅ Proceeds with deployment if everything is valid
+
+**Never manually edit** generated configuration files (Docker Compose, Kubernetes manifests, etc.). Always update [config-registry.yaml](config-registry.yaml) and let the deployment pipeline handle the rest.
+
+📚 **Documentation:**
+- [DEPLOYMENT-INTEGRATION.md](docs/DEPLOYMENT-INTEGRATION.md) - How auto-config works
+- [CONFIGURATION.md](docs/CONFIGURATION.md) - Environment variables and app config
+- [QUICK-START.md](docs/QUICK-START.md) - Common configuration tasks
+- [GIT-STRATEGY.md](docs/GIT-STRATEGY.md) - What to commit vs ignore
+
 ## 🚀 Quick Start
 
 ### Local Development (Docker)

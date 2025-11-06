@@ -1,54 +1,44 @@
-# Config source: infrastructure/deployment/configs/agents/persistence-agent.config.json
+# Auto-generated from config-registry.yaml
+# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: srvthreds-persistence-agent
   namespace: srvthreds
   labels:
-    app.kubernetes.io/name: srvthreds-persistence-agent
-    app.kubernetes.io/component: persistence-agent
-    app.kubernetes.io/part-of: srvthreds
+    app: srvthreds-persistence-agent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: srvthreds-persistence-agent
-      app.kubernetes.io/component: persistence-agent
+      app: srvthreds-persistence-agent
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: srvthreds-persistence-agent
-        app.kubernetes.io/component: persistence-agent
+        app: srvthreds-persistence-agent
     spec:
       containers:
-      - name: persistence-agent
-        image: srvthreds:latest
-        # Command from persistence-agent.config.json
-        command: ["node", "/app/srvthreds/dist-server/agent/agent.js", "-c", "persistence_agent", "-i", "persistence-agent-1", "-d"]
-        envFrom:
-        - configMapRef:
-            name: srvthreds-config
-        # Resources from persistence-agent.config.json
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "400m"
-        livenessProbe:
-          exec:
-            command:
+        - name: srvthreds-persistence-agent
+          image: srvthreds:dev
+          imagePullPolicy: Never
+          ports: []
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 200m
+            limits:
+              memory: 512Mi
+              cpu: 400m
+          command:
             - node
-            - -e
-            - "console.log('Health check')"
-          initialDelaySeconds: 30
-          periodSeconds: 30
-        readinessProbe:
-          exec:
-            command:
-            - node
-            - -e
-            - "console.log('Ready check')"
-          initialDelaySeconds: 5
-          periodSeconds: 10
+          args:
+            - dist-server/agent/agent.js
+            - '-c'
+            - persistence_agent
+            - '-i'
+            - org.wt.persistence1
+            - '-d'

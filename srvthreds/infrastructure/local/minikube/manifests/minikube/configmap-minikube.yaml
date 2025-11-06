@@ -1,12 +1,15 @@
+# Auto-generated from config-registry.yaml
+# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: srvthreds-config
   namespace: srvthreds
 data:
-  NODE_ENV: development
   MONGO_HOST: host.minikube.internal:27017
-  MONGO_DIRECT_CONNECTION: "true"
   REDIS_HOST: host.minikube.internal:6379
-  RABBITMQ_HOST: rabbitmq:5672
-  LOG_LEVEL: DEBUG
+  RABBITMQ_HOST: host.minikube.internal
+  MONGO_DIRECT_CONNECTION: 'true'
+  JWT_EXPIRE_TIME: 1h
+  REFRESH_TOKEN_EXPIRE_TIME: 7d

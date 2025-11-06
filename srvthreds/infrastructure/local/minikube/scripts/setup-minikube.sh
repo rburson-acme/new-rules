@@ -54,7 +54,7 @@ npm run deploymentCli -- minikube build_server
 
 # Tag the builder image as srvthreds:dev for Kubernetes deployments
 echo "🏷️  Tagging builder image as srvthreds:dev..."
-docker tag srvthreds-builder:latest srvthreds:dev
+docker tag srvthreds/builder:latest srvthreds:dev
 
 # 5. Start host databases (MUST run on HOST Docker, not Minikube Docker)
 echo "💾 Starting host databases..."
@@ -124,7 +124,7 @@ kubectl wait --for=condition=available --timeout=300s \
 
 # 8. Port forward for access
 echo "🔌 Setting up port forwarding..."
-kubectl port-forward svc/session-agent 3000:3000 -n srvthreds &
+kubectl port-forward svc/srvthreds-session-agent-service 3000:3000 -n srvthreds &
 
 echo ""
 echo "✅ Minikube setup complete!"
