@@ -51,8 +51,9 @@ read -p "Stop host databases now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "💾 Stopping host databases..."
-  cd "$(git rev-parse --show-toplevel)" 2>/dev/null || cd ../../../../
-  if npm run deploymentCli local d_a_dbs 2>/dev/null; then
+  cd "$(git rev-parse --show-toplevel)/srvthreds" 2>/dev/null || cd ../../..
+  echo "Running command from $(pwd)"
+  if npm run deploy-local-down-databases 2>/dev/null; then
     echo "✓ Databases stopped successfully"
   else
     echo "⚠️  Could not stop databases via CLI"

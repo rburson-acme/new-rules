@@ -4,22 +4,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: srvthreds-bootstrap
+  name: srvthreds-builder
   namespace: srvthreds
   labels:
-    app: srvthreds-bootstrap
+    app: srvthreds-builder
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: srvthreds-bootstrap
+      app: srvthreds-builder
   template:
     metadata:
       labels:
-        app: srvthreds-bootstrap
+        app: srvthreds-builder
     spec:
       containers:
-        - name: srvthreds-bootstrap
+        - name: srvthreds-builder
           image: srvthreds:dev
           imagePullPolicy: Never
           ports: []
@@ -33,11 +33,3 @@ spec:
             limits:
               memory: 256Mi
               cpu: 200m
-          command:
-            - npm
-          args:
-            - run
-            - bootstrap
-            - '--'
-            - '-p'
-            - ef-detection

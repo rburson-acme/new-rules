@@ -13,6 +13,16 @@
         "deployCommand": "build",
         "composeFile": "docker-compose-services.yml",
         "defaultArgs": "--progress=plain srvthreds-builder",
+        "preBuildCommands": [
+          {
+            "description": "Generating configurations from config-registry.yaml...",
+            "command": "tsx infrastructure/tools/config-generator/index.ts"
+          },
+          {
+            "description": "Validating configuration consistency...",
+            "command": "tsx infrastructure/tools/config-validator/index.ts"
+          }
+        ],
         "environmentOverrides": {
           "local": {
             "preBuildCommands": [
@@ -24,7 +34,7 @@
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find infrastructure/local/configs/ -mindepth 1 -delete"
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           },

@@ -1,64 +1,60 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: mongo-repl-1
   namespace: srvthreds
   labels:
-    app: redis
+    app: mongo-repl-1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
+      app: mongo-repl-1
   template:
     metadata:
       labels:
-        app: redis
+        app: mongo-repl-1
     spec:
       containers:
-        - name: redis
+        - name: mongo-repl-1
           image: srvthreds:dev
           imagePullPolicy: Never
           ports:
-            - containerPort: 6379
+            - containerPort: 27017
           envFrom:
             - configMapRef:
                 name: srvthreds-config
           resources:
             requests:
-              memory: 128Mi
-              cpu: 100m
+              memory: 512Mi
+              cpu: 250m
             limits:
-              memory: 256Mi
-              cpu: 200m
+              memory: 1Gi
+              cpu: 500m
           command:
-            - redis-server
-            - '--save'
-            - '20'
-            - '1'
-            - '--loglevel'
-            - warning
-            - '--notify-keyspace-events'
-            - KA
+            - mongod
+            - '--replSet'
+            - rs0
+            - '--bind_ip_all'
           volumeMounts:
-            - name: redis-storage-0
-              mountPath: /data
+            - name: mongo-repl-1-storage-0
+              mountPath: /data/db
       volumes:
-        - name: redis-storage-0
+        - name: mongo-repl-1-storage-0
           emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-service
+  name: mongo-repl-1-service
   namespace: srvthreds
   labels:
-    app: redis
+    app: mongo-repl-1
 spec:
   type: ClusterIP
   selector:
-    app: redis
+    app: mongo-repl-1
   ports:
     - name: default
-      port: 6379
-      targetPort: 6379
+      port: 27017
+      targetPort: 27017

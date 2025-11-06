@@ -16,6 +16,14 @@
         "defaultArgs": "-d --wait",
         "preBuildCommands": [
           {
+            "description": "Generating service configurations from config-registry.yaml...",
+            "command": "tsx infrastructure/tools/config-generator/index.ts docker-compose agent-configs"
+          },
+          {
+            "description": "Validating configuration consistency...",
+            "command": "tsx infrastructure/tools/config-validator/index.ts"
+          },
+          {
             "description": "Building base builder image (uses cache if available)...",
             "command": "docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build srvthreds-builder"
           }
@@ -24,12 +32,12 @@
           "local": {
             "preBuildCommands": [
               {
-                "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
+                "description": "Copy Docker environment config into assets folder for delivery.",
+                "command": "cp ./infrastructure/local/configs/.env.docker ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Log out assets pushed to deployment assets folder",
-                "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
+                "command": "echo '--- Docker Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
               },
               {
                 "description": "Building production-optimized builder image...",
@@ -75,6 +83,16 @@
           {
             "composeFile": "docker-compose-db.yml",
             "defaultArgs": "-d --wait",
+            "preBuildCommands": [
+              {
+                "description": "Generating all configurations from config-registry.yaml...",
+                "command": "tsx infrastructure/tools/config-generator/index.ts"
+              },
+              {
+                "description": "Validating configuration consistency...",
+                "command": "tsx infrastructure/tools/config-validator/index.ts"
+              }
+            ],
             "postUpCommands": [
               {
                 "description": "Setting up MongoDB replica set...",
@@ -95,12 +113,12 @@
               "local": {
                 "preBuildCommands": [
                   {
-                    "description": "Copy environment config into assets folder for delivery.",
-                    "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
+                    "description": "Copy Docker environment config into assets folder for delivery.",
+                    "command": "cp ./infrastructure/local/configs/.env.docker ./infrastructure/tools/deployment-cli/assets/.env"
                   },
                   {
                     "description": "Log out assets pushed to deployment assets folder",
-                    "command": "echo '--- Local Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
+                    "command": "echo '--- Docker Assets Copied ---' && ls -aF ./infrastructure/tools/deployment-cli/assets/ && cat ./infrastructure/tools/deployment-cli/assets/.env"
                   },
                   {
                     "description": "Building production-optimized builder image...",

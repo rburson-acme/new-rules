@@ -1,20 +1,15 @@
 {
-  "name": "Bootstrap",
-  "description": "Initializes database with patterns and configuration data",
+  "name": "Database initialization and seeding",
+  "description": "Database initialization and seeding",
   "command": {
     "entrypoint": "npm",
-    "args": ["run", "bootstrap", "--", "-p", "ef-detection"]
+    "args": [
+      "run",
+      "bootstrap",
+      "--",
+      "-p",
+      "ef-detection"
+    ]
   },
-  "ports": {},
-  "resources": {
-    "memory": {
-      "request": "256Mi",
-      "limit": "512Mi"
-    },
-    "cpu": {
-      "request": "100m",
-      "limit": "300m"
-    }
-  },
-  "runOnce": true
+  "ports": {}
 }

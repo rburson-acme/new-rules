@@ -1,9 +1,12 @@
 {
-  "name": "SrvThreds Engine",
+  "name": "Main event processing engine",
   "description": "Main event processing engine",
   "command": {
     "entrypoint": "node",
-    "args": ["/app/dist-server/index.js", "-d"]
+    "args": [
+      "dist-server/index.js",
+      "-d"
+    ]
   },
   "ports": {
     "http": 8082
