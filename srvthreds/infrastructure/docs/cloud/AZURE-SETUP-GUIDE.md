@@ -127,27 +127,23 @@ az monitor diagnostic-settings subscription create \
 
 #### 2.1 Recommended Resource Group Structure
 
-Create organized resource groups following naming conventions:
+Create one resource group per environment containing all resources for that environment:
 
 ```bash
-# Network infrastructure
-az group create --name initiative-prod-network-rg --location eastus --tags environment=production managed_by=terraform cost_center=infrastructure
+# Development environment
+az group create --name initiative-dev-rg --location eastus --tags environment=development managed_by=terraform cost_center=engineering
 
-# Kubernetes cluster
-az group create --name initiative-prod-aks-rg --location eastus --tags environment=production managed_by=terraform cost_center=compute
+# Test/Staging environment
+az group create --name initiative-test-rg --location eastus --tags environment=test managed_by=terraform cost_center=engineering
 
-# Databases and data stores
-az group create --name initiative-prod-data-rg --location eastus --tags environment=production managed_by=terraform cost_center=data
+# Production environment
+az group create --name initiative-prod-rg --location eastus --tags environment=production managed_by=terraform cost_center=production
 
-# Security resources (Key Vault, managed identities)
-az group create --name initiative-prod-security-rg --location eastus --tags environment=production managed_by=terraform cost_center=security
-
-# Monitoring and observability
-az group create --name initiative-prod-monitoring-rg --location eastus --tags environment=production managed_by=terraform cost_center=operations
-
-# Terraform state and automation
-az group create --name initiative-prod-terraform-rg --location eastus --tags environment=production managed_by=manual cost_center=infrastructure
+# Terraform state and automation (shared across all environments)
+az group create --name initiative-terraform-rg --location eastus --tags environment=shared managed_by=manual cost_center=infrastructure
 ```
+
+**Note**: Each environment has a single resource group containing all resources (VNet, AKS, databases, Key Vault, etc.) for easier management and cost tracking.
 
 #### 2.2 Naming Convention Standards
 
@@ -155,12 +151,14 @@ Follow Azure naming best practices:
 
 | Resource Type | Pattern | Example |
 |--------------|---------|---------|
-| Resource Groups | `{org}-{env}-{purpose}-rg` | `initiative-prod-aks-rg` |
-| Virtual Networks | `{org}-{env}-{region}-vnet` | `initiative-prod-eastus-vnet` |
+| Resource Groups | `{org}-{env}-rg` | `initiative-prod-rg` |
+| Virtual Networks | `{org}-{env}-vnet` | `initiative-prod-vnet` |
 | Subnets | `{purpose}-subnet` | `aks-subnet`, `data-subnet` |
 | Storage Accounts | `{org}{env}{purpose}sa` (no hyphens) | `initprodtfstatesa` |
-| Key Vaults | `{org}-{env}-{purpose}-kv` | `initiative-prod-secrets-kv` |
-| AKS Clusters | `{org}-{env}-{region}-aks` | `initiative-prod-eastus-aks` |
+| Key Vaults | `{org}-{env}-kv` | `initiative-prod-kv` |
+| AKS Clusters | `{org}-{env}-aks` | `initiative-prod-aks` |
+| CosmosDB | `{org}-{env}-cosmos` | `initiative-prod-cosmos` |
+| Redis Cache | `{org}-{env}-redis` | `initiative-prod-redis` |
 
 ### Phase 3: Terraform State Management
 

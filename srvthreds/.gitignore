@@ -90,11 +90,16 @@ infrastructure/deployment/assets/
 
 # Terraform
 **/.terraform/*
-**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+*.tfstate.backup
 *.tfvars
+# Allow environment-specific tfvars (infrastructure-as-code, not secrets)
+!dev.tfvars
+!test.tfvars
+!prod.tfvars
 *.tfplan
+*.tfplan.binary
 crash.log
 crash.*.log
 override.tf
@@ -103,5 +108,8 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Keep .terraform.lock.hcl for dependency locking (should be committed)
+# !**/.terraform.lock.hcl is not needed - we removed the ignore pattern above
 
 env/

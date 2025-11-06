@@ -287,105 +287,185 @@ npm run minikube-destroy
 
 ---
 
-## Phase 3: Cloud Production Deployment (Planned 📋)
+## Phase 3: Azure Cloud Production Deployment (In Progress 🚧)
 
 ### Objectives
 
-Deploy to **cloud Kubernetes (EKS/GKE/AKS)** with:
-- Managed database services (MongoDB Atlas, Redis Cloud)
+Deploy to **Azure Kubernetes Service (AKS)** with:
+- Managed Azure services (CosmosDB MongoDB API, Azure Cache for Redis, Service Bus)
 - Infrastructure as Code via Terraform
 - CI/CD pipeline integration
-- Multi-environment support (dev, staging, prod)
+- Multi-environment support (dev, test, prod)
+- Private networking with zero public endpoints
+- Path to Azure Government Cloud migration
 
 ### Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Cloud Provider (AWS)                  │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │         EKS Cluster (Compute Layer)               │  │
-│  ├──────────────────────────────────────────────────┤  │
-│  │                                                    │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐       │  │
-│  │  │  Engine  │  │ Session  │  │Persistenc│       │  │
-│  │  │(3 replicas) │ Agent(2) │  │Agent (2) │       │  │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘       │  │
-│  │       │             │              │             │  │
-│  │       └─────────────┼──────────────┘             │  │
-│  │                     │                            │  │
-│  │           ┌─────────▼────────┐                   │  │
-│  │           │   CloudAMQP      │                   │  │
-│  │           │   (External)     │                   │  │
-│  │           └──────────────────┘                   │  │
-│  └──────────────────────────────────────────────────┘  │
-│                         │                               │
-│  ┌──────────────────────▼───────────────────────────┐  │
-│  │         Managed Database Services                 │  │
-│  ├───────────────────────────────────────────────────┤  │
-│  │  • MongoDB Atlas (Replica Set)                    │  │
-│  │  • Redis Cloud (HA)                               │  │
-│  │  • CloudAMQP (RabbitMQ)                          │  │
-│  └───────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Azure Commercial Cloud                        │
+│              (Future: Azure Gov Virginia Region)                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │              Application Gateway + WAF                      │ │
+│  │              (Public entry point with TLS)                  │ │
+│  └──────────────────────────┬─────────────────────────────────┘ │
+│                             │                                    │
+│  ┌──────────────────────────▼─────────────────────────────────┐ │
+│  │         AKS Private Cluster (Compute Layer)                 │ │
+│  ├──────────────────────────────────────────────────────────────┤ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │ │
+│  │  │  Engine  │  │ Session  │  │Persistenc│                  │ │
+│  │  │(3 replicas) │ Agent(2) │  │Agent (2) │                  │ │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘                  │ │
+│  │       │             │              │                        │ │
+│  │       └─────────────┼──────────────┘                        │ │
+│  │                     │                                        │ │
+│  │           ┌─────────▼────────┐                              │ │
+│  │           │  Azure Service   │                              │ │
+│  │           │  Bus (Private)   │                              │ │
+│  │           └──────────────────┘                              │ │
+│  └──────────────────────┬───────────────────────────────────────┘ │
+│                         │                                         │
+│                         │ Private Endpoints Only                  │
+│                         ▼                                         │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │         Managed Azure PaaS Services                           │ │
+│  ├──────────────────────────────────────────────────────────────┤ │
+│  │  • CosmosDB (MongoDB API) - Private Endpoint                 │ │
+│  │  • Azure Cache for Redis - Private Endpoint                  │ │
+│  │  • Azure Service Bus - Private Endpoint                      │ │
+│  │  • Azure Container Registry - Private Endpoint               │ │
+│  │  • Azure Key Vault - Private Endpoint                        │ │
+│  │  • Storage Account - Private Endpoint                        │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Terraform Structure
 
 ```
 infrastructure/cloud/terraform/
-├── bootstrap/              # Azure subscription setup
-│   ├── main.tf
+├── bootstrap/              # Azure subscription setup & state storage
+│   ├── main.tf            # ✅ Complete - Creates storage account
 │   ├── variables.tf
 │   └── README.md
 ├── modules/
-│   ├── eks/
-│   │   ├── main.tf
-│   │   └── outputs.tf
-│   ├── networking/
-│   │   ├── main.tf
-│   │   └── outputs.tf
-│   └── mongodb-atlas/
-│       ├── main.tf
-│       ├── variables.tf
-│       └── outputs.tf
+│   └── azure/             # Azure-specific modules
+│       ├── networking/    # VNet, subnets, NSGs, private DNS
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── private-endpoint/  # Reusable private endpoint pattern
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── aks/           # Private AKS cluster
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── cosmosdb/      # CosmosDB (MongoDB API)
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── redis/         # Azure Cache for Redis
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── servicebus/    # Azure Service Bus (RabbitMQ alternative)
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── acr/           # Azure Container Registry
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── keyvault/      # Azure Key Vault
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       ├── appgateway/    # Application Gateway + WAF
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── outputs.tf
+│       └── monitoring/    # Log Analytics, App Insights
+│           ├── main.tf
+│           ├── variables.tf
+│           └── outputs.tf
 └── environments/
-    └── prod/
+    ├── dev/               # Development environment
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   ├── terraform.tfvars
+    │   └── outputs.tf
+    ├── test/              # Test/staging environment
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   ├── terraform.tfvars
+    │   └── outputs.tf
+    └── prod/              # Production environment
         ├── main.tf
         ├── variables.tf
+        ├── terraform.tfvars
         └── outputs.tf
 ```
 
 ### Deployment Flow
 
 ```bash
-# 1. Provision infrastructure
-cd infrastructure/cloud/terraform/environments/prod
+# 1. Bootstrap (One-time setup)
+cd infrastructure/cloud/terraform/bootstrap
 terraform init
+terraform apply
+
+# 2. Provision dev environment infrastructure
+cd ../environments/dev
+terraform init \
+  -backend-config="resource_group_name=srvthreds-terraform-rg" \
+  -backend-config="storage_account_name=<from-bootstrap-output>" \
+  -backend-config="container_name=tfstate" \
+  -backend-config="key=dev.terraform.tfstate"
 terraform plan
 terraform apply
 
-# 2. Configure kubectl
-az aks get-credentials --resource-group srvthreds-prod --name srvthreds-aks
+# 3. Configure kubectl for AKS
+az aks get-credentials \
+  --resource-group initiative-dev-aks-rg \
+  --name initiative-dev-aks
 
-# 3. Deploy applications
-kubectl apply -k infrastructure/local/minikube/manifests/prod/
+# 4. Deploy applications to AKS
+kubectl apply -k infrastructure/cloud/k8s/overlays/dev/
 
-# 4. Verify deployment
+# 5. Verify deployment
 kubectl get pods -n srvthreds
 kubectl get svc -n srvthreds
+kubectl logs -f deployment/srvthreds-engine -n srvthreds
 ```
+
+### Multi-Environment Strategy
+
+**Environment Progression**:
+- **dev.initiative.io** - Development (lower resources, cost-optimized)
+- **test.initiative.io** - Testing/Staging (prod-like configuration)
+- **{app}.initiative.io** - Production (HA, auto-scaling, full observability)
+
+**Environment Isolation**:
+- Separate resource groups per environment
+- Separate VNets per environment
+- Separate Key Vaults and secrets per environment
+- Shared Terraform state storage with environment-specific state files
 
 ### CI/CD Integration
 
 **GitHub Actions Pipeline**:
-1. Build Docker images (multi-platform)
-2. Push to container registry (ECR/GHCR)
-3. Update Kubernetes manifests with new image tags
-4. Deploy via kubectl or ArgoCD
-5. Run smoke tests
-6. Rollback on failure
+1. Build Docker images and push to Azure Container Registry (ACR)
+2. Update Kubernetes manifests with new image tags
+3. Deploy to dev environment automatically
+4. Run integration tests
+5. Manual approval for test/prod environments
+6. Deploy via kubectl with health checks
+7. Automatic rollback on failure
 
 ---
 

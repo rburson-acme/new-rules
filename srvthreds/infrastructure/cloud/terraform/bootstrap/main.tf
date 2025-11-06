@@ -70,7 +70,7 @@ resource "azurerm_storage_account" "tfstate" {
 
   # Security settings
   min_tls_version                 = "TLS1_2"
-  enable_https_traffic_only       = true
+  https_traffic_only_enabled      = true
   allow_nested_items_to_be_public = false
   shared_access_key_enabled       = true # Required for Terraform backend
 
@@ -136,7 +136,7 @@ output "tenant_id" {
 
 output "backend_config" {
   description = "Backend configuration block for other Terraform projects"
-  value = <<-EOT
+  value       = <<-EOT
 
     Add this to your Terraform configuration:
 
