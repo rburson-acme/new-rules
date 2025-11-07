@@ -60,7 +60,7 @@ resource "azurerm_network_security_group" "gateway" {
     destination_address_prefix = "*"
   }
 
-  # Allow Application Gateway infrastructure ports
+  # Allow Application Gateway infrastructure ports (required for v2)
   security_rule {
     name                       = "AllowGatewayManager"
     priority                   = 120
@@ -69,7 +69,7 @@ resource "azurerm_network_security_group" "gateway" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "65200-65535"
-    source_address_prefix      = "GatewayManager"
+    source_address_prefix      = "Internet"
     destination_address_prefix = "*"
   }
 

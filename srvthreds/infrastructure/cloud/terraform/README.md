@@ -122,21 +122,21 @@ Verify in Azure Portal:
 
 ## What's Included
 
-### ✅ Completed Modules
+### ✅ Deployed to Dev
 
-- **[networking](modules/azure/networking/)** - VNet, subnets, NSGs with security-first defaults
-- **[private-endpoint](modules/azure/private-endpoint/)** - Reusable private endpoint pattern
-- **[keyvault](modules/azure/keyvault/)** - Key Vault with private endpoint and RBAC
+- **[networking](modules/azure/networking/)** - VNet, subnets, NSGs
+- **[keyvault](modules/azure/keyvault/)** - Key Vault with RBAC
+- **[acr](modules/azure/acr/)** - Container Registry (Standard SKU)
+- **[cosmosdb](modules/azure/cosmosdb/)** - MongoDB API (Free tier)
+- **[redis](modules/azure/redis/)** - Cache (Basic C0)
+- **[servicebus](modules/azure/servicebus/)** - Messaging with 3 queues
+- **[aks](modules/azure/aks/)** - Kubernetes cluster (v1.33.5, 2 nodes, Free tier)
+- **[monitoring](modules/azure/monitoring/)** - Log Analytics + Application Insights
+- **[appgateway](modules/azure/appgateway/)** - Application Gateway (Standard_v2, TLS 1.2+)
 
-### 🚧 Planned Modules
+### ✅ Available Modules
 
-- **aks** - Private AKS cluster with managed identity
-- **cosmosdb** - CosmosDB MongoDB API with private endpoint
-- **redis** - Azure Cache for Redis with private endpoint
-- **servicebus** - Azure Service Bus for messaging
-- **acr** - Azure Container Registry with private endpoint
-- **appgateway** - Application Gateway with WAF
-- **monitoring** - Log Analytics and Application Insights
+- **[private-endpoint](modules/azure/private-endpoint/)** - Reusable for Premium SKUs
 
 ## Common Operations
 
@@ -168,20 +168,27 @@ Verify in Azure Portal:
 ├── scripts/
 │   └── deploy-stack.sh    # 🎯 Primary deployment tool (use this for everything)
 ├── stacks/                # ✅ Modular stack deployments
-│   ├── networking/        # ✅ VNet, subnets, NSGs (foundation)
-│   ├── keyvault/          # ✅ Key Vault with private endpoint
-│   ├── acr/               # 🚧 Container registry
-│   ├── cosmosdb/          # 🚧 MongoDB API
-│   ├── redis/             # 🚧 Cache for Redis
-│   ├── servicebus/        # 🚧 Messaging
-│   ├── aks/               # 🚧 Private AKS cluster
-│   ├── appgateway/        # 🚧 WAF + TLS
-│   └── monitoring/        # 🚧 Observability
+│   ├── networking/        # ✅ VNet, subnets, NSGs (deployed)
+│   ├── keyvault/          # ✅ Key Vault (deployed)
+│   ├── acr/               # ✅ Container registry (deployed)
+│   ├── cosmosdb/          # ✅ MongoDB API (deployed)
+│   ├── redis/             # ✅ Cache for Redis (deployed)
+│   ├── servicebus/        # ✅ Messaging (deployed)
+│   ├── aks/               # ✅ Kubernetes cluster (deployed)
+│   ├── monitoring/        # ✅ Log Analytics + App Insights (deployed)
+│   └── appgateway/        # ✅ Application Gateway (deployed)
 └── modules/
     └── azure/             # Reusable Terraform modules
         ├── networking/
-        ├── private-endpoint/
-        └── keyvault/
+        ├── keyvault/
+        ├── acr/
+        ├── cosmosdb/
+        ├── redis/
+        ├── servicebus/
+        ├── aks/
+        ├── monitoring/
+        ├── appgateway/
+        └── private-endpoint/
 ```
 
 ## Architecture

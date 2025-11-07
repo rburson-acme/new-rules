@@ -10,33 +10,47 @@ This document provides a step-by-step guide to implementing Phase 3 of the SrvTh
 
 1. **Infrastructure Roadmap Updated** - Updated to reflect Azure (not AWS) deployment strategy
 2. **Bootstrap Infrastructure** - Terraform state storage in Azure (`bootstrap/`)
-3. **Azure Environment Structure** - Created dev/test/prod environment folders
-4. **Networking Module** (`modules/azure/networking/`)
+3. **Modular Stack Architecture** - Independent deployable stacks with shared backend config
+4. **Networking Stack** (`stacks/networking/`) - Deployed to dev
    - VNet with 5 subnet architecture
    - Network Security Groups for each subnet tier
    - Support for VNet encryption
-   - Hub-and-spoke ready design
+   - Module: `modules/azure/networking/`
 5. **Private Endpoint Module** (`modules/azure/private-endpoint/`)
    - Reusable module for any Azure service
    - Automatic Private DNS zone creation and linking
-   - Based on Catalyst infrastructure patterns
-6. **Key Vault Module** (`modules/azure/keyvault/`)
-   - Private endpoint only access
+6. **Key Vault Stack** (`stacks/keyvault/`) - Deployed to dev
    - RBAC authorization enabled
    - Configurable purge protection (prod vs dev)
-7. **Dev Environment Configuration** (`environments/dev/`)
-   - Complete example using networking and Key Vault modules
-   - Ready to deploy with `terraform apply`
+   - Module: `modules/azure/keyvault/`
+7. **ACR Stack** (`stacks/acr/`) - Deployed to dev
+   - Standard SKU for dev (no private endpoint)
+   - Premium SKU for prod with private endpoint support
+   - Module: `modules/azure/acr/`
+8. **CosmosDB Stack** (`stacks/cosmosdb/`) - Created
+   - MongoDB API 4.2 with configurable throughput
+   - Free tier for dev, autoscale for test, continuous backup for prod
+   - Module: `modules/azure/cosmosdb/`
+9. **Redis Stack** (`stacks/redis/`) - Deployed to dev
+   - Basic C0 for dev, Standard for test, Premium for prod
+   - Private endpoint support on Premium SKU
+   - Module: `modules/azure/redis/`
+10. **Service Bus Stack** (`stacks/servicebus/`) - Deployed to dev
+   - Basic SKU for dev, Standard for test, Premium for prod
+   - Queues: inbound-events, outbound-messages, dead-letter
+   - Private endpoint support on Premium SKU
+   - Module: `modules/azure/servicebus/`
+11. **AKS Stack** (`stacks/aks/`) - Created (ready to deploy)
+   - Free tier for dev/test, Standard (SLA) for prod
+   - Private cluster for prod, public for dev/test
+   - Azure CNI networking, auto-scaling, zone redundancy
+   - ACR integration, Key Vault secrets provider
+   - Module: `modules/azure/aks/`
 
 ### 🚧 In Progress / Next Steps
 
-8. **AKS Module** - Private Kubernetes cluster
-9. **CosmosDB Module** - MongoDB API with private endpoint
-10. **Redis Module** - Azure Cache for Redis
-11. **Service Bus Module** - Messaging (alternative to RabbitMQ)
-12. **ACR Module** - Container registry
-13. **Application Gateway Module** - WAF and TLS termination
-14. **Monitoring Module** - Log Analytics and Application Insights
+12. **Application Gateway Module** - WAF and TLS termination
+13. **Monitoring Module** - Log Analytics and Application Insights
 
 ## Architecture
 

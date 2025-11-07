@@ -125,15 +125,15 @@ This will:
 3. **Phase 2**: Apply all stacks in order if builds succeed
 
 Deployment order:
-1. networking (creates RG + VNet)
-2. keyvault
-3. acr (when implemented)
-4. cosmosdb (when implemented)
-5. redis (when implemented)
-6. servicebus (when implemented)
-7. aks (when implemented)
-8. appgateway (when implemented)
-9. monitoring (when implemented)
+1. networking (creates RG + VNet) ✅ Deployed
+2. keyvault ✅ Deployed
+3. acr ✅ Deployed
+4. cosmosdb ✅ Created
+5. redis ✅ Deployed
+6. servicebus ✅ Deployed
+7. aks ✅ Ready to deploy
+8. appgateway (future)
+9. monitoring (future)
 
 ## Quick Start Guide
 
@@ -336,7 +336,7 @@ backend "azurerm" {
 }
 ```
 
-## Implemented Stacks
+## Deployed Stacks
 
 ### ✅ networking
 
@@ -352,98 +352,130 @@ backend "azurerm" {
 
 **Outputs**: VNet ID, subnet IDs, NSG IDs
 
+**Status**: Deployed to dev
+
 ### ✅ keyvault
 
 **Purpose**: Secrets management with private access
 
 **Creates**:
 - Key Vault with RBAC authorization
-- Private endpoint
+- Private endpoint (Premium SKU)
 - Private DNS zone
 
 **Dependencies**: networking
 
 **Outputs**: Key Vault ID, URI, private endpoint ID
 
-## Planned Stacks
+**Status**: Deployed to dev
 
-### 🚧 acr
+### ✅ acr
 
 **Purpose**: Container image registry
 
 **Creates**:
-- Azure Container Registry (Premium SKU)
-- Private endpoint
-- Vulnerability scanning
+- Azure Container Registry (Standard SKU for dev)
+- Supports private endpoint (Premium SKU)
+- Admin user enabled
 
 **Dependencies**: networking
 
-### 🚧 cosmosdb
+**Outputs**: ACR ID, login server, admin credentials
+
+**Status**: Deployed to dev
+
+### ✅ cosmosdb
 
 **Purpose**: MongoDB-compatible database
 
 **Creates**:
-- CosmosDB account (MongoDB API)
-- Private endpoint
+- CosmosDB account (MongoDB API, Free tier for dev)
 - Automatic backup
+- Geo-redundancy (production)
 
 **Dependencies**: networking
 
-### 🚧 redis
+**Outputs**: CosmosDB ID, endpoint, connection strings
+
+**Status**: Deployed to dev
+
+### ✅ redis
 
 **Purpose**: Caching layer
 
 **Creates**:
-- Azure Cache for Redis
-- Private endpoint
+- Azure Cache for Redis (Basic C0 for dev)
 - TLS enforcement
+- Supports private endpoint (Premium SKU)
 
 **Dependencies**: networking
 
-### 🚧 servicebus
+**Outputs**: Redis ID, hostname, port, primary key
+
+**Status**: Deployed to dev
+
+### ✅ servicebus
 
 **Purpose**: Messaging and event streaming
 
 **Creates**:
-- Service Bus namespace
-- Private endpoint
-- Topics and subscriptions
+- Service Bus namespace (Basic SKU for dev)
+- 3 queues: inbound-events, outbound-messages, dead-letter
+- Supports private endpoint (Premium SKU)
 
 **Dependencies**: networking
 
-### 🚧 aks
+**Outputs**: Service Bus ID, endpoint, connection strings
+
+**Status**: Deployed to dev
+
+### ✅ aks
 
 **Purpose**: Kubernetes cluster
 
 **Creates**:
-- Private AKS cluster
+- AKS cluster (Free tier for dev, public endpoint)
 - System-assigned managed identity
-- Workload identity enabled
-- CSI driver for Key Vault
+- Azure CNI networking with network policy
+- Key Vault secrets provider enabled
+- ACR integration via role assignment
 
 **Dependencies**: networking, acr
 
-### 🚧 appgateway
+**Outputs**: AKS ID, FQDN, kubeconfig, kubelet identity
 
-**Purpose**: Ingress and WAF
+**Status**: Deployed to dev (v1.33.5, 2 nodes)
 
-**Creates**:
-- Application Gateway v2
-- WAF configuration
-- TLS certificates from Key Vault
+### ✅ monitoring
 
-**Dependencies**: networking, keyvault
-
-### 🚧 monitoring
-
-**Purpose**: Observability
+**Purpose**: Observability and diagnostics
 
 **Creates**:
-- Log Analytics workspace
-- Application Insights
-- Diagnostic settings
+- Log Analytics workspace (30-day retention, 5GB daily quota for dev)
+- Application Insights (full sampling, 30-day retention)
+- Action Groups for alerts (optional)
 
 **Dependencies**: networking
+
+**Outputs**: Log Analytics workspace ID, Application Insights ID, connection strings
+
+**Status**: Deployed to dev
+
+### ✅ appgateway
+
+**Purpose**: Ingress with WAF capabilities
+
+**Creates**:
+- Application Gateway v2 (Standard_v2 for dev, WAF_v2 for prod)
+- Public IP (static)
+- WAF policy with OWASP 3.2 rules (WAF_v2 only)
+- Modern TLS policy (TLS 1.2+)
+
+**Dependencies**: networking
+
+**Outputs**: Application Gateway ID, public IP address, backend pool ID
+
+**Status**: Deployed to dev (Standard_v2, public IP: 172.171.199.160)
 
 ## Common Operations
 
