@@ -470,10 +470,20 @@ show_status() {
       status_text="Not implemented"
     elif is_stack_deployed "$stack" "$environment"; then
       cd "${STACKS_DIR}/${stack}" > /dev/null 2>&1
-      resource_count=$(terraform state list 2>/dev/null | wc -l | tr -d ' ')
-      cd - > /dev/null 2>&1
 
-      # Check for drift
+      # Ensure terraform is initialized
+      if [[ ! -d ".terraform" ]]; then
+        terraform init \
+          -backend-config="resource_group_name=srvthreds-terraform-rg" \
+          -backend-config="storage_account_name=srvthredstfstated9jvee" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=stacks/${stack}/${environment}.tfstate" \
+          > /dev/null 2>&1
+      fi
+
+      resource_count=$(terraform state list 2>/dev/null | wc -l | tr -d ' ')
+
+      # Check for drift (while still in stack directory)
       if terraform plan -detailed-exitcode -var-file="${environment}.tfvars" > /dev/null 2>&1; then
         status_icon="${GREEN}✓${NC}"
         status_text="Deployed"
@@ -481,6 +491,8 @@ show_status() {
         status_icon="${YELLOW}⚠${NC}"
         status_text="Drift detected"
       fi
+
+      cd - > /dev/null 2>&1
     else
       status_icon="○"
       status_text="Not deployed"

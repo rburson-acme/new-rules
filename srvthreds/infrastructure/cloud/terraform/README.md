@@ -165,6 +165,10 @@ Verify in Azure Portal:
 ```
 .
 ├── bootstrap/              # Terraform state storage (run first with terraform directly)
+├── docs/                   # 📚 Detailed documentation
+│   ├── cARMY_NAMING_CONVENTIONS.md  # Army NETCOM naming standards
+│   ├── PHASE3-IMPLEMENTATION.md     # Implementation tracking
+│   └── ...                          # Additional design docs
 ├── scripts/
 │   └── deploy-stack.sh    # 🎯 Primary deployment tool (use this for everything)
 ├── stacks/                # ✅ Modular stack deployments
@@ -333,9 +337,17 @@ cd infrastructure/cloud/terraform
 
 ## Documentation
 
+### Terraform Documentation
+
 - **[Stacks Deployment Guide](stacks/README.md)** - Complete modular deployment documentation
-- **[Phase 3 Implementation Guide](PHASE3-IMPLEMENTATION.md)** - Overall deployment strategy
-- **[Naming Conventions](NAMING-CONVENTIONS.md)** - Army NETCOM naming standards
+- **[Naming Conventions](docs/cARMY_NAMING_CONVENTIONS.md)** - Army NETCOM naming standards
+- **[Phase 3 Implementation](docs/PHASE3-IMPLEMENTATION.md)** - Implementation tracking and status
+
+For additional architecture and design documentation, see the **[docs/](docs/)** folder.
+
+### Project Documentation
+
+- **[Deployment Guide](../../../DEPLOYMENT-GUIDE.md)** - Application deployment options (Manual, GitHub Actions, Azure DevOps)
 - **[Azure Setup Guide](../../docs/cloud/AZURE-SETUP-GUIDE.md)** - Subscription setup
 - **[Azure Security Requirements](../../docs/cloud/AZURE-SECURITY-REQUIREMENTS.md)** - Security architecture
 - **[Infrastructure Roadmap](../../INFRASTRUCTURE-ROADMAP.md)** - Overall infrastructure plan
