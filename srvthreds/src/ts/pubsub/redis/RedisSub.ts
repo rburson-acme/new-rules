@@ -18,7 +18,7 @@ export class RedisSub implements Sub {
         try {
           notifyFn(channel, JSON.parse(message));
         } catch (e) {
-          Logger.error(e);
+          Logger.error('RedisSub: Error in notifyFn', e);
         }
       });
     } catch (err) {

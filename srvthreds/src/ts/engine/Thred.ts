@@ -42,7 +42,10 @@ export class Thred {
       //if there's not a match, end the loop
       if (!reactionResult) {
         await Thred.logNoTransition(thredStore, event, fromReactionName);
-        L.debug(L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`));
+        L.debug({
+          msg: L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`),
+          thredId: thredStore.id,
+        });
         break transitionLoop;
       }
       // run any effects
@@ -52,11 +55,12 @@ export class Thred {
 
       // log the transition if any - thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
-      L.debug(
-        L.h2(
+      L.debug({
+        msg: L.h2(
           `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`,
         ),
-      );
+        thredId: thredStore.id,
+      });
       // resolve and store the participant addresses
       const to = reactionResult.messageTemplate
         ? await this.resolveAndUpdateParticipants(
@@ -99,9 +103,12 @@ export class Thred {
   static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
     const expiry = thredStore?.currentReaction?.expiry;
     if (expiry) {
-      L.debug(
-        L.h2(`Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`),
-      );
+      L.debug({
+        msg: L.h2(
+          `Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`,
+        ),
+        thredId: thredStore.id,
+      });
       const transtition = thredStore?.currentReaction?.expiry?.transition;
       await Thred.transition(thredStore, threds, transtition);
     }

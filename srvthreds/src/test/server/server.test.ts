@@ -7,9 +7,9 @@ import patternModel from '../config/patterns/simple_test.pattern.json' with { ty
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 import sessionsModel from '../config/sessions/simple_test_sessions_model.json' with { type: 'json' };
 import resolverConfig from '../config/simple_test_resolver_config.json' with { type: 'json' };
+import { PinoLogger } from '../../ts/logger/PinoLogger.js';
 
-Logger.setLevel(LoggerLevel.INFO);
-
+Logger.info('\n\n****************************************TEsting loggger delegate');
 describe('connMan.sessionServer test', function () {
   beforeAll(async () => {
     connMan = await ServerConnectionManager.newServerInstance(patternModels, sessionsModel, resolverConfig, {

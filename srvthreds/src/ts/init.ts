@@ -1,4 +1,5 @@
 import 'dotenv/config';
-import { Logger, LoggerLevel } from './thredlib/index.js';
+import { Logger } from './thredlib/index.js';
+import { PinoLogger } from './logger/PinoLogger.js';
 
-Logger.setLevel(LoggerLevel.TRACE);
+Logger.loggerDelegate = new PinoLogger();

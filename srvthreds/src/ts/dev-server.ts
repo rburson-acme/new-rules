@@ -1,5 +1,4 @@
-import './init.js';
-
+import 'dotenv/config';
 import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
@@ -12,7 +11,7 @@ import { RemoteQService } from './queue/remote/RemoteQService.js';
 import { Sessions } from './sessions/Sessions.js';
 import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
-import { Event, Logger, Message, PatternModel, Timers } from './thredlib/index.js';
+import { Event, Logger, LoggerLevel, Message, PatternModel, Timers } from './thredlib/index.js';
 
 const patternModelsOverride: PatternModel[] = [] as PatternModel[];
 
@@ -35,6 +34,9 @@ import {
 } from './config/ConfigDefs.js';
 import { EngineConfig } from './config/EngineConfig.js';
 import { RascalConfig } from './config/RascalConfig.js';
+import { PinoLogger } from './logger/PinoLogger.js';
+
+Logger.loggerDelegate = new PinoLogger();
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

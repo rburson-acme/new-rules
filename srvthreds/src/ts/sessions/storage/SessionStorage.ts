@@ -33,7 +33,7 @@ export class SessionStorage {
     try {
       const sessionIds: string[] = await this.storage.retrieveSet(Types.ParticipantSessions, participantId);
       if (!sessionIds?.length) {
-        Logger.error(`No Session found for participant ${participantId}`);
+        Logger.warn(`No Session found for participant ${participantId}`);
         return [];
       }
       const sessions: Session[] = await Series.reduce(

@@ -1,9 +1,8 @@
+import './init.js';
 import { Logger, LoggerLevel } from '../thredlib/index.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { SystemController } from '../persistence/controllers/SystemController.js';
 import { RemoteAgentService } from './RemoteAgentService.js';
-import { ConfigLoader } from '../config/ConfigLoader.js';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { AgentConfig } from '../config/AgentConfig.js';
 import { AgentConfigDef } from '../config/ConfigDefs.js';
@@ -34,7 +33,7 @@ class Server {
       configPath,
       config: new AgentConfig(nodeId),
     });
-    if (!agentConfig) throw new Error(`Agent: failed to load config for configPath: ${configPath}`);
+    if (!agentConfig) throw new Error(`RemoteAgent: failed to load config for configPath: ${configPath}`);
 
     this.agent = new RemoteAgentService({
       agentConfig: agentConfig,
@@ -47,9 +46,9 @@ class Server {
     try {
       Logger.info(`Shutting down session agent...`);
       await this.agent?.shutdown().catch(Logger.error);
-      Logger.info(`Agent shutdown successfully.`);
+      Logger.info(`RemoteAgent shutdown successfully.`);
     } catch (e) {
-      Logger.error(e);
+      Logger.error('RemoteAgent.shutdown(): failed to shutdown the agent', e);
       process.exitCode = 1;
     }
     process.exit(0);
@@ -83,7 +82,7 @@ const args = yargs(hideBin(process.argv))
 const configPath = args['config-path'];
 const nodeId = args['node-id'];
 const additionalArgs = args.arg as Record<string, any> | undefined;
-args.debug ? Logger.setLevel(LoggerLevel.DEBUG) : Logger.setLevel(LoggerLevel.INFO);
+if (args.debug) Logger.setLevel(LoggerLevel.DEBUG);
 
 const server = new Server();
 server.start({

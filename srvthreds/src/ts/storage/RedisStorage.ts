@@ -427,7 +427,7 @@ export class RedisStorage implements Storage {
       return await this.redlock.acquire([$lockKey(key)], ttl || RedisStorage.defaultLockTTL);
     } catch (e) {
       //failed to get lock
-      Logger.error(e);
+      Logger.error('RedisStorage::getLock(): failed to get lock', e);
       throw e;
     }
   }

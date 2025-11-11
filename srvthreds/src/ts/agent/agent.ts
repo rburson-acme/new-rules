@@ -1,3 +1,4 @@
+import './init.js';
 import { Event, Logger, LoggerLevel, Message, Timers } from '../thredlib/index.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -98,7 +99,7 @@ class Server {
       await this.agent?.shutdown().catch(Logger.error);
       Logger.info(`Agent shutdown successfully.`);
     } catch (e) {
-      Logger.error(e);
+      Logger.error('Agent.shutdown(): failed to shutdown the agent', e);
       process.exitCode = 1;
     }
     process.exit(0);
@@ -143,7 +144,7 @@ const args = yargs(hideBin(process.argv))
 
 const configPath = args['config-path'];
 const additionalArgs = args.arg as Record<string, any> | undefined;
-args.debug ? Logger.setLevel(LoggerLevel.DEBUG) : Logger.setLevel(LoggerLevel.INFO);
+if (args.debug) Logger.setLevel(LoggerLevel.DEBUG);
 
 const server = new Server();
 server.start({

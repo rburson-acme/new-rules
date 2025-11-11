@@ -19,7 +19,7 @@ import { System } from './System.js';
 import { ThredStore } from './store/ThredStore.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
 
-const { debug, error, warn, crit, h1, h2, logObject } = Logger;
+const { debug, error, info, crit, h1, h2, logObject } = Logger;
 
 /**
  * The Engine is the main entry point for Event processing.
@@ -67,12 +67,19 @@ export class Engine implements MessageHandler {
   public async handleMessage(messageTemplate: MessageTemplate): Promise<void> {
     try {
       // log the event
-      debug(h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`));
-      logObject(messageTemplate);
+      info({
+        msg: h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`),
+        thredId: messageTemplate.event.thredId,
+      });
+      debug({ thredId: messageTemplate.event.thredId, obj: messageTemplate });
       // NOTE: dispatch all at once - failure notification will be handled separately
       await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate));
     } catch (e) {
-      error(crit(`Engine::Failed dispatch message : ${messageTemplate}`), e as Error, (e as Error).stack);
+      error({
+        msg: crit(`Engine::Failed dispatch message : ${messageTemplate}`),
+        thredId: messageTemplate.event.thredId,
+        err: e as Error,
+      });
     }
   }
 
@@ -95,7 +102,11 @@ export class Engine implements MessageHandler {
       // remove the message from the queue
       await this.inboundQ.delete(message);
     } catch (e) {
-      error(crit(`Failed to consider event ${message.payload?.id}`), e as Error, (e as Error).stack);
+      error({
+        msg: crit(`Failed to consider event ${message.payload?.id}`),
+        thredId: message.payload?.thredId,
+        err: e as Error,
+      });
       await this.inboundQ.reject(message, e as Error).catch(error);
       // update the event with the error
       await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
@@ -125,7 +136,11 @@ export class Engine implements MessageHandler {
       // send the error message
       await this.handleMessage({ event: outboundEvent, to: resolvedTo });
     } catch (e) {
-      error(crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`), e as Error, (e as Error).stack);
+      error({
+        msg: crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`),
+        thredId: inboundEvent.thredId,
+        err: e as Error,
+      });
     }
   }
 
@@ -135,8 +150,8 @@ export class Engine implements MessageHandler {
    * @param event
    */
   consider(event: Event): Promise<void> {
-    debug(h1(`Engine received Event ${event.id} from ${event.source.id}`));
-    logObject(event);
+    info({ msg: h1(`Engine received Event ${event.id} from ${event.source.id}`), thredId: event.thredId });
+    debug({ thredId: event.thredId, obj: event });
     return this.threds.consider(event);
   }
 

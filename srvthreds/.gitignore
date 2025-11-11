@@ -63,8 +63,5 @@ web-build/
 
 .docker/
 
-.roo/
-
-.roomodes
 .env*
 env/

@@ -95,7 +95,7 @@ export class RemoteQService<T> implements QService<T> {
           resolve();
         })
         .on('error', (err, messageId) => {
-          Logger.error(`${this.pubName}: Publisher error`, err, messageId, routingKey);
+          Logger.error(`${this.pubName}: Publisher error for ${messageId} on ${routingKey}`);
           reject(err);
         })
         .on('return', (message) => {
