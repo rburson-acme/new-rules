@@ -9,9 +9,9 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
-    key                  = "stacks/keyvault/${var.environment}.tfstate"
+    key                  = "stacks/keyvault/dev.tfstate"
   }
 }
 
@@ -39,12 +39,7 @@ locals {
   # Army naming convention: CAZ-APPNAME-ENV-REGION-FUNCTION
   resource_group_name = "${local.caz}-${local.app_name}-${local.env_code}-${local.region}-RG"
 
-  # Backend configuration for remote state references
-  backend_config = {
-    resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
-    container_name       = "tfstate"
-  }
+  # Backend configuration is defined in backend-config.tf (symlinked from _shared)
 
   common_tags = {
     Project     = var.project_name

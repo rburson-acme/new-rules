@@ -10,9 +10,9 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
-    key                  = "stacks/acr/${var.environment}.tfstate"
+    key                  = "stacks/acr/dev.tfstate"
   }
 }
 

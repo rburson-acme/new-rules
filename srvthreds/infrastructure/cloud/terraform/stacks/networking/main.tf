@@ -9,9 +9,9 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
-    key                  = "stacks/networking/${var.environment}.tfstate"
+    key                  = "stacks/networking/dev.tfstate"
   }
 }
 
@@ -37,9 +37,13 @@ locals {
   resource_group_name = "${local.caz}-${local.app_name}-${local.env_code}-${local.region}-RG"
 
   # Backend configuration for remote state references
+  # NOTE: Networking stack defines this inline (not via symlink) because:
+  # 1. It's the foundation stack - no dependencies on other stacks
+  # 2. It doesn't reference any remote state
+  # 3. Other stacks reference networking's outputs, not vice versa
   backend_config = {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
   }
 

@@ -2,197 +2,178 @@
 
 Terraform infrastructure-as-code for deploying SrvThreds to Azure with private networking and multi-environment support.
 
-## Deployment Pattern
-
-**IMPORTANT**: All infrastructure deployments are managed through the `deploy-stack.sh` script. This is the **only** supported way to deploy, update, or destroy resources.
-
-- ✅ **Use**: `./scripts/deploy-stack.sh`
-- ❌ **Don't use**: Manual `terraform` commands
-
-This ensures consistent backend configuration, proper dependency ordering, and prevents configuration errors.
-
 ## Quick Start
 
-Follow these steps in order to deploy SrvThreds infrastructure to Azure.
+All infrastructure deployments are managed through the **Terraform CLI**. This ensures consistent configuration, proper dependency ordering, and comprehensive error handling.
 
-### Step 1: Prerequisites
-
-Before starting, ensure you have:
-
-**Azure CLI** installed and you're logged in:
 ```bash
-# Install Azure CLI if needed
-# https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+# Show available commands
+npm run terraformCli -- --help
 
-# Login to Azure
-az login
+# Deploy all stacks to dev
+npm run terraformCli -- deploy dev
 
-# Set the correct subscription
-az account set --subscription "f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed"
+# Check deployment status
+npm run terraformCli -- status dev
 
-# Verify you're on the right subscription
-az account show --query "{Name:name, SubscriptionId:id}" -o table
+# Cleanup infrastructure
+npm run terraformCli -- cleanup dev --dry-run
+npm run terraformCli -- cleanup dev
 ```
 
-**Terraform** version 1.5 or higher:
+## Documentation
+
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide and workflows
+- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[CLI README](../../tools/terraform-cli/README.md)** - Detailed CLI documentation
+
+## Prerequisites
+
+Before deploying, ensure you have:
+
 ```bash
-# Check Terraform version
+# Azure CLI installed and logged in
+az login
+az account set --subscription "<subscription-id>"
+
+# Terraform 1.5+
 terraform version
 
-# Should show: Terraform v1.5.x or higher
-```
-
-### Step 2: Deploy Bootstrap (One-Time Setup)
-
-The bootstrap creates Azure Storage for Terraform state files. This is the **only** time you run terraform directly.
-
-```bash
-# Navigate to bootstrap directory
-cd infrastructure/cloud/terraform/bootstrap
-
-# Initialize Terraform
-terraform init
-
-# Deploy the state storage
-terraform apply
-
-# IMPORTANT: Save the storage account name from the output
-# You'll see: storage_account_name = "srvthredstfstated9jvee"
-```
-
-✅ **Checkpoint**: You should see a new resource group `srvthreds-terraform-rg` in Azure portal.
-
-### Step 3: Deploy Infrastructure to Dev
-
-Now use the deployment script for all infrastructure operations.
-
-**Option A: Deploy Everything (Recommended)**
-
-```bash
-# Navigate to terraform root
-cd infrastructure/cloud/terraform
-
-# Deploy all stacks to dev environment
-./scripts/deploy-stack.sh all dev
-
-# The script will:
-# 1. Build (validate + plan) each stack
-# 2. Show you what will be created
-# 3. Ask for confirmation
-# 4. Deploy everything in dependency order
-```
-
-**Option B: Deploy Individual Stacks**
-
-```bash
-cd infrastructure/cloud/terraform
-
-# Step 1: Deploy networking (foundation)
-./scripts/deploy-stack.sh build networking dev   # Review what will be created
-./scripts/deploy-stack.sh apply networking dev   # Deploy it
-
-# Step 2: Deploy Key Vault
-./scripts/deploy-stack.sh apply keyvault dev     # Auto-runs build first
-
-# Step 3: Deploy remaining stacks as they're implemented
-# ./scripts/deploy-stack.sh apply acr dev
-# ./scripts/deploy-stack.sh apply cosmosdb dev
-# ./scripts/deploy-stack.sh apply aks dev
-```
-
-✅ **Checkpoint**: Run `./scripts/deploy-stack.sh status dev` to see what's deployed.
-
-### Step 4: Verify Deployment
-
-Check that everything deployed successfully:
-
-```bash
-# Show deployment status
-./scripts/deploy-stack.sh status dev
-
-# You should see:
-# networking     ✓ Deployed        15
-# keyvault       ✓ Deployed        8
-```
-
-Verify in Azure Portal:
-- Resource group: `CAZ-SRVTHREDS-D-E-RG`
-- VNet: `CAZ-SRVTHREDS-D-E-NET-VNET`
-- Key Vault: `CAZ-SRVTHREDS-D-E-KEY`
-
-## What's Included
-
-### ✅ Deployed to Dev
-
-- **[networking](modules/azure/networking/)** - VNet, subnets, NSGs
-- **[keyvault](modules/azure/keyvault/)** - Key Vault with RBAC
-- **[acr](modules/azure/acr/)** - Container Registry (Standard SKU)
-- **[cosmosdb](modules/azure/cosmosdb/)** - MongoDB API (Free tier)
-- **[redis](modules/azure/redis/)** - Cache (Basic C0)
-- **[servicebus](modules/azure/servicebus/)** - Messaging with 3 queues
-- **[aks](modules/azure/aks/)** - Kubernetes cluster (v1.33.5, 2 nodes, Free tier)
-- **[monitoring](modules/azure/monitoring/)** - Log Analytics + Application Insights
-- **[appgateway](modules/azure/appgateway/)** - Application Gateway (Standard_v2, TLS 1.2+)
-
-### ✅ Available Modules
-
-- **[private-endpoint](modules/azure/private-endpoint/)** - Reusable for Premium SKUs
-
-## Common Operations
-
-```bash
-# Build (validate and plan) a stack - safe, no changes
-./scripts/deploy-stack.sh build networking dev
-
-# Deploy a stack (auto-runs build first)
-./scripts/deploy-stack.sh apply networking dev
-
-# Show deployment status
-./scripts/deploy-stack.sh status dev
-
-# Deploy all stacks in dependency order
-./scripts/deploy-stack.sh all dev
-
-# Destroy a stack (with dependency checking)
-./scripts/deploy-stack.sh destroy keyvault dev
-
-# Destroy all infrastructure (requires special confirmation)
-./scripts/deploy-stack.sh destroy-all dev
+# Bash 4.0+
+bash --version
 ```
 
 ## Directory Structure
 
 ```
-.
-├── bootstrap/              # Terraform state storage (run first with terraform directly)
-├── docs/                   # 📚 Detailed documentation
-│   ├── cARMY_NAMING_CONVENTIONS.md  # Army NETCOM naming standards
-│   ├── PHASE3-IMPLEMENTATION.md     # Implementation tracking
-│   └── ...                          # Additional design docs
-├── scripts/
-│   └── deploy-stack.sh    # 🎯 Primary deployment tool (use this for everything)
-├── stacks/                # ✅ Modular stack deployments
-│   ├── networking/        # ✅ VNet, subnets, NSGs (deployed)
-│   ├── keyvault/          # ✅ Key Vault (deployed)
-│   ├── acr/               # ✅ Container registry (deployed)
-│   ├── cosmosdb/          # ✅ MongoDB API (deployed)
-│   ├── redis/             # ✅ Cache for Redis (deployed)
-│   ├── servicebus/        # ✅ Messaging (deployed)
-│   ├── aks/               # ✅ Kubernetes cluster (deployed)
-│   ├── monitoring/        # ✅ Log Analytics + App Insights (deployed)
-│   └── appgateway/        # ✅ Application Gateway (deployed)
-└── modules/
-    └── azure/             # Reusable Terraform modules
-        ├── networking/
-        ├── keyvault/
-        ├── acr/
-        ├── cosmosdb/
-        ├── redis/
-        ├── servicebus/
-        ├── aks/
-        ├── monitoring/
-        ├── appgateway/
-        └── private-endpoint/
+terraform/
+├── bootstrap/              # Bootstrap infrastructure (state storage)
+├── stacks/                 # Infrastructure stacks
+│   ├── networking/         # VNet, subnets, NSGs
+│   ├── keyvault/          # Key Vault for secrets
+│   ├── acr/               # Container registry
+│   ├── cosmosdb/          # Cosmos DB database
+│   ├── redis/             # Redis cache
+│   ├── servicebus/        # Service Bus messaging
+│   ├── monitoring/        # Monitoring and logging
+│   ├── aks/               # Kubernetes cluster
+│   ├── appgateway/        # Application Gateway
+│   └── _shared/           # Shared backend configuration
+├── docs/                   # Documentation
+└── README.md              # This file
+```
+
+## Deployment Workflow
+
+### 1. Bootstrap (First Time Only)
+
+```bash
+npm run terraformCli -- bootstrap dev
+```
+
+This creates the storage account for Terraform state. The storage account name includes a random suffix (e.g., `srvthredstfstatei274ht`).
+
+### 2. Deploy Infrastructure
+
+```bash
+# Deploy all stacks
+npm run terraformCli -- deploy dev
+
+# Or deploy specific stacks
+npm run terraformCli -- deploy dev networking keyvault
+```
+
+The CLI automatically handles:
+- Dependency resolution (deploys in correct order)
+- Terraform initialization and validation
+- Planning and applying changes
+- Error handling and rollback
+
+### 3. Verify Deployment
+
+```bash
+npm run terraformCli -- status dev
+```
+
+## Stacks
+
+Infrastructure is organized into independent stacks with clear dependencies:
+
+| Stack | Purpose | Dependencies |
+|-------|---------|--------------|
+| **networking** | VNet, subnets, NSGs | None |
+| **keyvault** | Secrets management | networking |
+| **acr** | Container registry | networking |
+| **cosmosdb** | MongoDB database | networking |
+| **redis** | Cache layer | networking |
+| **servicebus** | Message queue | networking |
+| **monitoring** | Logging & monitoring | networking |
+| **aks** | Kubernetes cluster | networking, acr |
+| **appgateway** | Load balancer | networking |
+
+## Common Commands
+
+```bash
+# Preview changes before deploying
+npm run terraformCli -- plan dev
+
+# Deploy all stacks
+npm run terraformCli -- deploy dev
+
+# Deploy specific stacks
+npm run terraformCli -- deploy dev networking keyvault
+
+# Check status
+npm run terraformCli -- status dev
+
+# Backup state
+npm run terraformCli -- state backup dev
+
+# Cleanup infrastructure
+npm run terraformCli -- cleanup dev --dry-run
+npm run terraformCli -- cleanup dev
+```
+
+## State Management
+
+Manage Terraform state with the CLI:
+
+```bash
+# Backup state before risky operations
+npm run terraformCli -- state backup dev
+
+# Check state consistency
+npm run terraformCli -- state validate dev
+
+# Refresh state from Azure
+npm run terraformCli -- state repair dev
+
+# Show state information
+npm run terraformCli -- state show dev
+```
+
+## Directory Structure
+
+```
+terraform/
+├── bootstrap/              # Bootstrap infrastructure (state storage)
+├── stacks/                 # Infrastructure stacks
+│   ├── networking/         # VNet, subnets, NSGs
+│   ├── keyvault/          # Key Vault
+│   ├── acr/               # Container registry
+│   ├── cosmosdb/          # MongoDB database
+│   ├── redis/             # Cache
+│   ├── servicebus/        # Message queue
+│   ├── monitoring/        # Logging & monitoring
+│   ├── aks/               # Kubernetes cluster
+│   ├── appgateway/        # Load balancer
+│   └── _shared/           # Shared backend configuration
+├── modules/               # Reusable Terraform modules
+│   └── azure/
+├── docs/                  # Documentation
+│   ├── DEPLOYMENT.md      # Deployment guide
+│   └── TROUBLESHOOTING.md # Troubleshooting guide
+└── README.md              # This file
 ```
 
 ## Architecture
@@ -208,7 +189,7 @@ Verify in Azure Portal:
 ### Subnet Architecture
 
 ```
-VNet: initiative-{env}-vnet
+VNet: CAZ-SRVTHREDS-{ENV}-E-NET-VNET
 ├── Gateway Subnet          → Application Gateway + WAF
 ├── AKS Subnet             → Kubernetes nodes
 ├── Private Endpoint Subnet → Private endpoints for PaaS services
@@ -216,154 +197,47 @@ VNet: initiative-{env}-vnet
 └── Support Subnet         → Container Instances for jobs
 ```
 
-## Environment Strategy
+## Naming Convention
 
-| Environment | VNet CIDR | Purpose | Domains |
-|------------|-----------|---------|---------|
-| **dev** | 10.0.0.0/16 | Development, cost-optimized | dev.initiative.io |
-| **test** | 10.1.0.0/16 | Staging, prod-like config | test.initiative.io |
-| **prod** | 10.2.0.0/16 | Production, HA, auto-scale | *.initiative.io |
+Resources follow Army NETCOM naming standards:
 
-## Common Workflows
-
-### Daily Development Workflow
-
-**Check what's currently deployed:**
-```bash
-cd infrastructure/cloud/terraform
-./scripts/deploy-stack.sh status dev
+```
+CAZ-SRVTHREDS-{ENV}-E-{RESOURCE}
 ```
 
-**Make a change to infrastructure:**
+Where:
+- `CAZ` - Commercial Azure
+- `SRVTHREDS` - Application name
+- `{ENV}` - Environment code (D=dev, T=test, P=prod)
+- `E` - Enterprise
+- `{RESOURCE}` - Resource type (RG, NET, KEY, etc.)
+
+## Getting Help
+
+For detailed information:
+
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
+- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[terraform-cli README](../../tools/terraform-cli/README.md)** - CLI documentation
+
+For command help:
+
 ```bash
-# 1. Edit the stack files (e.g., stacks/networking/main.tf)
-
-# 2. Preview changes before applying
-./scripts/deploy-stack.sh build networking dev
-
-# 3. Review the plan output carefully
-
-# 4. Apply the changes
-./scripts/deploy-stack.sh apply networking dev
-
-# 5. Verify the changes
-./scripts/deploy-stack.sh status dev
+npm run terraformCli -- --help
+npm run terraformCli -- <command> --help
 ```
 
-**Add a new stack:**
-```bash
-# 1. Create stack directory and files
-# 2. Deploy the new stack
-./scripts/deploy-stack.sh build <new-stack> dev
-./scripts/deploy-stack.sh apply <new-stack> dev
-```
+## Key Principles
 
-### Promoting to Test/Production
-
-**Deploy to test environment:**
-```bash
-# Review what will be deployed
-./scripts/deploy-stack.sh status test
-
-# Deploy all stacks to test
-./scripts/deploy-stack.sh all test
-
-# Verify deployment
-./scripts/deploy-stack.sh status test
-```
-
-**Deploy to production:**
-```bash
-# Production requires extra care
-# 1. Ensure test is working correctly
-# 2. Deploy to production
-./scripts/deploy-stack.sh all prod
-
-# 3. Verify critical resources
-./scripts/deploy-stack.sh status prod
-```
-
-### Destroying Resources
-
-**Destroy a single stack:**
-```bash
-# The script checks for dependent stacks automatically
-./scripts/deploy-stack.sh destroy keyvault dev
-
-# If other stacks depend on it, you'll see an error like:
-# "Cannot destroy networking - these deployed stacks depend on it: keyvault"
-```
-
-**Destroy all infrastructure:**
-```bash
-# WARNING: This destroys everything in the environment
-./scripts/deploy-stack.sh destroy-all dev
-
-# You'll need to type: destroy-all-dev
-```
-
-### Troubleshooting Deployments
-
-**Build failed with errors:**
-```bash
-# Fix the error in the stack files
-# Then run build again
-./scripts/deploy-stack.sh build networking dev
-```
-
-**Detect configuration drift:**
-```bash
-# Status command shows drift automatically
-./scripts/deploy-stack.sh status dev
-
-# If you see "⚠ Drift detected":
-./scripts/deploy-stack.sh build networking dev   # See what changed
-./scripts/deploy-stack.sh apply networking dev   # Sync state
-```
-
-**Missing dependencies error:**
-```bash
-# Error: "Missing dependencies for keyvault: networking"
-# Solution: Deploy dependencies first
-./scripts/deploy-stack.sh apply networking dev
-./scripts/deploy-stack.sh apply keyvault dev
-```
-
-**Important Notes:**
-- ✅ Always use `./scripts/deploy-stack.sh` - never run `terraform` directly in stacks/
-- ✅ Run `build` before `apply` to preview changes
+- ✅ Always use the Terraform CLI - never run `terraform` directly
+- ✅ Preview changes with `--dry-run` before applying
 - ✅ Use `status` command regularly to check deployment health
-- ✅ The script handles all backend configuration automatically
-
-## Documentation
-
-### Terraform Documentation
-
-- **[Stacks Deployment Guide](stacks/README.md)** - Complete modular deployment documentation
-- **[Naming Conventions](docs/cARMY_NAMING_CONVENTIONS.md)** - Army NETCOM naming standards
-- **[Phase 3 Implementation](docs/PHASE3-IMPLEMENTATION.md)** - Implementation tracking and status
-
-For additional architecture and design documentation, see the **[docs/](docs/)** folder.
-
-### Project Documentation
-
-- **[Deployment Guide](../../../DEPLOYMENT-GUIDE.md)** - Application deployment options (Manual, GitHub Actions, Azure DevOps)
-- **[Azure Setup Guide](../../docs/cloud/AZURE-SETUP-GUIDE.md)** - Subscription setup
-- **[Azure Security Requirements](../../docs/cloud/AZURE-SECURITY-REQUIREMENTS.md)** - Security architecture
-- **[Infrastructure Roadmap](../../INFRASTRUCTURE-ROADMAP.md)** - Overall infrastructure plan
-
-## Reference
-
-- **Catalyst Infrastructure**: `~/Repos/catalyst-infrastructure/bicep/innovation-resources/`
-- **Azure Terraform Provider**: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
+- ✅ Backup state before risky operations
+- ✅ The CLI handles all backend configuration automatically
 
 ## Support
 
-Initiative Labs Platform Team
-- GitHub: github.com/initiative-labs/srvthreds
-- Subscription ID: `f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed`
-
----
-
-**Status**: Phase 3 In Progress
-**Last Updated**: 2025-01-06
+For issues or questions:
+1. Check [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+2. Enable debug logging: `npm run terraformCli -- --debug <command>`
+3. Contact infrastructure team

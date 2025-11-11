@@ -11,8 +11,14 @@ output "cosmosdb_endpoint" {
 }
 
 output "cosmosdb_connection_strings" {
-  description = "CosmosDB connection strings"
+  description = "CosmosDB connection strings (primary and secondary)"
   value       = module.cosmosdb.cosmosdb_connection_strings
+  sensitive   = true
+}
+
+output "cosmosdb_primary_connection_string" {
+  description = "Primary MongoDB connection string (recommended for most use cases)"
+  value       = module.cosmosdb.cosmosdb_primary_connection_string
   sensitive   = true
 }
 

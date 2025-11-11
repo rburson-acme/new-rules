@@ -13,9 +13,9 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
-    key                  = "stacks/monitoring/${var.environment}.tfstate"
+    key                  = "stacks/monitoring/dev.tfstate"
   }
 }
 
@@ -30,7 +30,7 @@ data "terraform_remote_state" "networking" {
   backend = "azurerm"
   config = {
     resource_group_name  = "srvthreds-terraform-rg"
-    storage_account_name = "srvthredstfstated9jvee"
+    storage_account_name = "srvthredstfstatei274ht"
     container_name       = "tfstate"
     key                  = "stacks/networking/${var.environment}.tfstate"
   }

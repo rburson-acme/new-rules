@@ -45,7 +45,8 @@
     "minikube-reset": "npm run deploymentCli -- minikube k8s_reset",
     "minikube-set-context": "npm run deploymentCli -- minikube set_context",
     "minikube-validate": "npm run deploymentCli -- minikube k8s_validate",
-    "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup"
+    "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup",
+    "terraformCli": "tsx infrastructure/tools/terraform-cli/cli.ts"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

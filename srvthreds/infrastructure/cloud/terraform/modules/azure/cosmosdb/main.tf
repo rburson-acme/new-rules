@@ -116,10 +116,10 @@ resource "azurerm_cosmosdb_account" "main" {
   local_authentication_disabled = var.disable_local_auth
 
   # Automatic failover
-  enable_automatic_failover = var.enable_automatic_failover
+  automatic_failover_enabled = var.enable_automatic_failover
 
   # Free tier (dev only)
-  enable_free_tier = var.enable_free_tier
+  free_tier_enabled = var.enable_free_tier
 
   tags = local.common_tags
 }

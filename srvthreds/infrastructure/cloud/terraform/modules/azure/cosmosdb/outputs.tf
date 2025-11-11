@@ -11,8 +11,17 @@ output "cosmosdb_endpoint" {
 }
 
 output "cosmosdb_connection_strings" {
-  description = "CosmosDB connection strings"
-  value       = azurerm_cosmosdb_account.main.connection_strings
+  description = "CosmosDB MongoDB connection strings (primary and secondary)"
+  value = {
+    primary   = "mongodb://${azurerm_cosmosdb_account.main.name}:${azurerm_cosmosdb_account.main.primary_key}@${azurerm_cosmosdb_account.main.name}.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${azurerm_cosmosdb_account.main.name}@"
+    secondary = "mongodb://${azurerm_cosmosdb_account.main.name}:${azurerm_cosmosdb_account.main.secondary_key}@${azurerm_cosmosdb_account.main.name}.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${azurerm_cosmosdb_account.main.name}@"
+  }
+  sensitive = true
+}
+
+output "cosmosdb_primary_connection_string" {
+  description = "Primary MongoDB connection string (recommended for most use cases)"
+  value       = "mongodb://${azurerm_cosmosdb_account.main.name}:${azurerm_cosmosdb_account.main.primary_key}@${azurerm_cosmosdb_account.main.name}.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${azurerm_cosmosdb_account.main.name}@"
   sensitive   = true
 }
 

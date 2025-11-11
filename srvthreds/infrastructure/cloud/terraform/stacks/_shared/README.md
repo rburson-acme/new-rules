@@ -2,6 +2,9 @@
 
 This directory contains shared configuration files used across all stacks.
 
+> **⚠️ CRITICAL**: This configuration is essential for state management. Changes here affect ALL stacks.
+> **🛡️ PROTECTED**: Symlink consistency is validated automatically. See `../../SYMLINK-PROTECTION.md`
+
 ## backend-config.tf
 
 Centralized backend storage configuration for remote state references.
@@ -19,7 +22,7 @@ Each stack should create a symbolic link to this file:
 
 ```bash
 cd stacks/<your-stack>
-ln -sf ../_shared/backend-config.tf ./shared-backend-config.tf
+ln -s ../_shared/backend-config.tf ./backend-config.tf
 ```
 
 Then use the locals in your remote state references:
@@ -74,12 +77,15 @@ From `backend-config.tf`:
 
 ### Stacks Using This Configuration
 
-- ✅ networking
+- ○ networking (doesn't need remote state - it's the foundation)
 - ✅ keyvault
 - ✅ acr
-- 🚧 cosmosdb (add symlink when created)
-- 🚧 redis (add symlink when created)
-- 🚧 aks (add symlink when created)
+- ✅ cosmosdb
+- ✅ redis
+- ✅ servicebus
+- ✅ aks
+- ✅ appgateway
+- ✅ monitoring
 
 ## Adding to New Stacks
 
@@ -88,7 +94,7 @@ When creating a new stack:
 1. Create the symbolic link:
    ```bash
    cd stacks/<new-stack>
-   ln -sf ../_shared/backend-config.tf ./shared-backend-config.tf
+   ln -s ../_shared/backend-config.tf ./backend-config.tf
    ```
 
 2. Remove any `backend_config` or `state_key_format` locals from your stack's main.tf
@@ -120,7 +126,7 @@ If migrating existing stacks:
 **Solution**:
 ```bash
 cd stacks/<stack-name>
-ln -sf ../_shared/backend-config.tf ./shared-backend-config.tf
+ln -s ../_shared/backend-config.tf ./backend-config.tf
 ```
 
 ### Error: "local.state_key_format is not defined"

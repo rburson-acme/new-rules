@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "resourceGroupName": "CAZ-SRVTHREDS-D-E-RG",
+    "bootstrapResourceGroup": "srvthreds-terraform-rg",
+    "bootstrapStorageAccount": "srvthredstfstatei274ht"
+  },
+  "test": {
+    "resourceGroupName": "CAZ-SRVTHREDS-T-E-RG",
+    "bootstrapResourceGroup": "srvthreds-terraform-rg",
+    "bootstrapStorageAccount": "srvthredstfstatei274ht"
+  },
+  "prod": {
+    "resourceGroupName": "CAZ-SRVTHREDS-P-E-RG",
+    "bootstrapResourceGroup": "srvthreds-terraform-rg",
+    "bootstrapStorageAccount": "srvthredstfstatei274ht"
+  }
+}
+
