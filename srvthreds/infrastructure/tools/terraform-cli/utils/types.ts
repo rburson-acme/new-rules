@@ -23,8 +23,8 @@ export interface TerraformStackConfig {
  * Environment-specific configuration
  */
 export interface EnvironmentConfig {
-  bootstrapResourceGroup: string;
-  bootstrapStorageAccount: string;
+  stateBackendResourceGroup: string;
+  stateBackendStorageAccount: string;
 }
 
 // ============================================================================

@@ -1,4 +1,4 @@
-# Variables for Terraform Bootstrap
+# Variables for Terraform State Backend Setup
 
 variable "subscription_id" {
   description = "Azure subscription ID for resource deployment"

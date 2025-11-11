@@ -49,7 +49,7 @@ bash --version
 
 ```
 terraform/
-├── bootstrap/              # Bootstrap infrastructure (state storage)
+├── state-backend/          # Terraform state backend setup (remote state storage)
 ├── stacks/                 # Infrastructure stacks
 │   ├── networking/         # VNet, subnets, NSGs
 │   ├── keyvault/          # Key Vault for secrets
@@ -67,10 +67,10 @@ terraform/
 
 ## Deployment Workflow
 
-### 1. Bootstrap (First Time Only)
+### 1. Setup State Backend (First Time Only)
 
 ```bash
-npm run terraformCli -- bootstrap dev
+npm run terraformCli -- state-backend dev
 ```
 
 This creates the storage account for Terraform state. The storage account name includes a random suffix (e.g., `srvthredstfstatei274ht`).
@@ -158,7 +158,7 @@ npm run terraformCli -- state show dev
 
 ```
 terraform/
-├── bootstrap/              # Bootstrap infrastructure (state storage)
+├── state-backend/          # Terraform state backend setup (remote state storage)
 ├── stacks/                 # Infrastructure stacks
 │   ├── networking/         # VNet, subnets, NSGs
 │   ├── keyvault/          # Key Vault
@@ -175,7 +175,7 @@ terraform/
 ├── docs/                  # Centralized documentation
 │   ├── README.md          # Documentation index
 │   ├── deployment-guide.md
-│   ├── bootstrap-guide.md
+│   ├── state-backend-guide.md
 │   ├── stacks-guide.md
 │   ├── best-practices.md
 │   └── modules/           # Module documentation

@@ -275,8 +275,8 @@ Environment-specific configuration:
 {
   "dev": {
     "resourceGroupName": "CAZ-SRVTHREDS-D-E-RG",
-    "bootstrapResourceGroup": "srvthreds-terraform-rg",
-    "bootstrapStorageAccount": "srvthredstfstate"
+    "stateBackendResourceGroup": "srvthreds-terraform-rg",
+    "stateBackendStorageAccount": "srvthredstfstate"
   }
 }
 ```

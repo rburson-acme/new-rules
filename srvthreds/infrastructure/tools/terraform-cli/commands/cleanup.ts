@@ -239,14 +239,14 @@ async function cleanupBootstrap(
   azure: AzureManager,
   envConfig: EnvironmentConfig
 ): Promise<void> {
-  logger.info('Cleaning up bootstrap infrastructure', 'cleanup');
+  logger.info('Cleaning up state backend infrastructure', 'cleanup');
 
   try {
     // Remove management lock
-    const locks = await azure.listLocks(envConfig.bootstrapResourceGroup);
+    const locks = await azure.listLocks(envConfig.stateBackendResourceGroup);
     for (const lock of locks) {
       try {
-        await azure.deleteLock(lock.name, envConfig.bootstrapResourceGroup);
+        await azure.deleteLock(lock.name, envConfig.stateBackendResourceGroup);
         logger.success(`Removed lock ${lock.name}`);
       } catch (error: any) {
         logger.warn(`Failed to remove lock: ${error.message}`, 'cleanup');

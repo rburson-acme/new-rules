@@ -130,8 +130,8 @@ export class TerraformManager {
     // Add storage account config if available
     if (this.envConfig) {
       backendConfigArgs.push(
-        `-backend-config=resource_group_name=${this.envConfig.bootstrapResourceGroup}`,
-        `-backend-config=storage_account_name=${this.envConfig.bootstrapStorageAccount}`,
+        `-backend-config=resource_group_name=${this.envConfig.stateBackendResourceGroup}`,
+        `-backend-config=storage_account_name=${this.envConfig.stateBackendStorageAccount}`,
         `-backend-config=container_name=tfstate`
       );
     }

@@ -10,7 +10,7 @@
  *   terraform-cli deploy <environment> [stacks...]
  *   terraform-cli state <command> <environment>
  *   terraform-cli cleanup <environment> [--force] [--dry-run]
- *   terraform-cli bootstrap <environment>
+ *   terraform-cli state-backend <environment>
  *   terraform-cli status <environment>
  */
 
@@ -72,9 +72,17 @@ const commands: Map<string, Command> = new Map([
     },
   ],
   [
-    'bootstrap',
+    'state-backend',
     {
-      name: 'bootstrap',
+      name: 'state-backend',
+      description: BOOTSTRAP_COMMAND_DESCRIPTION,
+      handler: bootstrapCommand,
+    },
+  ],
+  [
+    'bootstrap',  // Keep as alias for backward compatibility
+    {
+      name: 'bootstrap (deprecated, use state-backend)',
       description: BOOTSTRAP_COMMAND_DESCRIPTION,
       handler: bootstrapCommand,
     },

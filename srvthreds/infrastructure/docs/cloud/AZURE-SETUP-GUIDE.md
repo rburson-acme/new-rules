@@ -8,7 +8,7 @@ The SrvThreds Azure infrastructure is managed using Terraform with the following
 
 ```
 infrastructure/cloud/terraform/
-├── bootstrap/           # Initial state management setup (run once)
+├── state-backend/       # Terraform state backend setup (run once)
 ├── core/               # Core infrastructure (networking, AKS, ACR, Key Vault)
 ├── data/               # Data layer (CosmosDB, Redis, Service Bus)
 └── app/                # Application deployments
@@ -63,9 +63,9 @@ Before you begin, ensure you have:
 
 ## Setup Phases
 
-### Phase 1: Bootstrap Terraform State Management
+### Phase 1: Terraform State Backend Setup
 
-The bootstrap phase creates the foundational resources needed to store Terraform state remotely. This is a one-time setup that must be completed before deploying any other infrastructure.
+The state backend setup creates the foundational resources needed to store Terraform state remotely. This is a one-time setup that must be completed before deploying any other infrastructure.
 
 **What gets created:**
 - Resource Group for Terraform state storage
@@ -73,14 +73,14 @@ The bootstrap phase creates the foundational resources needed to store Terraform
 - Storage Container for state files
 - Management Lock to prevent accidental deletion
 
-**Implementation:** See [cloud/terraform/bootstrap/](../../cloud/terraform/bootstrap/)
+**Implementation:** See [cloud/terraform/state-backend/](../../cloud/terraform/state-backend/)
 
 #### Step 1: Configure Variables
 
-Navigate to the bootstrap directory:
+Navigate to the state-backend directory:
 
 ```bash
-cd infrastructure/cloud/terraform/bootstrap
+cd infrastructure/cloud/terraform/state-backend
 ```
 
 Create your variables file from the template:
@@ -110,23 +110,23 @@ project_name = "srvthreds"
 
 **IMPORTANT:** Never commit `terraform.tfvars` to version control. It's already in `.gitignore`.
 
-#### Step 2: Deploy Bootstrap Infrastructure
+#### Step 2: Deploy State Backend Infrastructure
 
 Use the Terraform CLI from the project root:
 
 ```bash
-# Bootstrap Azure subscription (first time setup)
-npm run terraformCli -- bootstrap dev
+# Setup state backend (first time setup)
+npm run terraformCli -- state-backend dev
 ```
 
 Type `yes` when prompted. Deployment takes ~2-3 minutes.
 
-#### Step 3: Verify Bootstrap
+#### Step 3: Verify State Backend
 
-The CLI will automatically save the backend configuration. You can verify the bootstrap status:
+The CLI will automatically save the backend configuration. You can verify the state backend status:
 
 ```bash
-# Check bootstrap status
+# Check state backend status
 npm run terraformCli -- status dev
 ```
 
@@ -149,7 +149,7 @@ The core infrastructure includes networking, Kubernetes cluster, container regis
 
 Before deploying core infrastructure:
 
-1. Complete Phase 1 (Bootstrap) - you need remote state storage
+1. Complete Phase 1 (State Backend Setup) - you need remote state storage
 2. Decide on your environment configuration (dev, staging, production)
 3. Review environment-specific settings in [shared/configs/environments/](../../shared/configs/environments/)
 
@@ -484,8 +484,8 @@ terraform force-unlock <lock-id>
 **2. Resource Name Conflicts:**
 
 Storage account names must be globally unique. If you get naming conflicts:
-- The bootstrap includes a random suffix
-- Try running the CLI bootstrap command again for a new suffix
+- The state backend setup includes a random suffix
+- Try running the CLI state-backend command again for a new suffix
 - Or manually set a unique name in the environment tfvars file
 
 **3. Insufficient Permissions:**

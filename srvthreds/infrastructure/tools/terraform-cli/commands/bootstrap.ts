@@ -1,5 +1,5 @@
 /**
- * Bootstrap command - Initialize bootstrap infrastructure
+ * State Backend command - Initialize Terraform state backend infrastructure
  */
 
 import * as path from 'path';
@@ -16,21 +16,23 @@ interface DeployConfig {
   environments: string[];
 }
 
-export const BOOTSTRAP_COMMAND_DESCRIPTION = 'Initialize bootstrap infrastructure (storage, resource group)';
+export const BOOTSTRAP_COMMAND_DESCRIPTION = 'Initialize Terraform state backend infrastructure (storage, resource group)';
 
 export async function bootstrapCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
     console.log(`
-Initialize bootstrap infrastructure
+Initialize Terraform State Backend Infrastructure
 
-Bootstrap creates the foundational infrastructure needed for Terraform state management:
+Creates the foundational infrastructure needed for Terraform remote state management:
 - Resource group for Terraform state
 - Storage account for state files
 - Container for state storage
 - Management lock to prevent accidental deletion
 
+Note: This is separate from application data seeding (npm run bootstrap).
+
 USAGE:
-  terraform-cli bootstrap <environment> [options]
+  terraform-cli state-backend <environment> [options]
 
 ARGUMENTS:
   environment     Target environment (dev, test, prod)
@@ -41,14 +43,14 @@ OPTIONS:
   --help          Show this help message
 
 EXAMPLES:
-  # Bootstrap dev environment
-  terraform-cli bootstrap dev
+  # Setup state backend for dev environment
+  terraform-cli state-backend dev
 
-  # Preview bootstrap
-  terraform-cli bootstrap dev --dry-run
+  # Preview state backend setup
+  terraform-cli state-backend dev --dry-run
 
-  # Bootstrap without confirmation
-  terraform-cli bootstrap dev --force
+  # Setup without confirmation
+  terraform-cli state-backend dev --force
 `);
     return;
   }
@@ -75,24 +77,24 @@ EXAMPLES:
     );
   }
 
-  logger.section('BOOTSTRAP INFRASTRUCTURE');
+  logger.section('STATE BACKEND SETUP');
 
   if (dryRun) {
-    logger.warn('DRY RUN MODE - No changes will be made', 'bootstrap');
+    logger.warn('DRY RUN MODE - No changes will be made', 'state-backend');
   }
 
   // Show what will be created
-  console.log('\nBootstrap Plan:');
+  console.log('\nState Backend Setup Plan:');
   console.log('  1. Create resource group for Terraform state');
   console.log('  2. Create storage account for state files');
   console.log('  3. Create container for state storage');
   console.log('  4. Apply management lock to prevent deletion');
 
-  // Confirm bootstrap
+  // Confirm setup
   if (!force && !dryRun) {
-    const confirmed = await confirmAction('Proceed with bootstrap?');
+    const confirmed = await confirmAction('Proceed with state backend setup?');
     if (!confirmed) {
-      logger.info('Bootstrap cancelled', 'bootstrap');
+      logger.info('State backend setup cancelled', 'state-backend');
       return;
     }
   }
@@ -101,9 +103,9 @@ EXAMPLES:
   const terraform = new TerraformManager(terraformDir, environment);
 
   try {
-    logger.section('INITIALIZING BOOTSTRAP');
+    logger.section('INITIALIZING STATE BACKEND');
 
-    const bootstrapPath = 'bootstrap';
+    const bootstrapPath = 'state-backend';
 
     // Initialize
     await terraform.init(bootstrapPath, { dryRun });
@@ -118,26 +120,26 @@ EXAMPLES:
     // Apply
     if (!dryRun) {
       await terraform.apply(bootstrapPath, planFile);
-      logger.success('Bootstrap infrastructure created');
+      logger.success('State backend infrastructure created');
 
       // Get outputs
-      logger.section('BOOTSTRAP OUTPUTS');
+      logger.section('STATE BACKEND OUTPUTS');
       try {
         const outputs = await terraform.getOutput(bootstrapPath);
-        console.log('\nBootstrap outputs:');
+        console.log('\nState backend outputs:');
         for (const [key, value] of Object.entries(outputs)) {
           console.log(`  ${key}: ${JSON.stringify(value)}`);
         }
       } catch (error: any) {
-        logger.warn(`Failed to retrieve outputs: ${error.message}`, 'bootstrap');
+        logger.warn(`Failed to retrieve outputs: ${error.message}`, 'state-backend');
       }
     } else {
-      logger.info('[DRY RUN] Would create bootstrap infrastructure', 'bootstrap');
+      logger.info('[DRY RUN] Would create state backend infrastructure', 'state-backend');
     }
 
-    logger.success('Bootstrap completed successfully');
+    logger.success('State backend setup completed successfully');
   } catch (error: any) {
-    logger.failure(`Bootstrap failed: ${error.message}`);
+    logger.failure(`State backend setup failed: ${error.message}`);
     throw error;
   }
 }

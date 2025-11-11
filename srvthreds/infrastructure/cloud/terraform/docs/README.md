@@ -7,7 +7,7 @@ Comprehensive documentation for SrvThreds cloud infrastructure deployment using 
 ### Getting Started
 
 - **[Deployment Guide](deployment-guide.md)** - How to deploy infrastructure to Azure
-- **[Bootstrap Guide](bootstrap-guide.md)** - Setting up Azure subscription and state management
+- **[State Backend Setup Guide](state-backend-guide.md)** - Setting up Terraform remote state backend
 - **[Stacks Guide](stacks-guide.md)** - Stack-based deployment with dependency resolution
 - **[Best Practices](best-practices.md)** - Terraform coding standards and patterns
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
@@ -54,11 +54,11 @@ choco install azure-cli  # Windows
 az login
 ```
 
-### Bootstrap Azure Subscription
+### Setup State Backend
 
 ```bash
 # Using Terraform CLI (from project root)
-npm run terraformCli -- bootstrap dev
+npm run terraformCli -- state-backend dev
 ```
 
 ### Deploy Infrastructure

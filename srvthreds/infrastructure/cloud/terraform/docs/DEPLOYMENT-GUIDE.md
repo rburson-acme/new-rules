@@ -8,8 +8,8 @@ Complete guide for deploying and managing Azure infrastructure using the Terrafo
 # Show available commands
 npm run terraformCli -- --help
 
-# Bootstrap (first time only)
-npm run terraformCli -- bootstrap dev
+# Setup state backend (first time only)
+npm run terraformCli -- state-backend dev
 
 # Deploy all stacks to dev
 npm run terraformCli -- deploy dev
@@ -45,12 +45,12 @@ bash --version
 
 ## Deployment Workflow
 
-### 1. Bootstrap Infrastructure (First Time Only)
+### 1. Setup State Backend (First Time Only)
 
 Initialize the foundational infrastructure for Terraform state management:
 
 ```bash
-npm run terraformCli -- bootstrap dev
+npm run terraformCli -- state-backend dev
 ```
 
 This creates:
@@ -160,7 +160,7 @@ This will:
 3. Purge soft-deleted Key Vaults (90-day retention)
 4. Purge soft-deleted Storage Accounts (7-day retention)
 5. Delete resource group
-6. Cleanup bootstrap infrastructure
+6. Cleanup state backend infrastructure
 
 **Warning:** This is destructive and cannot be undone. You will be prompted for confirmation.
 

@@ -1,14 +1,16 @@
-# Bootstrap Guide
+# State Backend Setup Guide
 
-Setting up Azure subscription and Terraform state management for the first time.
+Setting up Azure Terraform state backend for the first time.
 
 ## Overview
 
-The bootstrap process creates the foundational infrastructure needed for Terraform state management. This is a one-time setup per environment.
+The state backend setup creates the foundational infrastructure needed for Terraform remote state management. This is a one-time setup per environment.
+
+> **Note:** This guide is about Terraform state backend infrastructure, NOT the application data seeding process (which uses `npm run bootstrap`).
 
 ## What Gets Created
 
-The bootstrap process creates:
+The state backend setup creates:
 
 1. **Resource Group**: `srvthreds-terraform-rg`
    - Contains all Terraform state infrastructure
@@ -27,7 +29,7 @@ The bootstrap process creates:
    - Applied to the resource group
    - Must be manually removed before cleanup
 
-## Bootstrap Process
+## State Backend Setup Process
 
 ### Step 1: Prerequisites
 
@@ -48,14 +50,14 @@ terraform version
 cd srvthreds
 ```
 
-### Step 2: Run Bootstrap
+### Step 2: Run State Backend Setup
 
 ```bash
-npm run terraformCli -- bootstrap dev
+npm run terraformCli -- state-backend dev
 ```
 
-The bootstrap command will:
-1. Check if bootstrap infrastructure already exists
+The state-backend command will:
+1. Check if state backend infrastructure already exists
 2. Create resource group if needed
 3. Create storage account with random suffix
 4. Create blob container for state files
@@ -64,10 +66,10 @@ The bootstrap command will:
 
 ### Step 3: Save Outputs
 
-The bootstrap process outputs important information:
+The state backend setup outputs important information:
 
 ```
-Bootstrap completed successfully!
+State backend setup completed successfully!
 
 Resource Group: srvthreds-terraform-rg
 Storage Account: srvthredstfstatei274ht
@@ -81,7 +83,7 @@ Save these values for reference.
 
 ## Backend Configuration
 
-After bootstrap completes, the backend configuration is automatically set up:
+After state backend setup completes, the backend configuration is automatically set up:
 
 **File**: `infrastructure/cloud/terraform/stacks/_shared/backend-config.tf`
 
@@ -100,7 +102,7 @@ Each stack symlinks to this shared configuration, ensuring consistency across al
 
 ## Verification
 
-Verify bootstrap was successful:
+Verify state backend setup was successful:
 
 ```bash
 # Check resource group exists
@@ -126,7 +128,7 @@ az lock list --resource-group srvthreds-terraform-rg
 
 **Cause:** Storage account names are globally unique. The random suffix wasn't unique enough.
 
-**Solution:** The bootstrap script will automatically try a different random suffix.
+**Solution:** The state backend setup script will automatically try a different random suffix.
 
 ### "Insufficient permissions"
 
@@ -139,41 +141,41 @@ az lock list --resource-group srvthreds-terraform-rg
 
 ### "Resource group already exists"
 
-**Cause:** Previous bootstrap attempt or manual resource group creation.
+**Cause:** Previous state backend setup attempt or manual resource group creation.
 
 **Solution:**
 ```bash
-# Check if it's from a previous bootstrap
+# Check if it's from a previous state backend setup
 az group show --name srvthreds-terraform-rg
 
-# If it's your old bootstrap, you can use it
-# Or delete and re-bootstrap
+# If it's from your previous setup, you can use it
+# Or delete and re-run state backend setup
 az group delete --name srvthreds-terraform-rg --yes
-npm run terraformCli -- bootstrap dev
+npm run terraformCli -- state-backend dev
 ```
 
 ## Multiple Environments
 
-Bootstrap is environment-specific. For multiple environments:
+State backend setup is environment-specific. For multiple environments:
 
 ```bash
-# Bootstrap dev environment
-npm run terraformCli -- bootstrap dev
+# Setup dev environment state backend
+npm run terraformCli -- state-backend dev
 
-# Bootstrap test environment
-npm run terraformCli -- bootstrap test
+# Setup test environment state backend
+npm run terraformCli -- state-backend test
 
-# Bootstrap prod environment
-npm run terraformCli -- bootstrap prod
+# Setup prod environment state backend
+npm run terraformCli -- state-backend prod
 ```
 
 Each environment gets its own:
 - Resource group: `srvthreds-terraform-<env>-rg`
 - Storage account: `srvthredstfstate<env><random>`
 
-## Cleanup Bootstrap
+## Cleanup State Backend
 
-To remove bootstrap infrastructure (careful - this deletes all state!):
+To remove state backend infrastructure (careful - this deletes all state!):
 
 ```bash
 # Remove management lock first
@@ -189,9 +191,9 @@ az group delete --name srvthreds-terraform-rg --yes
 
 ## Best Practices
 
-1. **Bootstrap Once**: Only run bootstrap once per environment
+1. **Setup Once**: Only run state backend setup once per environment
 2. **Save Outputs**: Document the storage account name
-3. **Don't Delete**: Never delete bootstrap resources while infrastructure exists
+3. **Don't Delete**: Never delete state backend resources while infrastructure exists
 4. **Backup State**: Regularly backup state files
 5. **Separate Subscriptions**: Consider separate Azure subscriptions for prod
 

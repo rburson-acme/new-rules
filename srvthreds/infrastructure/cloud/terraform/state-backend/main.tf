@@ -1,6 +1,6 @@
-# Terraform Bootstrap Infrastructure
-# This creates the foundational resources needed for Terraform state management
-# Run this ONCE manually, then use the remote backend for all other deployments
+# Terraform State Backend Infrastructure
+# This creates the foundational resources needed for Terraform remote state management
+# Run this ONCE per environment, then use the remote backend for all other deployments
 
 terraform {
   required_version = ">= 1.5"

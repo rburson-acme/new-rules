@@ -324,7 +324,7 @@ terraform -chdir=stacks/<stack> force-unlock <lock-id>
 ## Related Documentation
 
 - [Deployment Guide](deployment-guide.md) - How to deploy stacks
-- [Bootstrap Guide](bootstrap-guide.md) - Setting up state storage
+- [State Backend Setup Guide](state-backend-guide.md) - Setting up remote state storage
 - [Best Practices](best-practices.md) - Terraform coding standards
 - [Module Documentation](modules/) - Individual module documentation
 

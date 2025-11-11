@@ -21,7 +21,7 @@ infrastructure/
 │   └── terraform/      # Infrastructure as code
 │       ├── modules/    # Reusable Terraform modules
 │       ├── environments/# Per-environment configs
-│       └── bootstrap/  # Bootstrap configs
+│       └── state-backend/# Terraform state backend setup
 │
 ├── shared/             # Shared across all deployments
 │   └── configs/        # Common configuration
@@ -113,8 +113,8 @@ npm run minikube-cleanup
 Provision cloud resources using the Terraform CLI:
 
 ```bash
-# Bootstrap Azure subscription (first time only)
-npm run terraformCli -- bootstrap dev
+# Setup Terraform state backend (first time only)
+npm run terraformCli -- state-backend dev
 
 # Deploy all stacks
 npm run terraformCli -- deploy dev
@@ -130,7 +130,7 @@ npm run terraformCli -- deploy dev networking keyvault acr
 - **Reusable modules**: [cloud/terraform/modules/azure/](cloud/terraform/modules/azure/)
   - 11 production-ready Azure infrastructure modules
 - **Environment configs**: [cloud/terraform/environments/](cloud/terraform/environments/)
-- **Bootstrap setup**: [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/) - [README](cloud/terraform/bootstrap/README.md)
+- **State backend setup**: [cloud/terraform/state-backend/](cloud/terraform/state-backend/) - Terraform remote state configuration
 
 ## 📚 Developer Guide
 
@@ -157,7 +157,7 @@ npm run deploy-local-services
 # Stop and remove all containers
 npm run deploy-local-down-all
 
-# Bootstrap test data
+# Seed database with configuration data (application bootstrap)
 npm run deploymentCli local bootstrap
 ```
 
@@ -200,7 +200,7 @@ npm run minikube-cleanup
 
 - **Create reusable modules** → [cloud/terraform/modules/](cloud/terraform/modules/)
 - **Configure prod environment** → [cloud/terraform/environments/prod/](cloud/terraform/environments/prod/)
-- **Bootstrap Azure** → [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/)
+- **Setup state backend** → [cloud/terraform/state-backend/](cloud/terraform/state-backend/)
 
 **Available modules:**
 - `eks/` - EKS Kubernetes cluster
@@ -209,8 +209,8 @@ npm run minikube-cleanup
 
 **Common tasks:**
 ```bash
-# Bootstrap Azure subscription (first time setup)
-npm run terraformCli -- bootstrap dev
+# Setup Terraform state backend (first time setup)
+npm run terraformCli -- state-backend dev
 
 # Plan infrastructure changes
 npm run terraformCli -- plan dev
@@ -285,7 +285,7 @@ npm run terraformCli -- destroy dev
 **Terraform Documentation:**
 - **Terraform Docs Index** → [cloud/terraform/docs/README.md](cloud/terraform/docs/README.md)
 - **Deployment Guide** → [cloud/terraform/docs/deployment-guide.md](cloud/terraform/docs/deployment-guide.md)
-- **Bootstrap Guide** → [cloud/terraform/docs/bootstrap-guide.md](cloud/terraform/docs/bootstrap-guide.md)
+- **State Backend Setup Guide** → [cloud/terraform/docs/state-backend-guide.md](cloud/terraform/docs/state-backend-guide.md)
 - **Stacks Guide** → [cloud/terraform/docs/stacks-guide.md](cloud/terraform/docs/stacks-guide.md)
 - **Best Practices** → [cloud/terraform/docs/best-practices.md](cloud/terraform/docs/best-practices.md)
 - **Module Documentation** → [cloud/terraform/docs/modules/](cloud/terraform/docs/modules/)
@@ -330,7 +330,7 @@ SrvThreds follows a **3-phase infrastructure evolution**:
   - Azure Service Bus / CloudAMQP
 - Multi-environment (dev, staging, prod)
 
-**Status:** Terraform bootstrap complete, modules in progress
+**Status:** Terraform state backend complete, modules in progress
 
 ## 🔑 Key Design Decisions
 
@@ -400,7 +400,7 @@ npm run minikube-cleanup             # Full cleanup
 npm run minikube-validate            # Validate deployment
 
 # Utilities
-npm run deploymentCli -- local bootstrap    # Bootstrap data
+npm run deploymentCli -- local bootstrap    # Seed database with config data
 npm run deploymentCli -- local build        # Build base image
 ```
 

@@ -20,8 +20,8 @@ export interface StackConfig extends TerraformStackConfig {}
  * Environment-specific configuration for backend state storage
  */
 export interface EnvironmentConfig {
-  bootstrapResourceGroup: string;
-  bootstrapStorageAccount: string;
+  stateBackendResourceGroup: string;
+  stateBackendStorageAccount: string;
 }
 
 /**
