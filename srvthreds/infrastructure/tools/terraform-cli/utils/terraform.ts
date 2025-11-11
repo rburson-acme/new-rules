@@ -151,7 +151,7 @@ export class TerraformManager {
     if (!result.success) {
       throw new TerraformError(`Failed to initialize Terraform in ${stackPath}:\r\n${result.stderr}`);
     }
-    logger.info(`Terraform init successful:\r\n${result.stdout}`, 'terraform');
+    logger.debug(`Terraform init successful:\r\n${result.stdout}`, 'terraform');
   }
 
   /**
@@ -277,7 +277,7 @@ export class TerraformManager {
       throw new TerraformError(`Failed to get Terraform output from ${stackPath}:\r\n${result.stderr}`);
     }
 
-    logger.info(`Terraform output:\r\n${result.stdout}`, 'terraform');
+    logger.debug(`Terraform output:\r\n${result.stdout}`, 'terraform');
     try {
       return JSON.parse(result.stdout);
     } catch {
@@ -322,7 +322,7 @@ export class TerraformManager {
     if (!result.success) {
       throw new TerraformError(`Failed to force unlock Terraform state in ${stackPath}:\r\n${result.stderr}`);
     }
-    logger.info(`Terraform forceUnlock:\r\n${result.stdout}`, 'terraform');
+    logger.debug(`Terraform forceUnlock:\r\n${result.stdout}`, 'terraform');
   }
 
   /**

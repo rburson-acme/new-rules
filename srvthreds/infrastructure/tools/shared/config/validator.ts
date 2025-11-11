@@ -25,8 +25,8 @@ interface ValidationIssue {
   actual?: any;
 }
 
-const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../config-registry.yaml');
-const INFRA_BASE = path.join(__dirname, '../..');
+const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../config-registry.yaml');
+const INFRA_BASE = path.join(__dirname, '../../..');
 
 class ConfigValidator {
   private config: any;

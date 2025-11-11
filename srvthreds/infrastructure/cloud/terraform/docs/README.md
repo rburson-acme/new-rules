@@ -57,25 +57,18 @@ az login
 ### Bootstrap Azure Subscription
 
 ```bash
-cd infrastructure/cloud/terraform/bootstrap
-terraform init
-terraform plan
-terraform apply
+# Using Terraform CLI (from project root)
+npm run terraformCli -- bootstrap dev
 ```
 
 ### Deploy Infrastructure
 
 ```bash
-# Using Terraform CLI tool
-cd infrastructure
-npm run terraform -- deploy networking dev
-npm run terraform -- deploy aks dev
+# Using Terraform CLI (from project root)
+npm run terraformCli -- deploy dev
 
-# Or manually
-cd cloud/terraform/stacks/networking
-terraform init
-terraform plan
-terraform apply
+# Deploy specific stacks
+npm run terraformCli -- deploy dev networking keyvault
 ```
 
 ## 📖 Module Usage Pattern
@@ -148,10 +141,11 @@ Infrastructure tests validate module configurations:
 # Run infrastructure tests
 npm test infrastructure/test
 
-# Validate specific module
-terraform validate
-terraform fmt -check
+# Validate deployment plan
+npm run terraformCli -- plan dev
 ```
+
+The Terraform CLI automatically validates and formats code during deployment operations.
 
 See [Infrastructure Tests](../../../test/README.md) for details.
 

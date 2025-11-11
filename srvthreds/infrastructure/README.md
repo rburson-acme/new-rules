@@ -110,13 +110,17 @@ npm run minikube-cleanup
 
 ### Cloud Infrastructure (Terraform)
 
-Provision cloud resources with Terraform:
+Provision cloud resources using the Terraform CLI:
 
 ```bash
-cd cloud/terraform/environments/prod
-terraform init
-terraform plan
-terraform apply
+# Bootstrap Azure subscription (first time only)
+npm run terraformCli -- bootstrap dev
+
+# Deploy all stacks
+npm run terraformCli -- deploy dev
+
+# Deploy specific stacks
+npm run terraformCli -- deploy dev networking keyvault acr
 ```
 
 **Where to find Terraform resources:**
@@ -205,23 +209,23 @@ npm run minikube-cleanup
 
 **Common tasks:**
 ```bash
-# Bootstrap Azure subscription
-cd cloud/terraform/bootstrap
-terraform init
-terraform apply
-
-# Initialize Terraform for prod
-cd cloud/terraform/environments/prod
-terraform init
+# Bootstrap Azure subscription (first time setup)
+npm run terraformCli -- bootstrap dev
 
 # Plan infrastructure changes
-terraform plan
+npm run terraformCli -- plan dev
 
-# Apply changes
-terraform apply
+# Deploy all infrastructure
+npm run terraformCli -- deploy dev
 
-# Destroy infrastructure
-terraform destroy
+# Deploy specific stacks
+npm run terraformCli -- deploy dev networking keyvault
+
+# Check deployment status
+npm run terraformCli -- status dev
+
+# Destroy infrastructure (requires confirmation)
+npm run terraformCli -- destroy dev
 ```
 
 #### 🔧 Modify deployment automation
@@ -238,13 +242,10 @@ terraform destroy
   - Stack-based deployment with dependency resolution
   - Azure integration
 
-- **Config Generator** → [tools/config-generator/](tools/config-generator/) - [README](tools/config-generator/README.md)
-  - Generates configs from config-registry.yaml
+- **Config Utilities** → [tools/shared/config/](tools/shared/config/) - [README](tools/shared/config/README.md)
+  - Config Generator: Generates configs from config-registry.yaml
+  - Config Validator: Validates config consistency across deployment targets
   - Docker Compose, Kubernetes, .env files, agent configs
-
-- **Config Validator** → [tools/config-validator/](tools/config-validator/) - [README](tools/config-validator/README.md)
-  - Validates config consistency across deployment targets
-  - Port, path, and environment variable validation
 
 - **Deployment configs** → [shared/configs/deployments/](shared/configs/deployments/)
   - [databases.json](shared/configs/deployments/databases.json)
@@ -274,7 +275,6 @@ terraform destroy
 - **Configuration guide** → [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
 - **Configuration strategy** → [docs/CONFIGURATION-STRATEGY.md](docs/CONFIGURATION-STRATEGY.md)
 - **Troubleshooting** → [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-- **Infrastructure roadmap** → [INFRASTRUCTURE-ROADMAP.md](INFRASTRUCTURE-ROADMAP.md)
 
 **Cloud Infrastructure:**
 - **Azure Setup Guide** → [docs/cloud/AZURE-SETUP-GUIDE.md](docs/cloud/AZURE-SETUP-GUIDE.md)
@@ -295,8 +295,7 @@ terraform destroy
 - **Tools Overview** → [tools/README.md](tools/README.md)
 - **Deployment CLI** → [tools/deployment-cli/README.md](tools/deployment-cli/README.md)
 - **Terraform CLI** → [tools/terraform-cli/README.md](tools/terraform-cli/README.md)
-- **Config Generator** → [tools/config-generator/README.md](tools/config-generator/README.md)
-- **Config Validator** → [tools/config-validator/README.md](tools/config-validator/README.md)
+- **Config Utilities** → [tools/shared/config/README.md](tools/shared/config/README.md)
 
 **Testing:**
 - **Infrastructure Tests** → [test/README.md](test/README.md)
@@ -332,8 +331,6 @@ SrvThreds follows a **3-phase infrastructure evolution**:
 - Multi-environment (dev, staging, prod)
 
 **Status:** Terraform bootstrap complete, modules in progress
-
-**See:** [INFRASTRUCTURE-ROADMAP.md](INFRASTRUCTURE-ROADMAP.md) for details
 
 ## 🔑 Key Design Decisions
 

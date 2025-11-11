@@ -273,7 +273,7 @@ If you encounter an issue not listed here:
 
 2. **Check logs:**
    - CLI output shows detailed error messages
-   - Terraform logs: `TF_LOG=DEBUG terraform plan`
+   - Enable debug logging: `npm run terraformCli -- --debug plan dev`
 
 3. **Verify prerequisites:**
    ```bash

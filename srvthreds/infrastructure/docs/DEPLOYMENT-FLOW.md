@@ -43,11 +43,11 @@ This document provides visual diagrams of how deployments work from CLI commands
     │     └─→ infrastructure/local/configs/.env.docker          │
     │                                                            │
     │  2. Generate configs from registry                        │
-    │     ├─→ config-generator/index.ts                         │
+    │     ├─→ shared/config/generator.ts                         │
     │     │   - Input: config-registry.yaml                     │
     │     │   - Output: docker-compose-*.yml, .env files        │
     │     │                                                      │
-    │     └─→ config-validator/index.ts                         │
+    │     └─→ shared/config/validator.ts                         │
     │         - Validates all generated configs                 │
     │                                                            │
     │  3. Build builder image                                   │
@@ -237,7 +237,7 @@ Docker Container Startup Sequence
     │     └─→ eval $(minikube docker-env)                      │
     │                                                           │
     │  2. Generate configs                                     │
-    │     └─→ config-generator/index.ts                        │
+    │     └─→ shared/config/generator.ts                        │
     │         - Input: config-registry.yaml                    │
     │         - Output: K8s manifests, ConfigMap               │
     │                                                           │
@@ -441,7 +441,7 @@ Configuration Generation Flow
 └───────────────────────────┬─────────────────────────────────┘
                             ↓
     ┌───────────────────────────────────────────────────────────┐
-    │      Config Generator (config-generator/index.ts)          │
+    │      Config Generator (shared/config/generator.ts)          │
     └───────────────────────────────────────────────────────────┘
                             ↓
         ┌───────────────────────────────────────┐
@@ -480,7 +480,7 @@ Configuration Generation Flow
      └───────────────────┴──────────────────
                             ↓
     ┌───────────────────────────────────────────────────────────┐
-    │     Config Validator (config-validator/index.ts)           │
+    │     Config Validator (shared/config/validator.ts)           │
     │                                                            │
     │  Validates:                                               │
     │  ├─ Port consistency across all files                     │
@@ -515,7 +515,7 @@ services:
         - org.wt.session1
         - -d
 
-         ↓ (config-generator processes)
+         ↓ (shared/config/generator.ts processes)
 
 Docker Compose:
 ───────────────
@@ -539,7 +539,7 @@ node dist-server/agent/agent.js -c session_agent -i org.wt.session1 -d
 
          │
          │
-         ↓ (config-generator processes)
+         ↓ (shared/config/generator.ts processes)
 
 Kubernetes Manifest:
 ────────────────────
@@ -811,11 +811,9 @@ Configuration:
 ──────────────
 ❌ Changes not taking effect
    └─→ Re-run config generation:
-       cd infrastructure/tools/config-generator
-       npx tsx index.ts
+       npx tsx infrastructure/tools/shared/config/generator.ts
    └─→ Validate:
-       cd infrastructure/tools/config-validator
-       npx tsx index.ts
+       npx tsx infrastructure/tools/shared/config/validator.ts
 ```
 
 ---

@@ -19,11 +19,11 @@
         "preBuildCommands": [
           {
             "description": "Generating database configurations from config-registry.yaml...",
-            "command": "tsx infrastructure/tools/config-generator/index.ts docker-compose"
+            "command": "tsx infrastructure/tools/shared/config/generator.ts docker-compose"
           },
           {
             "description": "Validating configuration consistency...",
-            "command": "tsx infrastructure/tools/config-validator/index.ts"
+            "command": "tsx infrastructure/tools/shared/config/validator.ts"
           }
         ],
         "environmentOverrides": {

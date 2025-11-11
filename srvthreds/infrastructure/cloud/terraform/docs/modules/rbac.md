@@ -451,14 +451,7 @@ az ad sp show --id <principal-id>
 
 ### Role Assignment Conflicts
 
-```bash
-# Terraform state may be out of sync
-terraform refresh
-
-# Or import existing assignments
-terraform import azurerm_role_assignment.example \
-  "/subscriptions/.../providers/Microsoft.Authorization/roleAssignments/<id>"
-```
+If you encounter role assignment conflicts, you may need to manually check Azure Portal for existing assignments or contact your Azure administrator. The Terraform CLI manages state automatically, but Azure RBAC assignments created outside of Terraform may need to be imported or removed manually through the Azure Portal.
 
 ### Cosmos DB RBAC Not Working
 

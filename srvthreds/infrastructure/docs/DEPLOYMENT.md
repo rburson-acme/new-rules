@@ -347,19 +347,14 @@ rabbitmq_cloud_api_key = "your-rabbitmq-key"
 #### 2. Deploy Infrastructure
 
 ```bash
-cd terraform/environments/prod
+# Bootstrap Azure subscription (first time only)
+npm run terraformCli -- bootstrap prod
 
-# Initialize Terraform
-terraform init
+# Deploy all infrastructure
+npm run terraformCli -- deploy prod
 
-# Plan deployment
-terraform plan
-
-# Deploy infrastructure
-terraform apply
-
-# Configure kubectl
-aws eks update-kubeconfig --region us-west-2 --name srvthreds-prod
+# Configure kubectl for AKS
+az aks get-credentials --resource-group srvthreds-prod-rg --name srvthreds-prod-aks
 ```
 
 ### Application Deployment
@@ -799,7 +794,7 @@ kubectl rollout restart deployment/srvthreds-engine -n srvthreds  # Restart serv
 # Cleanup
 docker-compose down -v                          # Remove Docker Compose setup
 kubectl delete namespace srvthreds              # Remove Kubernetes development
-terraform destroy -chdir=terraform/environments/prod  # Remove production
+npm run terraformCli -- destroy prod            # Remove production infrastructure
 ```
 
 ### Important URLs

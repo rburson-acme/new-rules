@@ -112,39 +112,25 @@ project_name = "srvthreds"
 
 #### Step 2: Deploy Bootstrap Infrastructure
 
+Use the Terraform CLI from the project root:
+
 ```bash
-# Initialize Terraform
-terraform init
-
-# Review the deployment plan
-terraform plan
-
-# Deploy the infrastructure
-terraform apply
+# Bootstrap Azure subscription (first time setup)
+npm run terraformCli -- bootstrap dev
 ```
 
 Type `yes` when prompted. Deployment takes ~2-3 minutes.
 
-#### Step 3: Save Backend Configuration
+#### Step 3: Verify Bootstrap
 
-After successful deployment, save the output for use in other Terraform projects:
-
-```bash
-terraform output -raw backend_config
-```
-
-This output shows you exactly how to configure remote state for other infrastructure stacks.
-
-**Alternative: Using Terraform CLI Wrapper**
-
-You can also use the Terraform CLI wrapper from the project root:
+The CLI will automatically save the backend configuration. You can verify the bootstrap status:
 
 ```bash
-cd infrastructure
-npm run terraformCli -- bootstrap deploy --environment dev
+# Check bootstrap status
+npm run terraformCli -- status dev
 ```
 
-See [tools/terraform-cli/README.md](../../tools/terraform-cli/README.md) for more information.
+See [tools/terraform-cli/README.md](../../tools/terraform-cli/README.md) for more CLI commands.
 
 ### Phase 2: Core Infrastructure
 
@@ -169,30 +155,16 @@ Before deploying core infrastructure:
 
 #### Deployment
 
-```bash
-cd infrastructure/cloud/terraform/core
-
-# Initialize with remote backend
-terraform init \
-  -backend-config="resource_group_name=<from-bootstrap-output>" \
-  -backend-config="storage_account_name=<from-bootstrap-output>" \
-  -backend-config="container_name=tfstate" \
-  -backend-config="key=core-<environment>.tfstate"
-
-# Create variables file
-cp terraform.tfvars.example terraform.tfvars
-# Edit with your values
-
-# Deploy
-terraform plan
-terraform apply
-```
-
-**Alternative: Using Terraform CLI Wrapper**
+Use the Terraform CLI to deploy core infrastructure:
 
 ```bash
-cd infrastructure
-npm run terraformCli -- deploy --environment dev --stack core
+# Deploy all core stacks
+npm run terraformCli -- deploy dev networking keyvault acr
+
+# Or deploy individual stacks
+npm run terraformCli -- deploy dev networking
+npm run terraformCli -- deploy dev keyvault
+npm run terraformCli -- deploy dev acr
 ```
 
 ### Phase 3: Data Layer
@@ -223,24 +195,16 @@ Example for dev:
 
 #### Deployment
 
-```bash
-cd infrastructure/cloud/terraform/data
-
-# Initialize with remote backend
-terraform init \
-  -backend-config="resource_group_name=<from-bootstrap-output>" \
-  -backend-config="storage_account_name=<from-bootstrap-output>" \
-  -backend-config="container_name=tfstate" \
-  -backend-config="key=data-<environment>.tfstate"
-
-# Deploy
-terraform apply
-```
-
-**Alternative: Using Terraform CLI Wrapper**
+Use the Terraform CLI to deploy data layer:
 
 ```bash
-npm run terraformCli -- deploy --environment dev --stack data
+# Deploy all data stacks
+npm run terraformCli -- deploy dev cosmosdb redis servicebus
+
+# Or deploy individual stacks
+npm run terraformCli -- deploy dev cosmosdb
+npm run terraformCli -- deploy dev redis
+npm run terraformCli -- deploy dev servicebus
 ```
 
 ### Phase 4: Application Deployment
@@ -260,7 +224,7 @@ The application layer deploys SrvThreds services to AKS using Kubernetes manifes
 Application deployment uses Helm charts and Kubernetes manifests:
 
 ```bash
-npm run terraformCli -- deploy --environment dev --stack app
+npm run terraformCli -- deploy dev aks
 ```
 
 ## Configuration Management
@@ -495,8 +459,8 @@ az storage blob download \
 
 **Infrastructure Rebuild:**
 ```bash
-# Re-deploy infrastructure from Terraform
-npm run terraformCli -- deploy --environment production
+# Re-deploy infrastructure using CLI
+npm run terraformCli -- deploy production
 ```
 
 ## Troubleshooting
@@ -521,8 +485,8 @@ terraform force-unlock <lock-id>
 
 Storage account names must be globally unique. If you get naming conflicts:
 - The bootstrap includes a random suffix
-- Try running `terraform apply` again for a new suffix
-- Or manually set a unique name in variables
+- Try running the CLI bootstrap command again for a new suffix
+- Or manually set a unique name in the environment tfvars file
 
 **3. Insufficient Permissions:**
 
@@ -548,11 +512,10 @@ az vm list-usage --location eastus -o table
 
 ### Debug Mode
 
-Enable detailed Terraform logging:
+Enable detailed Terraform logging with the CLI:
 
 ```bash
-export TF_LOG=DEBUG
-terraform apply
+npm run terraformCli -- --debug deploy dev
 ```
 
 ## Next Steps

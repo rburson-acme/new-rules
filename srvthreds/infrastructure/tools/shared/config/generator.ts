@@ -30,8 +30,8 @@ interface ConfigRegistry {
   security: any;
 }
 
-const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../config-registry.yaml');
-const OUTPUT_BASE = path.join(__dirname, '../../local');
+const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../config-registry.yaml');
+const OUTPUT_BASE = path.join(__dirname, '../../../local');
 
 class ConfigGenerator {
   private config: ConfigRegistry;

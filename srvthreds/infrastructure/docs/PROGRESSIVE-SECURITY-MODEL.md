@@ -279,9 +279,8 @@ resource "azurerm_kubernetes_cluster" "this" {
 
 ### Step 1: Deploy Development Tier
 ```bash
-cd infrastructure/terraform/environments/dev
-terraform init
-terraform apply -var="security_tier=development"
+# Deploy development environment with basic security
+npm run terraformCli -- deploy dev
 ```
 
 **What you get**:
@@ -299,7 +298,8 @@ terraform apply -var="security_tier=development"
 
 ### Step 3: Harden to Staging
 ```bash
-terraform apply -var="security_tier=staging"
+# Deploy staging environment with enhanced security
+npm run terraformCli -- deploy staging
 ```
 
 **What changes**:
@@ -315,9 +315,8 @@ terraform apply -var="security_tier=staging"
 
 ### Step 4: Promote to Production
 ```bash
-cd infrastructure/terraform/environments/prod
-terraform init
-terraform apply -var="security_tier=production"
+# Deploy production environment with full security
+npm run terraformCli -- deploy prod
 ```
 
 **What changes**:
@@ -328,9 +327,8 @@ terraform apply -var="security_tier=production"
 
 ### Step 5: Migrate to Government Cloud
 ```bash
-cd infrastructure/terraform/environments/govcloud/prod
-terraform init
-terraform apply -var="security_tier=govcloud"
+# Deploy to government cloud with maximum security
+npm run terraformCli -- deploy govcloud
 ```
 
 **What changes**:

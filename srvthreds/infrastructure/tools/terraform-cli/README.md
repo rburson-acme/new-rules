@@ -113,16 +113,14 @@ The authenticated identity needs the following permissions:
 
 ### Verifying Authentication
 
-Before running Terraform commands, verify your authentication:
+Before using the Terraform CLI, verify your authentication:
 
 ```bash
 # Check current account
 az account show
 
-# Test Azure provider authentication
-cd infrastructure/cloud/terraform/stacks/networking
-terraform init
-terraform plan
+# Test with CLI status command
+npm run terraformCli -- status dev
 ```
 
 ### Troubleshooting Authentication

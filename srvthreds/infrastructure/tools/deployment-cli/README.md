@@ -297,8 +297,7 @@ minikube start
 ## Related Tools
 
 - **[terraform-cli](../terraform-cli/README.md)** - Deploy cloud infrastructure
-- **[config-generator](../config-generator/README.md)** - Generate deployment configurations
-- **[config-validator](../config-validator/README.md)** - Validate configuration consistency
+- **[config-utilities](../shared/config/README.md)** - Generate and validate deployment configurations
 
 ---
 

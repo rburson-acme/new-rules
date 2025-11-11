@@ -4,9 +4,13 @@ This directory contains tooling for managing SrvThreds infrastructure configurat
 
 ## Tools
 
-### 1. Configuration Generator ([config-generator/](config-generator/))
+### 1. Configuration Utilities ([shared/config/](shared/config/))
 
-Generates all deployment configurations from the centralized [config-registry.yaml](../config-registry.yaml).
+Shared infrastructure utilities for generating and validating deployment configurations from the centralized [config-registry.yaml](../config-registry.yaml).
+
+**Contains:**
+- **Config Generator** ([generator.ts](shared/config/generator.ts)) - Generates deployment configurations
+- **Config Validator** ([validator.ts](shared/config/validator.ts)) - Validates configuration consistency
 
 **Usage:**
 ```bash
@@ -18,28 +22,16 @@ npm run generate:config:docker      # Docker Compose files
 npm run generate:config:k8s          # Kubernetes manifests
 npm run generate:config:env          # Environment files
 npm run generate:config:agents       # Agent configuration files
+
+# Validate configurations
+npm run validate:config
 ```
 
-**Outputs:**
+**Generates:**
 - Docker Compose files (databases and services)
 - Kubernetes manifests (deployments, services, ConfigMaps)
 - Environment files (.env.local, .env.docker, etc.)
 - Agent configuration JSON files
-
-**How it works:**
-1. Reads [config-registry.yaml](../config-registry.yaml)
-2. Parses service and database definitions
-3. Generates deployment files using templates
-4. Writes files with "auto-generated" headers
-
-### 2. Configuration Validator ([config-validator/](config-validator/))
-
-Validates that all deployment configurations match the config registry.
-
-**Usage:**
-```bash
-npm run validate:config
-```
 
 **Validates:**
 - Port consistency across Docker Compose, Kubernetes, and agent configs
@@ -48,32 +40,9 @@ npm run validate:config
 - Connection string correctness
 - Missing or mismatched configurations
 
-**Exit codes:**
-- `0` - All configurations valid
-- `1` - Validation errors found (also exits with 1 for warnings)
+See [shared/config/README.md](shared/config/README.md) for detailed documentation.
 
-**Example output:**
-```
-🔍 Validating configurations against config-registry.yaml...
-
-📦 Validating Docker Compose files...
-☸️  Validating Kubernetes manifests...
-🤖 Validating agent configuration files...
-📝 Validating .env files...
-
-📊 Validation Results:
-
-❌ Errors (1):
-
-  infrastructure/local/minikube/manifests/base/srvthreds-engine.yaml
-    Port mismatch in containerPort
-    Expected: 8082
-    Actual:   [3000]
-
-💡 Run `npm run generate:config` to regenerate configurations from config-registry.yaml
-```
-
-### 3. Deployment CLI ([deployment-cli/](deployment-cli/))
+### 2. Deployment CLI ([deployment-cli/](deployment-cli/))
 
 Interactive CLI for deploying and managing infrastructure across different environments.
 
@@ -136,7 +105,7 @@ See [deployment-cli/README.md](deployment-cli/README.md) for detailed documentat
              │
              ▼
 ┌─────────────────────────────────┐
-│   config-generator/index.ts     │  Generator Script
+│   shared/config/generator.ts    │  Generator Script
 │   (reads registry, writes files)│  ← npm run generate:config
 └────────────┬────────────────────┘
              │
@@ -151,7 +120,7 @@ See [deployment-cli/README.md](deployment-cli/README.md) for detailed documentat
                                    │
                                    ▼
                     ┌──────────────────────────────┐
-                    │  config-validator/index.ts   │  Validator
+                    │  shared/config/validator.ts  │  Validator
                     │  (checks consistency)        │  ← npm run validate:config
                     └──────────────────────────────┘
 ```
@@ -255,14 +224,14 @@ npm run validate:config
 
 ### Adding a New Generator Target
 
-1. Edit [config-generator/index.ts](config-generator/index.ts)
+1. Edit [shared/config/generator.ts](shared/config/generator.ts)
 2. Add new generation method (e.g., `generateTerraform()`)
 3. Call it in `generateAll()`
 4. Add npm script in `package.json`
 
 ### Adding New Validations
 
-1. Edit [config-validator/index.ts](config-validator/index.ts)
+1. Edit [shared/config/validator.ts](shared/config/validator.ts)
 2. Add new validation method (e.g., `validateTerraform()`)
 3. Call it in `validateAll()`
 4. Add test cases

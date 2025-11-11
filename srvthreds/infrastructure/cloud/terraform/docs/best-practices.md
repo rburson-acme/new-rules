@@ -423,14 +423,13 @@ locals {
 ### Validate Before Apply
 
 ```bash
-# Format check
-terraform fmt -check
+# Preview changes using Terraform CLI
+npm run terraformCli -- plan dev networking
 
-# Validation
-terraform validate
-
-# Plan review
-terraform plan
+# The CLI automatically handles:
+# - Format validation
+# - Terraform validation
+# - Plan generation
 ```
 
 ### Test in Dev First
