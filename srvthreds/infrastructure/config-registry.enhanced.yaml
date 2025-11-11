@@ -1,0 +1,622 @@
+#═══════════════════════════════════════════════════════════════════════════════
+# Infrastructure Configuration Registry
+# Single Source of Truth for all deployment configurations
+#═══════════════════════════════════════════════════════════════════════════════
+#
+# This file defines all ports, paths, resources, and connection strings
+# used across Docker Compose, Kubernetes, and cloud deployments.
+#
+# STRUCTURE:
+#   - metadata: Application identification and versioning
+#   - services: Application service definitions
+#   - databases: Database service definitions
+#   - build: Build configuration and paths
+#   - networks: Network configuration
+#   - connectionStrings: Environment-specific connection templates
+#   - security: Security-related configuration
+#   - cloud: Cloud-specific configurations (Azure, AWS, GCP)
+#
+# USAGE:
+#   - Local development: Use 'local' connection strings
+#   - Docker Compose: Use 'docker' connection strings
+#   - Kubernetes: Use 'kubernetes' connection strings
+#   - Cloud deployments: Override with cloud-specific values
+#
+# ENVIRONMENT VARIABLES:
+#   All ${VAR} placeholders will be replaced with environment variable values
+#   or their default values (specified after :-) at runtime.
+#
+#   Required variables:
+#     - NODE_ENV: Application environment (development, staging, production)
+#     - MONGO_HOST: MongoDB connection host
+#     - REDIS_HOST: Redis connection host
+#     - RABBITMQ_HOST: RabbitMQ connection host
+#
+#   Optional variables (with defaults):
+#     - IMAGE_REGISTRY: Container registry URL (default: srvthreds)
+#     - IMAGE_TAG: Image version tag (default: latest)
+#     - LOG_LEVEL: Logging level (default: info)
+#
+#═══════════════════════════════════════════════════════════════════════════════
+
+# Application metadata
+metadata:
+  name: srvthreds
+  namespace: srvthreds
+  version: "1.0.0"
+  description: "Event-driven workflow automation system"
+
+#═══════════════════════════════════════════════════════════════════════════════
+# SERVICE DEFINITIONS
+#═══════════════════════════════════════════════════════════════════════════════
+# Each service defines its image, ports, environment variables, and resources.
+# Resource limits and replica counts are base values - override per environment
+# using overlay files in shared/configs/environments/
+#═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # Builder Service
+  # Purpose: Base builder image with compiled TypeScript artifacts
+  # Usage: Build-only service, not deployed to runtime environments
+  builder:
+    name: srvthreds-builder
+    description: "Base builder image with compiled artifacts"
+    image:
+      repository: ${IMAGE_REGISTRY:-srvthreds}/builder
+      tag: ${IMAGE_TAG:-latest}
+    buildOnly: true
+    dockerfile: infrastructure/local/docker/dockerfiles/Dockerfile.builder
+
+  # Bootstrap Service
+  # Purpose: Initialize databases with seed data and schema
+  # Usage: Run once before starting application services
+  # Restart Policy: No restart - exits after successful completion
+  bootstrap:
+    name: srvthreds-bootstrap
+    description: "Database initialization and seeding"
+    image:
+      repository: ${IMAGE_REGISTRY:-srvthreds}/bootstrap
+      tag: ${IMAGE_TAG:-latest}
+    dockerfile: infrastructure/local/docker/dockerfiles/Dockerfile.cmdRunner
+    command:
+      entrypoint: npm
+      args:
+        - run
+        - bootstrap
+        - --
+        - -p
+        - ef-detection  # Pattern to bootstrap
+    ports: {}
+    environment:
+      # Application environment
+      NODE_ENV: ${NODE_ENV:-development}
+      # Database connections (default to Docker Compose service names)
+      MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    restartPolicy: "no"  # Run once and exit
+
+  # Engine Service
+  # Purpose: Main event processing engine - orchestrates thred workflows
+  # Scaling: Horizontally scalable - multiple instances can run in parallel
+  # Port 8082: HTTP API for health checks and metrics
+  engine:
+    name: srvthreds-engine
+    description: "Main event processing engine"
+    image:
+      repository: ${IMAGE_REGISTRY:-srvthreds}/engine
+      tag: ${IMAGE_TAG:-latest}
+    dockerfile: infrastructure/local/docker/dockerfiles/Dockerfile
+    command:
+      entrypoint: node
+      args:
+        - dist-server/index.js
+        - -d  # Debug flag
+    ports:
+      http: 8082
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    dependsOn:
+      - srvthreds-bootstrap
+    # Base resource allocations - override per environment
+    resources:
+      memory:
+        request: 256Mi  # Minimum memory required
+        limit: 512Mi    # Maximum memory allowed
+      cpu:
+        request: 200m   # Minimum CPU (0.2 cores)
+        limit: 500m     # Maximum CPU (0.5 cores)
+    # Base replica counts - override per environment in overlay files
+    replicas:
+      dev: 1
+      staging: 2
+      production: 3
+
+  # Session Agent Service
+  # Purpose: Manages user sessions and participant interactions via WebSocket
+  # Scaling: Horizontally scalable with sticky sessions
+  # Port 3000: HTTP API
+  # Port 3001: WebSocket connections
+  session-agent:
+    name: srvthreds-session-agent
+    description: "Manages user sessions and participant interactions"
+    image:
+      repository: ${IMAGE_REGISTRY:-srvthreds}/session-agent
+      tag: ${IMAGE_TAG:-latest}
+    dockerfile: infrastructure/local/docker/dockerfiles/Dockerfile
+    command:
+      entrypoint: node
+      args:
+        - dist-server/agent/agent.js
+        - -c
+        - session_agent  # Config file name
+        - -i
+        - org.wt.session1  # Agent instance ID
+        - -d  # Debug flag
+    ports:
+      http: 3000
+      websocket: 3001
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    dependsOn:
+      - srvthreds-bootstrap
+    resources:
+      memory:
+        request: 128Mi
+        limit: 256Mi
+      cpu:
+        request: 100m
+        limit: 300m
+    replicas:
+      dev: 1
+      staging: 2
+      production: 3
+
+  # Persistence Agent Service
+  # Purpose: Handles data persistence operations asynchronously
+  # Scaling: Horizontally scalable - multiple instances process queue
+  # No exposed ports - internal message queue consumer
+  persistence-agent:
+    name: srvthreds-persistence-agent
+    description: "Handles data persistence operations"
+    image:
+      repository: ${IMAGE_REGISTRY:-srvthreds}/persistence-agent
+      tag: ${IMAGE_TAG:-latest}
+    dockerfile: infrastructure/local/docker/dockerfiles/Dockerfile
+    command:
+      entrypoint: node
+      args:
+        - dist-server/agent/agent.js
+        - -c
+        - persistence_agent
+        - -i
+        - org.wt.persistence1
+        - -d
+    ports: {}  # Internal service - no exposed ports
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    dependsOn:
+      - srvthreds-bootstrap
+    resources:
+      memory:
+        request: 256Mi
+        limit: 512Mi
+      cpu:
+        request: 200m
+        limit: 400m
+    replicas:
+      dev: 1
+      staging: 2
+      production: 3
+
+#═══════════════════════════════════════════════════════════════════════════════
+# DATABASE DEFINITIONS
+#═══════════════════════════════════════════════════════════════════════════════
+# Local/development databases - not used in cloud deployments
+# Cloud deployments should use managed services (Atlas, DocumentDB, ElastiCache, etc.)
+#═══════════════════════════════════════════════════════════════════════════════
+
+databases:
+  # MongoDB Replica Set
+  # Purpose: Primary data store for threds, events, and patterns
+  # Local Only: Use managed MongoDB in cloud (Atlas, DocumentDB)
+  mongodb:
+    name: mongo-repl-1
+    description: "MongoDB replica set primary node"
+    image:
+      repository: mongo
+      tag: "7.0"  # Specify exact version for consistency
+    port: 27017
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+    environment:
+      MONGO_INITDB_DATABASE: admin
+    volumes:
+      mountPath: /data/db
+      hostPath: ./.docker/mongodb/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      startPeriod: 30s
+    resources:
+      memory:
+        request: 512Mi
+        limit: 1Gi
+      cpu:
+        request: 250m
+        limit: 500m
+
+  # Redis Cache
+  # Purpose: Caching, distributed locking, session storage
+  # Local Only: Use managed Redis in cloud (ElastiCache, Redis Cloud)
+  redis:
+    name: redis
+    description: "Redis cache server"
+    image:
+      repository: redis
+      tag: "7-alpine"  # Alpine for smaller image size
+    port: 6379
+    command:
+      - redis-server
+      - --save
+      - "20"  # Save to disk every 20 seconds if 1 key changed
+      - "1"
+      - --loglevel
+      - warning
+      - --notify-keyspace-events
+      - KA  # Enable keyspace notifications
+    volumes:
+      mountPath: /data
+      hostPath: ./.docker/redis-data
+    resources:
+      memory:
+        request: 128Mi
+        limit: 256Mi
+      cpu:
+        request: 100m
+        limit: 200m
+
+  # RabbitMQ Message Broker
+  # Purpose: Inter-service messaging and event distribution
+  # Local Only: Use managed message queues in cloud (AmazonMQ, CloudAMQP)
+  rabbitmq:
+    name: rabbitmq
+    description: "RabbitMQ message broker"
+    image:
+      repository: rabbitmq
+      tag: "3.12-management"  # Includes management UI
+    ports:
+      amqp: 5672        # AMQP protocol
+      management: 15672  # Management UI
+    volumes:
+      - mountPath: /var/lib/rabbitmq
+        hostPath: ./.docker/rabbitmq/data
+      - mountPath: /var/log/rabbitmq
+        hostPath: ./.docker/rabbitmq/logs
+    resources:
+      memory:
+        request: 256Mi
+        limit: 512Mi
+      cpu:
+        request: 150m
+        limit: 300m
+
+#═══════════════════════════════════════════════════════════════════════════════
+# BUILD CONFIGURATION
+#═══════════════════════════════════════════════════════════════════════════════
+
+build:
+  context: /app
+  distPath: /app/dist-server
+  workdir: /app
+  assets:
+    source: infrastructure/tools/deployment-cli/assets
+    destination: /app/dist-server
+  dockerfiles:
+    builder: infrastructure/local/docker/dockerfiles/Dockerfile.builder
+    runtime: infrastructure/local/docker/dockerfiles/Dockerfile
+    cmdRunner: infrastructure/local/docker/dockerfiles/Dockerfile.cmdRunner
+  dockerContext:
+    root: ../../../../
+    thredlib: ../../../../../thredlib
+
+#═══════════════════════════════════════════════════════════════════════════════
+# NETWORK CONFIGURATION
+#═══════════════════════════════════════════════════════════════════════════════
+
+networks:
+  default:
+    name: srvthreds-net
+    driver: bridge
+
+#═══════════════════════════════════════════════════════════════════════════════
+# CONNECTION STRINGS
+#═══════════════════════════════════════════════════════════════════════════════
+# Environment-specific connection templates
+# Select the appropriate section based on deployment target
+#═══════════════════════════════════════════════════════════════════════════════
+
+connectionStrings:
+  # Local Development
+  # Used when running application on host machine connecting to Docker containers
+  local:
+    mongodb: "localhost:27017"
+    redis: "localhost:6379"
+    rabbitmq: "localhost"
+    mongoDirectConnection: true
+
+  # Docker Compose
+  # Used when all services run in containers via docker-compose
+  docker:
+    mongodb: "mongo-repl-1:27017"
+    redis: "redis:6379"
+    rabbitmq: "rabbitmq"
+    mongoDirectConnection: true
+
+  # Kubernetes/Minikube
+  # Used for Kubernetes deployments - services discovered via k8s DNS
+  kubernetes:
+    mongodb: "mongodb-service:27017"
+    redis: "redis-service:6379"
+    rabbitmq: "rabbitmq-service"
+    mongoDirectConnection: false
+
+  # Minikube (external services)
+  # Used when k8s services need to connect to host machine services
+  minikube:
+    mongodb: "host.minikube.internal:27017"
+    redis: "host.minikube.internal:6379"
+    rabbitmq: "host.minikube.internal"
+    mongoDirectConnection: true
+
+#═══════════════════════════════════════════════════════════════════════════════
+# SECURITY CONFIGURATION
+#═══════════════════════════════════════════════════════════════════════════════
+# Non-sensitive default values
+# Production deployments must override with secure values from secret management
+#═══════════════════════════════════════════════════════════════════════════════
+
+security:
+  jwt:
+    # Token expiration times
+    expireTime: 1h  # Access token TTL
+    refreshTokenExpireTime: 7d  # Refresh token TTL
+    # Secret key location (cloud deployments)
+    secretKeyRef:
+      azure: "azure-keyvault://srvthreds-${ENV}/jwt-secret"
+      aws: "arn:aws:secretsmanager:${REGION}:${ACCOUNT}:secret:srvthreds/${ENV}/jwt"
+      gcp: "projects/${PROJECT}/secrets/srvthreds-${ENV}-jwt"
+
+#═══════════════════════════════════════════════════════════════════════════════
+# CLOUD-SPECIFIC CONFIGURATIONS
+#═══════════════════════════════════════════════════════════════════════════════
+# These sections provide cloud-specific defaults and references
+# Actual values should be provided via environment-specific overlay files
+#═══════════════════════════════════════════════════════════════════════════════
+
+cloud:
+  # Microsoft Azure Configuration
+  azure:
+    # Resource naming convention
+    naming:
+      prefix: "CAZ-SRVTHREDS"
+      environment:
+        dev: "D"
+        test: "T"
+        prod: "P"
+      suffix: "E"
+
+    # Managed services
+    services:
+      # Azure Cosmos DB (MongoDB API)
+      cosmosdb:
+        enabled: true
+        apiVersion: "MongoDB 4.2"
+        consistencyLevel: "Session"
+        connectionStringRef: "azure-keyvault://srvthreds-${ENV}/cosmosdb"
+
+      # Azure Cache for Redis
+      redis:
+        enabled: true
+        sku: "Standard"
+        capacity: 1
+        connectionStringRef: "azure-keyvault://srvthreds-${ENV}/redis"
+
+      # Azure Service Bus
+      servicebus:
+        enabled: true
+        sku: "Standard"
+        connectionStringRef: "azure-keyvault://srvthreds-${ENV}/servicebus"
+
+      # Azure Key Vault
+      keyvault:
+        name: "srvthreds-${ENV}-kv"
+        enableSoftDelete: true
+        purgeProtection: true
+
+      # Azure Container Registry
+      acr:
+        name: "srvthreds${ENV}acr"
+        sku: "Standard"
+
+      # Azure Kubernetes Service
+      aks:
+        nodeCount: 3
+        vmSize: "Standard_D2s_v3"
+        enableAutoScaling: true
+        minCount: 2
+        maxCount: 10
+
+    # Networking
+    networking:
+      vnetName: "srvthreds-${ENV}-vnet"
+      addressSpace: "10.0.0.0/16"
+      subnets:
+        aks: "10.0.1.0/24"
+        privateEndpoints: "10.0.2.0/24"
+        appGateway: "10.0.3.0/24"
+
+    # Monitoring
+    monitoring:
+      logAnalytics:
+        workspaceName: "srvthreds-${ENV}-logs"
+        retentionDays: 30
+      applicationInsights:
+        enabled: true
+
+  # Amazon Web Services Configuration
+  aws:
+    # Resource naming convention
+    naming:
+      prefix: "srvthreds"
+      environment: "${ENV}"
+
+    # Managed services
+    services:
+      # Amazon DocumentDB (MongoDB compatible)
+      documentdb:
+        enabled: true
+        instanceClass: "db.r5.large"
+        instanceCount: 3
+        secretArn: "arn:aws:secretsmanager:${REGION}:${ACCOUNT}:secret:srvthreds/${ENV}/documentdb"
+
+      # Amazon ElastiCache (Redis)
+      elasticache:
+        enabled: true
+        nodeType: "cache.t3.medium"
+        numCacheNodes: 2
+        secretArn: "arn:aws:secretsmanager:${REGION}:${ACCOUNT}:secret:srvthreds/${ENV}/redis"
+
+      # Amazon MQ (RabbitMQ)
+      amazonmq:
+        enabled: true
+        instanceType: "mq.t3.micro"
+        deploymentMode: "ACTIVE_STANDBY_MULTI_AZ"
+        secretArn: "arn:aws:secretsmanager:${REGION}:${ACCOUNT}:secret:srvthreds/${ENV}/rabbitmq"
+
+      # Amazon ECR
+      ecr:
+        repositoryName: "srvthreds"
+        imageScanOnPush: true
+
+      # Amazon EKS
+      eks:
+        version: "1.28"
+        nodeGroupInstanceTypes:
+          - "t3.medium"
+          - "t3.large"
+        desiredSize: 3
+        minSize: 2
+        maxSize: 10
+
+    # Networking
+    networking:
+      vpcCidr: "10.0.0.0/16"
+      availabilityZones: 3
+      privateSubnets:
+        - "10.0.1.0/24"
+        - "10.0.2.0/24"
+        - "10.0.3.0/24"
+      publicSubnets:
+        - "10.0.101.0/24"
+        - "10.0.102.0/24"
+        - "10.0.103.0/24"
+
+    # Monitoring
+    monitoring:
+      cloudWatch:
+        logRetentionDays: 30
+      xray:
+        enabled: true
+
+  # Google Cloud Platform Configuration
+  gcp:
+    # Resource naming convention
+    naming:
+      prefix: "srvthreds"
+      environment: "${ENV}"
+
+    # Managed services
+    services:
+      # Cloud MongoDB (Atlas)
+      mongodb:
+        enabled: true
+        tier: "M10"
+        provider: "GCP"
+        secretRef: "projects/${PROJECT}/secrets/srvthreds-${ENV}-mongodb"
+
+      # Cloud Memorystore (Redis)
+      memorystore:
+        enabled: true
+        tier: "STANDARD_HA"
+        memorySizeGb: 1
+        secretRef: "projects/${PROJECT}/secrets/srvthreds-${ENV}-redis"
+
+      # Cloud Pub/Sub (alternative to RabbitMQ)
+      pubsub:
+        enabled: true
+        topics:
+          - "srvthreds-events"
+          - "srvthreds-commands"
+
+      # Artifact Registry
+      artifactRegistry:
+        repository: "srvthreds"
+        format: "DOCKER"
+
+      # Google Kubernetes Engine
+      gke:
+        version: "1.28"
+        nodeCount: 3
+        machineType: "e2-standard-2"
+        enableAutoscaling: true
+        minNodeCount: 2
+        maxNodeCount: 10
+
+    # Networking
+    networking:
+      vpcName: "srvthreds-${ENV}-vpc"
+      subnetCidr: "10.0.0.0/16"
+      secondaryRanges:
+        pods: "10.1.0.0/16"
+        services: "10.2.0.0/16"
+
+    # Monitoring
+    monitoring:
+      cloudLogging:
+        retentionDays: 30
+      cloudTrace:
+        enabled: true
+
+#═══════════════════════════════════════════════════════════════════════════════
+# ENVIRONMENT OVERLAYS
+#═══════════════════════════════════════════════════════════════════════════════
+# Reference environment-specific overlay files in shared/configs/environments/
+# These files override base values for specific deployment environments
+#
+# Files:
+#   - dev.yaml: Development environment overrides
+#   - staging.yaml: Staging environment overrides
+#   - production.yaml: Production environment overrides
+#
+# To apply overlays, merge them with this base configuration at deployment time
+#═══════════════════════════════════════════════════════════════════════════════

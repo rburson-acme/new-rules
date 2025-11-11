@@ -16,6 +16,8 @@ interface DeployConfig {
   environments: string[];
 }
 
+export const BOOTSTRAP_COMMAND_DESCRIPTION = 'Initialize bootstrap infrastructure (storage, resource group)';
+
 export async function bootstrapCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
     console.log(`

@@ -32,6 +32,8 @@ interface EnvironmentsConfig {
   [key: string]: EnvironmentConfigWithRG;
 }
 
+export const STATUS_COMMAND_DESCRIPTION = 'Check deployment status';
+
 export async function statusCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
     console.log(`

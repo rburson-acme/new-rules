@@ -30,6 +30,8 @@ interface EnvironmentsConfig {
 
 const STATE_COMMANDS = ['backup', 'validate', 'repair', 'clean', 'show'];
 
+export const STATE_COMMAND_DESCRIPTION = 'Manage Terraform state (backup, validate, repair, clean)';
+
 export async function stateCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
     console.log(`

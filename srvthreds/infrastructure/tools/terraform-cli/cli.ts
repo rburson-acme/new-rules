@@ -18,11 +18,16 @@ import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { logger, LogLevel } from '../shared/logger.js';
 import { handleError, CLIError } from '../shared/error-handler.js';
-import { deployCommand, planCommand } from './commands/deploy.js';
-import { stateCommand } from './commands/state.js';
-import { cleanupCommand } from './commands/cleanup.js';
-import { bootstrapCommand } from './commands/bootstrap.js';
-import { statusCommand } from './commands/status.js';
+import {
+  deployCommand,
+  planCommand,
+  DEPLOY_COMMAND_DESCRIPTION,
+  PLAN_COMMAND_DESCRIPTION
+} from './commands/deploy.js';
+import { stateCommand, STATE_COMMAND_DESCRIPTION } from './commands/state.js';
+import { cleanupCommand, CLEANUP_COMMAND_DESCRIPTION } from './commands/cleanup.js';
+import { bootstrapCommand, BOOTSTRAP_COMMAND_DESCRIPTION } from './commands/bootstrap.js';
+import { statusCommand, STATUS_COMMAND_DESCRIPTION } from './commands/status.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,7 +43,7 @@ const commands: Map<string, Command> = new Map([
     'deploy',
     {
       name: 'deploy',
-      description: 'Deploy infrastructure stacks to Azure',
+      description: DEPLOY_COMMAND_DESCRIPTION,
       handler: deployCommand,
     },
   ],
@@ -46,7 +51,7 @@ const commands: Map<string, Command> = new Map([
     'plan',
     {
       name: 'plan',
-      description: 'Preview infrastructure changes without applying',
+      description: PLAN_COMMAND_DESCRIPTION,
       handler: planCommand,
     },
   ],
@@ -54,7 +59,7 @@ const commands: Map<string, Command> = new Map([
     'state',
     {
       name: 'state',
-      description: 'Manage Terraform state (backup, validate, repair, clean)',
+      description: STATE_COMMAND_DESCRIPTION,
       handler: stateCommand,
     },
   ],
@@ -62,7 +67,7 @@ const commands: Map<string, Command> = new Map([
     'cleanup',
     {
       name: 'cleanup',
-      description: 'Cleanup infrastructure and state (with soft-delete handling)',
+      description: CLEANUP_COMMAND_DESCRIPTION,
       handler: cleanupCommand,
     },
   ],
@@ -70,7 +75,7 @@ const commands: Map<string, Command> = new Map([
     'bootstrap',
     {
       name: 'bootstrap',
-      description: 'Initialize bootstrap infrastructure (storage, resource group)',
+      description: BOOTSTRAP_COMMAND_DESCRIPTION,
       handler: bootstrapCommand,
     },
   ],
@@ -78,7 +83,7 @@ const commands: Map<string, Command> = new Map([
     'status',
     {
       name: 'status',
-      description: 'Check deployment status',
+      description: STATUS_COMMAND_DESCRIPTION,
       handler: statusCommand,
     },
   ],

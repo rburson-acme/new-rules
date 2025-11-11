@@ -7,30 +7,25 @@ import { fileURLToPath } from 'url';
 import { logger } from '../../shared/logger.js';
 import { requireString, ValidationError, confirmAction } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
-import { TerraformManager, EnvironmentConfig } from '../utils/terraform.js';
+import { TerraformManager } from '../utils/terraform.js';
+
+// Import types from centralized location
+import type {
+  StackConfig,
+  DeployConfig,
+  EnvironmentsConfig,
+  EnvironmentConfig
+} from '../types/index.js';
+
+import { COMMAND_DESCRIPTIONS } from '../types/constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface StackConfig {
-  name: string;
-  path: string;
-  dependencies: string[];
-}
-
-interface DeployConfig {
-  stacks: StackConfig[];
-  environments: string[];
-}
-
-interface EnvironmentsConfig {
-  [key: string]: EnvironmentConfig;
-}
-
 /**
  * Get stack deployment order respecting dependencies
  */
-function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: string[]): StackConfig[] {
+export function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: string[]): StackConfig[] {
   const stackMap = new Map(stacks.map((s) => [s.name, s]));
   const deployed = new Set<string>();
   const order: StackConfig[] = [];
@@ -62,6 +57,56 @@ function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: string[]): 
 
   return order;
 }
+
+/**
+ * Load and validate configuration
+ */
+function loadConfiguration(environment: string): {
+  deployConfig: DeployConfig;
+  envConfig: EnvironmentConfig;
+} {
+  const configDir = path.join(__dirname, '../../..', 'shared', 'configs', 'terraform');
+  const configLoader = createConfigLoader(configDir, 'deploy');
+
+  let deployConfig: DeployConfig;
+  let environmentsConfig: EnvironmentsConfig;
+
+  try {
+    deployConfig = configLoader.loadConfig<DeployConfig>('stacks.json');
+    environmentsConfig = configLoader.loadConfig<EnvironmentsConfig>('environments.json');
+  } catch (error: any) {
+    throw new ValidationError(`Failed to load configuration: ${error.message}`);
+  }
+
+  if (!deployConfig.environments.includes(environment)) {
+    throw new ValidationError(
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+    );
+  }
+
+  const envConfig = environmentsConfig[environment];
+  if (!envConfig) {
+    throw new ValidationError(`Environment configuration not found for: ${environment}`);
+  }
+
+  return { deployConfig, envConfig };
+}
+
+/**
+ * Display deployment plan
+ */
+function displayDeploymentPlan(deploymentOrder: StackConfig[], title: string): void {
+  console.log(`\n${title}:`);
+  deploymentOrder.forEach((stack, idx) => {
+    console.log(`  ${idx + 1}. ${stack.name}`);
+    if (stack.dependencies.length > 0) {
+      console.log(`     Dependencies: ${stack.dependencies.join(', ')}`);
+    }
+  });
+}
+
+export const DEPLOY_COMMAND_DESCRIPTION = COMMAND_DESCRIPTIONS.DEPLOY;
+export const PLAN_COMMAND_DESCRIPTION = COMMAND_DESCRIPTIONS.PLAN;
 
 export async function deployCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
@@ -98,31 +143,8 @@ EXAMPLES:
   const force = args.includes('--force');
   const requestedStacks = args.filter((a) => !a.startsWith('--'));
 
-  // Load configuration
-  const configDir = path.join(__dirname, '../../..', 'shared', 'configs', 'terraform');
-  const configLoader = createConfigLoader(configDir, 'deploy');
-
-  let deployConfig: DeployConfig;
-  let environmentsConfig: EnvironmentsConfig;
-  try {
-    deployConfig = configLoader.loadConfig<DeployConfig>('stacks.json');
-    environmentsConfig = configLoader.loadConfig<EnvironmentsConfig>('environments.json');
-  } catch (error: any) {
-    throw new ValidationError(`Failed to load configuration: ${error.message}`);
-  }
-
-  // Validate environment
-  if (!deployConfig.environments.includes(environment)) {
-    throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
-    );
-  }
-
-  // Get environment config
-  const envConfig = environmentsConfig[environment];
-  if (!envConfig) {
-    throw new ValidationError(`Environment configuration not found for: ${environment}`);
-  }
+  // Load and validate configuration
+  const { deployConfig, envConfig } = loadConfiguration(environment);
 
   // Get deployment order
   const stacksToProcess = requestedStacks.length > 1
@@ -137,13 +159,7 @@ EXAMPLES:
   }
 
   // Show deployment plan
-  console.log('\nDeployment Plan:');
-  deploymentOrder.forEach((stack, idx) => {
-    console.log(`  ${idx + 1}. ${stack.name}`);
-    if (stack.dependencies.length > 0) {
-      console.log(`     Dependencies: ${stack.dependencies.join(', ')}`);
-    }
-  });
+  displayDeploymentPlan(deploymentOrder, 'Deployment Plan');
 
   // Confirm deployment
   if (!force && !dryRun) {
@@ -221,31 +237,8 @@ EXAMPLES:
   const environment = requireString(args[0], 'environment');
   const requestedStacks = args.filter((a) => !a.startsWith('--'));
 
-  // Load configuration
-  const configDir = path.join(__dirname, '../../..', 'shared', 'configs', 'terraform');
-  const configLoader = createConfigLoader(configDir, 'plan');
-
-  let deployConfig: DeployConfig;
-  let environmentsConfig: EnvironmentsConfig;
-  try {
-    deployConfig = configLoader.loadConfig<DeployConfig>('stacks.json');
-    environmentsConfig = configLoader.loadConfig<EnvironmentsConfig>('environments.json');
-  } catch (error: any) {
-    throw new ValidationError(`Failed to load configuration: ${error.message}`);
-  }
-
-  // Validate environment
-  if (!deployConfig.environments.includes(environment)) {
-    throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
-    );
-  }
-
-  // Get environment config
-  const envConfig = environmentsConfig[environment];
-  if (!envConfig) {
-    throw new ValidationError(`Environment configuration not found for: ${environment}`);
-  }
+  // Load and validate configuration
+  const { deployConfig, envConfig } = loadConfiguration(environment);
 
   // Get deployment order
   const stacksToProcess = requestedStacks.length > 1
@@ -257,13 +250,7 @@ EXAMPLES:
   logger.info(`Planning ${deploymentOrder.length} stack(s) for ${environment}`, 'plan');
 
   // Show plan order
-  console.log('\nPlan Order:');
-  deploymentOrder.forEach((stack, idx) => {
-    console.log(`  ${idx + 1}. ${stack.name}`);
-    if (stack.dependencies.length > 0) {
-      console.log(`     Dependencies: ${stack.dependencies.join(', ')}`);
-    }
-  });
+  displayDeploymentPlan(deploymentOrder, 'Plan Order');
 
   // Execute plan
   const terraformDir = path.join(__dirname, '../../..', 'cloud', 'terraform');

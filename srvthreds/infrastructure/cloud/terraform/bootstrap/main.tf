@@ -17,8 +17,8 @@ terraform {
 }
 
 provider "azurerm" {
-  subscription_id = "f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed"
-  tenant_id       = "0fbd63ce-fee7-4264-ae5d-4e9d725a9417"
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
 
   features {
     resource_group {
@@ -32,14 +32,14 @@ provider "azurerm" {
 
 # Local variables
 locals {
-  project_name = "srvthreds"
-  environment  = "shared" # Shared across all environments
+  project_name = var.project_name
+  environment  = var.environment
   location     = var.location
 
   common_tags = {
     Project     = "SrvThreds"
     ManagedBy   = "Terraform"
-    Environment = "Shared"
+    Environment = title(var.environment)
     Purpose     = "Terraform State Management"
     CostCenter  = "Infrastructure"
   }

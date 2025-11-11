@@ -120,9 +120,13 @@ terraform apply
 ```
 
 **Where to find Terraform resources:**
-- Reusable modules: [cloud/terraform/modules/](cloud/terraform/modules/)
-- Environment configs: [cloud/terraform/environments/](cloud/terraform/environments/)
-- Bootstrap setup: [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/)
+- **Overview**: [cloud/terraform/README.md](cloud/terraform/README.md)
+- **Documentation**: [cloud/terraform/docs/](cloud/terraform/docs/) - [Index](cloud/terraform/docs/README.md)
+  - Deployment guides, best practices, and complete module documentation
+- **Reusable modules**: [cloud/terraform/modules/azure/](cloud/terraform/modules/azure/)
+  - 11 production-ready Azure infrastructure modules
+- **Environment configs**: [cloud/terraform/environments/](cloud/terraform/environments/)
+- **Bootstrap setup**: [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/) - [README](cloud/terraform/bootstrap/README.md)
 
 ## 📚 Developer Guide
 
@@ -222,10 +226,26 @@ terraform destroy
 
 #### 🔧 Modify deployment automation
 
-**Find:** [tools/deployment-cli/](tools/deployment-cli/)
+**Find:** [tools/](tools/) - [Documentation](tools/README.md)
 
-- **CLI entry point** → [tools/deployment-cli/cli.ts](tools/deployment-cli/cli.ts)
-- **Deployment logic** → [tools/deployment-cli/deployment.ts](tools/deployment-cli/deployment.ts)
+- **Deployment CLI** → [tools/deployment-cli/](tools/deployment-cli/) - [README](tools/deployment-cli/README.md)
+  - Interactive deployment orchestration
+  - Docker Compose, Kubernetes, and shell script execution
+  - Multi-environment support
+
+- **Terraform CLI** → [tools/terraform-cli/](tools/terraform-cli/) - [README](tools/terraform-cli/README.md)
+  - Cloud infrastructure deployment
+  - Stack-based deployment with dependency resolution
+  - Azure integration
+
+- **Config Generator** → [tools/config-generator/](tools/config-generator/) - [README](tools/config-generator/README.md)
+  - Generates configs from config-registry.yaml
+  - Docker Compose, Kubernetes, .env files, agent configs
+
+- **Config Validator** → [tools/config-validator/](tools/config-validator/) - [README](tools/config-validator/README.md)
+  - Validates config consistency across deployment targets
+  - Port, path, and environment variable validation
+
 - **Deployment configs** → [shared/configs/deployments/](shared/configs/deployments/)
   - [databases.json](shared/configs/deployments/databases.json)
   - [services.json](shared/configs/deployments/services.json)
@@ -247,13 +267,39 @@ terraform destroy
 
 #### 📖 Find documentation
 
-**Find:** [docs/](docs/)
+**Infrastructure Documentation:** [docs/](docs/) - [Index](docs/README.md)
 
+**General Infrastructure:**
 - **Deployment guide** → [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **Configuration guide** → [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
 - **Configuration strategy** → [docs/CONFIGURATION-STRATEGY.md](docs/CONFIGURATION-STRATEGY.md)
 - **Troubleshooting** → [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 - **Infrastructure roadmap** → [INFRASTRUCTURE-ROADMAP.md](INFRASTRUCTURE-ROADMAP.md)
+
+**Cloud Infrastructure:**
+- **Azure Setup Guide** → [docs/cloud/AZURE-SETUP-GUIDE.md](docs/cloud/AZURE-SETUP-GUIDE.md)
+- **Azure RBAC Guide** → [docs/cloud/AZURE-RBAC-GUIDE.md](docs/cloud/AZURE-RBAC-GUIDE.md)
+- **Azure Security Requirements** → [docs/cloud/AZURE-SECURITY-REQUIREMENTS.md](docs/cloud/AZURE-SECURITY-REQUIREMENTS.md)
+- **Progressive Security Model** → [docs/cloud/PROGRESSIVE-SECURITY-MODEL.md](docs/cloud/PROGRESSIVE-SECURITY-MODEL.md)
+
+**Terraform Documentation:**
+- **Terraform Docs Index** → [cloud/terraform/docs/README.md](cloud/terraform/docs/README.md)
+- **Deployment Guide** → [cloud/terraform/docs/deployment-guide.md](cloud/terraform/docs/deployment-guide.md)
+- **Bootstrap Guide** → [cloud/terraform/docs/bootstrap-guide.md](cloud/terraform/docs/bootstrap-guide.md)
+- **Stacks Guide** → [cloud/terraform/docs/stacks-guide.md](cloud/terraform/docs/stacks-guide.md)
+- **Best Practices** → [cloud/terraform/docs/best-practices.md](cloud/terraform/docs/best-practices.md)
+- **Module Documentation** → [cloud/terraform/docs/modules/](cloud/terraform/docs/modules/)
+  - Networking, AKS, ACR, Key Vault, Cosmos DB, Redis, Service Bus, Monitoring, App Gateway, Private Endpoint, RBAC
+
+**Infrastructure Tools:**
+- **Tools Overview** → [tools/README.md](tools/README.md)
+- **Deployment CLI** → [tools/deployment-cli/README.md](tools/deployment-cli/README.md)
+- **Terraform CLI** → [tools/terraform-cli/README.md](tools/terraform-cli/README.md)
+- **Config Generator** → [tools/config-generator/README.md](tools/config-generator/README.md)
+- **Config Validator** → [tools/config-validator/README.md](tools/config-validator/README.md)
+
+**Testing:**
+- **Infrastructure Tests** → [test/README.md](test/README.md)
 
 ## 🗺️ Infrastructure Roadmap
 

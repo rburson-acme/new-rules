@@ -29,6 +29,8 @@ interface EnvironmentConfigWithRG extends EnvironmentConfig {
   resourceGroupName: string;
 }
 
+export const CLEANUP_COMMAND_DESCRIPTION = 'Cleanup infrastructure and state (with soft-delete handling)';
+
 export async function cleanupCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
     console.log(`

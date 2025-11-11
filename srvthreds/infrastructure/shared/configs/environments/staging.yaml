@@ -1,0 +1,133 @@
+#═══════════════════════════════════════════════════════════════════════════════
+# Staging Environment Configuration
+#═══════════════════════════════════════════════════════════════════════════════
+# This file provides staging-specific overrides for the base config-registry
+#
+# Purpose: Pre-production environment for integration testing
+# Target: Azure AKS, AWS EKS, or GCP GKE
+# Characteristics: Production-like but with reduced resources
+#═══════════════════════════════════════════════════════════════════════════════
+
+environment:
+  name: staging
+  description: "Staging environment for pre-production testing"
+  cloud:
+    provider: azure
+    region: eastus
+
+# Image configuration
+images:
+  registry: srvthredsstgacr.azurecr.io
+  tag: staging-${VERSION}
+  pullPolicy: IfNotPresent
+
+# Service-specific overrides
+services:
+  engine:
+    replicas: 2  # Multiple instances like prod
+    resources:
+      memory:
+        request: 512Mi
+        limit: 1Gi
+      cpu:
+        request: 500m
+        limit: 1000m
+    environment:
+      LOG_LEVEL: info
+      NODE_ENV: staging
+
+  session-agent:
+    replicas: 2
+    resources:
+      memory:
+        request: 256Mi
+        limit: 512Mi
+      cpu:
+        request: 200m
+        limit: 500m
+    environment:
+      LOG_LEVEL: info
+      NODE_ENV: staging
+
+  persistence-agent:
+    replicas: 2
+    resources:
+      memory:
+        request: 512Mi
+        limit: 1Gi
+      cpu:
+        request: 400m
+        limit: 800m
+    environment:
+      LOG_LEVEL: info
+      NODE_ENV: staging
+
+# Cloud-specific managed services
+cloud:
+  azure:
+    cosmosdb:
+      tier: "Standard"
+      throughput: 1000
+    redis:
+      sku: "Standard"
+      capacity: 1  # C1
+    aks:
+      nodeCount: 3
+      vmSize: "Standard_D2s_v3"
+      enableAutoScaling: true
+      minCount: 2
+      maxCount: 5
+
+  aws:
+    documentdb:
+      instanceClass: "db.r5.large"
+      instanceCount: 2
+    elasticache:
+      nodeType: "cache.t3.small"
+      numCacheNodes: 2
+    eks:
+      nodeGroupInstanceTypes:
+        - "t3.medium"
+      desiredSize: 3
+      minSize: 2
+      maxSize: 5
+
+  gcp:
+    mongodb:
+      tier: "M10"
+    memorystore:
+      tier: "STANDARD_HA"
+      memorySizeGb: 2
+    gke:
+      nodeCount: 3
+      machineType: "e2-standard-2"
+      enableAutoscaling: true
+      minNodeCount: 2
+      maxNodeCount: 5
+
+# Monitoring (similar to prod)
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    retention: "15d"
+  grafana:
+    enabled: true
+  logging:
+    retention: "30d"
+  tracing:
+    enabled: true
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilization: 70
+  targetMemoryUtilization: 80
+
+# Backup
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "14d"

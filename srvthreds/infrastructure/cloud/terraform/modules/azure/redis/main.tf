@@ -47,7 +47,7 @@ resource "azurerm_redis_cache" "main" {
 
   # Redis configuration
   redis_configuration {
-    enable_authentication           = var.enable_authentication
+    authentication_enabled = var.enable_authentication
     maxmemory_reserved              = var.maxmemory_reserved
     maxmemory_delta                 = var.maxmemory_delta
     maxmemory_policy                = var.maxmemory_policy
@@ -85,7 +85,7 @@ resource "azurerm_redis_cache" "main" {
   shard_count = var.sku_name == "Premium" && var.shard_count > 0 ? var.shard_count : null
 
   # Non-SSL port
-  enable_non_ssl_port = var.enable_non_ssl_port
+  non_ssl_port_enabled = var.enable_non_ssl_port
 
   # Replicas per master (Premium SKU)
   replicas_per_master = var.sku_name == "Premium" ? var.replicas_per_master : null

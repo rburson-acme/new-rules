@@ -23,9 +23,11 @@ npm run terraformCli -- cleanup dev
 
 ## Documentation
 
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide and workflows
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[CLI README](../../tools/terraform-cli/README.md)** - Detailed CLI documentation
+- **[Terraform Docs Index](docs/README.md)** - Complete Terraform documentation
+  - Deployment guides, best practices, and all module documentation
+- **[Terraform CLI](../../tools/terraform-cli/README.md)** - CLI tool documentation
+- **[Azure Setup Guide](../../docs/cloud/AZURE-SETUP-GUIDE.md)** - Initial Azure configuration
+- **[RBAC Guide](../../docs/cloud/AZURE-RBAC-GUIDE.md)** - Role-based access control
 
 ## Prerequisites
 
@@ -169,10 +171,14 @@ terraform/
 │   ├── appgateway/        # Load balancer
 │   └── _shared/           # Shared backend configuration
 ├── modules/               # Reusable Terraform modules
-│   └── azure/
-├── docs/                  # Documentation
-│   ├── DEPLOYMENT.md      # Deployment guide
-│   └── TROUBLESHOOTING.md # Troubleshooting guide
+│   └── azure/             # 11 production-ready Azure modules
+├── docs/                  # Centralized documentation
+│   ├── README.md          # Documentation index
+│   ├── deployment-guide.md
+│   ├── bootstrap-guide.md
+│   ├── stacks-guide.md
+│   ├── best-practices.md
+│   └── modules/           # Module documentation
 └── README.md              # This file
 ```
 
@@ -216,9 +222,9 @@ Where:
 
 For detailed information:
 
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[terraform-cli README](../../tools/terraform-cli/README.md)** - CLI documentation
+- **[Terraform Documentation Index](docs/README.md)** - Complete Terraform documentation
+- **[Terraform CLI](../../tools/terraform-cli/README.md)** - CLI tool documentation
+- **[Troubleshooting Guide](../../docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 For command help:
 
