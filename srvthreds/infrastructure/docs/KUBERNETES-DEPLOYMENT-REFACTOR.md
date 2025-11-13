@@ -1027,10 +1027,18 @@ Use this checklist to track overall progress:
 - [ ] Deployment CLI integration complete
 
 ### AKS
-- [ ] Manifest overlays created
-- [ ] AKSDeployer implemented
-- [ ] AzureManager implemented
-- [ ] Deployed to AKS dev successfully
+- [x] Manifest overlays created
+- [x] AKSDeployer implemented
+- [x] AzureManager implemented
+- [x] Deployed to AKS dev successfully
+- [ ] **Production LoadBalancer Setup** - Configure external access for production
+  - [ ] Add Network Security Groups (NSG) rules to restrict access to specific IPs/networks
+  - [ ] Configure Azure Application Gateway or API Management for SSL/TLS termination
+  - [ ] Consider using Azure Front Door for additional security and CDN capabilities
+  - [ ] Set up DNS names instead of using raw public IPs (Azure DNS or custom domain)
+  - [ ] Document LoadBalancer costs and monitoring strategy
+  - [ ] Implement health checks and connection draining
+  - [ ] Configure rate limiting and DDoS protection
 
 ### CI/CD
 - [ ] GitHub Actions workflows created

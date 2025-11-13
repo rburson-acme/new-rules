@@ -27,3 +27,4 @@ images:
 # Patch to use Always pull policy for ACR images
 patches:
 - path: image-pull-policy.yaml
+# - path: service-type.yaml  # Commented out - use port-forward instead for dev

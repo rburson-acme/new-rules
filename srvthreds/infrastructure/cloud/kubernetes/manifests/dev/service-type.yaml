@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: srvthreds-session-agent-service
+  namespace: srvthreds
+spec:
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: srvthreds-engine-service
+  namespace: srvthreds
+spec:
+  type: LoadBalancer
