@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: srvthreds
+
+resources:
+- ../base
+
+# Override images to use ACR
+images:
+- name: srvthreds:dev
+  newName: cazsrvthredsdeacr.azurecr.io/srvthreds/engine
+  newTag: latest
+- name: srvthreds/bootstrap
+  newName: cazsrvthredsdeacr.azurecr.io/srvthreds/bootstrap
+  newTag: latest
+- name: srvthreds/engine
+  newName: cazsrvthredsdeacr.azurecr.io/srvthreds/engine
+  newTag: latest
+- name: srvthreds/session-agent
+  newName: cazsrvthredsdeacr.azurecr.io/srvthreds/session-agent
+  newTag: latest
+- name: srvthreds/persistence-agent
+  newName: cazsrvthredsdeacr.azurecr.io/srvthreds/persistence-agent
+  newTag: latest
+
+# Patch to use Always pull policy for ACR images
+patches:
+- path: image-pull-policy.yaml

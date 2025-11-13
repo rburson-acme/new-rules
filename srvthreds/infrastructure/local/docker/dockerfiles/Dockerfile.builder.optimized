@@ -1,7 +1,9 @@
-# Builder stage for SrvThreds - shared across all services
+# Optimized Builder stage for SrvThreds - shared across all services
 # This image contains compiled thredlib and srvthreds artifacts
 # Support for multiple architectures (amd64, arm64)
-FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+
+# Build stage with all dependencies
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -26,7 +28,20 @@ RUN echo "--- Files under dist-server run-profiles directory ---" && ls -aF ./di
 # Copy env file from assets directory
 COPY infrastructure/tools/deployment-cli/assets/*.* ./dist-server/
 RUN echo "--- Files under dist-server ---" && ls -aF ./dist-server/
-# RUN cat ./dist-server/.env
+RUN cat ./dist-server/.env
+
+# Optimized builder stage - only artifacts, no node_modules
+FROM node:20-alpine AS builder
+
+WORKDIR /app/srvthreds
+
+# Copy only the built artifacts (no node_modules)
+COPY --from=build /app/srvthreds/dist-server ./dist-server
+COPY --from=build /app/srvthreds/package*.json ./
+
+# Copy thredlib build output (not node_modules)
+COPY --from=build /app/thredlib/dist ./thredlib/dist
+COPY --from=build /app/thredlib/package*.json ./thredlib/
 
 # Default command (this image is meant to be used as a base)
 CMD ["/bin/sh"]

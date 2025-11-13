@@ -47,7 +47,7 @@ echo "   MongoDB replica set state may become corrupted, causing startup failure
 echo ""
 echo "Recommended: Stop databases for a clean state"
 echo ""
-read -p "Stop host databases now? (y/n) " -n 1 -r
+read -p "Delete host databases now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "💾 Stopping host databases..."
