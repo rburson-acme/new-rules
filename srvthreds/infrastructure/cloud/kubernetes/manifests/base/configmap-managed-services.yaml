@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: srvthreds-config
+  namespace: srvthreds
+data:
+  # Azure Cosmos DB (MongoDB API)
+  MONGO_HOST: cazsrvthredsdecosmos.mongo.cosmos.azure.com:10255
+  MONGO_SSL: "true"
+  MONGO_DIRECT_CONNECTION: "false"
+  MONGO_REPLICA_SET: "globaldb"
+  MONGO_RETRY_WRITES: "false"
+  MONGO_MAX_IDLE_TIME_MS: "120000"
+
+  # Azure Cache for Redis
+  REDIS_HOST: caz-srvthreds-d-e-redis.redis.cache.windows.net
+  REDIS_PORT: "6380"
+  REDIS_TLS_ENABLED: "true"
+
+  # JWT settings (unchanged)
+  JWT_EXPIRE_TIME: 1h
+  REFRESH_TOKEN_EXPIRE_TIME: 7d

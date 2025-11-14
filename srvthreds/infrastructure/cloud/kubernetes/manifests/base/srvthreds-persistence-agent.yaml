@@ -23,6 +23,17 @@ spec:
           image: srvthreds:dev
           imagePullPolicy: Never
           ports: []
+          env:
+            - name: MONGO_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: mongo-connection-string
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: redis-password
           envFrom:
             - configMapRef:
                 name: srvthreds-config
