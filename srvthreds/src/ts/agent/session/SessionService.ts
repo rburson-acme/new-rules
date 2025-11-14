@@ -74,7 +74,7 @@ export class SessionService {
           }
         });
       } else {
-        Logger.warn({ msg: `SessionService: participant ${to} not found for thredId: ${thredId}`, thredId });
+        Logger.warn({ message: `SessionService: participant ${to} not found for thredId: ${thredId}`, thredId });
       }
     });
     return channels;

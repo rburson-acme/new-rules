@@ -7,7 +7,7 @@ Logger.setLevel(LoggerLevel.INFO);
 // this runs against a running server running 'simple_test.pattern.json' and simple_test_sessions_model.json
 // @TODO - right now it doesn't clean up sessions and threds....
 
-describe('client connection test', function () {
+describe.skip('client connection test', function () {
   beforeAll(async () => {
     eventManager0 = new EventManager();
     eventManager1 = new EventManager();

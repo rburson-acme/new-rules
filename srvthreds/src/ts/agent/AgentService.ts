@@ -98,7 +98,7 @@ export class AgentService {
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
     Logger.info({
-      msg: Logger.h1(
+      message: Logger.h1(
         `Agent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`,
       ),
       thredId: message.event.thredId,
@@ -115,7 +115,7 @@ export class AgentService {
   publishEvent = async (event: Event): Promise<void> => {
     const { eventQ } = this.params;
     Logger.info({
-      msg: Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
+      message: Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
       thredId: event.thredId,
     });
     Logger.debug({ thredId: event.thredId, obj: event });
@@ -142,7 +142,7 @@ export class AgentService {
     } catch (e: any) {
       const thredId = qMessage.payload?.event.thredId;
       Logger.error({
-        msg: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
+        message: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
         err: e,
         thredId,
       });
@@ -158,7 +158,7 @@ export class AgentService {
         // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
       } catch (e) {
         Logger.error({
-          msg: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
+          message: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
           err: e as Error,
           thredId,
         });

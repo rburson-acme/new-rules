@@ -160,13 +160,13 @@ export class SessionAgent implements MessageHandler {
           const addresses = message.to.join(',');
           if (channel.isProxy) {
             Logger.error({
-              msg: `SessionAgent: Failed to send message to proxy channel ${channel.id} for addresses: ${addresses}`,
+              message: `SessionAgent: Failed to send message to proxy channel ${channel.id} for addresses: ${addresses}`,
               err: e as Error,
               thredId: message.event.thredId,
             });
           } else {
             Logger.error({
-              msg: `SessionAgent: Failed to send event to outbound channel ${channel.id} for addresses: ${addresses}`,
+              message: `SessionAgent: Failed to send event to outbound channel ${channel.id} for addresses: ${addresses}`,
               err: e as Error,
               thredId: message.event.thredId,
             });

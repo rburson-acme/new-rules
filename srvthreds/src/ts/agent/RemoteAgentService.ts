@@ -164,7 +164,7 @@ export class RemoteAgentService {
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
     Logger.info({
-      msg: Logger.h1(
+      message: Logger.h1(
         `RemoteAgent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`,
       ),
       thredId: message.event.thredId,
@@ -180,7 +180,7 @@ export class RemoteAgentService {
   // publish Events to engine
   publishEvent = async (event: Event): Promise<void> => {
     Logger.info({
-      msg: Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
+      message: Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
       thredId: event.thredId,
     });
     Logger.debug({ thredId: event.thredId, obj: event });
@@ -193,7 +193,7 @@ export class RemoteAgentService {
     } catch (e: any) {
       const thredId = message.event.thredId;
       Logger.error({
-        msg: `RemoteAgent: failed to process message ${message.id} for thredId: ${thredId}`,
+        message: `RemoteAgent: failed to process message ${message.id} for thredId: ${thredId}`,
         err: e,
         thredId,
       });
@@ -206,7 +206,7 @@ export class RemoteAgentService {
         await this.eventPublisher.publishEvent(outboundEvent);
       } catch (e) {
         Logger.error({
-          msg: `RemoteAgent: failed to publish error event for message ${message.id} for thredId: ${thredId}`,
+          message: `RemoteAgent: failed to publish error event for message ${message.id} for thredId: ${thredId}`,
           err: e as Error,
           thredId,
         });

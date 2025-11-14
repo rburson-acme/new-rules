@@ -89,7 +89,7 @@ class Server {
       await Timers.wait(delay);
       Logger.info(`Stopping message consumption...`);
       await this.eventService?.unsubscribeAll().catch(Logger.error);
-      const eventProcessingWait = agentConfig?.eventProcessingWait ?? 3000;
+      const eventProcessingWait = agentConfig?.eventProcessingWait ?? 2000;
       Logger.info(`Waiting ${eventProcessingWait}ms for message processing to complete...`);
       await Timers.wait(eventProcessingWait);
       Logger.info(`Disconnecting RemoteQ...`);

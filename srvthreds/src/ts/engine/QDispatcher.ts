@@ -57,11 +57,11 @@ export class QDispatcher implements Dispatcher {
         try {
           const id = `${event.id}_agent_${index}`;
           const newMessage: Message = { id, event, to: [address] };
-          L.info({ msg: L.h2(`Server.tell(): Message ${id} to Agent ${address}`), thredId });
+          L.info({ msg: L.h2(`QDispatcher.tell(): Message ${id} to Agent ${address}`), thredId });
           if (address) await this.outboundQ.queue(newMessage, [address]);
         } catch (e) {
           L.error({
-            msg: L.crit(`Engine.tell(): Error sending message to Agent service address ${address}`),
+            msg: L.crit(`QDispatcher.tell(): Error sending message to Agent service address ${address}`),
             thredId,
             err: e as Error,
           });
@@ -92,18 +92,21 @@ export class QDispatcher implements Dispatcher {
           // route to specific node id if present (websocket sessions require this)
           // if there's no nodeId, assume any session service can retrieve it
           const topicString = nodeId ? nodeId : 'org.wt.session';
-          L.info({ msg: L.h2(`Server.tell(): Message ${id} to ${[...participants]} via ${topicString}`), thredId });
+          L.info({
+            msg: L.h2(`QDispatcher.tell(): Message ${id} to ${[...participants]} via ${topicString}`),
+            thredId,
+          });
           await this.outboundQ.queue(newMessage, [topicString]);
         } catch (e) {
           L.error({
-            msg: L.crit(`Engine.tell(): Error sending message to participants with nodeId ${nodeId}`),
+            msg: L.crit(`QDispatcher.tell(): Error sending message to participants with nodeId ${nodeId}`),
             thredId,
             err: e as Error,
           });
         }
       });
     } catch (e) {
-      L.error({ msg: L.crit('Engine.tell(): Error'), thredId, err: e as Error });
+      L.error({ msg: L.crit('QDispatcher.tell(): Error'), thredId, err: e as Error });
     }
   };
 }

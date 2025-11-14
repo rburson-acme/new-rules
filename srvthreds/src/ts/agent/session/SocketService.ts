@@ -51,7 +51,7 @@ export class SocketService {
     if (channel) {
       channel(messageOrEvent, channelId);
     } else {
-      Logger.error({ msg: `session: channel ${channelId} not found` });
+      Logger.error(`session: channel ${channelId} not found`);
     }
   };
 
@@ -82,9 +82,7 @@ export class SocketService {
     const isProxy = !!socket.handshake.headers['x-proxy-message'];
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
-    Logger.info({
-      msg: `session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`,
-    });
+    Logger.info(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     this.channels[channelId] = this.sendSocket;
     // for websockets, session must include a node id (so that we can route message back here)
     this.serviceListener
@@ -95,11 +93,11 @@ export class SocketService {
           this.serviceListener
             .sessionEnded(sessionId)
             .then(() => {
-              Logger.info({ msg: `session: participant ${participantId} disconnected` });
+              Logger.info(`session: participant ${participantId} disconnected`);
             })
             .catch((e) => {
               Logger.error({
-                msg: `session: participant ${participantId}::${sessionId} failed to remove Session`,
+                message: `session: participant ${participantId}::${sessionId} failed to remove Session`,
                 err: e as Error,
               });
             });
@@ -114,7 +112,7 @@ export class SocketService {
       })
       .catch((e) => {
         Logger.error({
-          msg: `session: participant ${participantId}::${sessionId} failed to add Session`,
+          message: `session: participant ${participantId}::${sessionId} failed to add Session`,
           err: e as Error,
         });
       });
@@ -125,12 +123,12 @@ export class SocketService {
     if (toSocket && toSocket.connected) {
       toSocket.send(messageOrEvent);
     } else {
-      Logger.error({ msg: `session: socket ${channelId} is not connected` });
+      Logger.error(`session: socket ${channelId} is not connected`);
     }
   };
 
   async shutdown(): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
+    (await new Promise<void>((resolve, reject) => {
       this.io.close(function onServerClosed(err: any) {
         if (err) {
           reject(err);
@@ -144,6 +142,6 @@ export class SocketService {
         setTimeout(() => {
           resolve();
         }, 3000);
-      });
+      }));
   }
 }

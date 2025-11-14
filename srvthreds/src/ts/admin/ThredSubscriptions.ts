@@ -38,7 +38,7 @@ export class ThredSubscriptions {
     if (this.subscriptions.size === 0) {
       this.keySubscriber.subscribe([ThredSubscriptions.THRED_PATTERN], async (pattern, channel, eventType) => {
         const thredId = channel.split(':')[2];
-        Logger.debug({ msg: `Got notification for thred change with ${eventType}`, thredId });
+        Logger.debug({ message: `Got notification for thred change with ${eventType}`, thredId });
         this.subscriptions.forEach((value, key) => value(thredId, eventType));
       });
     }
