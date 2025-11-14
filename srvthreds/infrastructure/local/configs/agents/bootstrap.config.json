@@ -1,0 +1,15 @@
+{
+  "name": "Database initialization and seeding",
+  "description": "Database initialization and seeding",
+  "command": {
+    "entrypoint": "npm",
+    "args": [
+      "run",
+      "bootstrap",
+      "--",
+      "-p",
+      "ef-detection"
+    ]
+  },
+  "ports": {}
+}

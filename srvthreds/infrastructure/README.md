@@ -1,255 +1,462 @@
-# Deployment CLI
+# SrvThreds Infrastructure
 
-An interactive command-line interface for managing Docker Compose deployments across multiple environments.
+This directory contains all infrastructure-related code, configurations, and scripts for deploying SrvThreds across different environments.
 
-## Overview
-
-The Deployment CLI provides a streamlined way to start, stop, and manage containerized services (databases and application services) using Docker Compose. It supports both interactive menu-driven operation and direct command-line execution.
-
-## Usage
-
-### Interactive Mode
-
-Run the CLI without arguments to enter interactive mode:
-
-```bash
-./deploymentCli.ts
-```
-
-The CLI will prompt you to:
-1. Select an environment (local, dev, test)
-2. Choose from available deployments for that environment
-
-### Direct Command Mode
-
-Execute deployments directly by specifying environment and deployment name or shortName:
-
-```bash
-./deploymentCli.ts <environment> <deployment-name|shortName>
-```
-
-**Examples using full names:**
-```bash
-./deploymentCli.ts local "Start Databases"
-./deploymentCli.ts local "Start All"
-./deploymentCli.ts dev "Stop Services"
-```
-
-**Examples using shortNames:**
-```bash
-./deploymentCli.ts local "s_s_dbs"      # Start Databases
-./deploymentCli.ts local "s_a_dbs_s"  # Start All
-./deploymentCli.ts dev "d_a_s"        # Stop Services
-```
-
-## Available Deployments
-
-### Database Management
-- **Start Databases** (`s_s_dbs`): Starts MongoDB, Redis, and RabbitMQ containers
-  - Environments: local, dev, test
-  - Includes MongoDB replica set initialization
-- **Stop Databases** (`d_dbs`): Stops and removes database containers and volumes
-  - Environments: local, dev, test
-
-### Service Management
-- **Start Services** (`s_a_s`): Starts application service containers
-  - Environments: local, dev
-- **Stop Services** (`d_a_s`): Stops and removes application service containers
-  - Environments: local, dev
-
-### Full Stack Management
-- **Start All** (`s_a_dbs_s`): Starts both databases and services in sequence
-  - Environment: local only
-- **Stop All** (`d_a_dbs_s`): Stops all containers and removes volumes
-  - Environment: local only
-
-### Individual Service Management
-- **Start Server** (`s_s`): Starts only the main server service
-  - Environments: local, dev
-- **Stop Server** (`d_s`): Stops the main server service
-  - Environments: local, dev
-- **Start Session Agent Service** (`s_sa`): Starts session agent service
-  - Environments: local, dev
-- **Stop Session Agent Services** (`d_sa`): Stops session agent service
-  - Environments: local, dev
-- **Start Persistence Agent Service** (`s_pa`): Starts persistence agent service
-  - Environments: local, dev
-- **Stop Persistence Agent Service** (`d_pa`): Stops persistence agent service
-  - Environments: local, dev
-
-### Utility Operations
-- **Run bootstrap for data** (`bootstrap`): Bootstraps database with configuration data
-  - Environments: local, dev
-- **Create Base Image** (`build`): Creates the base builder image used by all services
-  - Environments: local, dev
-
-## Configuration
-
-The deployment configuration is defined in [`configs/containerDeploymentConfig.json`](configs/containerDeploymentConfig.json). This file specifies:
-
-- **Deployment definitions** with names, shortNames, descriptions, and supported environments
-- **Docker Compose files** to use for each deployment
-- **Default arguments** for docker compose commands
-- **Pre-build commands** (e.g., building the base builder image before services)
-- **Post-deployment commands** (e.g., MongoDB replica set setup)
-
-### Configuration Structure
-
-```json
-{
-  "deployments": [
-    {
-      "name": "Deployment Name",
-      "shortName": "-shortcut",
-      "description": "Human-readable description",
-      "environments": ["local", "dev", "test"],
-      "target": {
-        "composing": "deployment-type",
-        "deployCommand": "up|down",
-        "composeFile": "docker-compose-file.yml",
-        "defaultArgs": "-d --wait",
-        "preBuildCommands": [
-          {
-            "description": "Command description",
-            "command": "shell command to execute before deployment"
-          }
-        ],
-        "postUpCommands": [
-          {
-            "description": "Command description",
-            "command": "shell command to execute after deployment"
-          }
-        ],
-        "environmentOverrides": {
-          "staging": {
-            "preBuildCommands": [
-              {
-                "description": "Environment-specific pre-build command",
-                "command": "shell command for staging environment"
-              }
-            ],
-            "postUpCommands": [
-              {
-                "description": "Environment-specific post-up command",
-                "command": "shell command for staging environment"
-              }
-            ]
-          }
-        }
-      }
-    }
-  ]
-}
-```
-
-## Docker Compose Files
-
-The CLI works with these Docker Compose files in the [`dockerCompose/`](dockerCompose/) directory:
-
-- **docker-compose-db.yml**: Database services (MongoDB, Redis, RabbitMQ)
-- **docker-compose-services.yml**: Application services
-
-## Features
-
-- **Environment Validation**: Ensures deployments are only run in supported environments
-- **Interactive Selection**: User-friendly menus with numbered options showing both full names and shortNames
-- **ShortName Support**: Quick deployment execution using short, memorable aliases
-- **Pre-Build Commands**: Automatic execution of build commands before container startup (e.g., building base images)
-- **Post-Deployment Commands**: Automatic execution of setup commands after container startup
-- **Environment-Specific Overrides**: Override pre-build and post-up commands per environment for flexible deployment strategies
-- **Multi-Compose Support**: Can orchestrate multiple compose files in sequence
-- **Asset Management**: Automatically creates and cleans up deployment assets (e.g., environment files)
-- **Error Handling**: Graceful error handling with informative messages
-- **Cancellation**: Built-in cancel option for interactive operations
-
-## Dependencies
-
-- Node.js with ES modules support
-- Docker and Docker Compose
-- TypeScript compilation (if running .ts files directly)
-
-## File Structure
+## 📁 Directory Structure
 
 ```
 infrastructure/
-├── deploymentCli.ts              # Main CLI script
-├── deployment.ts                 # Deployment execution logic
-├── configs/
-│   ├── containerDeploymentConfig.json  # Deployment configuration
-│   └── .env.*.example            # Environment variable templates
-├── dockerCompose/
-│   ├── docker-compose-db.yml           # Database services
-│   ├── docker-compose-services.yml     # Application services
-│   ├── Dockerfile                      # Main service Dockerfile
-│   ├── Dockerfile.builder              # Base builder image
-│   └── Dockerfile.cmdRunner            # Command runner image
-├── scripts/
-│   ├── setup-repl.sh             # MongoDB replica set initialization
-│   └── validationScript.sh       # Validation utilities
-├── deploymentAssets/             # Temporary files created during deployment
-└── README.md                     # This file
+├── local/              # Local development deployments
+│   ├── docker/         # Docker Compose development
+│   │   ├── compose/    # docker-compose files
+│   │   ├── dockerfiles/# Container definitions
+│   │   └── scripts/    # Docker scripts (setup-repl.sh, etc.)
+│   ├── minikube/       # Local Kubernetes testing
+│   │   ├── manifests/  # K8s manifests (base + overlays)
+│   │   └── scripts/    # Minikube scripts
+│   └── configs/        # Local configs
+│       └── agents/     # Agent service configs
+│
+├── cloud/              # Cloud (Azure) deployment
+│   └── terraform/      # Infrastructure as code
+│       ├── modules/    # Reusable Terraform modules
+│       ├── environments/# Per-environment configs
+│       └── bootstrap/  # Bootstrap configs
+│
+├── shared/             # Shared across all deployments
+│   └── configs/        # Common configuration
+│       ├── deployments/# Deployment definitions (for CLI)
+│       └── environments/# Environment templates
+│
+├── tools/              # Deployment tooling
+│   └── deployment-cli/ # CLI orchestrator
+│
+└── docs/               # Infrastructure documentation
 ```
 
-## Pre-Build and Post-Deployment Commands
+## ⚙️ Configuration Management
 
-### Pre-Build Commands
+**IMPORTANT**: All infrastructure configurations are managed through a centralized registry system with **automatic generation and validation** built into the deployment pipeline.
 
-Some deployments include pre-build commands that run before containers start. For example, the services deployment builds the base builder image:
+### Making Configuration Changes
+
+1. **Edit the single source of truth:**
+   ```bash
+   vim infrastructure/config-registry.yaml
+   ```
+
+2. **Deploy (configs auto-generate and validate):**
+   ```bash
+   npm run deploy-local-up-all
+   ```
+
+That's it! The deployment pipeline automatically:
+- ✅ Generates all config files from the registry
+- ✅ Validates consistency across all targets
+- ✅ Fails fast if configuration is invalid
+- ✅ Proceeds with deployment if everything is valid
+
+**Never manually edit** generated configuration files (Docker Compose, Kubernetes manifests, etc.). Always update [config-registry.yaml](config-registry.yaml) and let the deployment pipeline handle the rest.
+
+📚 **Documentation:**
+- [DEPLOYMENT-INTEGRATION.md](docs/DEPLOYMENT-INTEGRATION.md) - How auto-config works
+- [CONFIGURATION.md](docs/CONFIGURATION.md) - Environment variables and app config
+- [QUICK-START.md](docs/QUICK-START.md) - Common configuration tasks
+- [GIT-STRATEGY.md](docs/GIT-STRATEGY.md) - What to commit vs ignore
+
+## 🚀 Quick Start
+
+### Local Development (Docker)
+
+Start all services locally with Docker Compose:
 
 ```bash
-docker compose -f infrastructure/dockerCompose/docker-compose-services.yml build srvthreds-builder
+# Start databases and services
+npm run deploy-local-up-all
+
+# Or use individual commands
+npm run deploy-local-databases    # Start databases only
+npm run deploy-local-services     # Start services only
+
+# Or use the interactive menu
+npm run deploymentCli
 ```
 
-This ensures dependencies are built and cached before starting the main services.
+**Where to find local development resources:**
+- Docker Compose files: [local/docker/compose/](local/docker/compose/)
+- Dockerfiles: [local/docker/dockerfiles/](local/docker/dockerfiles/)
+- Docker scripts: [local/docker/scripts/](local/docker/scripts/)
+- Agent configs: [local/configs/agents/](local/configs/agents/)
 
-### Post-Deployment Commands
+### Kubernetes Deployment (Minikube)
 
-Some deployments include post-deployment commands that run automatically after containers start. For example, the database deployment includes MongoDB replica set initialization:
+Deploy to Minikube for local Kubernetes testing:
 
 ```bash
-docker exec mongo-repl-1 mongosh "mongodb://localhost:27017" --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo-repl-1:27017' }] })"
+# Deploy to Minikube (full setup)
+npm run minikube-create
+
+# Or just apply manifests (if Minikube already running)
+npm run minikube-apply
+
+# Cleanup Minikube environment
+npm run minikube-cleanup
 ```
 
-These commands ensure that services are properly configured and ready for use after startup.
+**Where to find Kubernetes resources:**
+- Base manifests: [local/minikube/manifests/base/](local/minikube/manifests/base/)
+- Environment overlays: [local/minikube/manifests/minikube/](local/minikube/manifests/minikube/)
+- Deployment scripts: [local/minikube/scripts/](local/minikube/scripts/)
 
-### Environment-Specific Command Overrides
+### Cloud Infrastructure (Terraform)
 
-The deployment system supports environment-specific command overrides, allowing you to define different pre-build and post-up commands for different environments. This is useful when:
+Provision cloud resources with Terraform:
 
-- Production builds require different optimization flags (e.g., `--no-cache`)
-- Staging environments need additional setup steps (e.g., database migrations)
-- Development environments need test data bootstrapping
-- Different environments have different validation requirements
+```bash
+cd cloud/terraform/environments/prod
+terraform init
+terraform plan
+terraform apply
+```
+
+**Where to find Terraform resources:**
+- Reusable modules: [cloud/terraform/modules/](cloud/terraform/modules/)
+- Environment configs: [cloud/terraform/environments/](cloud/terraform/environments/)
+- Bootstrap setup: [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/)
+
+## 📚 Developer Guide
+
+### I want to...
+
+#### 🐳 Work on local Docker development
+
+**Find:** [local/docker/](local/docker/)
+
+- **Modify database setup** → [local/docker/compose/docker-compose-db.yml](local/docker/compose/docker-compose-db.yml)
+- **Modify service containers** → [local/docker/compose/docker-compose-services.yml](local/docker/compose/docker-compose-services.yml)
+- **Update Dockerfiles** → [local/docker/dockerfiles/](local/docker/dockerfiles/)
+- **Add docker scripts** → [local/docker/scripts/](local/docker/scripts/)
+- **Configure agents** → [local/configs/agents/](local/configs/agents/)
+
+**Common tasks:**
+```bash
+# Start just databases
+npm run deploy-local-databases
+
+# Start just services
+npm run deploy-local-services
+
+# Stop and remove all containers
+npm run deploy-local-down-all
+
+# Bootstrap test data
+npm run deploymentCli local bootstrap
+```
+
+#### ☸️ Deploy to Kubernetes (Minikube)
+
+**Find:** [local/minikube/](local/minikube/)
+
+- **Modify base deployments** → [local/minikube/manifests/base/](local/minikube/manifests/base/)
+- **Configure Minikube** → [local/minikube/manifests/minikube/](local/minikube/manifests/minikube/)
+- **Configure prod overlay** → [local/minikube/manifests/prod/](local/minikube/manifests/prod/)
+- **Deployment scripts** → [local/minikube/scripts/](local/minikube/scripts/)
+
+**Key concepts:**
+- **Base manifests**: Common K8s resources shared across all environments
+- **Overlays**: Environment-specific configurations using Kustomize
+- **Minikube overlay**: Includes RabbitMQ, connects to host databases
+- **Prod overlay**: Production-ready configuration with replica scaling
+
+**Common tasks:**
+```bash
+# Deploy to Minikube (local K8s testing)
+npm run minikube-create
+
+# Apply manifest changes
+npm run minikube-apply
+
+# Reset deployment
+npm run minikube-reset
+
+# Full cleanup
+npm run minikube-cleanup
+
+# Debug MongoDB connection
+./local/minikube/scripts/debug-mongodb.sh
+```
+
+#### ☁️ Provision cloud infrastructure
+
+**Find:** [cloud/terraform/](cloud/terraform/)
+
+- **Create reusable modules** → [cloud/terraform/modules/](cloud/terraform/modules/)
+- **Configure prod environment** → [cloud/terraform/environments/prod/](cloud/terraform/environments/prod/)
+- **Bootstrap Azure** → [cloud/terraform/bootstrap/](cloud/terraform/bootstrap/)
+
+**Available modules:**
+- `eks/` - EKS Kubernetes cluster
+- `mongodb-atlas/` - MongoDB Atlas managed database
+- `networking/` - VPC, subnets, security groups
+
+**Common tasks:**
+```bash
+# Bootstrap Azure subscription
+cd cloud/terraform/bootstrap
+terraform init
+terraform apply
+
+# Initialize Terraform for prod
+cd cloud/terraform/environments/prod
+terraform init
+
+# Plan infrastructure changes
+terraform plan
+
+# Apply changes
+terraform apply
+
+# Destroy infrastructure
+terraform destroy
+```
+
+#### 🔧 Modify deployment automation
+
+**Find:** [tools/deployment-cli/](tools/deployment-cli/)
+
+- **CLI entry point** → [tools/deployment-cli/cli.ts](tools/deployment-cli/cli.ts)
+- **Deployment logic** → [tools/deployment-cli/deployment.ts](tools/deployment-cli/deployment.ts)
+- **Deployment configs** → [shared/configs/deployments/](shared/configs/deployments/)
+  - [databases.json](shared/configs/deployments/databases.json)
+  - [services.json](shared/configs/deployments/services.json)
+  - [kubernetes.json](shared/configs/deployments/kubernetes.json)
+  - [build.json](shared/configs/deployments/build.json)
 
 **How it works:**
+1. CLI reads configs from `shared/configs/deployments/`
+2. User selects environment + deployment
+3. Executes pre-build commands (e.g., build base images)
+4. Runs docker compose or kubectl with specified files
+5. Executes post-up commands (e.g., setup replica set)
 
-1. Define default `preBuildCommands` and `postUpCommands` at the target level
-2. Add `environmentOverrides` with environment-specific commands
-3. When deploying to a specific environment, the override commands **completely replace** the defaults (if defined)
-4. If no override exists for an environment, the default commands are used
+**Adding new deployment:**
+1. Create or edit JSON file in [shared/configs/deployments/](shared/configs/deployments/)
+2. Add new deployment entry with name, shortName, environments
+3. Specify composeFile(s), defaultArgs, and commands
+4. Test with `npm run deploymentCli`
 
-**Example:**
+#### 📖 Find documentation
 
-```json
-{
-  "target": {
-    "preBuildCommands": [
-      { "description": "Building with cache...", "command": "docker compose build" }
-    ],
-    "environmentOverrides": {
-      "production": {
-        "preBuildCommands": [
-          { "description": "Building without cache for production...", "command": "docker compose build --no-cache" }
-        ],
-        "postUpCommands": [
-          { "description": "Running migrations...", "command": "npm run migrate" }
-        ]
-      }
-    }
-  }
-}
+**Find:** [docs/](docs/)
+
+- **Deployment guide** → [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- **Configuration guide** → [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
+- **Configuration strategy** → [docs/CONFIGURATION-STRATEGY.md](docs/CONFIGURATION-STRATEGY.md)
+- **Troubleshooting** → [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+- **Infrastructure roadmap** → [INFRASTRUCTURE-ROADMAP.md](INFRASTRUCTURE-ROADMAP.md)
+
+## 🗺️ Infrastructure Roadmap
+
+SrvThreds follows a **3-phase infrastructure evolution**:
+
+### Phase 1: Local Development (Complete ✅)
+- Docker Compose for databases and services
+- Interactive deployment CLI
+- Multi-stage Docker builds with shared builder
+- Local development workflow
+
+**Status:** Fully implemented and operational
+
+### Phase 2: Minikube for Production-like Testing (Complete ✅)
+- Kubernetes manifests for Minikube
+- RabbitMQ runs in cluster
+- MongoDB and Redis on host Docker (via `host.minikube.internal`)
+- Kustomize overlays for configuration
+- Local K8s development workflow
+
+**Status:** Fully implemented and operational
+
+### Phase 3: Cloud Deployment (In Progress 🚀)
+- Terraform modules for cloud resources
+- Azure AKS for Kubernetes
+- Managed services for databases:
+  - MongoDB Atlas
+  - Azure Cache for Redis
+  - Azure Service Bus / CloudAMQP
+- Multi-environment (dev, staging, prod)
+
+**Status:** Terraform bootstrap complete, modules in progress
+
+**See:** [INFRASTRUCTURE-ROADMAP.md](INFRASTRUCTURE-ROADMAP.md) for details
+
+## 🔑 Key Design Decisions
+
+### Database Strategy
+
+**Local Docker:** ✅ Databases run in containers on host Docker
+- MongoDB (replica set)
+- Redis
+- RabbitMQ
+
+**Minikube:** ✅ Services run in K8s, databases on host Docker
+- Compute layer in Minikube
+- Data layer on host (via `host.minikube.internal`)
+- RabbitMQ runs in cluster as messaging layer
+
+**Cloud:** 🚀 Use managed services
+- MongoDB Atlas
+- Azure Cache for Redis / Redis Cloud
+- Azure Service Bus / CloudAMQP
+
+**Why?**
+- Managed services provide better reliability, backups, and scaling
+- Reduces operational burden
+- Focus development time on application, not database operations
+- Minikube uses host databases to avoid resource overhead
+
+### Kustomize Overlays
+
+We use Kustomize for environment-specific configurations:
+
+- **base/**: Common resources shared by all environments
+- **minikube/**: Local testing with RabbitMQ in-cluster
+- **prod/**: Production with replica scaling
+
+### Docker Multi-stage Builds
+
+Our Dockerfiles use a **builder pattern**:
+
+1. `Dockerfile.builder` - Compiles TypeScript, installs dependencies
+2. `Dockerfile` - Copies artifacts from builder, runs application
+3. `Dockerfile.cmdRunner` - Extends builder for one-off commands
+
+**Benefits:**
+- Faster builds (shared builder is cached)
+- Smaller production images
+- Consistent build environment
+
+## 📞 Common Commands
+
+### Deployment CLI
+
+```bash
+# Interactive mode
+npm run deploymentCli
+
+# Docker deployments
+npm run deploy-local-databases       # Start databases
+npm run deploy-local-services        # Start services
+npm run deploy-local-up-all          # Start everything
+npm run deploy-local-down-all        # Stop everything
+
+# Minikube deployments
+npm run minikube-create              # Full Minikube setup
+npm run minikube-apply               # Apply manifest changes
+npm run minikube-reset               # Reset deployment
+npm run minikube-cleanup             # Full cleanup
+npm run minikube-validate            # Validate deployment
+
+# Utilities
+npm run deploymentCli -- local bootstrap    # Bootstrap data
+npm run deploymentCli -- local build        # Build base image
 ```
 
-In this example:
-- **Local/Dev**: Uses cached builds (default `preBuildCommands`), no post-up commands
-- **Production**: Rebuilds from scratch (`--no-cache`), runs migrations after deployment
+### Docker Commands
+
+```bash
+# View logs
+docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml logs -f
+
+# View specific service
+docker logs -f srvthreds-engine
+
+# Rebuild with no cache
+docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml build --no-cache
+
+# Remove all containers and volumes
+docker compose -f infrastructure/local/docker/compose/docker-compose-db.yml down -v
+docker compose -f infrastructure/local/docker/compose/docker-compose-services.yml down -v
+```
+
+### Kubernetes Commands
+
+```bash
+# Apply manifests with Kustomize
+kubectl apply -k infrastructure/local/minikube/manifests/minikube
+
+# View resources
+kubectl get pods -n srvthreds
+kubectl get services -n srvthreds
+
+# View logs
+kubectl logs -f deployment/srvthreds-engine -n srvthreds
+
+# Port forward for local access
+kubectl port-forward svc/srvthreds-session-agent 3000:3000 -n srvthreds
+
+# Scale deployment
+kubectl scale deployment srvthreds-engine --replicas=3 -n srvthreds
+```
+
+## 🔍 Troubleshooting
+
+### Docker issues
+
+**Problem:** MongoDB replica set initialization fails
+**Solution:** Check [local/docker/scripts/setup-repl.sh](local/docker/scripts/setup-repl.sh) and container logs
+
+**Problem:** Services can't connect to databases
+**Solution:** Ensure databases are running: `docker ps | grep mongo`
+
+**Problem:** Port conflicts
+**Solution:** Check what's using ports: `lsof -i :27017` or `lsof -i :3000`
+
+### Kubernetes issues
+
+**Problem:** Pods not starting
+**Solution:** Check events: `kubectl describe pod <pod-name> -n srvthreds`
+
+**Problem:** Can't access services
+**Solution:** Verify services: `kubectl get svc -n srvthreds`
+
+**Problem:** MongoDB connection issues
+**Solution:** Run debug script: `./local/minikube/scripts/debug-mongodb.sh`
+
+**Problem:** Minikube can't reach host databases
+**Solution:** Check connectivity: `kubectl exec -n srvthreds deployment/srvthreds-engine -- ping host.minikube.internal`
+
+### More Help
+
+See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for comprehensive troubleshooting guide.
+
+## 📦 Dependencies
+
+### Local Development
+- Docker Desktop or Docker Engine
+- Docker Compose v2+
+- Node.js 18+
+- npm or yarn
+
+### Kubernetes
+- kubectl
+- Minikube (for local K8s)
+- Kustomize (usually bundled with kubectl)
+
+### Cloud
+- Terraform 1.5+
+- Cloud CLI (azure-cli)
+- Appropriate cloud credentials
+
+## 🤝 Contributing
+
+When adding infrastructure changes:
+
+1. **Local changes** → Update [local/](local/) and test with deployment CLI
+2. **K8s changes** → Update [local/minikube/manifests/base/](local/minikube/manifests/base/) and appropriate overlays
+3. **Cloud changes** → Update Terraform modules in [cloud/terraform/modules/](cloud/terraform/modules/)
+4. **Automation changes** → Update [tools/deployment-cli/](tools/deployment-cli/) and config JSON files
+5. **Documentation** → Update this README and [docs/](docs/)
+
+## 📄 License
+
+See project root for license information.

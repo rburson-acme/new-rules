@@ -1,0 +1,59 @@
+{
+  "deployments": [
+    {
+      "name": "Create Base Image",
+      "shortName": "build_server",
+      "description": "Creates the base image used by all services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "build",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "--progress=plain srvthreds-builder",
+        "preBuildCommands": [
+          {
+            "description": "Generating configurations from config-registry.yaml...",
+            "command": "tsx infrastructure/tools/config-generator/index.ts"
+          },
+          {
+            "description": "Validating configuration consistency...",
+            "command": "tsx infrastructure/tools/config-validator/index.ts"
+          }
+        ],
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ./infrastructure/local/configs/.env.local.example ./infrastructure/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
+                "command": "touch ./infrastructure/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

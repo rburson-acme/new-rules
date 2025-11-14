@@ -20,7 +20,11 @@ export class MongoPersistenceProvider implements PersistenceProvider {
 
   constructor(hostString?: string, config?: { connectOptions?: MongoClientOptions }) {
     const _host = hostString || MongoPersistenceProvider.DEFAULT_HOST;
-    this.client = new MongoClient(`mongodb://${_host}/?replicaSet=rs0`, config?.connectOptions);
+    // Only add replicaSet parameter if not using directConnection
+    const connectionString = config?.connectOptions?.directConnection
+      ? `mongodb://${_host}/`
+      : `mongodb://${_host}/?replicaSet=rs0`;
+    this.client = new MongoClient(connectionString, config?.connectOptions);
   }
 
   async connect(): Promise<void> {
