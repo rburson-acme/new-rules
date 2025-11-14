@@ -4,7 +4,7 @@ export class ConsoleLogger {
     info = (args, error) => { };
     warn = (args, error) => { };
     // should always be enabled
-    error = (args, error) => error ? console.error(args, error) : console.error(args);
+    error = (args, error) => (error ? console.error(args, error) : console.error(args));
     trace = (args, error) => { };
     logObject = (args) => { };
     constructor() {
@@ -19,17 +19,51 @@ export class ConsoleLogger {
         this.error = (args, error) => { };
         this.trace = (args, error) => { };
         this.logObject = (args) => { };
-        if (loggerLevel >= LoggerLevel.TRACE)
-            this.trace = (args, error) => error ? console.trace(args, error) : console.trace(args);
-        if (loggerLevel >= LoggerLevel.DEBUG)
-            this.debug = (args, error) => error ? console.debug(args, error) : console.debug(args);
-        if (loggerLevel >= LoggerLevel.INFO)
-            this.info = (args, error) => error ? console.info(args, error) : console.info(args);
-        if (loggerLevel >= LoggerLevel.WARN)
-            this.warn = (args, error) => error ? console.warn(args, error) : console.warn(args);
-        if (loggerLevel >= LoggerLevel.ERROR)
-            this.error = (args, error) => error ? console.error(args, error) : console.error(args);
+        this.assignLogger(loggerLevel, LoggerLevel.TRACE, 'trace', console.trace.bind(console));
+        this.assignLogger(loggerLevel, LoggerLevel.DEBUG, 'debug', console.debug.bind(console));
+        this.assignLogger(loggerLevel, LoggerLevel.INFO, 'info', console.info.bind(console));
+        this.assignLogger(loggerLevel, LoggerLevel.WARN, 'warn', console.warn.bind(console));
+        this.assignLogger(loggerLevel, LoggerLevel.ERROR, 'error', console.error.bind(console));
         if (loggerLevel >= LoggerLevel.DEBUG)
             this.logObject = (args) => console.dir(args, { depth: null, colors: true });
+    }
+    h1(message) {
+        return `
+ ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
+(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
+
+${message}
+ ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
+(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
+`;
+    }
+    h2(message) {
+        return `
+${message}
+___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___ ___
+`;
+    }
+    crit(message) {
+        return `
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+${message}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+`;
+    }
+    assignLogger(currentLevel, requiredLevel, loggerName, consoleFn) {
+        if (currentLevel >= requiredLevel) {
+            this[loggerName] = (args, error) => {
+                if (error) {
+                    consoleFn(args, error);
+                }
+                else if (typeof args === 'object') {
+                    consoleFn(args);
+                }
+            };
+        }
     }
 }

@@ -25,6 +25,9 @@ export interface LoggerDelegate {
     trace: LogSignature;
     logObject: (args: any) => void;
     setLevel: (loggerLevel: LoggerLevel) => void;
+    h1(message: string): string;
+    h2(message: string): string;
+    crit(message: string): string;
 }
 export declare const levelNameMap: Record<LoggerLevel, string>;
 export declare const nameLevelMap: Record<string, LoggerLevel>;

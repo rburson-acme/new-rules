@@ -8,4 +8,8 @@ export declare class ConsoleLogger implements LoggerDelegate {
     logObject: (args: LogArgs) => void;
     constructor();
     setLevel(loggerLevel: LoggerLevel): void;
+    h1(message: string): string;
+    h2(message: string): string;
+    crit(message: string): string;
+    private assignLogger;
 }

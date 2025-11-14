@@ -32,6 +32,9 @@ export interface LoggerDelegate {
   trace: LogSignature;
   logObject: (args: any) => void;
   setLevel: (loggerLevel: LoggerLevel) => void;
+  h1(message: string): string;
+  h2(message: string): string;
+  crit(message: string): string;
 }
 
 export const levelNameMap: Record<LoggerLevel, string> = {
@@ -92,33 +95,15 @@ export class Logger {
     Logger.loggerDelegate.setLevel(loggerLevel);
   }
 
-  static h1(message: string): string {
-    return `
- ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
-(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
-
-${message}
- ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
-(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
-`;
+  public static h1(message: string): string {
+    return Logger.loggerDelegate.h1(message);
   }
 
-  static h2(message: string): string {
-    return `
-${message}
-___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___ ___
-`;
+  public static h2(message: string): string {
+    return Logger.loggerDelegate.h2(message);
   }
 
-  static crit(message: string): string {
-    return `
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-${message}
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-`;
+  public static crit(message: string): string {
+    return Logger.loggerDelegate.crit(message);
   }
 }
