@@ -43,7 +43,7 @@ export class Thred {
       if (!reactionResult) {
         await Thred.logNoTransition(thredStore, event, fromReactionName);
         L.debug({
-          msg: L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`),
+          message: L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`),
           thredId: thredStore.id,
         });
         break transitionLoop;
@@ -56,7 +56,7 @@ export class Thred {
       // log the transition if any - thredStore may be updated with a new reaction
       await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
       L.debug({
-        msg: L.h2(
+        message: L.h2(
           `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`,
         ),
         thredId: thredStore.id,
@@ -104,7 +104,7 @@ export class Thred {
     const expiry = thredStore?.currentReaction?.expiry;
     if (expiry) {
       L.debug({
-        msg: L.h2(
+        message: L.h2(
           `Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`,
         ),
         thredId: thredStore.id,

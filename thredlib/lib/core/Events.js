@@ -121,7 +121,7 @@ export class Events {
         const values = this.getValues(event);
         const result = this._valueNamed(values, name);
         if (!result)
-            Logger.debug({ msg: Logger.h2(`Event value named ${name} not found`), thredId: event.thredId });
+            Logger.debug({ message: Logger.h2(`Event value named ${name} not found`), thredId: event.thredId });
         return result;
     }
     static _valueNamed(value, name) {

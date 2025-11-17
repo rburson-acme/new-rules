@@ -68,7 +68,7 @@ export class Engine implements MessageHandler {
     try {
       // log the event
       info({
-        msg: h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`),
+        message: h1(`Engine publish Message:Event ${messageTemplate.event.id} to ${messageTemplate.to}`),
         thredId: messageTemplate.event.thredId,
       });
       debug({ thredId: messageTemplate.event.thredId, obj: messageTemplate });
@@ -76,7 +76,7 @@ export class Engine implements MessageHandler {
       await Parallel.forEach(this.dispatchers, async (dispatcher) => dispatcher(messageTemplate));
     } catch (e) {
       error({
-        msg: crit(`Engine::Failed dispatch message : ${messageTemplate}`),
+        message: crit(`Engine::Failed dispatch message : ${messageTemplate}`),
         thredId: messageTemplate.event.thredId,
         err: e as Error,
       });
@@ -103,7 +103,7 @@ export class Engine implements MessageHandler {
       await this.inboundQ.delete(message);
     } catch (e) {
       error({
-        msg: crit(`Failed to consider event ${message.payload?.id}`),
+        message: crit(`Failed to consider event ${message.payload?.id}`),
         thredId: message.payload?.thredId,
         err: e as Error,
       });
@@ -137,7 +137,7 @@ export class Engine implements MessageHandler {
       await this.handleMessage({ event: outboundEvent, to: resolvedTo });
     } catch (e) {
       error({
-        msg: crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`),
+        message: crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`),
         thredId: inboundEvent.thredId,
         err: e as Error,
       });
@@ -150,7 +150,7 @@ export class Engine implements MessageHandler {
    * @param event
    */
   consider(event: Event): Promise<void> {
-    info({ msg: h1(`Engine received Event ${event.id} from ${event.source.id}`), thredId: event.thredId });
+    info({ message: h1(`Engine received Event ${event.id} from ${event.source.id}`), thredId: event.thredId });
     debug({ thredId: event.thredId, obj: event });
     return this.threds.consider(event);
   }

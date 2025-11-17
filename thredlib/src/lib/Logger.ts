@@ -10,7 +10,7 @@ export enum LoggerLevel {
 }
 
 export interface LogObj {
-  msg?: string;
+  message?: string;
   err?: Error;
   obj?: any;
   thredId?: string;

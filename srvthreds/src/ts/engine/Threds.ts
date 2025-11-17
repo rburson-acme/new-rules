@@ -98,14 +98,14 @@ export class Threds {
         if (await pattern.consider(event, new ThredContext())) {
           matches++;
           L.info({
-            msg: L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`),
+            message: L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`),
             thredId: event.thredId,
           });
           return this.startThred(pattern, event);
         }
       } catch (e) {
         L.error({
-          msg: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`),
+          message: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`),
           thredId: event.thredId,
           err: e as Error,
         });
@@ -125,7 +125,7 @@ export class Threds {
         timestamp: Date.now(),
       });
       L.info({
-        msg: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
+        message: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
         thredId: event.thredId,
       });
     }

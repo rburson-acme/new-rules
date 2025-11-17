@@ -63,14 +63,14 @@ export class SocketService {
     // UNCOMMENT TO TURN ON AUTHENTICATION
     /* const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token'));
-    Logger.debug({ msg:`session: validation successful for: token ${token}` });
+    Logger.debug({ message:`session: validation successful for: token ${token}` });
 
     // use auth to validate the token here
     this.auth.validateAccessToken(token).then((payload) => {
       socket.data.participantId = payload.participantId;
       next();
     }).catch((err) => {
-      Logger.error({ msg:`session: validation failed for: token ${token}`, err });
+      Logger.error({ message:`session: validation failed for: token ${token}`, err });
       next(new Error('Authentication error: Invalid token'));
     });
     */

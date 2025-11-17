@@ -7,7 +7,7 @@ export declare enum LoggerLevel {
     TRACE = 5
 }
 export interface LogObj {
-    msg?: string;
+    message?: string;
     err?: Error;
     obj?: any;
     thredId?: string;

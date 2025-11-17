@@ -51,7 +51,7 @@ export class SessionService {
     const sessionsByParticipant: StringMap<string[]> = await sessions.getSessionIdsForParticipantIds(to);
     if (!Object.keys(sessionsByParticipant).length) {
       Logger.warn({
-        msg: `SessionService: No participants are logged in for address ${to} for thredId: ${thredId}`,
+        message: `SessionService: No participants are logged in for address ${to} for thredId: ${thredId}`,
         thredId,
       });
       return [];
@@ -68,7 +68,7 @@ export class SessionService {
             // If the sessionId is no longer mapped to a channel, then the session must be an orphan
             this.removeSession(sessionId).catch((e) => `Failed to remove orphaned Session: ${sessionId}`);
             Logger.error({
-              msg: `SessionService: no channel found for session ${sessionId} participant ${participantId} for thredId: ${thredId}`,
+              message: `SessionService: no channel found for session ${sessionId} participant ${participantId} for thredId: ${thredId}`,
               thredId,
             });
           }
