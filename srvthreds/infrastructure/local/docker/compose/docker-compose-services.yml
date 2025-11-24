@@ -28,7 +28,7 @@ services:
     environment:
       - NODE_ENV=development
       - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
-      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - REDIS_HOST=${REDIS_HOST:-redis:6380}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     build:
       context: ../../../../
@@ -51,7 +51,7 @@ services:
     environment:
       - NODE_ENV=development
       - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
-      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - REDIS_HOST=${REDIS_HOST:-redis:6380}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     ports:
       - '8082:8082'
@@ -82,7 +82,7 @@ services:
     environment:
       - NODE_ENV=development
       - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
-      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - REDIS_HOST=${REDIS_HOST:-redis:6380}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     ports:
       - '3000:3000'
@@ -114,7 +114,7 @@ services:
     environment:
       - NODE_ENV=development
       - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
-      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - REDIS_HOST=${REDIS_HOST:-redis:6380}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     build:
       context: ../../../../

@@ -60,7 +60,7 @@ data "azurerm_resource_group" "main" {
 data "terraform_remote_state" "networking" {
   backend = "azurerm"
   config = merge(local.backend_config, {
-    key = "stacks/networking/${var.environment}.tfstate"
+    key = format(local.state_key_format, "networking", var.environment)
   })
 }
 
@@ -82,3 +82,16 @@ module "keyvault" {
 
   tags = local.common_tags
 }
+
+# Get current client config for Terraform service principal
+data "azurerm_client_config" "current" {}
+
+# Grant Terraform service principal Key Vault Secrets Officer role
+# This allows Terraform to create/update secrets in Key Vault
+resource "azurerm_role_assignment" "terraform_secrets_officer" {
+  scope                = module.keyvault.key_vault_id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+  description          = "Allow Terraform to manage secrets in Key Vault"
+}
+

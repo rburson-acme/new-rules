@@ -41,7 +41,7 @@ services:
       - '--notify-keyspace-events'
       - KA
     ports:
-      - '6379:6379'
+      - '6380:6380'
     volumes:
       - ./.docker/redis-data:/data
   rabbitmq:

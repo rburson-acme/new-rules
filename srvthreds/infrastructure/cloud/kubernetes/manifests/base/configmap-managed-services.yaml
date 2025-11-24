@@ -5,7 +5,7 @@ metadata:
   namespace: srvthreds
 data:
   # Azure Cosmos DB (MongoDB API)
-  MONGO_HOST: cazsrvthredsdecosmos.mongo.cosmos.azure.com:10255
+  # NOTE: MONGO_HOST is injected from Key Vault secret in pod env
   MONGO_SSL: "true"
   MONGO_DIRECT_CONNECTION: "false"
   MONGO_REPLICA_SET: "globaldb"
@@ -13,10 +13,14 @@ data:
   MONGO_MAX_IDLE_TIME_MS: "120000"
 
   # Azure Cache for Redis
-  REDIS_HOST: caz-srvthreds-d-e-redis.redis.cache.windows.net
-  REDIS_PORT: "6380"
-  REDIS_TLS_ENABLED: "true"
+  REDIS_HOST: caz-srvthreds-d-e-redis.redis.cache.windows.net:6380 # TODO: port 6380 for SSL in production
+  # REDIS_HOST: caz-srvthreds-d-e-redis.redis.cache.windows.net:6379 # TODO: port 6379 for non-SSL in development
+  REDIS_USE_TLS: "true" # Set to "false" for non-SSL connection in development
 
-  # JWT settings (unchanged)
+  
+  # RabbitMQ (in-cluster service)
+  RABBITMQ_HOST: rabbitmq-service
+
+  # JWT settings
   JWT_EXPIRE_TIME: 1h
   REFRESH_TOKEN_EXPIRE_TIME: 7d

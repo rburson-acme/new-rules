@@ -135,6 +135,18 @@ export abstract class BaseDeployer {
     }
   }
 
+  async rolloutRestartDeployment(): Promise<void> {
+    this.logger.section('ROLLOUT RESTARTING DEPLOYMENT');
+
+    try {
+      await this.rolloutRestart();
+      this.logger.success('Restarted deployment successfully');
+    } catch (error: any) {
+      this.logger.error('Restarting deployment failed', error);
+      throw error;
+    }
+  }
+
   // ========================================================================
   // Abstract methods that subclasses must implement
   // ========================================================================
@@ -173,6 +185,9 @@ export abstract class BaseDeployer {
    * Perform cleanup operations
    */
   protected abstract performCleanup(): Promise<void>;
+
+
+  protected abstract rolloutRestart(): Promise<void>;
 
   // ========================================================================
   // Optional hook methods that subclasses can override

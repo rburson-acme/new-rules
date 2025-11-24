@@ -213,3 +213,13 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# Firewall Rules
+variable "firewall_rules" {
+  description = "Map of firewall rules to create"
+  type = map(object({
+    start_ip = string
+    end_ip   = string
+  }))
+  default = {}
+}

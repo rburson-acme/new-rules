@@ -8,6 +8,7 @@
 export const COMMAND_DESCRIPTIONS = {
   DEPLOY: 'Deploy infrastructure stacks to Azure',
   PLAN: 'Preview infrastructure changes without applying',
+  DESTROY: 'Destroy infrastructure stacks from Azure',
   STATE: 'Manage Terraform state (backup, validate, repair, clean)',
   CLEANUP: 'Cleanup infrastructure and state (with soft-delete handling)',
   BOOTSTRAP: 'Initialize bootstrap infrastructure (storage, resource group)',

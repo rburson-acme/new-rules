@@ -243,6 +243,13 @@ variable "additional_node_pools" {
   default = []
 }
 
+# Workload Identity
+variable "enable_workload_identity" {
+  description = "Enable Workload Identity and OIDC issuer for pod-level Azure authentication"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

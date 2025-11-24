@@ -36,8 +36,8 @@ public_network_access_enabled = false
 enable_private_endpoint = true
 
 # High Availability - Premium features
-shard_count          = 2      # 2 shards for horizontal scaling
-replicas_per_primary = 1      # 1 replica per primary for HA
+shard_count          = 2          # 2 shards for horizontal scaling
+replicas_per_primary = 1          # 1 replica per primary for HA
 zones                = ["1", "2"] # Zone redundancy for HA
 
 # Patch Schedule - Weekend maintenance with larger window

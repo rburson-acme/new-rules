@@ -62,3 +62,4 @@ output "support_nsg_id" {
   description = "ID of the support NSG"
   value       = module.networking.nsg_support_id
 }
+

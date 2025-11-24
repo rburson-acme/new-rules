@@ -50,9 +50,10 @@ resource "azurerm_key_vault" "main" {
   # Public network access
   public_network_access_enabled = var.public_network_access_enabled
 
-  # Network ACLs - deny by default
+  # Network ACLs - conditional based on public access setting
+  # When public access is enabled, allow all; when disabled, deny all (use private endpoint)
   network_acls {
-    default_action = "Deny"
+    default_action = var.public_network_access_enabled ? "Allow" : "Deny"
     bypass         = "AzureServices"
     ip_rules       = []
   }

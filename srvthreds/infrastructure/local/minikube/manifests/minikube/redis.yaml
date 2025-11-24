@@ -20,7 +20,7 @@ spec:
           image: srvthreds:dev
           imagePullPolicy: Never
           ports:
-            - containerPort: 6379
+            - containerPort: 6380
           envFrom:
             - configMapRef:
                 name: srvthreds-config
@@ -60,5 +60,5 @@ spec:
     app: redis
   ports:
     - name: default
-      port: 6379
-      targetPort: 6379
+      port: 6380
+      targetPort: 6380

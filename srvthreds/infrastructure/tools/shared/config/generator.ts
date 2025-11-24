@@ -417,6 +417,7 @@ class ConfigGenerator {
         MONGO_HOST: connStrings.mongodb,
         REDIS_HOST: connStrings.redis,
         RABBITMQ_HOST: connStrings.rabbitmq,
+        REDIS_USE_TLS: String(connStrings.useTls),
         MONGO_DIRECT_CONNECTION: String(connStrings.mongoDirectConnection),
         JWT_EXPIRE_TIME: this.config.security.jwt.expireTime,
         REFRESH_TOKEN_EXPIRE_TIME: this.config.security.jwt.refreshTokenExpireTime
@@ -463,6 +464,7 @@ class ConfigGenerator {
       '',
       '# Cache and Storage Configuration',
       `REDIS_HOST=${connStrings.redis}`,
+      `REDIS_USE_TLS=${connStrings.useTls}`,
       '',
       '# Message Queue Configuration',
       `RABBITMQ_HOST=${connStrings.rabbitmq}`,

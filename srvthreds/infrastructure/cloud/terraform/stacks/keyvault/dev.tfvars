@@ -14,4 +14,4 @@ sku_name                      = "standard"
 enabled_for_disk_encryption   = true
 enable_rbac_authorization     = true
 purge_protection_enabled      = false # Dev can be deleted
-public_network_access_enabled = false # Private endpoint only
+public_network_access_enabled = true # Private endpoint only

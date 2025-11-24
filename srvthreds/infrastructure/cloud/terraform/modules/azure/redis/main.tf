@@ -111,3 +111,14 @@ module "private_endpoint" {
   vnet_id                        = var.vnet_id
   tags                           = local.common_tags
 }
+
+# Firewall rules for Redis (when public access is enabled)
+resource "azurerm_redis_firewall_rule" "rules" {
+  for_each = var.public_network_access_enabled ? var.firewall_rules : {}
+
+  name                = each.key
+  redis_cache_name    = azurerm_redis_cache.main.name
+  resource_group_name = var.resource_group_name
+  start_ip            = each.value.start_ip
+  end_ip              = each.value.end_ip
+}

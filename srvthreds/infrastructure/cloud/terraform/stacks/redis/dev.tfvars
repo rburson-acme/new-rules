@@ -9,16 +9,16 @@ location    = "eastus"
 project_name = "srvthreds"
 cost_center  = "engineering"
 
-# Redis SKU - Basic C0 (250 MB) for dev
-sku_name = "Basic"
+# Redis SKU - Premium P1 (6 GB) for dev
+sku_name = "Standard"
 family   = "C"
-capacity = 0 # C0 = 250 MB
+capacity = 1 # C1 = 1 GB
 
 # Redis Configuration
 redis_version         = "6"
 minimum_tls_version   = "1.2"
 enable_authentication = true
-enable_non_ssl_port   = false # Keep SSL only for security
+enable_non_ssl_port   = false
 
 # Eviction policy
 maxmemory_policy = "volatile-lru" # Evict LRU keys with expiration
@@ -29,8 +29,20 @@ rdb_backup_frequency          = 60
 rdb_backup_max_snapshot_count = 1
 rdb_storage_connection_string = ""
 
-# Network - Public access for dev
+# Network - Private access for dev
 public_network_access_enabled = true
+
+# Firewall Rules - Not needed with private endpoint
+firewall_rules = {
+  AllowAKSOutbound = {
+    start_ip = "74.179.237.247"
+    end_ip   = "74.179.237.247"
+  }
+  AllowMyIP = {
+    start_ip = "174.85.197.172"
+    end_ip   = "174.85.197.172"
+  }
+}
 
 # Private Endpoint - Not available on Basic/Standard SKUs
 enable_private_endpoint = false # Premium SKU required for private endpoints

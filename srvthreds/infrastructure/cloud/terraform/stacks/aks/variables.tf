@@ -224,6 +224,13 @@ variable "maintenance_window" {
   default = null
 }
 
+# Workload Identity
+variable "enable_workload_identity" {
+  description = "Enable Workload Identity for pod-level Azure authentication"
+  type        = bool
+  default     = true
+}
+
 # Additional Node Pools
 variable "additional_node_pools" {
   description = "Additional node pools"

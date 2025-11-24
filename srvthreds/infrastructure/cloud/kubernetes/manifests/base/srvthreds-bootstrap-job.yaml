@@ -22,13 +22,28 @@ spec:
       labels:
         app: srvthreds-bootstrap
         component: bootstrap
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: srvthreds-workload
       restartPolicy: OnFailure  # Restart on failure, but not on success
+
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-srvthreds-secrets"
 
       containers:
         - name: bootstrap
           image: cazsrvthredsdeacr.azurecr.io/srvthreds/bootstrap:latest
           imagePullPolicy: Always
+
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
 
           command:
             - npm
@@ -39,6 +54,17 @@ spec:
             - '-p'
             - ef-detection
 
+          env:
+            - name: MONGO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: mongo-connection-string
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: redis-password
           envFrom:
             - configMapRef:
                 name: srvthreds-config

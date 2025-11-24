@@ -27,11 +27,6 @@
       "dependencies": ["networking"]
     },
     {
-      "name": "servicebus",
-      "path": "stacks/servicebus",
-      "dependencies": ["networking"]
-    },
-    {
       "name": "monitoring",
       "path": "stacks/monitoring",
       "dependencies": ["networking"]
@@ -42,9 +37,9 @@
       "dependencies": ["networking", "acr"]
     },
     {
-      "name": "appgateway",
-      "path": "stacks/appgateway",
-      "dependencies": ["networking"]
+      "name": "nginx-ingress",
+      "path": "stacks/nginx-ingress",
+      "dependencies": ["aks", "networking"]
     }
   ]
 }

@@ -35,3 +35,24 @@ output "node_resource_group" {
   description = "Node resource group"
   value       = module.aks.node_resource_group
 }
+
+output "oidc_issuer_url" {
+  description = "OIDC issuer URL for workload identity"
+  value       = module.aks.oidc_issuer_url
+}
+
+# Workload Identity outputs
+output "workload_identity_client_id" {
+  description = "Client ID of the workload identity"
+  value       = module.aks.workload_identity_client_id
+}
+
+output "workload_identity_principal_id" {
+  description = "Principal ID of the workload identity (for RBAC)"
+  value       = module.aks.workload_identity_principal_id
+}
+
+output "workload_identity_tenant_id" {
+  description = "Tenant ID of the workload identity"
+  value       = module.aks.workload_identity_tenant_id
+}

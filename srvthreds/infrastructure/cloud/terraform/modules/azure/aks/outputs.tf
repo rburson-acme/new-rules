@@ -32,6 +32,31 @@ output "kube_config_admin" {
   sensitive   = true
 }
 
+# Kubernetes provider configuration outputs
+output "kube_config_host" {
+  description = "Kubernetes API server host"
+  value       = azurerm_kubernetes_cluster.main.kube_config[0].host
+  sensitive   = true
+}
+
+output "kube_config_client_certificate" {
+  description = "Base64 encoded client certificate"
+  value       = azurerm_kubernetes_cluster.main.kube_config[0].client_certificate
+  sensitive   = true
+}
+
+output "kube_config_client_key" {
+  description = "Base64 encoded client key"
+  value       = azurerm_kubernetes_cluster.main.kube_config[0].client_key
+  sensitive   = true
+}
+
+output "kube_config_cluster_ca_certificate" {
+  description = "Base64 encoded cluster CA certificate"
+  value       = azurerm_kubernetes_cluster.main.kube_config[0].cluster_ca_certificate
+  sensitive   = true
+}
+
 output "kubelet_identity_object_id" {
   description = "Object ID of the kubelet managed identity"
   value       = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
@@ -52,11 +77,18 @@ output "oidc_issuer_url" {
   value       = azurerm_kubernetes_cluster.main.oidc_issuer_url
 }
 
-output "key_vault_secrets_provider_identity" {
-  description = "Key Vault secrets provider identity"
-  value = var.enable_key_vault_secrets_provider ? {
-    client_id   = azurerm_kubernetes_cluster.main.key_vault_secrets_provider[0].secret_identity[0].client_id
-    object_id   = azurerm_kubernetes_cluster.main.key_vault_secrets_provider[0].secret_identity[0].object_id
-    resource_id = azurerm_kubernetes_cluster.main.key_vault_secrets_provider[0].secret_identity[0].user_assigned_identity_id
-  } : null
+# Workload Identity outputs
+output "workload_identity_client_id" {
+  description = "Client ID of the workload identity (used in SecretProviderClass and service account)"
+  value       = var.enable_workload_identity ? azurerm_user_assigned_identity.workload[0].client_id : null
+}
+
+output "workload_identity_principal_id" {
+  description = "Principal ID of the workload identity (used for RBAC assignments)"
+  value       = var.enable_workload_identity ? azurerm_user_assigned_identity.workload[0].principal_id : null
+}
+
+output "workload_identity_tenant_id" {
+  description = "Tenant ID of the workload identity"
+  value       = var.enable_workload_identity ? azurerm_user_assigned_identity.workload[0].tenant_id : null
 }

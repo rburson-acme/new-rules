@@ -166,6 +166,7 @@ export interface ConnectionStringSet {
   redis: string;
   rabbitmq: string;
   mongoDirectConnection: boolean;
+  useTls: boolean;
 }
 
 export interface ConnectionStrings {

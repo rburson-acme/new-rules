@@ -41,6 +41,7 @@ locals {
     ManagedBy   = "Terraform"
     Stack       = "redis"
   }
+  workbook_guid = uuidv5("dns", "redismonitoringworkbook-${var.environment}")
 }
 
 # Reference networking stack outputs
@@ -48,6 +49,14 @@ data "terraform_remote_state" "networking" {
   backend = "azurerm"
   config = merge(local.backend_config, {
     key = format(local.state_key_format, "networking", var.environment)
+  })
+}
+
+# Reference monitoring stack outputs
+data "terraform_remote_state" "monitoring" {
+  backend = "azurerm"
+  config = merge(local.backend_config, {
+    key = format(local.state_key_format, "monitoring", var.environment)
   })
 }
 
@@ -65,10 +74,10 @@ module "redis" {
   capacity = var.capacity
 
   # Redis Configuration
-  redis_version              = var.redis_version
-  minimum_tls_version        = var.minimum_tls_version
-  enable_authentication      = var.enable_authentication
-  enable_non_ssl_port        = var.enable_non_ssl_port
+  redis_version         = var.redis_version
+  minimum_tls_version   = var.minimum_tls_version
+  enable_authentication = var.enable_authentication
+  enable_non_ssl_port   = var.enable_non_ssl_port
 
   # Memory Management
   maxmemory_policy = var.maxmemory_policy
@@ -95,5 +104,61 @@ module "redis" {
   # Patch Schedule
   patch_schedule = var.patch_schedule
 
+  # Firewall Rules
+  firewall_rules = var.firewall_rules
+
   tags = local.common_tags
 }
+
+# Reference Key Vault from remote state
+data "terraform_remote_state" "keyvault" {
+  backend = "azurerm"
+  config = merge(local.backend_config, {
+    key = format(local.state_key_format, "keyvault", var.environment)
+  })
+}
+
+# Store Redis password in Key Vault
+resource "azurerm_key_vault_secret" "redis_password" {
+  name         = "redis-password"
+  value        = module.redis.redis_primary_access_key
+  key_vault_id = data.terraform_remote_state.keyvault.outputs.key_vault_id
+}
+
+# Diagnostic Settings for Redis
+resource "azurerm_monitor_diagnostic_setting" "redis" {
+  name                       = "redis-diagnostics"
+  target_resource_id         = module.redis.redis_id
+  log_analytics_workspace_id = data.terraform_remote_state.monitoring.outputs.log_analytics_workspace_id
+
+  enabled_log {
+    category = "ConnectedClientList"
+  }
+
+  enabled_log {
+    category = "MSEntraAuthenticationAuditLog"
+  }
+
+  # --- Metrics ---
+  # Enabling AllMetrics is crucial for monitoring CPU, memory, connection count, etc.
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+// TODO: Come back to later
+# resource "azurerm_resource_group_template_deployment" "redis_workbook" {
+#   name                = "redis-monitoring-workbook-${var.environment}"
+#   resource_group_name = local.rg_name
+#   deployment_mode     = "Incremental"
+
+#   template_content = file("${path.module}/redis_monitoring_workbook_s.json")
+
+#   parameters_content = jsonencode({
+#     workbookName    = { value = local.workbook_guid }
+#     location        = { value = var.location }
+#     displayName     = { value = "Redis Monitoring Dashboard ${var.environment}" }
+#     serializedData  = { value = jsonencode(jsondecode(file("${path.module}/workbook-data.json"))) }
+#   })
+# }

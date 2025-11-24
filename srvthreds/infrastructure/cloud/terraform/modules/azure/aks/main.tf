@@ -57,10 +57,16 @@ resource "azurerm_kubernetes_cluster" "main" {
     tags = local.common_tags
   }
 
-  # Managed identity
+  # System Assigned Managed Identity for cluster operations
   identity {
     type = "SystemAssigned"
   }
+
+  # Enable OIDC issuer for Workload Identity
+  oidc_issuer_enabled = var.enable_workload_identity
+
+  # Enable Workload Identity
+  workload_identity_enabled = var.enable_workload_identity
 
   # Network profile
   network_profile {
@@ -155,4 +161,29 @@ resource "azurerm_kubernetes_cluster_node_pool" "additional" {
   node_taints         = each.value.node_taints
 
   tags = local.common_tags
+}
+
+# =============================================================================
+# Workload Identity for Application Pods
+# =============================================================================
+
+# User Assigned Identity for srvthreds workloads
+resource "azurerm_user_assigned_identity" "workload" {
+  count               = var.enable_workload_identity ? 1 : 0
+  name                = "${local.aks_name}-workload-identity"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = local.common_tags
+}
+
+# Federated credential linking Kubernetes service account to Azure identity
+resource "azurerm_federated_identity_credential" "workload" {
+  count               = var.enable_workload_identity ? 1 : 0
+  name                = "srvthreds-workload-federated"
+  resource_group_name = var.resource_group_name
+  parent_id           = azurerm_user_assigned_identity.workload[0].id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.main.oidc_issuer_url
+  subject             = "system:serviceaccount:srvthreds:srvthreds-workload"
 }

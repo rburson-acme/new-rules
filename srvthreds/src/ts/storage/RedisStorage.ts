@@ -2,6 +2,7 @@ import { createClient, RedisClientType } from 'redis';
 import Redlock, { Lock as RLock } from './Redlock.js';
 import { Logger, Series } from '../thredlib/index.js';
 import { Lock, Storage } from './Storage.js';
+import { redisConfig } from '../config/RedisConfig.js';
 
 interface LockWrapper extends Lock {
   lock: RLock;
@@ -31,19 +32,8 @@ export class RedisStorage implements Storage {
   //@TODO - set up sentinel or clustering
 
   constructor(hostString?: string) {
-    // TODO: Look at handling the host string farther up the stack
     const _host = hostString || process.env.REDIS_HOST || RedisStorage.DEFAULT_HOST;
-    // const _host = hostString || RedisStorage.DEFAULT_HOST;
-    const redisUrl = `redis://${_host}`;
-    this.client = createClient({
-      url: redisUrl,
-      socket: {
-        reconnectStrategy: (retries) => {
-          const delay = Math.min(retries * 50, 2000);
-          return delay;
-        },
-      },
-    });
+    this.client = createClient(redisConfig(_host));
 
     this.client.on('error', function (error) {
       Logger.error(error);

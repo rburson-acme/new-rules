@@ -24,10 +24,12 @@ import {
   DEPLOY_COMMAND_DESCRIPTION,
   PLAN_COMMAND_DESCRIPTION
 } from './commands/deploy.js';
+import { destroyCommand, DESTROY_COMMAND_DESCRIPTION } from './commands/destroy.js';
 import { stateCommand, STATE_COMMAND_DESCRIPTION } from './commands/state.js';
 import { cleanupCommand, CLEANUP_COMMAND_DESCRIPTION } from './commands/cleanup.js';
 import { bootstrapCommand, BOOTSTRAP_COMMAND_DESCRIPTION } from './commands/bootstrap.js';
 import { statusCommand, STATUS_COMMAND_DESCRIPTION } from './commands/status.js';
+import { outputCommand, OUTPUT_COMMAND_DESCRIPTION } from './commands/output.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,6 +55,14 @@ const commands: Map<string, Command> = new Map([
       name: 'plan',
       description: PLAN_COMMAND_DESCRIPTION,
       handler: planCommand,
+    },
+  ],
+  [
+    'destroy',
+    {
+      name: 'destroy',
+      description: DESTROY_COMMAND_DESCRIPTION,
+      handler: destroyCommand,
     },
   ],
   [
@@ -93,6 +103,14 @@ const commands: Map<string, Command> = new Map([
       name: 'status',
       description: STATUS_COMMAND_DESCRIPTION,
       handler: statusCommand,
+    },
+  ],
+  [
+    'output',
+    {
+      name: 'output',
+      description: OUTPUT_COMMAND_DESCRIPTION,
+      handler: outputCommand,
     },
   ],
 ]);

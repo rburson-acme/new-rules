@@ -120,6 +120,44 @@ resource "azurerm_network_security_group" "aks" {
     destination_address_prefix = "*"
   }
 
+  # Allow HTTPS inbound from Internet (for NGINX ingress LoadBalancer)
+  security_rule {
+    name                       = "AllowHTTPSFromInternet"
+    priority                   = 120
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
+  # Allow HTTP inbound from Internet (for NGINX ingress LoadBalancer)
+  security_rule {
+    name                       = "AllowHTTPFromInternet"
+    priority                   = 130
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowNodePortsFromLB"
+    priority                   = 140
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "30000-32767"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "*"
+  }
+
   # Deny all other inbound traffic
   security_rule {
     name                       = "DenyAllInbound"

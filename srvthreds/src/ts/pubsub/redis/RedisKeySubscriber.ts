@@ -1,6 +1,7 @@
 import { createClient } from 'redis';
 import { Logger } from '../../thredlib/index.js';
 import { KeySubscriber } from '../KeySubscriber.js';
+import { redisConfig } from '../../config/RedisConfig.js';
 
 export class RedisKeySubscriber implements KeySubscriber {
   private sub;
@@ -42,16 +43,24 @@ export class RedisKeySubscriber implements KeySubscriber {
 
   private newClient() {
     // TODO: Look at handling the host string farther up the stack
-    const redisHost = process.env.REDIS_HOST || 'localhost:6379';
-    const client = createClient({
-      url: `redis://${redisHost}`,
-      socket: {
-        reconnectStrategy: (retries) => {
-          const delay = Math.min(retries * 50, 2000);
-          return delay;
-        },
-      },
-    });
+    // const _host = process.env.REDIS_HOST || 'localhost:6379';
+    // const includeProtocol = !_host.startsWith('redis://') && !_host.startsWith('rediss://');
+    // const useTls = process.env.REDIS_USE_TLS === 'true';
+    // const protocol = includeProtocol ? (useTls ? 'rediss://' : 'redis://') : '';
+    // // Redis will automatically set up TLS if the URL starts with rediss://
+    // const redisUrl = includeProtocol ?  `${protocol}${_host}` : _host;
+    // const password = process.env.REDIS_PASSWORD;
+    const client = createClient(redisConfig());
+    // const client = createClient({
+    //   url: redisUrl,
+    //   password,
+    //   socket: {
+    //     reconnectStrategy: (retries) => {
+    //       const delay = Math.min(retries * 50, 2000);
+    //       return delay;
+    //     },
+    //   },
+    // });
 
     client.on('error', function (error) {
       Logger.error(error);

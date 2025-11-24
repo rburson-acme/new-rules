@@ -22,6 +22,7 @@ export function EventProvider({ children, token }: { children: ReactNode; token:
 
     eventManager
       .connect('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token } })
+      // .connect('http://135.237.67.131', { transports: ['websocket'], jsonp: false, auth: { token } })
       .catch(e => {
         if (!cancelled) {
           Logger.error(e);

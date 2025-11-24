@@ -86,10 +86,10 @@ if [ "$MODE" == "all" ] || [ "$MODE" == "local" ]; then
     echo -e "${RED}  ✗${NC} MongoDB port 27017 NOT listening"
   fi
 
-  if lsof -Pi :6379 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo -e "${GREEN}  ✓${NC} Redis port 6379 listening"
+  if lsof -Pi :6380 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo -e "${GREEN}  ✓${NC} Redis port 6380 listening"
   else
-    echo -e "${RED}  ✗${NC} Redis port 6379 NOT listening"
+    echo -e "${RED}  ✗${NC} Redis port 6380 NOT listening"
   fi
 
   if lsof -Pi :5672 -sTCP:LISTEN -t >/dev/null 2>&1; then
@@ -156,7 +156,7 @@ fi
 # Network Connectivity
 echo "=== Network Connectivity ==="
 nc -zv localhost 27017 &>/dev/null && echo -e "${GREEN}✓${NC} MongoDB (27017) reachable" || echo -e "${RED}✗${NC} MongoDB (27017) NOT reachable"
-nc -zv localhost 6379 &>/dev/null && echo -e "${GREEN}✓${NC} Redis (6379) reachable" || echo -e "${RED}✗${NC} Redis (6379) NOT reachable"
+nc -zv localhost 6380 &>/dev/null && echo -e "${GREEN}✓${NC} Redis (6380) reachable" || echo -e "${RED}✗${NC} Redis (6380) NOT reachable"
 nc -zv localhost 5672 &>/dev/null && echo -e "${GREEN}✓${NC} RabbitMQ (5672) reachable" || echo -e "${RED}✗${NC} RabbitMQ (5672) NOT reachable"
 
 echo ""

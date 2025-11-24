@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
   }
 
   backend "azurerm" {
@@ -22,6 +26,14 @@ provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
+}
+
+# Kubernetes provider configured with AKS credentials
+provider "kubernetes" {
+  host                   = module.aks.kube_config_host
+  client_certificate     = base64decode(module.aks.kube_config_client_certificate)
+  client_key             = base64decode(module.aks.kube_config_client_key)
+  cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
 }
 
 # Local variables
@@ -59,6 +71,14 @@ data "terraform_remote_state" "acr" {
   })
 }
 
+# Reference Key Vault stack outputs
+data "terraform_remote_state" "keyvault" {
+  backend = "azurerm"
+  config = merge(local.backend_config, {
+    key = format(local.state_key_format, "keyvault", var.environment)
+  })
+}
+
 # AKS Module
 module "aks" {
   source = "../../modules/azure/aks"
@@ -72,6 +92,9 @@ module "aks" {
   sku_tier                 = var.sku_tier
   private_cluster_enabled  = var.private_cluster_enabled
   private_dns_zone_id      = var.private_dns_zone_id
+
+  # Workload Identity for pod-level Azure authentication
+  enable_workload_identity = var.enable_workload_identity
 
   # Default node pool
   default_node_pool_node_count          = var.default_node_pool_node_count
@@ -117,4 +140,90 @@ module "aks" {
   additional_node_pools = var.additional_node_pools
 
   tags = local.common_tags
+}
+
+# =============================================================================
+# Kubernetes Resources - Created via Terraform for proper value injection
+# =============================================================================
+
+# Namespace for srvthreds application
+resource "kubernetes_namespace" "srvthreds" {
+  metadata {
+    name = "srvthreds"
+    labels = {
+      name = "srvthreds"
+    }
+  }
+
+  depends_on = [module.aks]
+}
+
+# Service Account with Workload Identity annotation
+resource "kubernetes_service_account" "workload" {
+  metadata {
+    name      = "srvthreds-workload"
+    namespace = kubernetes_namespace.srvthreds.metadata[0].name
+    annotations = {
+      "azure.workload.identity/client-id" = module.aks.workload_identity_client_id
+    }
+    labels = {
+      "azure.workload.identity/use" = "true"
+    }
+  }
+}
+
+# SecretProviderClass for Key Vault integration
+resource "kubernetes_manifest" "secret_provider_class" {
+  manifest = {
+    apiVersion = "secrets-store.csi.x-k8s.io/v1"
+    kind       = "SecretProviderClass"
+    metadata = {
+      name      = "azure-srvthreds-secrets"
+      namespace = kubernetes_namespace.srvthreds.metadata[0].name
+    }
+    spec = {
+      provider = "azure"
+      secretObjects = [{
+        secretName = "azure-managed-services"
+        type       = "Opaque"
+        data = [
+          {
+            objectName = "mongo-connection-string"
+            key        = "mongo-connection-string"
+          },
+          {
+            objectName = "redis-password"
+            key        = "redis-password"
+          }
+        ]
+      }]
+      parameters = {
+        usePodIdentity       = "false"
+        useVMManagedIdentity = "false"
+        clientID             = module.aks.workload_identity_client_id
+        keyvaultName         = data.terraform_remote_state.keyvault.outputs.key_vault_name
+        cloudName            = "AzurePublicCloud"
+        tenantId             = module.aks.workload_identity_tenant_id
+        objects              = <<-EOT
+          array:
+            - |
+              objectName: mongo-connection-string
+              objectType: secret
+            - |
+              objectName: redis-password
+              objectType: secret
+        EOT
+      }
+    }
+  }
+
+  depends_on = [kubernetes_namespace.srvthreds]
+}
+
+# Grant workload identity access to Key Vault secrets
+resource "azurerm_role_assignment" "workload_identity_keyvault" {
+  scope                = data.terraform_remote_state.keyvault.outputs.key_vault_id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.aks.workload_identity_principal_id
+  description          = "Allow AKS workload identity to read secrets from Key Vault"
 }

@@ -51,6 +51,14 @@ data "terraform_remote_state" "networking" {
   })
 }
 
+# Reference Key Vault from remote state
+data "terraform_remote_state" "keyvault" {
+  backend = "azurerm"
+  config = merge(local.backend_config, {
+    key = format(local.state_key_format, "keyvault", var.environment)
+  })
+}
+
 # Service Bus Module
 module "servicebus" {
   source = "../../modules/azure/servicebus"
@@ -82,4 +90,14 @@ module "servicebus" {
   vnet_id                    = data.terraform_remote_state.networking.outputs.vnet_id
 
   tags = local.common_tags
+}
+
+# Store Service Bus connection string in Key Vault
+# This will be injected into RABBITMQ_HOST environment variable for compatibility
+resource "azurerm_key_vault_secret" "servicebus_connection_string" {
+  name         = "rabbitmq-connection-string"
+  value        = module.servicebus.servicebus_primary_connection_string
+  key_vault_id = data.terraform_remote_state.keyvault.outputs.key_vault_id
+
+  depends_on = [module.servicebus]
 }

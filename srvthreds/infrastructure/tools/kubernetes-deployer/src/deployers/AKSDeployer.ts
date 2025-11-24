@@ -307,6 +307,7 @@ export class AKSDeployer extends BaseDeployer {
           '-f',
           'infrastructure/local/docker/compose/docker-compose-services.yml',
           'build',
+          '--no-cache',
           '--build-arg',
           'BUILDPLATFORM=linux/amd64',
           'srvthreds-builder',
@@ -328,6 +329,7 @@ export class AKSDeployer extends BaseDeployer {
           '-f',
           'infrastructure/local/docker/compose/docker-compose-services.yml',
           'build',
+          '--no-cache',
           '--build-arg',
           'BUILDPLATFORM=linux/amd64',
           'srvthreds-bootstrap',
@@ -443,6 +445,7 @@ export class AKSDeployer extends BaseDeployer {
       await this.k8s.apply(path, {
         namespace: this.aksOptions.namespace,
         kustomize: true,
+        serverSide: true,
       });
 
       this.logger.success('Manifests applied successfully');
@@ -572,6 +575,20 @@ export class AKSDeployer extends BaseDeployer {
     try {
       this.logger.info(`Deleting namespace ${this.aksOptions.namespace}...`);
       await this.k8s.deleteNamespace(this.aksOptions.namespace, { timeout: 60 });
+      this.logger.success('Namespace deleted successfully');
+    } catch (error) {
+      this.logger.warn('Failed to delete namespace (may not exist)');
+    }
+
+    this.logger.info('AKS deployment cleanup complete');
+  }
+
+  protected async rolloutRestart(): Promise<void> {
+    this.logger.section('Rollout Restarting Deployments');
+
+   try {
+      this.logger.info(`Rolling out restart ${this.aksOptions.clusterName}...`);
+      await this.k8s.restartAKS(this.aksOptions.clusterName);
       this.logger.success('Namespace deleted successfully');
     } catch (error) {
       this.logger.warn('Failed to delete namespace (may not exist)');

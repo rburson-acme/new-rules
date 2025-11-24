@@ -97,3 +97,21 @@ module "cosmosdb" {
 
   tags = local.common_tags
 }
+
+# Reference Key Vault from remote state
+data "terraform_remote_state" "keyvault" {
+  backend = "azurerm"
+  config = merge(local.backend_config, {
+    key = format(local.state_key_format, "keyvault", var.environment)
+  })
+}
+
+# Store MongoDB connection string in Key Vault
+# This will be injected into MONGO_HOST environment variable
+resource "azurerm_key_vault_secret" "mongo_connection_string" {
+  name         = "mongo-connection-string"
+  value        = module.cosmosdb.cosmosdb_primary_connection_string
+  key_vault_id = data.terraform_remote_state.keyvault.outputs.key_vault_id
+
+  depends_on = [module.cosmosdb]
+}

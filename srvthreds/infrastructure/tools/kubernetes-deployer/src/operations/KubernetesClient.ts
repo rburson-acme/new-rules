@@ -169,6 +169,7 @@ export class KubernetesClient {
 
   /**
    * Apply manifest from file or directory
+   * Automatically handles Job immutability by deleting and re-applying
    */
   async apply(manifestPath: string, options: KubectlApplyOptions = {}): Promise<void> {
     // Use -k for kustomize directories, -f for regular files/directories
@@ -188,15 +189,71 @@ export class KubernetesClient {
     }
 
     if (options.serverSide) {
-      args.push('--server-side');
+      args.push('--server-side', '--force-conflicts');
     }
 
     if (this.options.dryRun || options.dryRun) {
       args.push('--dry-run=client');
     }
 
-    await this.exec(args);
-    this.logger.info(`Applied manifests from: ${manifestPath}`);
+    try {
+      await this.exec(args);
+      this.logger.info(`Applied manifests from: ${manifestPath}`);
+    } catch (error) {
+      // Check if this is a Job immutability error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (this.isJobImmutabilityError(errorMessage)) {
+        // Extract job name from error message
+        const jobName = this.extractJobNameFromError(errorMessage);
+
+        if (jobName) {
+          this.logger.warn('Detected Job immutability error - attempting to delete and re-apply');
+          this.logger.info(`Deleting existing Job: ${jobName}`);
+
+          try {
+            await this.delete('job', jobName, {
+              namespace: options.namespace,
+              cascade: 'foreground',
+            });
+
+            this.logger.info('Retrying manifest apply...');
+            await this.exec(args);
+            this.logger.success(`Successfully re-applied manifests after deleting Job: ${jobName}`);
+            return; // Success after retry
+          } catch (retryError) {
+            this.logger.error('Failed to delete and re-apply Job');
+            throw retryError;
+          }
+        } else {
+          this.logger.warn('Detected Job immutability error but could not extract job name');
+          this.logger.debug(`Error message: ${errorMessage.substring(0, 500)}`);
+          throw error;
+        }
+      } else {
+        // Not a Job immutability error, re-throw
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Check if error message indicates Job immutability issue
+   */
+  private isJobImmutabilityError(errorMessage: string): boolean {
+    return (
+      errorMessage.includes('field is immutable') &&
+      (errorMessage.includes('Job') || errorMessage.includes('spec.template'))
+    );
+  }
+
+  /**
+   * Extract Job name from error message
+   * Example: 'The Job "srvthreds-bootstrap" is invalid: spec.template: Invalid value...'
+   */
+  private extractJobNameFromError(errorMessage: string): string | null {
+    const match = errorMessage.match(/Job\s+"([^"]+)"/);
+    return match ? match[1] : null;
   }
 
   /**
@@ -578,5 +635,30 @@ export class KubernetesClient {
     if (hours > 0) return `${hours}h`;
     if (minutes > 0) return `${minutes}m`;
     return `${seconds}s`;
+  }
+
+  async restartAKS(deployedService: string = ''): Promise<void> {
+    const args = ['rollout', 'restart'];
+
+    if (deployedService) {
+      args.push('-f', `deployment.apps/${deployedService}`);
+    }
+    else {
+      args.push('deployment');
+    }
+    
+    if (this.options.namespace) {
+      args.push('-n', 'srvthreds');
+    }
+
+    try {
+      await this.exec(args);
+      this.logger.info(`Executed with args: ${args.join(' ')}`);
+    } catch (error) {
+      // Check if this is a Job immutability error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      // Not a Job immutability error, re-throw
+      throw errorMessage;
+    }
   }
 }

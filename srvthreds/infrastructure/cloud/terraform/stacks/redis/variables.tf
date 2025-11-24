@@ -152,3 +152,13 @@ variable "patch_schedule" {
   }))
   default = []
 }
+
+# Firewall Rules
+variable "firewall_rules" {
+  description = "Map of firewall rules to create when public access is enabled"
+  type = map(object({
+    start_ip = string
+    end_ip   = string
+  }))
+  default = {}
+}
