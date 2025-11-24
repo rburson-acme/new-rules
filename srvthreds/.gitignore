@@ -86,7 +86,7 @@ infrastructure/local/configs/.env.kubernetes
 infrastructure/local/configs/.env.minikube
 
 # Infrastructure runtime data
-infrastructure/local/compose/.docker/
+infrastructure/local/docker/compose/
 infrastructure/deployment/assets/
 
 # Terraform

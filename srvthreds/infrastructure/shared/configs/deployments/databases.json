@@ -34,6 +34,9 @@
                 "command": "infrastructure/local/docker/scripts/setup-repl.sh"
               }
             ]
+          },
+          "minikube": {
+            "defaultArgs": "mongo-repl-1 redis -d --wait"
           }
         }
       }
@@ -44,6 +47,7 @@
       "description": "Stops and removes the database containers and their volumes.",
       "environments": [
         "local",
+        "minikube",
         "dev",
         "test"
       ],
@@ -51,7 +55,12 @@
         "composing": "databases",
         "deployCommand": "down",
         "composeFile": "docker-compose-db.yml",
-        "defaultArgs": "-v"
+        "defaultArgs": "-v",
+        "environmentOverrides": {
+          "minikube": {
+            "defaultArgs": "mongo-repl-1 redis -v"
+          }
+        }
       }
     }
   ]

@@ -17,13 +17,10 @@ spec:
     spec:
       containers:
         - name: mongo-repl-1
-          image: srvthreds:dev
-          imagePullPolicy: Never
+          image: mongo:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 27017
-          envFrom:
-            - configMapRef:
-                name: srvthreds-config
           resources:
             requests:
               memory: 512Mi

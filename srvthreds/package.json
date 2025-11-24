@@ -46,9 +46,6 @@
     "minikube-set-context": "npm run deploymentCli -- minikube set_context",
     "minikube-validate": "npm run deploymentCli -- minikube k8s_validate",
     "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup",
-    "minikube-deploy-ts": "tsx infrastructure/tools/kubernetes-deployer/examples/deploy-to-minikube.ts",
-    "minikube-reset-ts": "tsx infrastructure/tools/kubernetes-deployer/examples/reset-minikube.ts",
-    "minikube-cleanup-ts": "tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts",
     "aks-deploy-ts": "tsx infrastructure/tools/kubernetes-deployer/examples/deploy-to-aks.ts",
     "terraformCli": "tsx infrastructure/tools/terraform-cli/cli.ts"
   },

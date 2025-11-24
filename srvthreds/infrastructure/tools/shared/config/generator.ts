@@ -225,14 +225,20 @@ class ConfigGenerator {
     fs.mkdirSync(k8sBasePath, { recursive: true });
     fs.mkdirSync(k8sMinikubePath, { recursive: true });
 
-    // Generate service manifests
+    // Generate service manifests (always Deployments)
     for (const [key, config] of Object.entries(this.config.services)) {
-      this.generateK8sServiceManifest(config, k8sBasePath);
+      this.generateK8sResourceManifest(config, k8sBasePath, true);
     }
 
-    // Generate database manifests
+    // Generate database manifests (Deployment or StatefulSet based on config)
     for (const [key, config] of Object.entries(this.config.databases)) {
-      this.generateK8sServiceManifest(config, k8sMinikubePath);
+      const useStatefulSet = config.kubernetes?.kind === 'StatefulSet';
+
+      if (useStatefulSet) {
+        this.generateK8sStatefulSet(config, k8sMinikubePath, false);
+      } else {
+        this.generateK8sResourceManifest(config, k8sMinikubePath, false);
+      }
     }
 
     // Generate ConfigMaps
@@ -243,9 +249,9 @@ class ConfigGenerator {
   }
 
   /**
-   * Generate individual Kubernetes service manifest
+   * Generate individual Kubernetes resource manifest (Deployment)
    */
-  private generateK8sServiceManifest(config: any, outputPath: string) {
+  private generateK8sResourceManifest(config: any, outputPath: string, isService: boolean = true) {
     const serviceName = config.name;
     const namespace = this.config.metadata.namespace;
 
@@ -276,14 +282,16 @@ class ConfigGenerator {
           spec: {
             containers: [{
               name: serviceName,
-              image: 'srvthreds:dev',  // All services use the same builder image in Minikube
-              imagePullPolicy: 'Never',  // Use local image, don't pull from registry
+              image: this.getK8sImage(config, isService),
+              imagePullPolicy: this.getK8sImagePullPolicy(config, isService),
               ports: this.getK8sContainerPorts(config),
-              envFrom: [{
-                configMapRef: {
-                  name: `${this.config.metadata.name}-config`
-                }
-              }],
+              ...(isService ? {
+                envFrom: [{
+                  configMapRef: {
+                    name: `${this.config.metadata.name}-config`
+                  }
+                }]
+              } : {}),
               resources: {
                 requests: {
                   memory: config.resources?.memory?.request || '128Mi',
@@ -354,6 +362,168 @@ class ConfigGenerator {
       // Write only Deployment
       const manifestPath = path.join(outputPath, `${serviceName}.yaml`);
       this.writeYamlFile(manifestPath, deployment);
+    }
+  }
+
+  /**
+   * Get appropriate image for Kubernetes deployment
+   */
+  private getK8sImage(config: any, isService: boolean): string {
+    // Services use the builder image for minikube
+    if (isService) {
+      return 'srvthreds:dev';
+    }
+
+    // Databases must use their specific images
+    if (!config.image) {
+      throw new Error(
+        `Missing image configuration for ${config.name}. ` +
+        `Database resources require explicit image configuration.`
+      );
+    }
+
+    return `${config.image.repository}:${config.image.tag}`;
+  }
+
+  /**
+   * Get appropriate image pull policy
+   */
+  private getK8sImagePullPolicy(config: any, isService: boolean): string {
+    // Services use local build, never pull
+    if (isService) {
+      return 'Never';
+    }
+
+    // Databases pull from registry if not present
+    return config.image?.pullPolicy || 'IfNotPresent';
+  }
+
+  /**
+   * Generate Kubernetes StatefulSet manifest (for databases needing persistence)
+   */
+  private generateK8sStatefulSet(config: any, outputPath: string, isService: boolean = false): void {
+    const serviceName = config.name;
+    const namespace = this.config.metadata.namespace;
+    const k8sConfig = config.kubernetes || {};
+
+    const statefulSet: any = {
+      apiVersion: 'apps/v1',
+      kind: 'StatefulSet',
+      metadata: {
+        name: serviceName,
+        namespace: namespace,
+        labels: {
+          app: serviceName
+        }
+      },
+      spec: {
+        serviceName: `${serviceName}-service`,
+        replicas: config.replicas?.dev || 1,
+        selector: {
+          matchLabels: {
+            app: serviceName
+          }
+        },
+        template: {
+          metadata: {
+            labels: {
+              app: serviceName
+            }
+          },
+          spec: {
+            containers: [{
+              name: serviceName,
+              image: this.getK8sImage(config, isService),
+              imagePullPolicy: this.getK8sImagePullPolicy(config, isService),
+              ports: this.getK8sContainerPorts(config),
+              resources: {
+                requests: {
+                  memory: config.resources?.memory?.request || '128Mi',
+                  cpu: config.resources?.cpu?.request || '100m'
+                },
+                limits: {
+                  memory: config.resources?.memory?.limit || '256Mi',
+                  cpu: config.resources?.cpu?.limit || '200m'
+                }
+              }
+            }]
+          }
+        }
+      }
+    };
+
+    // Add command if present
+    if (config.command) {
+      if (Array.isArray(config.command)) {
+        statefulSet.spec.template.spec.containers[0].command = config.command;
+      } else {
+        statefulSet.spec.template.spec.containers[0].command = [config.command.entrypoint];
+        statefulSet.spec.template.spec.containers[0].args = config.command.args;
+      }
+    }
+
+    // Add environment variables (for databases that don't use ConfigMap)
+    if (config.environment) {
+      statefulSet.spec.template.spec.containers[0].env = Object.entries(config.environment).map(
+        ([key, value]) => ({ name: key, value: String(value) })
+      );
+    }
+
+    // Add volumeClaimTemplates for persistent storage
+    if (k8sConfig.volumeClaimTemplate) {
+      const vct = k8sConfig.volumeClaimTemplate;
+      statefulSet.spec.volumeClaimTemplates = [{
+        metadata: {
+          name: vct.name
+        },
+        spec: {
+          accessModes: ['ReadWriteOnce'],
+          resources: {
+            requests: {
+              storage: vct.storage
+            }
+          }
+        }
+      }];
+
+      // Add volumeMount to container
+      statefulSet.spec.template.spec.containers[0].volumeMounts = [{
+        name: vct.name,
+        mountPath: vct.mountPath
+      }];
+    }
+
+    // Generate Service
+    const ports = this.getK8sServicePorts(config);
+    if (ports.length > 0) {
+      const service = {
+        apiVersion: 'v1',
+        kind: 'Service',
+        metadata: {
+          name: `${serviceName}-service`,
+          namespace: namespace,
+          labels: {
+            app: serviceName
+          }
+        },
+        spec: {
+          type: 'ClusterIP',
+          selector: {
+            app: serviceName
+          },
+          ports: ports
+        }
+      };
+
+      // Write StatefulSet and Service
+      const manifestPath = path.join(outputPath, `${serviceName}.yaml`);
+      this.writeYamlFile(manifestPath, statefulSet, false);
+      fs.appendFileSync(manifestPath, '---\n');
+      fs.appendFileSync(manifestPath, yaml.dump(service, { indent: 2 }));
+    } else {
+      // Write only StatefulSet
+      const manifestPath = path.join(outputPath, `${serviceName}.yaml`);
+      this.writeYamlFile(manifestPath, statefulSet);
     }
   }
 

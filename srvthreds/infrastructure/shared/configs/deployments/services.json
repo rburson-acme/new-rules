@@ -103,6 +103,7 @@
           {
             "composeFile": "docker-compose-services.yml",
             "defaultArgs": "-d --wait",
+            "skipBuild": false,
             "preBuildCommands": [
               {
                 "description": "Building base builder image (uses cache if available)...",

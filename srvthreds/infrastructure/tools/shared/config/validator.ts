@@ -25,6 +25,82 @@ interface ValidationIssue {
   actual?: any;
 }
 
+interface K8sPort {
+  containerPort: number;
+  name?: string;
+  protocol?: string;
+}
+
+interface K8sResources {
+  requests?: {
+    memory?: string;
+    cpu?: string;
+    storage?: string;
+  };
+  limits?: {
+    memory?: string;
+    cpu?: string;
+  };
+}
+
+interface K8sContainer {
+  name: string;
+  image: string;
+  imagePullPolicy?: string;
+  ports?: K8sPort[];
+  resources?: K8sResources;
+  volumeMounts?: Array<{
+    name: string;
+    mountPath: string;
+  }>;
+  env?: Array<{
+    name: string;
+    value: string;
+  }>;
+}
+
+interface K8sVolumeClaimTemplate {
+  metadata: {
+    name: string;
+  };
+  spec: {
+    accessModes: string[];
+    resources: K8sResources;
+  };
+}
+
+interface K8sDeploymentSpec {
+  replicas?: number;
+  selector: {
+    matchLabels: Record<string, string>;
+  };
+  template: {
+    metadata: {
+      labels: Record<string, string>;
+    };
+    spec: {
+      containers: K8sContainer[];
+      volumes?: Array<{
+        name: string;
+        emptyDir?: Record<string, unknown>;
+      }>;
+    };
+  };
+  volumeClaimTemplates?: K8sVolumeClaimTemplate[];
+  serviceName?: string;
+}
+
+interface K8sResource {
+  apiVersion: string;
+  kind: 'Deployment' | 'StatefulSet' | 'Service' | 'Job' | 'CronJob';
+  metadata: {
+    name: string;
+    namespace?: string;
+    labels?: Record<string, string>;
+  };
+  spec?: K8sDeploymentSpec;
+}
+
 const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../config-registry.yaml');
 const INFRA_BASE = path.join(__dirname, '../../..');
 
@@ -165,13 +241,16 @@ class ConfigValidator {
       }
     }).filter(Boolean);
 
-    const deployment = docs.find((doc: any) => doc?.kind === 'Deployment');
+    // Support both Deployment and StatefulSet
+    const deployment = docs.find((doc: any): doc is K8sResource =>
+      doc?.kind === 'Deployment' || doc?.kind === 'StatefulSet'
+    );
 
     if (!deployment) {
       this.issues.push({
         severity: 'warning',
         file: manifestPath,
-        issue: `No Deployment found in manifest (may be Job or other kind)`
+        issue: `No Deployment or StatefulSet found in manifest (may be Job or other kind)`
       });
       return;
     }
@@ -185,6 +264,28 @@ class ConfigValidator {
         issue: `No container definition found`
       });
       return;
+    }
+
+    // Validate StatefulSet-specific fields
+    if (deployment.kind === 'StatefulSet' && expectedConfig.kubernetes?.volumeClaimTemplate) {
+      const vct = deployment.spec?.volumeClaimTemplates?.[0];
+      const expectedVct = expectedConfig.kubernetes.volumeClaimTemplate;
+
+      if (!vct) {
+        this.issues.push({
+          severity: 'error',
+          file: manifestPath,
+          issue: `Missing volumeClaimTemplates for StatefulSet`
+        });
+      } else if (vct.spec?.resources?.requests?.storage !== expectedVct.storage) {
+        this.issues.push({
+          severity: 'warning',
+          file: manifestPath,
+          issue: `Storage size mismatch`,
+          expected: expectedVct.storage,
+          actual: vct.spec?.resources?.requests?.storage
+        });
+      }
     }
 
     // Validate ports
@@ -251,6 +352,26 @@ class ConfigValidator {
             actual: actualResources.requests?.cpu
           });
         }
+      }
+    }
+
+    // Validate image configuration for databases
+    if (expectedConfig.image) {
+      const actualImage = container.image;
+      const expectedImage = `${expectedConfig.image.repository}:${expectedConfig.image.tag}`;
+
+      // Allow exact match OR 'srvthreds:dev' for services
+      const isValidImage = actualImage === expectedImage ||
+                           actualImage === 'srvthreds:dev';
+
+      if (!isValidImage && !expectedConfig.buildOnly) {
+        this.issues.push({
+          severity: 'error',
+          file: manifestPath,
+          issue: `Image mismatch`,
+          expected: expectedImage,
+          actual: actualImage
+        });
       }
     }
   }

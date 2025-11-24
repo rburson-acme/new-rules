@@ -8,8 +8,8 @@ metadata:
   namespace: srvthreds
 data:
   MONGO_HOST: host.minikube.internal:27017
-  REDIS_HOST: host.minikube.internal:6380
-  RABBITMQ_HOST: host.minikube.internal
+  REDIS_HOST: host.minikube.internal:6379
+  RABBITMQ_HOST: rabbitmq-service
   REDIS_USE_TLS: 'false'
   MONGO_DIRECT_CONNECTION: 'true'
   JWT_EXPIRE_TIME: 1h

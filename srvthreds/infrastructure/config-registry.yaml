@@ -75,7 +75,7 @@ services:
     environment:
       NODE_ENV: development
       MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
-      REDIS_HOST: ${REDIS_HOST:-redis:6380}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
     restartPolicy: "no"  # Run once and exit
 
@@ -96,7 +96,7 @@ services:
     environment:
       NODE_ENV: development
       MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
-      REDIS_HOST: ${REDIS_HOST:-redis:6380}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
     dependsOn:
       - srvthreds-bootstrap
@@ -134,7 +134,7 @@ services:
     environment:
       NODE_ENV: development
       MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
-      REDIS_HOST: ${REDIS_HOST:-redis:6380}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
     dependsOn:
       - srvthreds-bootstrap
@@ -170,7 +170,7 @@ services:
     environment:
       NODE_ENV: development
       MONGO_HOST: ${MONGO_HOST:-mongo-repl-1:27017}
-      REDIS_HOST: ${REDIS_HOST:-redis:6380}
+      REDIS_HOST: ${REDIS_HOST:-redis:6379}
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
     dependsOn:
       - srvthreds-bootstrap
@@ -221,13 +221,15 @@ databases:
 
   redis:
     name: redis
-    description: Redis cache server
+    description: Redis cache server (local/minikube uses standard port 6379, cloud uses managed service with port 6380)
     image:
       repository: redis
       tag: latest
-    port: 6380
+    port: 6379
     command:
       - redis-server
+      - --port
+      - "6379"
       - --save
       - "20"
       - "1"
@@ -252,6 +254,12 @@ databases:
     image:
       repository: rabbitmq
       tag: 3-management
+    kubernetes:
+      kind: StatefulSet  # Use StatefulSet for persistence in K8s
+      volumeClaimTemplate:
+        name: rabbitmq-data
+        mountPath: /var/lib/rabbitmq
+        storage: 1Gi  # Smaller for minikube, 8Gi for production
     ports:
       amqp: 5672
       management: 15672
@@ -296,7 +304,7 @@ connectionStrings:
   # Local development (host machine connecting to Docker containers)
   local:
     mongodb: "localhost:27017"
-    redis: "localhost:6380"
+    redis: "localhost:6379"
     rabbitmq: "localhost"
     mongoDirectConnection: true
     useTls: false
@@ -304,7 +312,7 @@ connectionStrings:
   # Docker Compose (all services in containers)
   docker:
     mongodb: "mongo-repl-1:27017"
-    redis: "redis:6380"
+    redis: "redis:6379"
     rabbitmq: "rabbitmq"
     mongoDirectConnection: true
     useTls: false
@@ -312,16 +320,16 @@ connectionStrings:
   # Kubernetes/Minikube (services via k8s DNS)
   kubernetes:
     mongodb: "mongodb-service:27017"
-    redis: "redis-service:6380"
+    redis: "redis-service:6379"
     rabbitmq: "rabbitmq-service"
     mongoDirectConnection: false
     useTls: true
 
-  # Minikube (host.minikube.internal for services outside k8s)
+  # Minikube (host.minikube.internal for databases on host, k8s DNS for services in cluster)
   minikube:
     mongodb: "host.minikube.internal:27017"
-    redis: "host.minikube.internal:6380"
-    rabbitmq: "host.minikube.internal"
+    redis: "host.minikube.internal:6379"
+    rabbitmq: "rabbitmq-service"
     mongoDirectConnection: true
     useTls: false
 
