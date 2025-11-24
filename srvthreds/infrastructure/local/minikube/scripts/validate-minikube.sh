@@ -9,7 +9,7 @@ echo "🧪 Starting Minikube environment validation..."
 # Configuration
 NAMESPACE="srvthreds"
 MONGO_LOCAL_PORT=27017
-REDIS_LOCAL_PORT=6380
+REDIS_LOCAL_PORT=6379
 RABBITMQ_LOCAL_PORT=5672
 RABBITMQ_MGMT_PORT=15672
 

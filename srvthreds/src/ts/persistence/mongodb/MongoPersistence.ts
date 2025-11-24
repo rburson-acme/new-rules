@@ -2,11 +2,24 @@ import { ClientSession, Db, MongoClient } from 'mongodb';
 import { Persistence, Query } from '../Persistence.js';
 import { MongoOperations } from './MongoOperations.js';
 import { Persistent } from '../../thredlib/persistence/Persistent.js';
-import { Operations } from '../../thredlib/index.js';
+import { Logger, Operations } from '../../thredlib/index.js';
 import { Transaction } from '../Transaction.js';
 import { MongoTransaction } from './MongoTransaction.js';
 
+/**
+ * MongoDB persistence implementation with automatic index creation for CosmosDB compatibility.
+ *
+ * Azure CosmosDB (MongoDB API) requires indexes for sort operations, unlike standard MongoDB
+ * which will perform collection scans. This implementation detects CosmosDB index errors and
+ * automatically creates the required indexes, then retries the query.
+ *
+ * Note: Standard MongoDB deployments (local, Atlas, self-hosted) do not require this behavior
+ * and will simply perform slower collection scans when indexes are missing.
+ */
 export class MongoPersistence implements Persistence {
+  // Track indexes created this session to avoid redundant createIndex calls
+  private createdIndexes: Set<string> = new Set();
+
   constructor(
     private client: MongoClient,
     private db: Db,
@@ -48,6 +61,18 @@ export class MongoPersistence implements Persistence {
   }
 
   async get<T>(query: Query, options?: any): Promise<(Persistent & T)[] | null> {
+    try {
+      return await this.executeGet<T>(query, options);
+    } catch (err) {
+      if (this.isCosmosDbIndexError(err) && query.collector?.sort?.length) {
+        await this.ensureIndexForSort(query.type, query.collector.sort);
+        return await this.executeGet<T>(query, options);
+      }
+      throw err;
+    }
+  }
+
+  private async executeGet<T>(query: Query, options?: any): Promise<(Persistent & T)[] | null> {
     if (!query.matcher) query.matcher = {};
     const sort = query.collector?.sort || [];
     const mappedMatcher = MongoOperations.mapMatcherValues(query.matcher);
@@ -129,5 +154,32 @@ export class MongoPersistence implements Persistence {
       return { session: options.transaction.getSession() };
     }
     return undefined;
+  }
+
+  /**
+   * Detects CosmosDB-specific index errors for sort operations.
+   * CosmosDB MongoDB API requires indexes for ORDER BY, unlike standard MongoDB.
+   */
+  private isCosmosDbIndexError(err: any): boolean {
+    const errorMsg = err?.errorResponse?.errmsg || err?.message || '';
+    return errorMsg.includes('order-by item is excluded');
+  }
+
+  /**
+   * Creates an index for the specified sort fields.
+   * Called automatically when CosmosDB rejects a query due to missing sort index.
+   */
+  private async ensureIndexForSort(
+    collection: string,
+    sort: { field: string; desc?: boolean }[],
+  ): Promise<void> {
+    const indexKey = `${collection}:${sort.map((s) => `${s.field}:${s.desc ? -1 : 1}`).join(',')}`;
+    if (this.createdIndexes.has(indexKey)) return;
+
+    const indexSpec = Object.fromEntries(sort.map((f) => [f.field, f.desc ? -1 : 1]));
+    Logger.warn(`CosmosDB: Auto-creating index on ${collection} for sort fields: ${JSON.stringify(indexSpec)}`);
+
+    await this.db.collection(collection).createIndex(indexSpec);
+    this.createdIndexes.add(indexKey);
   }
 }
