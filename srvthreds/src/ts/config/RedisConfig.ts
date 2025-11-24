@@ -15,9 +15,8 @@ export const redisConfig = (hostString: string = ''): RedisConfigDef => {
   const protocol = includeProtocol ? (useTls ? 'rediss://' : 'redis://') : '';
   // Redis will automatically set up TLS if the URL starts with rediss://
   const redisUrl = includeProtocol ? `${protocol}${_host}` : _host;
-  Logger.info(`Using Redis URL: ${redisUrl}`);
-  Logger.info(`Using Redis TLS: ${useTls}`);
-  Logger.info(`Using Redis Password: ${!!process.env.REDIS_PASSWORD}`);
+  Logger.debug(`Using Redis URL: ${redisUrl}`);
+  Logger.debug(`Using Redis TLS: ${useTls}`);
   return {
     url: redisUrl,
     password: process.env.REDIS_PASSWORD,
