@@ -67,6 +67,10 @@ export class RedisStorage implements Storage {
     await this.client.quit();
   }
 
+  /*
+        Acquire locks on multiple resources, execute the operations, and release the locksa
+        This method is preferred over manual lock management
+  */
   async acquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
     return this.redlock.using(
       resources.map(({ type, id }) => $toLockKey(type, id)),
@@ -417,7 +421,7 @@ export class RedisStorage implements Storage {
       return await this.redlock.acquire([$lockKey(key)], ttl || RedisStorage.defaultLockTTL);
     } catch (e) {
       //failed to get lock
-      Logger.error(e);
+      Logger.error('RedisStorage::getLock(): failed to get lock', e);
       throw e;
     }
   }

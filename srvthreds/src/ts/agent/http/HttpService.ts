@@ -7,6 +7,7 @@ import cors from 'cors';
 import { EventPublisher } from '../AgentService.js';
 import { Auth } from '../../auth/Auth.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
+import { Logger } from '../../thredlib/index.js';
 
 const DEFAULT_PORT = 3000;
 
@@ -56,7 +57,7 @@ export class HttpService {
     ca: fs.readFileSync(__dirname + '/config/fullchain.pem')
   }, app);*/
     this.httpServer.listen(this.port || DEFAULT_PORT, () => {
-      console.log(`LoginService is running on port ${this.port || DEFAULT_PORT}`);
+      Logger.info(`LoginService is running on port ${this.port || DEFAULT_PORT}`);
     });
   }
 
@@ -65,10 +66,10 @@ export class HttpService {
       return new Promise<void>((resolve, reject) => {
         this.httpServer.close((err) => {
           if (err) {
-            console.error('Error shutting LoginService:', err);
+            Logger.error('Error shutting LoginService:', err);
             reject(err);
           } else {
-            console.log('LoginService shutdown successful.');
+            Logger.info('LoginService shutdown successful.');
             resolve();
           }
         });

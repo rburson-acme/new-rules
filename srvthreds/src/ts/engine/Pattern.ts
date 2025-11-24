@@ -1,4 +1,4 @@
-import { StringMap } from '../thredlib/index.js';
+import { Logger, StringMap } from '../thredlib/index.js';
 import { PatternModel } from '../thredlib/index.js';
 import { ReactionModel } from '../thredlib/index.js';
 import { ThredContext } from './ThredContext.js';
@@ -45,6 +45,7 @@ export class Pattern {
     if (!initialReaction) {
       throw Error(`No intial reaction found for pattern ${this.name}`);
     }
+    Logger.debug(`Testing event ${event.id} against pattern ${this.name}`);
     return initialReaction.test(event, thredContext);
   }
 

@@ -1,7 +1,7 @@
 import { KeySubscriberFactory } from '../pubsub/KeySubscriberFactory.js';
 import { PubSubFactory } from '../pubsub/PubSubFactory.js';
 import { Topics } from '../pubsub/Topics.js';
-import { Logger } from '../thredlib/index.js';
+import { Logger, LogObj } from '../thredlib/index.js';
 import { debounce } from '../thredlib/lib/debounce.js';
 
 /*
@@ -38,7 +38,7 @@ export class ThredSubscriptions {
     if (this.subscriptions.size === 0) {
       this.keySubscriber.subscribe([ThredSubscriptions.THRED_PATTERN], async (pattern, channel, eventType) => {
         const thredId = channel.split(':')[2];
-        Logger.debug('got notification for thred change', thredId, eventType);
+        Logger.debug({ message: `Got notification for thred change with ${eventType}`, thredId });
         this.subscriptions.forEach((value, key) => value(thredId, eventType));
       });
     }

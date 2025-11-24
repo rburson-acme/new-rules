@@ -21,7 +21,7 @@ export class RedisKeySubscriber implements KeySubscriber {
           // We'll use the channel as both pattern and topic for now
           notifyFn(channel, channel, message);
         } catch (e) {
-          Logger.error(e);
+          Logger.error(`RedisKeySubscriber: Error in notifyFn`, e);
         }
       });
     } catch (err) {

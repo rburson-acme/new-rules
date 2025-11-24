@@ -97,11 +97,18 @@ export class Threds {
       try {
         if (await pattern.consider(event, new ThredContext())) {
           matches++;
-          L.info(L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`));
+          L.info({
+            message: L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`),
+            thredId: event.thredId,
+          });
           return this.startThred(pattern, event);
         }
       } catch (e) {
-        L.error(L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`));
+        L.error({
+          message: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`),
+          thredId: event.thredId,
+          err: e as Error,
+        });
         throw EventThrowable.get({
           message: `Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}`,
           code: errorCodes[errorKeys.SERVER_ERROR].code,
@@ -117,7 +124,10 @@ export class Threds {
         type: ThredLogRecordType.NO_PATTERN_MATCH,
         timestamp: Date.now(),
       });
-      L.info(L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`));
+      L.info({
+        message: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
+        thredId: event.thredId,
+      });
     }
   }
 

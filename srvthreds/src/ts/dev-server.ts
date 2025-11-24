@@ -1,5 +1,4 @@
-import './init.js';
-
+import 'dotenv/config';
 import express, { Express, Request, Response } from 'express';
 import http from 'http';
 
@@ -35,6 +34,9 @@ import {
 } from './config/ConfigDefs.js';
 import { EngineConfig } from './config/EngineConfig.js';
 import { RascalConfig } from './config/RascalConfig.js';
+import { PinoLogger } from './logger/PinoLogger.js';
+
+Logger.loggerDelegate = new PinoLogger();
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -204,7 +206,7 @@ class ServiceManager {
     const persistenceAgentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
       type: 'agent-config',
       configName: 'persistence_agent',
-      config: new AgentConfig('wt.org.persistence'),
+      config: new AgentConfig('org.wt.persistence'),
     });
     this.persistenceAgent = new AgentService({
       agentConfig: persistenceAgentConfig,
@@ -219,7 +221,7 @@ class ServiceManager {
     const robotConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
       type: 'agent-config',
       configName: 'robot_agent',
-      config: new AgentConfig('wt.org.robot'),
+      config: new AgentConfig('org.wt.robot'),
     });
     if (!robotConfig) throw new Error(`Agent: failed to load config for 'robot_agent'`);
     this.robotAgent = new RemoteAgentService({
@@ -277,8 +279,8 @@ class ServiceManager {
     await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     Logger.info(`RemoteQ Broker disconnected successfully.`);
     // wait for processing to complete
-    Logger.info(`Waiting ${engineConfig?.eventProcessingWait ?? 2000}ms for event processing to complete...`);
-    await Timers.wait(engineConfig?.eventProcessingWait ?? 2000);
+    Logger.info(`Waiting ${engineConfig?.eventProcessingWait ?? 1000}ms for event processing to complete...`);
+    await Timers.wait(engineConfig?.eventProcessingWait ?? 1000);
     // stop publishing messages
     Logger.info(`Disconnecting RemoteQ...`);
     await this.engineMessageService?.disconnect().catch(Logger.error);

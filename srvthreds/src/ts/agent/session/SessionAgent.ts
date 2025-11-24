@@ -157,8 +157,20 @@ export class SessionAgent implements MessageHandler {
           // if the channel is a proxy, send the full message so that it can be further routed, otherwise just the event
           channel.isProxy ? dispatcher(message, channel.id) : dispatcher(message.event, channel.id);
         } catch (e) {
-          Logger.error(e);
-          Logger.error(`session: Failed to send event to outbound channel ${channel}`);
+          const addresses = message.to.join(',');
+          if (channel.isProxy) {
+            Logger.error({
+              message: `SessionAgent: Failed to send message to proxy channel ${channel.id} for addresses: ${addresses}`,
+              err: e as Error,
+              thredId: message.event.thredId,
+            });
+          } else {
+            Logger.error({
+              message: `SessionAgent: Failed to send event to outbound channel ${channel.id} for addresses: ${addresses}`,
+              err: e as Error,
+              thredId: message.event.thredId,
+            });
+          }
         }
       });
     });

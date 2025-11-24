@@ -1,16 +1,4 @@
-import {
-  PatternModel,
-  Logger,
-  LoggerLevel,
-  EventManager,
-  EventBuilder,
-  Tasks,
-  Events,
-  EventTask,
-} from '../../ts/thredlib/index.js';
-import { events, withPromiseHandlers } from '../testUtils.js';
-
-Logger.setLevel(LoggerLevel.INFO);
+import { EventManager, EventBuilder, Events } from '../../ts/thredlib/index.js';
 
 // @NOTE
 // this runs against a running server running 'system_test.pattern.json' and simple_test_sessions_model.json
@@ -22,16 +10,16 @@ describe.skip('system_test client test', function () {
     locationAgentEventManager = new EventManager();
   });
   test('Connect to server', async function () {
-    await participant1EventManager
-      .connect('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token: 'participant1' } })
-      .catch((e) => {
-        Logger.error(e);
-      });
-    await locationAgentEventManager
-      .connect('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token: 'location_agent0' } })
-      .catch((e) => {
-        Logger.error(e);
-      });
+    await participant1EventManager.connect('http://localhost:3000', {
+      transports: ['websocket'],
+      jsonp: false,
+      auth: { token: 'participant1' },
+    });
+    await locationAgentEventManager.connect('http://localhost:3000', {
+      transports: ['websocket'],
+      jsonp: false,
+      auth: { token: 'location_agent0' },
+    });
   });
   test('test location event', async function () {
     const pr = participant1EventManager.subscribeOnceWithPromise({ filter: `$event.type = 'org.wt.tell'` });

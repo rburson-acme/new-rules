@@ -43,13 +43,17 @@ export class SessionService {
 
   // map recipients to channels
   async getChannels(message: Message): Promise<Channel[]> {
+    const thredId = message.event.thredId;
     const { sessions, sessionChannels } = this;
     const { event, to } = message;
     //Logger.debug(`SessionService: getChannels for: ${to}`, event);
 
     const sessionsByParticipant: StringMap<string[]> = await sessions.getSessionIdsForParticipantIds(to);
     if (!Object.keys(sessionsByParticipant).length) {
-      Logger.warn(`SessionService: No participants are logged in for address ${to}`);
+      Logger.warn({
+        message: `SessionService: No participants are logged in for address ${to} for thredId: ${thredId}`,
+        thredId,
+      });
       return [];
     }
     const channels: Channel[] = [];
@@ -63,11 +67,14 @@ export class SessionService {
           } else {
             // If the sessionId is no longer mapped to a channel, then the session must be an orphan
             this.removeSession(sessionId).catch((e) => `Failed to remove orphaned Session: ${sessionId}`);
-            Logger.error(`SessionService: no channel found for session ${sessionId} participant ${participantId}`);
+            Logger.error({
+              message: `SessionService: no channel found for session ${sessionId} participant ${participantId} for thredId: ${thredId}`,
+              thredId,
+            });
           }
         });
       } else {
-        Logger.error(`SessionService: participant ${to} not found`);
+        Logger.warn({ message: `SessionService: participant ${to} not found for thredId: ${thredId}`, thredId });
       }
     });
     return channels;

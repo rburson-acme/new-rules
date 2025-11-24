@@ -3,8 +3,6 @@ import { RedisStorage } from '../../ts/storage/RedisStorage.js';
 import { Lock, Storage } from '../../ts/storage/Storage.js';
 import { delay } from '../testUtils.js';
 
-Logger.setLevel(LoggerLevel.INFO);
-
 describe('redis locks', function () {
   test('connect', function () {
     storage = new RedisStorage();
@@ -46,7 +44,7 @@ describe('redis locks', function () {
     const result = await storage.retrieve(testObjType, testObjId2);
     expect((<any>result).visitors[0]).toBe('should be last');
   });
-  test('release should throw if lock is has already timed', async function () {
+  test('release should throw if lock has already timed out', async function () {
     const { result, lock } = await storage.claim(testObjType, testObjId2, 100);
     await delay(200);
     return expect(storage.saveAndRelease(lock, testObjType, result, testObjId2)).rejects.toThrow();

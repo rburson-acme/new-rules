@@ -51,7 +51,7 @@ export class SocketService {
     if (channel) {
       channel(messageOrEvent, channelId);
     } else {
-      Logger.debug(`session: channel ${channelId} not found`);
+      Logger.error(`session: channel ${channelId} not found`);
     }
   };
 
@@ -63,14 +63,14 @@ export class SocketService {
     // UNCOMMENT TO TURN ON AUTHENTICATION
     /* const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error: No token'));
-    Logger.debug(`session: validation successful for: token ${token}`);
+    Logger.debug({ message:`session: validation successful for: token ${token}` });
 
     // use auth to validate the token here
     this.auth.validateAccessToken(token).then((payload) => {
       socket.data.participantId = payload.participantId;
       next();
     }).catch((err) => {
-      Logger.debug(`session: validation failed for: token ${token}`, err);
+      Logger.error({ message:`session: validation failed for: token ${token}`, err });
       next(new Error('Authentication error: Invalid token'));
     });
     */
@@ -82,7 +82,7 @@ export class SocketService {
     const isProxy = !!socket.handshake.headers['x-proxy-message'];
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
-    Logger.debug(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
+    Logger.info(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     this.channels[channelId] = this.sendSocket;
     // for websockets, session must include a node id (so that we can route message back here)
     this.serviceListener
@@ -93,10 +93,13 @@ export class SocketService {
           this.serviceListener
             .sessionEnded(sessionId)
             .then(() => {
-              Logger.debug(`session: participant ${participantId} disconnected`);
+              Logger.info(`session: participant ${participantId} disconnected`);
             })
             .catch((e) => {
-              Logger.debug(`session: participant ${participantId}::${sessionId} failed to remove Session`);
+              Logger.error({
+                message: `session: participant ${participantId}::${sessionId} failed to remove Session`,
+                err: e as Error,
+              });
             });
         });
         // Handle inbound Events
@@ -108,7 +111,10 @@ export class SocketService {
         });
       })
       .catch((e) => {
-        Logger.debug(`session: participant ${participantId}::${sessionId} failed to add Session`);
+        Logger.error({
+          message: `session: participant ${participantId}::${sessionId} failed to add Session`,
+          err: e as Error,
+        });
       });
   };
 
@@ -117,12 +123,12 @@ export class SocketService {
     if (toSocket && toSocket.connected) {
       toSocket.send(messageOrEvent);
     } else {
-      Logger.debug(`session: socket ${channelId} is not connected`);
+      Logger.error(`session: socket ${channelId} is not connected`);
     }
   };
 
   async shutdown(): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
+    (await new Promise<void>((resolve, reject) => {
       this.io.close(function onServerClosed(err: any) {
         if (err) {
           reject(err);
@@ -136,6 +142,6 @@ export class SocketService {
         setTimeout(() => {
           resolve();
         }, 3000);
-      });
+      }));
   }
 }

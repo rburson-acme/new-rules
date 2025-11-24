@@ -21,6 +21,7 @@ Tests must be run **sequentially** (no parallelism) due to shared state and reso
 3. **Environment variables** - CI/CD and runtime overrides
 
 This pattern ensures tests can run in multiple environments:
+
 - ✅ Local development with Docker containers
 - ✅ CI/CD pipelines
 - ✅ Kubernetes/Minikube clusters
@@ -95,6 +96,7 @@ MONGO_DIRECT_CONNECTION=true
 **Why `directConnection=true` is required:**
 
 MongoDB driver behavior:
+
 - Without `directConnection=true`, the driver attempts replica set discovery
 - Single-node replica sets can fail discovery when accessed via localhost
 - Setting `directConnection=true` bypasses discovery and connects directly
@@ -120,8 +122,8 @@ The [vitest.config.ts](../../vitest.config.ts) file configures automatic setup:
 ```typescript
 export default defineConfig({
   test: {
-    setupFiles: ['./src/test/setup.ts'],  // Loaded before all tests
-    fileParallelism: false,                // Sequential execution
+    setupFiles: ['./src/test/setup.ts'], // Loaded before all tests
+    fileParallelism: false, // Sequential execution
   },
 });
 ```
@@ -136,11 +138,13 @@ export default defineConfig({
 ### Individual Test Requirements
 
 Tests should NOT:
+
 - ❌ Load `dotenv/config` directly
 - ❌ Set environment variables
 - ❌ Create custom connection logic
 
 Tests SHOULD:
+
 - ✅ Use factories: `PersistenceFactory`, `StorageFactory`
 - ✅ Trust the setup configuration
 - ✅ Clean up resources in `afterAll` hooks
@@ -152,9 +156,7 @@ import { MongoPersistenceProvider } from '../../ts/persistence/mongodb/MongoPers
 
 test('connect', async function () {
   // Uses environment variables automatically configured by setup.ts
-  persistenceProvider = new MongoPersistenceProvider(
-    process.env.MONGO_HOST || 'localhost:27017'
-  );
+  persistenceProvider = new MongoPersistenceProvider(process.env.MONGO_HOST || 'localhost:27017');
   await persistenceProvider.connect();
 });
 ```
@@ -263,6 +265,7 @@ services:
 ### Test Times Out Connecting to MongoDB
 
 **Symptom:**
+
 ```
 Error: Test timed out in 5000ms.
 ```
@@ -270,6 +273,7 @@ Error: Test timed out in 5000ms.
 **Causes & Solutions:**
 
 1. **MongoDB not running**
+
    ```bash
    docker ps | grep mongo
    # If not running:
@@ -277,6 +281,7 @@ Error: Test timed out in 5000ms.
    ```
 
 2. **Wrong connection configuration**
+
    ```bash
    # Check your .env or set explicitly:
    export MONGO_HOST=localhost:27017
@@ -284,6 +289,7 @@ Error: Test timed out in 5000ms.
    ```
 
 3. **Replica set not initialized**
+
    ```bash
    docker exec mongo-repl-1 mongosh --eval "rs.status()"
    # If not initialized:
@@ -299,6 +305,7 @@ Error: Test timed out in 5000ms.
 ### Tests Fail with "Cannot read properties of undefined"
 
 **Symptom:**
+
 ```
 Cleanup Failed Cannot read properties of undefined (reading 'deleteDatabase')
 ```
@@ -336,7 +343,7 @@ open http://localhost:15672
 ```typescript
 // ❌ Bad - hardcoded configuration
 const provider = new MongoPersistenceProvider('localhost:27017', {
-  connectOptions: { directConnection: true }
+  connectOptions: { directConnection: true },
 });
 
 // ✅ Good - uses environment configuration
@@ -388,7 +395,7 @@ Example migration:
 import 'dotenv/config';
 process.env.MONGO_HOST = 'localhost:27017';
 const provider = new MongoPersistenceProvider('localhost:27017', {
-  connectOptions: { directConnection: true }
+  connectOptions: { directConnection: true },
 });
 
 // After

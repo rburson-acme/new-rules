@@ -1,3 +1,4 @@
+import { ConsoleLogger } from './ConsoleLogger.js';
 export var LoggerLevel;
 (function (LoggerLevel) {
     LoggerLevel[LoggerLevel["NONE"] = 0] = "NONE";
@@ -7,69 +8,61 @@ export var LoggerLevel;
     LoggerLevel[LoggerLevel["DEBUG"] = 4] = "DEBUG";
     LoggerLevel[LoggerLevel["TRACE"] = 5] = "TRACE";
 })(LoggerLevel || (LoggerLevel = {}));
+export const levelNameMap = {
+    [LoggerLevel.NONE]: 'silent',
+    [LoggerLevel.ERROR]: 'error',
+    [LoggerLevel.WARN]: 'warn',
+    [LoggerLevel.INFO]: 'info',
+    [LoggerLevel.DEBUG]: 'debug',
+    [LoggerLevel.TRACE]: 'trace',
+};
+export const nameLevelMap = {
+    silent: LoggerLevel.NONE,
+    error: LoggerLevel.ERROR,
+    warn: LoggerLevel.WARN,
+    info: LoggerLevel.INFO,
+    debug: LoggerLevel.DEBUG,
+    trace: LoggerLevel.TRACE,
+};
 export class Logger {
-    static debug = (...args) => { };
-    static logObject = (...args) => { };
-    static info = (...args) => { };
-    static warn = (...args) => { };
-    // should always be enabled
-    static error = (...args) => console.error(...args);
-    static trace = (...args) => { };
+    // default to console logger
+    static loggerDelegate = new ConsoleLogger();
+    static delegateLog(logFn, args, error) {
+        if (error && typeof args === 'string') {
+            logFn(args, error);
+        }
+        else {
+            logFn(args);
+        }
+    }
+    static debug = (args, errorOrObject) => {
+        Logger.delegateLog(Logger.loggerDelegate.debug.bind(Logger.loggerDelegate), args, errorOrObject);
+    };
+    static info = (args, errorOrObject) => {
+        Logger.delegateLog(Logger.loggerDelegate.info.bind(Logger.loggerDelegate), args, errorOrObject);
+    };
+    static warn = (args, errorOrObject) => {
+        Logger.delegateLog(Logger.loggerDelegate.warn.bind(Logger.loggerDelegate), args, errorOrObject);
+    };
+    static error = (args, errorOrObject) => {
+        Logger.delegateLog(Logger.loggerDelegate.error.bind(Logger.loggerDelegate), args, errorOrObject);
+    };
+    static trace = (args, errorOrObject) => {
+        Logger.delegateLog(Logger.loggerDelegate.trace.bind(Logger.loggerDelegate), args, errorOrObject);
+    };
+    static logObject = (args) => {
+        Logger.loggerDelegate.logObject(args);
+    };
     static setLevel(loggerLevel) {
-        Logger.debug = (...args) => { };
-        Logger.logObject = (...args) => { };
-        Logger.info = (...args) => { };
-        Logger.warn = (...args) => { };
-        Logger.error = (...args) => { };
-        Logger.trace = (...args) => { };
-        if (loggerLevel >= LoggerLevel.TRACE)
-            Logger.trace = (...args) => console.trace(...args);
-        if (loggerLevel >= LoggerLevel.DEBUG)
-            Logger.debug = (...args) => console.debug(...args);
-        if (loggerLevel >= LoggerLevel.INFO)
-            Logger.info = (...args) => console.info(...args);
-        if (loggerLevel >= LoggerLevel.WARN)
-            Logger.warn = (...args) => console.warn(...args);
-        if (loggerLevel >= LoggerLevel.ERROR)
-            Logger.error = (...args) => console.error(...args);
-        if (loggerLevel >= LoggerLevel.DEBUG)
-            Logger.logObject = (...args) => {
-                if (args?.length) {
-                    if (args.length === 1) {
-                        console.dir(args[0], { depth: null, colors: true });
-                    }
-                    else {
-                        console.debug(args[0]);
-                        console.dir(args[1], { depth: null, colors: true });
-                    }
-                }
-            };
+        Logger.loggerDelegate.setLevel(loggerLevel);
     }
     static h1(message) {
-        return `
- ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
-(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
-
-${message}
- ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___
-(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)(___)
-`;
+        return Logger.loggerDelegate.h1(message);
     }
     static h2(message) {
-        return `
-${message}
-___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___  ___ ___
-`;
+        return Logger.loggerDelegate.h2(message);
     }
     static crit(message) {
-        return `
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-${message}
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-`;
+        return Logger.loggerDelegate.crit(message);
     }
 }

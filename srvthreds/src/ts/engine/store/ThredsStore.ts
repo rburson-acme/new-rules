@@ -108,7 +108,11 @@ export class ThredsStore {
                 await this.deleteAndTerminateThred(thredId);
               }
             } catch (e) {
-              Logger.error(`terminateAllThreds::Failed to properly terminate thred ${thredId}`, e);
+              Logger.error({
+                message: `terminateAllThreds::Failed to properly terminate thred ${thredId}`,
+                thredId,
+                err: e as Error,
+              });
             }
           },
         ],
@@ -164,33 +168,45 @@ export class ThredsStore {
 
   // requires lock
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
-    Logger.debug(Logger.h2(`deleteAndTerminateThred::terminating Thred ${thredId}`));
+    Logger.debug({ message: Logger.h2(`deleteAndTerminateThred::terminating Thred ${thredId}`), thredId });
     const thredStore = this.thredStores[thredId];
     try {
       //If locked, the lock will simply expire
       await this.storage.delete(Types.Thred, thredId);
     } catch (e) {
-      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId} from storage`));
+      Logger.warn({
+        message: Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId} from storage`),
+        thredId,
+      });
     }
     // move the user/thred associations to the archive
     const participantAddresses = thredStore.thredContext.getParticipantAddresses();
     try {
       await this.participantsStore.removeThredFromParticipants(participantAddresses, thredId);
     } catch (e) {
-      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to remove thred ${thredId} from participants in storage`));
+      Logger.warn({
+        message: Logger.crit(`deleteAndTerminate::Failed to remove thred ${thredId} from participants in storage`),
+        thredId,
+      });
     }
     // associate the thredId with each User (participant)
     try {
       await UserController.get().addArchivedThredIdToUsers(participantAddresses, thredId);
     } catch (e) {
-      Logger.warn(Logger.crit(`deleteAndTerminate::Failed to add archived thredId to Users for thred ${thredId}`));
+      Logger.warn({
+        message: Logger.crit(`deleteAndTerminate::Failed to add archived thredId to Users for thred ${thredId}`),
+        thredId,
+      });
     }
     // @todo archive the context and the reactionstore so that the thred could be replayed
     delete this.thredStores[thredId];
     try {
       await Pm.get().saveThredRecord({ id: thredId, thred: thredStore.toJSON() });
     } catch (e) {
-      Logger.error(Logger.crit(`deleteAndTerminate::Failed to save ThredRecord ${thredId} to archive`));
+      Logger.error({
+        message: Logger.crit(`deleteAndTerminate::Failed to save ThredRecord ${thredId} to archive`),
+        thredId,
+      });
       //throw ThredThrowable.get( { cause: e, message: 'Failed to save Thred to archive' }, 'sender', thredStore.thredContext,);
     }
   }

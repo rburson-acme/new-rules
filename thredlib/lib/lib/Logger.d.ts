@@ -6,13 +6,40 @@ export declare enum LoggerLevel {
     DEBUG = 4,
     TRACE = 5
 }
+export interface LogObj {
+    message?: string;
+    err?: Error;
+    obj?: any;
+    thredId?: string;
+}
+export type LogArgs = string | Error | LogObj;
+export interface LogSignature {
+    (arg: LogArgs): void;
+    (message: string, errorOrObject: Error | any): void;
+}
+export interface LoggerDelegate {
+    debug: LogSignature;
+    info: LogSignature;
+    warn: LogSignature;
+    error: LogSignature;
+    trace: LogSignature;
+    logObject: (args: any) => void;
+    setLevel: (loggerLevel: LoggerLevel) => void;
+    h1(message: string): string;
+    h2(message: string): string;
+    crit(message: string): string;
+}
+export declare const levelNameMap: Record<LoggerLevel, string>;
+export declare const nameLevelMap: Record<string, LoggerLevel>;
 export declare class Logger {
-    static debug: (...args: Array<any>) => void;
-    static logObject: (...args: Array<any>) => void;
-    static info: (...args: Array<any>) => void;
-    static warn: (...args: Array<any>) => void;
-    static error: (...args: Array<any>) => void;
-    static trace: (...args: Array<any>) => void;
+    static loggerDelegate: LoggerDelegate;
+    private static delegateLog;
+    static debug: LogSignature;
+    static info: LogSignature;
+    static warn: LogSignature;
+    static error: LogSignature;
+    static trace: LogSignature;
+    static logObject: (args: any) => void;
     static setLevel(loggerLevel: LoggerLevel): void;
     static h1(message: string): string;
     static h2(message: string): string;

@@ -163,12 +163,13 @@ export class RemoteAgentService {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    Logger.debug(
-      Logger.h1(
+    Logger.info({
+      message: Logger.h1(
         `RemoteAgent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`,
       ),
-    );
-    Logger.logObject(message);
+      thredId: message.event.thredId,
+    });
+    Logger.debug({ thredId: message.event.thredId, obj: message });
     return this.handler?.processMessage(message);
   }
 
@@ -178,10 +179,11 @@ export class RemoteAgentService {
 
   // publish Events to engine
   publishEvent = async (event: Event): Promise<void> => {
-    Logger.debug(
-      Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
-    );
-    Logger.logObject(event);
+    Logger.info({
+      message: Logger.h1(`RemoteAgent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
+      thredId: event.thredId,
+    });
+    Logger.debug({ thredId: event.thredId, obj: event });
     this.connectionManager.publish(event);
   };
 
@@ -189,7 +191,12 @@ export class RemoteAgentService {
     try {
       await this.processMessage(message);
     } catch (e: any) {
-      Logger.error(`RemoteAgent: failed to process message ${message.id}`, e);
+      const thredId = message.event.thredId;
+      Logger.error({
+        message: `RemoteAgent: failed to process message ${message.id} for thredId: ${thredId}`,
+        err: e,
+        thredId,
+      });
       const cause = serializableError(e.eventError ? e.eventError.cause : e);
       try {
         const outboundEvent = this.eventPublisher.createOutboundEvent({
@@ -198,7 +205,11 @@ export class RemoteAgentService {
         });
         await this.eventPublisher.publishEvent(outboundEvent);
       } catch (e) {
-        Logger.error(`RemoteAgent: failed to publish error event for message ${message.id}`, e);
+        Logger.error({
+          message: `RemoteAgent: failed to publish error event for message ${message.id} for thredId: ${thredId}`,
+          err: e as Error,
+          thredId,
+        });
       }
     }
   }

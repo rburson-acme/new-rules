@@ -28,6 +28,7 @@ export class QDispatcher implements Dispatcher {
   tell = async (messageTemplate: MessageTemplate) => {
     const sessions = System.getSessions();
     const { to, event } = messageTemplate;
+    const thredId = event.thredId;
     // don't propagate failures here as this is called in the event loop
     try {
       // -------------------------------------------------------------------
@@ -44,7 +45,10 @@ export class QDispatcher implements Dispatcher {
         await sessions.getSessionsForParticipantIds(participantAddresses);
       // warn if there are not services or participants to receive the message
       if (!Object.keys(sessionsByParticipant).length && !serviceAddresses.length) {
-        L.warn(L.crit(`No participants or services found for address ${to} - dispatchers not called`));
+        L.warn({
+          message: L.crit(`No participants or services found for address ${to} - dispatchers not called`),
+          thredId,
+        });
         return;
       }
 
@@ -53,10 +57,14 @@ export class QDispatcher implements Dispatcher {
         try {
           const id = `${event.id}_agent_${index}`;
           const newMessage: Message = { id, event, to: [address] };
-          L.debug(L.h2(`Server.tell(): Message ${id} to Agent ${address}`));
+          L.info({ message: L.h2(`QDispatcher.tell(): Message ${id} to Agent ${address}`), thredId });
           if (address) await this.outboundQ.queue(newMessage, [address]);
         } catch (e) {
-          L.error(L.crit(`Engine.tell(): Error sending message to Agent service address ${address}`), e);
+          L.error({
+            message: L.crit(`QDispatcher.tell(): Error sending message to Agent service address ${address}`),
+            thredId,
+            err: e as Error,
+          });
         }
       });
 
@@ -84,14 +92,21 @@ export class QDispatcher implements Dispatcher {
           // route to specific node id if present (websocket sessions require this)
           // if there's no nodeId, assume any session service can retrieve it
           const topicString = nodeId ? nodeId : 'org.wt.session';
-          L.debug(L.h2(`Server.tell(): Message ${id} to ${[...participants]} via ${topicString}`));
+          L.info({
+            message: L.h2(`QDispatcher.tell(): Message ${id} to ${[...participants]} via ${topicString}`),
+            thredId,
+          });
           await this.outboundQ.queue(newMessage, [topicString]);
         } catch (e) {
-          L.error(L.crit(`Engine.tell(): Error sending message to participants with nodeId ${nodeId}`), e);
+          L.error({
+            message: L.crit(`QDispatcher.tell(): Error sending message to participants with nodeId ${nodeId}`),
+            thredId,
+            err: e as Error,
+          });
         }
       });
     } catch (e) {
-      L.error(L.crit('Engine.tell(): Error'), e);
+      L.error({ message: L.crit('QDispatcher.tell(): Error'), thredId, err: e as Error });
     }
   };
 }

@@ -1,2 +1,0 @@
-#!/bin/sh
-npx twilio phone-numbers:update "+12029320316" --sms-url="http://localhost:3000/sms"

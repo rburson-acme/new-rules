@@ -4,7 +4,8 @@
       "name": "Session Server",
       "nodeType": "org.wt.session",
       "nodeId": "org.wt.session1",
-      "configName": "session_agent"
+      "configName": "session_agent",
+      "hidden": true
     },
     {
       "name": "Persistence Agent",

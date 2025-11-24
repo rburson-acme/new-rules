@@ -97,10 +97,13 @@ export class AgentService {
 
   // process Message from the Engine
   async processMessage(message: Message): Promise<void> {
-    Logger.debug(
-      Logger.h1(`Agent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`),
-    );
-    Logger.logObject(message);
+    Logger.info({
+      message: Logger.h1(
+        `Agent:${this.agentConfig!.nodeId} received Message ${message.id} from ${message.event.source?.id}`,
+      ),
+      thredId: message.event.thredId,
+    });
+    Logger.debug({ thredId: message.event.thredId, obj: message });
     return this.handler?.processMessage(message);
   }
 
@@ -111,8 +114,11 @@ export class AgentService {
   // publish Events to engine
   publishEvent = async (event: Event): Promise<void> => {
     const { eventQ } = this.params;
-    Logger.debug(Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`));
-    Logger.logObject(event);
+    Logger.info({
+      message: Logger.h1(`Agent:${this.agentConfig!.nodeId} publish Event ${event.id} from ${event.source?.id}`),
+      thredId: event.thredId,
+    });
+    Logger.debug({ thredId: event.thredId, obj: event });
     return eventQ.queue(event);
   };
 
@@ -134,7 +140,12 @@ export class AgentService {
       await this.processMessage(qMessage.payload);
       await messageQ.delete(qMessage);
     } catch (e: any) {
-      Logger.error(`Agent: failed to process message ${qMessage.payload?.id}`, e);
+      const thredId = qMessage.payload?.event.thredId;
+      Logger.error({
+        message: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
+        err: e,
+        thredId,
+      });
       const cause = serializableError(e.eventError ? e.eventError.cause : e);
       try {
         const outboundEvent = this.eventPublisher.createOutboundEvent({
@@ -146,7 +157,11 @@ export class AgentService {
         // @TODO figure out on what types of Errors it makes sense to requeue
         // await this.messageQ.requeue(qMessage, e).catch(Logger.error);
       } catch (e) {
-        Logger.error(`Agent: failed to publish error event for message ${qMessage.payload?.id}`, e);
+        Logger.error({
+          message: `Agent: failed to process message ${qMessage.payload?.id} for thredId: ${thredId}`,
+          err: e as Error,
+          thredId,
+        });
       }
     }
   }

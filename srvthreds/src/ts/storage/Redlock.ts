@@ -6,6 +6,7 @@ import { EventEmitter } from 'events';
 import { AbortController as PolyfillAbortController } from 'node-abort-controller';
 
 import { RedisClientType, RedisClusterType } from 'redis';
+import { Logger } from '../thredlib/index.js';
 type Client = RedisClientType | RedisClusterType;
 
 // Define script constants.
@@ -531,8 +532,7 @@ export default class Redlock extends EventEmitter {
         throw new Error(`Unexpected type ${typeof error} thrown with value: ${error}`);
       }
 
-      // Emit the error on the redlock instance for observability.
-      this.emit('error', error);
+      Logger.debug(`Redlock operation failed on a client: ${error.message}`, error);
 
       return {
         vote: 'against',

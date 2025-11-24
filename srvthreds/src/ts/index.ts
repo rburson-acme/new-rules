@@ -61,7 +61,7 @@ const args = yargs(hideBin(process.argv))
   .parseSync();
 
 const configPath = args['config-path'];
-args.debug ? Logger.setLevel(LoggerLevel.DEBUG) : Logger.setLevel(LoggerLevel.INFO);
+if (args.debug) Logger.setLevel(LoggerLevel.DEBUG);
 
 const serviceManager = new EngineServiceManager();
 try {
