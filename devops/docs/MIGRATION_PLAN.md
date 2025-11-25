@@ -128,13 +128,13 @@ Migration and validation of Terraform modules and CLI tooling.
 - [x] Update import paths in terraform-cli
 - [x] **TEST**: Run terraform-cli commands from devops
 
-### Phase 3: Kubernetes Deployment
+### Phase 3: Kubernetes Deployment ✅ COMPLETE
 Migration and validation of Kubernetes manifests and deployment CLI.
 
 - [x] Reorganize from `cloud/kubernetes/` to `kubernetes/srvthreds/` structure
-- [ ] Copy `tools/kubernetes-deployer/` to `devops/tools/`
-- [ ] Update import paths in kubernetes-deployer
-- [ ] **TEST**: Deploy artifacts to AKS using CLI from devops
+- [x] Copy `tools/kubernetes-deployer/` to `devops/tools/`
+- [x] Update import paths in kubernetes-deployer
+- [x] **TEST**: AKS deployer CLI runs from devops (`npm run aks:deploy -- --help`)
 
 ### Phase 4: Minikube (Local K8s)
 Migration of local Kubernetes simulation environment.

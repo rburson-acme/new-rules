@@ -7,20 +7,15 @@
   "scripts": {
     "terraform": "tsx tools/terraform-cli/cli.ts",
     "deploy": "tsx tools/deployment-cli/cli.ts",
-    "k8s": "tsx tools/kubernetes-deployer/src/index.ts",
-
     "tf:plan": "npm run terraform -- plan",
     "tf:apply": "npm run terraform -- deploy",
     "tf:destroy": "npm run terraform -- destroy",
     "tf:status": "npm run terraform -- status",
     "tf:bootstrap": "npm run terraform -- bootstrap",
 
-    "minikube:create": "npm run deploy -- minikube create",
-    "minikube:apply": "npm run deploy -- minikube apply",
-    "minikube:reset": "npm run deploy -- minikube reset",
-
-    "aks:deploy": "npm run k8s -- aks deploy",
-    "aks:status": "npm run k8s -- aks status",
+    "aks:deploy": "tsx tools/kubernetes-deployer/examples/deploy-to-aks.ts",
+    "minikube:deploy": "tsx tools/kubernetes-deployer/examples/deploy-to-minikube.ts",
+    "minikube:reset": "tsx tools/kubernetes-deployer/examples/reset-minikube.ts",
 
     "config:generate": "tsx tools/shared/config/generator.ts",
     "config:validate": "tsx tools/shared/config/validator.ts",

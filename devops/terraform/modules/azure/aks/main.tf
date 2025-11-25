@@ -54,6 +54,13 @@ resource "azurerm_kubernetes_cluster" "main" {
     os_disk_type        = var.default_node_pool_os_disk_type
     zones               = var.default_node_pool_zones
 
+    # Upgrade settings to prevent drift detection
+    upgrade_settings {
+      drain_timeout_in_minutes      = 0
+      max_surge                     = "10%"
+      node_soak_duration_in_minutes = 0
+    }
+
     tags = local.common_tags
   }
 

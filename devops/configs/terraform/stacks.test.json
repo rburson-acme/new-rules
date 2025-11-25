@@ -3,42 +3,42 @@
   "stacks": [
     {
       "name": "networking",
-      "path": "stacks/networking",
+      "path": "stacks/srvthreds/networking",
       "dependencies": []
     },
     {
       "name": "keyvault",
-      "path": "stacks/keyvault",
+      "path": "stacks/srvthreds/keyvault",
       "dependencies": ["networking"]
     },
     {
       "name": "acr",
-      "path": "stacks/acr",
+      "path": "stacks/srvthreds/acr",
       "dependencies": ["networking"]
     },
     {
       "name": "cosmosdb",
-      "path": "stacks/cosmosdb",
+      "path": "stacks/srvthreds/cosmosdb",
       "dependencies": ["networking"]
     },
     {
       "name": "redis",
-      "path": "stacks/redis",
+      "path": "stacks/srvthreds/redis",
       "dependencies": ["networking"]
     },
     {
       "name": "monitoring",
-      "path": "stacks/monitoring",
+      "path": "stacks/srvthreds/monitoring",
       "dependencies": ["networking"]
     },
     {
       "name": "aks",
-      "path": "stacks/aks",
+      "path": "stacks/srvthreds/aks",
       "dependencies": ["networking", "acr"]
     },
     {
       "name": "appgateway",
-      "path": "stacks/appgateway",
+      "path": "stacks/srvthreds/appgateway",
       "dependencies": ["networking"]
     }
   ]
