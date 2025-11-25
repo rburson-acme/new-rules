@@ -1,0 +1,90 @@
+# Bootstrap Job for SrvThreds
+# Runs once to seed database with initial configuration
+# This is a Kubernetes Job (not Deployment) because it should run to completion and not restart
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: srvthreds-bootstrap
+  namespace: srvthreds
+  labels:
+    app: srvthreds-bootstrap
+    component: bootstrap
+spec:
+  # Don't automatically clean up - keep for debugging
+  ttlSecondsAfterFinished: 3600  # Clean up 1 hour after completion
+
+  # Retry policy
+  backoffLimit: 3  # Retry up to 3 times on failure
+
+  template:
+    metadata:
+      labels:
+        app: srvthreds-bootstrap
+        component: bootstrap
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: srvthreds-workload
+      restartPolicy: OnFailure  # Restart on failure, but not on success
+
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-srvthreds-secrets"
+
+      containers:
+        - name: bootstrap
+          image: cazsrvthredsdeacr.azurecr.io/srvthreds/bootstrap:latest
+          imagePullPolicy: Always
+
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+
+          command:
+            - npm
+          args:
+            - run
+            - bootstrap
+            - '--'
+            - '-p'
+            - ef-detection
+
+          env:
+            - name: MONGO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: mongo-connection-string
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: redis-password
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 200m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+
+          # Add liveness probe to detect hangs
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - node
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3

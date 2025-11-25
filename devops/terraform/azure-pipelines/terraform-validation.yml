@@ -1,0 +1,144 @@
+# Azure DevOps Pipeline for Terraform Validation
+# 
+# This pipeline validates Terraform infrastructure on every PR and push
+# Includes symlink validation, formatting checks, and terraform validate
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - infrastructure/cloud/terraform/*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - infrastructure/cloud/terraform/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  terraformVersion: '1.5.0'
+  workingDirectory: 'infrastructure/cloud/terraform'
+
+stages:
+  - stage: Validate
+    displayName: 'Validation Stage'
+    jobs:
+      - job: ValidateSymlinks
+        displayName: 'Validate Symlink Consistency'
+        steps:
+          - checkout: self
+          
+          - task: Bash@3
+            displayName: 'Run Symlink Validation'
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd $(workingDirectory)
+                ./scripts/validate-symlinks.sh
+              failOnStderr: false
+              workingDirectory: '$(Build.SourcesDirectory)'
+          
+          - task: PublishTestResults@2
+            condition: failed()
+            displayName: 'Report Validation Failure'
+            inputs:
+              testResultsFormat: 'JUnit'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Symlink Validation Failed'
+
+      - job: TerraformFormat
+        displayName: 'Terraform Format Check'
+        dependsOn: ValidateSymlinks
+        steps:
+          - checkout: self
+          
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: '$(terraformVersion)'
+          
+          - task: Bash@3
+            displayName: 'Check Terraform Formatting'
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd $(workingDirectory)
+                terraform fmt -check -recursive
+              failOnStderr: false
+              workingDirectory: '$(Build.SourcesDirectory)'
+
+      - job: TerraformValidate
+        displayName: 'Terraform Validate'
+        dependsOn: ValidateSymlinks
+        strategy:
+          matrix:
+            networking:
+              stackName: 'networking'
+            keyvault:
+              stackName: 'keyvault'
+            acr:
+              stackName: 'acr'
+            cosmosdb:
+              stackName: 'cosmosdb'
+            redis:
+              stackName: 'redis'
+            # servicebus:
+            #   stackName: 'servicebus'
+            aks:
+              stackName: 'aks'
+            appgateway:
+              stackName: 'appgateway'
+            monitoring:
+              stackName: 'monitoring'
+        
+        steps:
+          - checkout: self
+          
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: '$(terraformVersion)'
+          
+          - task: Bash@3
+            displayName: 'Terraform Init (no backend)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd $(workingDirectory)/stacks/$(stackName)
+                terraform init -backend=false
+              workingDirectory: '$(Build.SourcesDirectory)'
+          
+          - task: Bash@3
+            displayName: 'Terraform Validate'
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd $(workingDirectory)/stacks/$(stackName)
+                terraform validate
+              workingDirectory: '$(Build.SourcesDirectory)'
+
+  - stage: Summary
+    displayName: 'Validation Summary'
+    dependsOn: Validate
+    condition: always()
+    jobs:
+      - job: ReportResults
+        displayName: 'Report Validation Results'
+        steps:
+          - task: Bash@3
+            displayName: 'Check Results'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "Validation pipeline completed"
+                echo "Check individual job results for details"
+

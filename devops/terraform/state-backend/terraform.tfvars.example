@@ -1,0 +1,21 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to version control
+
+# Azure subscription ID (required)
+# Find this in Azure Portal > Subscriptions
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# Azure Active Directory tenant ID (required)
+# Find this in Azure Portal > Azure Active Directory > Overview
+tenant_id = "00000000-0000-0000-0000-000000000000"
+
+# Environment name (required)
+# Valid values: dev, staging, production
+environment = "dev"
+
+# Azure region for resources (optional, defaults to eastus)
+location = "eastus"
+
+# Project name for resource naming (optional, defaults to srvthreds)
+project_name = "srvthreds"

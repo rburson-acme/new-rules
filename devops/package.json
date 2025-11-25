@@ -1,0 +1,45 @@
+{
+  "name": "devops",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "DevOps tooling and infrastructure for the threds monorepo",
+  "private": true,
+  "scripts": {
+    "terraform": "tsx tools/terraform-cli/cli.ts",
+    "deploy": "tsx tools/deployment-cli/cli.ts",
+    "k8s": "tsx tools/kubernetes-deployer/src/index.ts",
+
+    "tf:plan": "npm run terraform -- plan",
+    "tf:apply": "npm run terraform -- deploy",
+    "tf:destroy": "npm run terraform -- destroy",
+    "tf:status": "npm run terraform -- status",
+    "tf:bootstrap": "npm run terraform -- bootstrap",
+
+    "minikube:create": "npm run deploy -- minikube create",
+    "minikube:apply": "npm run deploy -- minikube apply",
+    "minikube:reset": "npm run deploy -- minikube reset",
+
+    "aks:deploy": "npm run k8s -- aks deploy",
+    "aks:status": "npm run k8s -- aks status",
+
+    "config:generate": "tsx tools/shared/config/generator.ts",
+    "config:validate": "tsx tools/shared/config/validator.ts",
+
+    "test": "vitest --run --bail=1",
+    "check": "tsc --noEmit",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@types/yargs": "^17.0.33",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "yargs": "^17.7.2"
+  }
+}

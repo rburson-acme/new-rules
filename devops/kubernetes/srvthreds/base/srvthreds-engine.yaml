@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srvthreds-engine
+  namespace: srvthreds
+  labels:
+    app: srvthreds-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: srvthreds-engine
+  template:
+    metadata:
+      labels:
+        app: srvthreds-engine
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: srvthreds-workload
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-srvthreds-secrets"
+      containers:
+        - name: srvthreds-engine
+          image: srvthreds:dev
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8082
+              name: http
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          env:
+            - name: MONGO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: mongo-connection-string
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: azure-managed-services
+                  key: redis-password
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 200m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          command:
+            - node
+          args:
+            - dist-server/index.js
+            - '-d'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: srvthreds-engine-service
+  namespace: srvthreds
+  labels:
+    app: srvthreds-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: srvthreds-engine
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082

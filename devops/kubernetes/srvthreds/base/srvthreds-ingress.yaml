@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: srvthreds-ingress
+  namespace: srvthreds
+  annotations:
+    # NGINX Ingress Controller annotations
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    
+    # WebSocket support - critical for session-agent
+    nginx.ingress.kubernetes.io/websocket-services: srvthreds-session-agent-service
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+    # Connection upgrade for WebSocket - handled automatically by websocket-services annotation
+    # Note: configuration-snippet is disabled by the Ingress administrator for security
+    # The websocket-services annotation above automatically sets up the required headers:
+    # - Upgrade: $http_upgrade
+    # - Connection: "upgrade"
+    # - HTTP version: 1.1
+
+    # Session affinity for WebSocket connections
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    nginx.ingress.kubernetes.io/session-cookie-name: "srvthreds-session"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    
+    # Azure Application Gateway annotations (if using AGIC instead)
+    # appgw.ingress.kubernetes.io/backend-protocol: "http"
+    # appgw.ingress.kubernetes.io/connection-draining: "true"
+    # appgw.ingress.kubernetes.io/connection-draining-timeout: "30"
+    # appgw.ingress.kubernetes.io/request-timeout: "30"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # Main HTTP/REST API endpoint (port 3000)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: srvthreds-session-agent-service
+                port:
+                  number: 3000
+          
+          # WebSocket endpoint (port 3001) - accessible via connection upgrade
+          # Note: WebSocket connections start as HTTP then upgrade
+          # NGINX will handle the upgrade and route to the websocket port
+          # Using ImplementationSpecific for Socket.IO compatibility
+          # - path: /socket.io
+          #   pathType: ImplementationSpecific
+          #   backend:
+          #     service:
+          #       name: srvthreds-session-agent-service
+          #       port:
+          #         number: 3001
