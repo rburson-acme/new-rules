@@ -218,12 +218,16 @@ export class AKSDeployer extends BaseDeployer {
       this.logger.info('[DRY RUN] Would get AKS credentials');
     }
 
-    // 5. Verify kubectl context
+    // 5. Verify kubectl context (skip in dry-run if credentials weren't fetched)
     this.logger.info('Verifying kubectl context...');
     await this.k8s.verify();
 
-    const currentContext = await this.k8s.getCurrentContext();
-    this.logger.info(`Current context: ${currentContext}`);
+    if (!this.options.dryRun) {
+      const currentContext = await this.k8s.getCurrentContext();
+      this.logger.info(`Current context: ${currentContext}`);
+    } else {
+      this.logger.info(`[DRY RUN] Would use context: ${this.aksOptions.clusterName}`);
+    }
 
     // 6. Verify ACR access
     this.logger.info('Verifying ACR access...');
