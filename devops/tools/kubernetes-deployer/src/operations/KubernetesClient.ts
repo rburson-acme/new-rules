@@ -4,7 +4,7 @@
  */
 
 import { ShellExecutor, type ExecResult } from '../utils/shell.js';
-import { Logger } from '../utils/logger.js';
+import { ContextLogger as Logger } from '../../../shared/logger.js';
 import { retry } from '../utils/retry.js';
 import {
   type Pod,

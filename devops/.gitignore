@@ -77,3 +77,4 @@ terraform.rc
 # !**/.terraform.lock.hcl is not needed - we removed the ignore pattern above
 
 .github/
+.claude/

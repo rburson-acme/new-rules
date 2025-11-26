@@ -10,7 +10,7 @@ import { ResourceNotFoundError, NamespaceNotFoundError } from '../../src/utils/e
 // Mock the ShellExecutor
 vi.mock('../../src/utils/shell.js', () => ({
   ShellExecutor: vi.fn().mockImplementation(() => ({
-    exec: vi.fn(),
+    exec: vi.fn().mockResolvedValue({ stdout: 'v1.28.0', stderr: '', exitCode: 0 }),
     execSync: vi.fn(),
     commandExists: vi.fn().mockResolvedValue(true),
     getVersion: vi.fn().mockResolvedValue('v1.28.0'),

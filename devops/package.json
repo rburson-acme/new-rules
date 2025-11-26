@@ -2,7 +2,7 @@
   "name": "devops",
   "version": "1.0.0",
   "type": "module",
-  "description": "DevOps tooling and infrastructure for the deploying monorepo",
+  "description": "DevOps tooling and infrastructure used for deploying this monorepo",
   "private": true,
   "scripts": {
     "terraform": "tsx tools/terraform-cli/cli.ts",
@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
+    "thredlib": "file:../thredlib",
     "yargs": "^17.7.2"
   }
 }

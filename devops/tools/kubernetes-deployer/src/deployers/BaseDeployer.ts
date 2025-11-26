@@ -9,7 +9,7 @@ import {
   DeploymentResult,
   ValidationResult
 } from '../types/index.js';
-import { Logger } from '../utils/logger.js';
+import { ContextLogger as Logger, LogLevel } from '../../../shared/logger.js';
 import { DeploymentState } from '../state/index.js';
 import { DeploymentError } from '../utils/errors.js';
 
@@ -30,7 +30,7 @@ export abstract class BaseDeployer {
     this.state = new DeploymentState(environment, target);
 
     if (options.verbose) {
-      Logger.setLevel(0); // DEBUG level
+      Logger.setLevel(LogLevel.DEBUG);
     }
   }
 

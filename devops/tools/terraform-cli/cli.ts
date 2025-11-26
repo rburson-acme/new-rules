@@ -168,7 +168,7 @@ async function main(): Promise<void> {
 
   // Handle global options
   if (args.includes('--debug')) {
-    logger.setMinLevel(LogLevel.DEBUG);
+    logger.setLevel(LogLevel.DEBUG);
     args.splice(args.indexOf('--debug'), 1);
   }
 

@@ -9,7 +9,7 @@ import {
   DeploymentStateData,
   DeployedResource
 } from '../types/index.js';
-import { Logger } from '../utils/logger.js';
+import { ContextLogger as Logger } from '../../../shared/logger.js';
 
 /**
  * Manages the state of a deployment
@@ -50,7 +50,7 @@ export class DeploymentState {
    */
   markFailed(error: Error): void {
     this.data.status = 'failed';
-    this.logger.warn('Deployment State potential false/positive issue', error);
+    this.logger.warn(`Deployment State potential false/positive issue: ${error.message}`);
   }
 
   /**

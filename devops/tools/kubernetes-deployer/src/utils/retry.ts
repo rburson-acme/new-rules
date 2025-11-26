@@ -2,7 +2,7 @@
  * Retry logic with exponential backoff
  */
 
-import { Logger } from './logger.js';
+import { ContextLogger as Logger } from '../../../shared/logger.js';
 
 export interface RetryOptions {
   maxAttempts?: number;
