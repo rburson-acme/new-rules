@@ -39,15 +39,7 @@
     "deploy-local-services": "npm run deploymentCli -- local s_a_s",
     "deploy-local-down-services": "npm run deploymentCli -- local d_a_s",
     "deploy-local-up-all": "npm run deploymentCli -- local s_a_dbs_s",
-    "deploy-local-down-all": "npm run deploymentCli -- local d_a_dbs_s",
-    "minikube-create": "npm run deploymentCli -- minikube k8s_minikube",
-    "minikube-apply": "npm run deploymentCli -- minikube k8s_apply",
-    "minikube-reset": "npm run deploymentCli -- minikube k8s_reset",
-    "minikube-set-context": "npm run deploymentCli -- minikube set_context",
-    "minikube-validate": "npm run deploymentCli -- minikube k8s_validate",
-    "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup",
-    "aks-deploy-ts": "tsx infrastructure/tools/kubernetes-deployer/examples/deploy-to-aks.ts",
-    "terraformCli": "tsx infrastructure/tools/terraform-cli/cli.ts"
+    "deploy-local-down-all": "npm run deploymentCli -- local d_a_dbs_s"
   },
   "nodemonConfig": {
     "exec": "npm run dev",
