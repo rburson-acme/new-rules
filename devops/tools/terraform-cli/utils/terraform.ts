@@ -22,7 +22,7 @@ import type {
   ITerraformExecutor
 } from '../types/index.js';
 
-import { BACKEND_CONFIG } from '../types/constants.js';
+// import { BACKEND_CONFIG } from '../types/constants.js';
 
 // Re-export all types for backward compatibility
 export type {

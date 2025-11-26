@@ -183,7 +183,7 @@ WARNING:
     // Double confirmation for production
     if (environment === 'prod') {
       const doubleConfirmed = await confirmAction(`Type "${environment}" to confirm destruction of PRODUCTION resources:`);
-      if (doubleConfirmed !== environment) {
+      if (!doubleConfirmed) {
         logger.info('Destruction cancelled - confirmation did not match', 'destroy');
         return;
       }

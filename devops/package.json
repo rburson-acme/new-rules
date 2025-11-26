@@ -13,9 +13,10 @@
     "tf:status": "npm run terraform -- status",
     "tf:bootstrap": "npm run terraform -- bootstrap",
 
-    "aks:deploy": "tsx tools/kubernetes-deployer/examples/deploy-to-aks.ts",
-    "minikube:deploy": "tsx tools/kubernetes-deployer/examples/deploy-to-minikube.ts",
-    "minikube:reset": "tsx tools/kubernetes-deployer/examples/reset-minikube.ts",
+    "aks:deploy": "tsx tools/kubernetes-deployer/cli/deploy-to-aks.ts",
+    "minikube:deploy": "tsx tools/kubernetes-deployer/cli/deploy-to-minikube.ts",
+    "minikube:reset": "tsx tools/kubernetes-deployer/cli/reset-minikube.ts",
+    "minikube:cleanup": "tsx tools/kubernetes-deployer/cli/cleanup-minikube.ts",
 
     "config:generate": "tsx tools/shared/config/generator.ts",
     "config:validate": "tsx tools/shared/config/validator.ts",

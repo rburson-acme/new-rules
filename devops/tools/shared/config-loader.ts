@@ -64,6 +64,8 @@ export class ConfigLoader {
     const configs = new Map<string, T>();
 
     try {
+      logger.debug(`Loading all configs from directory: ${this.configDir}`, this.context);
+      logger.debug(`Using pattern: ${pattern}`, this.context);
       const files = fs.readdirSync(this.configDir);
       const jsonFiles = files.filter((f) => f.endsWith('.json'));
 

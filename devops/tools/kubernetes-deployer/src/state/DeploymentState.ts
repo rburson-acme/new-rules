@@ -9,12 +9,14 @@ import {
   DeploymentStateData,
   DeployedResource
 } from '../types/index.js';
+import { Logger } from '../utils/logger.js';
 
 /**
  * Manages the state of a deployment
  */
 export class DeploymentState {
   private data: DeploymentStateData;
+  private logger: Logger;
 
   constructor(environment: Environment, target: DeploymentTarget = 'minikube') {
     this.data = {
@@ -25,6 +27,7 @@ export class DeploymentState {
       timestamp: new Date(),
       deployedResources: []
     };
+    this.logger = new Logger('DeploymentState');
   }
 
   /**
@@ -47,6 +50,7 @@ export class DeploymentState {
    */
   markFailed(error: Error): void {
     this.data.status = 'failed';
+    this.logger.warn('Deployment State potential false/positive issue', error);
   }
 
   /**

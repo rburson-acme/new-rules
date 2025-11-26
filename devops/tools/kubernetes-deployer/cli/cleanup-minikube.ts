@@ -1,14 +1,15 @@
 #!/usr/bin/env tsx
 /**
- * Cleanup Minikube deployment using the new MinikubeDeployer
- * This destroys the entire Minikube cluster
+ * Cleanup Minikube deployment using the MinikubeDeployer
+ * Destroys the entire Minikube cluster
  *
- * Run with: npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts
+ * Run with: npm run minikube:cleanup
  */
 
 import { MinikubeDeployer } from '../src/index.js';
-import { Logger, LogLevel } from '../src/utils/logger.js';
+// import { Logger, LogLevel } from '../src/utils/logger.js';
 import * as readline from 'readline';
+import { logger } from '../../shared/logger.js';
 
 // Helper to prompt user for confirmation
 function prompt(question: string): Promise<string> {
@@ -34,12 +35,12 @@ async function main() {
   const force = args.includes('--force') || args.includes('-f');
 
   // Set log level
-  Logger.setLevel(verbose ? LogLevel.DEBUG : LogLevel.INFO);
+  // Logger.setLevel(verbose ? LogLevel.DEBUG : LogLevel.INFO);
 
-  console.log('🧹 Cleaning up Minikube deployment\n');
+  logger.info('🧹 Cleaning up Minikube deployment\n');
 
   if (dryRun) {
-    console.log('🔍 DRY RUN MODE - No actual changes will be made\n');
+    logger.info('🔍 DRY RUN MODE - No actual changes will be made\n');
   }
 
   // Create deployer
@@ -50,28 +51,28 @@ async function main() {
 
   try {
     if (!force && !dryRun) {
-      console.log('⚠️  WARNING: This will:');
-      console.log('   • Delete the srvthreds namespace and all resources');
-      console.log('   • Stop the Minikube cluster');
-      console.log('   • Delete the Minikube cluster completely');
+      logger.info('⚠️  WARNING: This will:');
+      logger.info('   • Delete the srvthreds namespace and all resources');
+      logger.info('   • Stop the Minikube cluster');
+      logger.info('   • Delete the Minikube cluster completely');
 
       if (deleteDatabases) {
-        console.log('   • Delete host databases (MongoDB, Redis, RabbitMQ)');
+        logger.info('   • Delete host databases (MongoDB, Redis, RabbitMQ)');
       } else {
-        console.log('   • Leave host databases running (use --delete-databases to stop them)');
+        logger.info('   • Leave host databases running (use --delete-databases to stop them)');
       }
 
-      console.log('\n💡 If you just want to reset the deployment (faster), use:');
-      console.log('   npm run minikube-reset-ts\n');
+      logger.info('\n💡 If you just want to reset the deployment (faster), use:');
+      logger.info('   npm run minikube:reset\n');
 
       const answer = await prompt('Are you sure you want to continue? (yes/no): ');
 
       if (answer !== 'yes' && answer !== 'y') {
-        console.log('\n❌ Cleanup cancelled');
+        logger.info('\n❌ Cleanup cancelled');
         process.exit(0);
       }
 
-      console.log('');
+      logger.info('');
     }
 
     // Run cleanup
@@ -79,23 +80,23 @@ async function main() {
     await deployer.destroyCluster({ deleteDatabases });
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    console.log('\n' + '='.repeat(60));
-    console.log('✅ CLEANUP SUCCESSFUL');
-    console.log('='.repeat(60));
-    console.log(`⏱️  Duration: ${duration}s`);
+    logger.info('\n' + '='.repeat(60));
+    logger.info('✅ CLEANUP SUCCESSFUL');
+    logger.info('='.repeat(60));
+    logger.info(`⏱️  Duration: ${duration}s`);
 
     if (!deleteDatabases) {
-      console.log('\n📊 Host Database Status:');
-      console.log('   The following databases may still be running on your host Docker:');
-      console.log('   - MongoDB (mongo-repl-1)');
-      console.log('   - Redis');
-      console.log('   - RabbitMQ');
-      console.log('');
-      console.log('💡 To stop databases: npm run deploy-local-down-databases');
+      logger.info('\n📊 Host Database Status:');
+      logger.info('   The following databases may still be running on your host Docker:');
+      logger.info('   - MongoDB (mongo-repl-1)');
+      logger.info('   - Redis');
+      logger.info('   - RabbitMQ');
+      logger.info('');
+      logger.info('💡 To stop databases: npm run deploy-local-down-databases');
     }
 
-    console.log('\n💡 To start fresh:');
-    console.log('   npm run minikube-deploy-ts');
+    logger.info('\n💡 To start fresh:');
+    logger.info('   npm run minikube:deploy');
 
     process.exit(0);
   } catch (error) {
@@ -120,14 +121,14 @@ async function main() {
 
 // Handle Ctrl+C gracefully
 process.on('SIGINT', () => {
-  console.log('\n\n⚠️  Cleanup interrupted by user');
+  logger.info('\n\n⚠️  Cleanup interrupted by user');
   process.exit(130);
 });
 
 // Show usage if --help
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
-  console.log(`
-Usage: npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts [options]
+  logger.info(`
+Usage: npm run minikube:cleanup -- [options]
 
 Cleanup Minikube deployment by destroying the entire cluster.
 
@@ -140,19 +141,19 @@ Options:
 
 Examples:
   # Cleanup with confirmation
-  npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts
+  npm run minikube:cleanup
 
   # Cleanup and stop databases
-  npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts --delete-databases
+  npm run minikube:cleanup -- --delete-databases
 
   # Force cleanup without confirmation
-  npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts --force
+  npm run minikube:cleanup -- --force
 
   # Dry run to see what would happen
-  npx tsx infrastructure/tools/kubernetes-deployer/examples/cleanup-minikube.ts --dry-run
+  npm run minikube:cleanup -- --dry-run
 
 Note: This destroys the entire Minikube cluster. If you just want to reset
-the deployment (faster), use: npm run minikube-reset-ts
+the deployment (faster), use: npm run minikube:reset
 `);
   process.exit(0);
 }

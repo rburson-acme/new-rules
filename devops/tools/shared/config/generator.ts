@@ -12,6 +12,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { logger } from '../logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -45,7 +46,7 @@ class ConfigGenerator {
    * Generate all configuration files
    */
   generateAll(targets: string[] = ['all']) {
-    console.log('🚀 Generating configurations from config-registry.yaml...\n');
+    logger.info('🚀 Generating configurations from config-registry.yaml...\n');
 
     if (targets.includes('all') || targets.includes('docker-compose')) {
       this.generateDockerCompose();
@@ -63,14 +64,14 @@ class ConfigGenerator {
       this.generateAgentConfigs();
     }
 
-    console.log('\n✅ Configuration generation complete!');
+    logger.info('\n✅ Configuration generation complete!');
   }
 
   /**
    * Generate Docker Compose files
    */
   private generateDockerCompose() {
-    console.log('📦 Generating Docker Compose files...');
+    logger.info('📦 Generating Docker Compose files...');
 
     // Generate docker-compose-db.yml
     const dbCompose = {
@@ -85,7 +86,7 @@ class ConfigGenerator {
 
     const dbComposePath = path.join(OUTPUT_BASE, 'docker/compose/docker-compose-db.yml');
     this.writeYamlFile(dbComposePath, dbCompose);
-    console.log(`  ✓ Created ${dbComposePath}`);
+    logger.info(`  ✓ Created ${dbComposePath}`);
 
     // Generate docker-compose-services.yml
     const servicesCompose = {
@@ -99,7 +100,7 @@ class ConfigGenerator {
 
     const servicesComposePath = path.join(OUTPUT_BASE, 'docker/compose/docker-compose-services.yml');
     this.writeYamlFile(servicesComposePath, servicesCompose);
-    console.log(`  ✓ Created ${servicesComposePath}`);
+    logger.info(`  ✓ Created ${servicesComposePath}`);
   }
 
   /**
@@ -216,7 +217,7 @@ class ConfigGenerator {
    * Generate Kubernetes manifests
    */
   private generateKubernetes() {
-    console.log('☸️  Generating Kubernetes manifests...');
+    logger.info('☸️  Generating Kubernetes manifests...');
 
     const k8sBasePath = path.join(OUTPUT_BASE, 'minikube/manifests/base');
     const k8sMinikubePath = path.join(OUTPUT_BASE, 'minikube/manifests/minikube');
@@ -245,7 +246,7 @@ class ConfigGenerator {
     this.generateK8sConfigMap('base', k8sBasePath);
     this.generateK8sConfigMap('minikube', k8sMinikubePath);
 
-    console.log(`  ✓ Created Kubernetes manifests in ${k8sBasePath}`);
+    logger.info(`  ✓ Created Kubernetes manifests in ${k8sBasePath}`);
   }
 
   /**
@@ -602,14 +603,14 @@ class ConfigGenerator {
    * Generate environment files
    */
   private generateEnvFiles() {
-    console.log('📝 Generating .env files...');
+    logger.info('📝 Generating .env files...');
 
     for (const [envName, connStrings] of Object.entries(this.config.connectionStrings)) {
       const envContent = this.generateEnvContent(connStrings as any);
       const envPath = path.join(OUTPUT_BASE, `configs/.env.${envName}`);
 
       fs.writeFileSync(envPath, envContent, 'utf8');
-      console.log(`  ✓ Created ${envPath}`);
+      logger.info(`  ✓ Created ${envPath}`);
     }
   }
 
@@ -648,7 +649,7 @@ class ConfigGenerator {
    * Generate agent configuration files
    */
   private generateAgentConfigs() {
-    console.log('🤖 Generating agent configuration files...');
+    logger.info('🤖 Generating agent configuration files...');
 
     const agentConfigPath = path.join(OUTPUT_BASE, 'configs/agents');
     fs.mkdirSync(agentConfigPath, { recursive: true });
@@ -664,7 +665,7 @@ class ConfigGenerator {
 
       const configPath = path.join(agentConfigPath, `${key}.config.json`);
       this.writeJsonFile(configPath, agentConfig);
-      console.log(`  ✓ Created ${configPath}`);
+      logger.info(`  ✓ Created ${configPath}`);
     }
   }
 

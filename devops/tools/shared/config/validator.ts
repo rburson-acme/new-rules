@@ -12,6 +12,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { logger } from '../logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -117,7 +118,7 @@ class ConfigValidator {
    * Validate all configurations
    */
   validateAll() {
-    console.log('🔍 Validating configurations against config-registry.yaml...\n');
+    logger.info('🔍 Validating configurations against config-registry.yaml...\n');
 
     this.validateDockerCompose();
     this.validateKubernetes();
@@ -133,7 +134,7 @@ class ConfigValidator {
    * Validate Docker Compose files
    */
   private validateDockerCompose() {
-    console.log('📦 Validating Docker Compose files...');
+    logger.info('📦 Validating Docker Compose files...');
 
     const dbComposePath = path.join(INFRA_BASE, 'local/docker/compose/docker-compose-db.yml');
     const servicesComposePath = path.join(INFRA_BASE, 'local/docker/compose/docker-compose-services.yml');
@@ -206,7 +207,7 @@ class ConfigValidator {
    * Validate Kubernetes manifests
    */
   private validateKubernetes() {
-    console.log('☸️  Validating Kubernetes manifests...');
+    logger.info('☸️  Validating Kubernetes manifests...');
 
     const k8sBasePath = path.join(INFRA_BASE, 'local/minikube/manifests/base');
     const k8sMinikubePath = path.join(INFRA_BASE, 'local/minikube/manifests/minikube');
@@ -380,7 +381,7 @@ class ConfigValidator {
    * Validate agent configuration files
    */
   private validateAgentConfigs() {
-    console.log('🤖 Validating agent configuration files...');
+    logger.info('🤖 Validating agent configuration files...');
 
     const agentConfigPath = path.join(INFRA_BASE, 'local/configs/agents');
 
@@ -437,7 +438,7 @@ class ConfigValidator {
    * Validate environment files
    */
   private validateEnvFiles() {
-    console.log('📝 Validating .env files...');
+    logger.info('📝 Validating .env files...');
 
     const envExamplePath = path.join(INFRA_BASE, 'local/configs/.env.local.example');
 
@@ -473,33 +474,33 @@ class ConfigValidator {
    * Print validation results
    */
   private printResults() {
-    console.log('\n📊 Validation Results:\n');
+    logger.info('\n📊 Validation Results:\n');
 
     const errors = this.issues.filter(i => i.severity === 'error');
     const warnings = this.issues.filter(i => i.severity === 'warning');
     const infos = this.issues.filter(i => i.severity === 'info');
 
     if (errors.length === 0 && warnings.length === 0) {
-      console.log('✅ All configurations are valid!\n');
+      logger.info('✅ All configurations are valid!\n');
       return;
     }
 
     if (errors.length > 0) {
-      console.log(`❌ Errors (${errors.length}):\n`);
+      logger.info(`❌ Errors (${errors.length}):\n`);
       errors.forEach(issue => this.printIssue(issue));
     }
 
     if (warnings.length > 0) {
-      console.log(`\n⚠️  Warnings (${warnings.length}):\n`);
+      logger.info(`\n⚠️  Warnings (${warnings.length}):\n`);
       warnings.forEach(issue => this.printIssue(issue));
     }
 
     if (infos.length > 0) {
-      console.log(`\nℹ️  Info (${infos.length}):\n`);
+      logger.info(`\nℹ️  Info (${infos.length}):\n`);
       infos.forEach(issue => this.printIssue(issue));
     }
 
-    console.log('\n💡 Run `npm run generate:config` to regenerate configurations from config-registry.yaml\n');
+    logger.info('\n💡 Run `npm run generate:config` to regenerate configurations from config-registry.yaml\n');
   }
 
   /**
@@ -507,15 +508,15 @@ class ConfigValidator {
    */
   private printIssue(issue: ValidationIssue) {
     const relativePath = path.relative(process.cwd(), issue.file);
-    console.log(`  ${relativePath}`);
-    console.log(`    ${issue.issue}`);
+    logger.info(`  ${relativePath}`);
+    logger.info(`    ${issue.issue}`);
 
     if (issue.expected !== undefined) {
-      console.log(`    Expected: ${JSON.stringify(issue.expected)}`);
-      console.log(`    Actual:   ${JSON.stringify(issue.actual)}`);
+      logger.info(`    Expected: ${JSON.stringify(issue.expected)}`);
+      logger.info(`    Actual:   ${JSON.stringify(issue.actual)}`);
     }
 
-    console.log();
+    logger.info('');
   }
 }
 
@@ -526,6 +527,6 @@ try {
 
   process.exit(isValid ? 0 : 1);
 } catch (error) {
-  console.error('❌ Error validating configurations:', error);
+  logger.error('❌ Error validating configurations:', 'ConfigValidator', error);
   process.exit(1);
 }

@@ -56,6 +56,7 @@ export class ShellExecutor {
     }
 
     const fullCommand = this.buildCommand(command, args);
+    this.logger.debug(`Full command: ${fullCommand}`);
 
     if (!options.silent) {
       this.logger.debug(`Executing: ${fullCommand}`, {
@@ -105,6 +106,7 @@ export class ShellExecutor {
     options: ExecOptions = {}
   ): Promise<ExecResult> {
     const fullCommand = this.buildCommand(command, args);
+    this.logger.debug(`Full command (streaming): ${fullCommand}`);
 
     if (!options.silent) {
       this.logger.debug(`Executing (streaming): ${fullCommand}`, {
@@ -265,6 +267,8 @@ export class ShellExecutor {
       return arg;
     });
 
-    return `${command} ${escapedArgs.join(' ')}`;
+    const builtCommand = `${command} ${escapedArgs.join(' ')}`
+    this.logger.debug(`Built command: ${builtCommand}`);
+    return builtCommand;
   }
 }

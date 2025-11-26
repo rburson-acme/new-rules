@@ -3,7 +3,7 @@
  * Type-safe wrapper around kubectl operations
  */
 
-import { ShellExecutor, type ExecOptions, type ExecResult } from '../utils/shell.js';
+import { ShellExecutor, type ExecResult } from '../utils/shell.js';
 import { Logger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
 import {
@@ -12,7 +12,6 @@ import {
   type Service,
   type Namespace,
   type PodStatus,
-  type DeploymentCondition,
 } from '../types/kubernetes.types.js';
 import {
   KubernetesError,

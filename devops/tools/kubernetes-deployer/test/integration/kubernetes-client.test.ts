@@ -22,7 +22,7 @@ describe('KubernetesClient Integration Tests', () => {
   let mockShell: any;
 
   beforeEach(async () => {
-    const { ShellExecutor } = await import('../../src/utils/shell.js');
+    // const { ShellExecutor } = await import('../../src/utils/shell.js');
     client = new KubernetesClient({ verbose: false });
     mockShell = (client as any).shell;
   });

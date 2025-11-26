@@ -2,7 +2,7 @@
  * Terraform state-related type definitions
  */
 
-import type { TerraformOutput } from './index.js';
+// import type { TerraformOutput } from './index.js';
 
 /**
  * Terraform state structure

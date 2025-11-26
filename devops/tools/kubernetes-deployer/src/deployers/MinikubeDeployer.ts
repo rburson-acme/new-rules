@@ -598,7 +598,7 @@ export class MinikubeDeployer extends BaseDeployer {
 
       // 4. Optionally delete host databases
       if (options.deleteDatabases) {
-        this.logger.info('Stopping host databases...');
+        this.logger.info('MinikubeDeployer Stopping host databases...');
         try {
           await this.shell.exec('npm', ['run', 'deploy-local-down-databases'], {
             silent: true,
@@ -609,7 +609,7 @@ export class MinikubeDeployer extends BaseDeployer {
         }
       } else {
         this.logger.warn('Host databases left running');
-        this.logger.info('To stop databases: npm run deploy-local-down-databases');
+        this.logger.info('To stop databases: npm run deploymentCli -- local s_a_dbs');
       }
 
       this.logger.success('Cluster destruction complete!');

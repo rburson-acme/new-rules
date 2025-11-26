@@ -14,10 +14,10 @@
  *   terraform-cli status <environment>
  */
 
-import { fileURLToPath } from 'url';
-import * as path from 'path';
+// import { fileURLToPath } from 'url';
+// import * as path from 'path';
 import { logger, LogLevel } from '../shared/logger.js';
-import { handleError, CLIError } from '../shared/error-handler.js';
+import { handleError } from '../shared/error-handler.js';
 import {
   deployCommand,
   planCommand,
@@ -31,8 +31,8 @@ import { bootstrapCommand, BOOTSTRAP_COMMAND_DESCRIPTION } from './commands/boot
 import { statusCommand, STATUS_COMMAND_DESCRIPTION } from './commands/status.js';
 import { outputCommand, OUTPUT_COMMAND_DESCRIPTION } from './commands/output.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 interface Command {
   name: string;
