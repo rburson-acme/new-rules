@@ -4,20 +4,23 @@ This document outlines the migration of infrastructure code from `srvthreds/infr
 
 ## Current State
 
-The `srvthreds/infrastructure/` folder contains:
+### Migrated to devops/ ✅
+| Component | Original Location | New Location |
+|-----------|-------------------|--------------|
+| `terraform-cli/` | `srvthreds/infrastructure/tools/` | `devops/tools/terraform-cli/` |
+| `kubernetes-deployer/` | `srvthreds/infrastructure/tools/` | `devops/tools/kubernetes-deployer/` |
+| `cloud/terraform/` | `srvthreds/infrastructure/` | `devops/terraform/` |
+| `cloud/kubernetes/` | `srvthreds/infrastructure/` | `devops/kubernetes/` |
+| `local/minikube/` | `srvthreds/infrastructure/` | `devops/minikube/` |
 
-| Component | Description | Lines of Code |
-|-----------|-------------|---------------|
-| `tools/terraform-cli/` | Azure infrastructure management CLI | ~1,500 |
-| `tools/deployment-cli/` | Interactive deployment orchestration | ~800 |
-| `tools/kubernetes-deployer/` | TypeScript K8s deployment framework | ~3,500 |
-| `tools/shared/` | Common utilities (logger, shell, config) | ~2,000 |
-| `cloud/terraform/` | 13 Azure modules, 12 deployment stacks | - |
-| `cloud/kubernetes/` | AKS manifests (base/dev/test/prod) | - |
-| `local/minikube/` | Local Kubernetes configurations | - |
-| `local/docker/` | Docker Compose for local development | - |
-| `local/configs/` | Environment files and agent configs | - |
-| `config-registry.yaml` | Single source of truth for all configs | - |
+### Remaining in srvthreds/infrastructure/
+| Component | Description | Status |
+|-----------|-------------|--------|
+| `tools/deployment-cli/` | Interactive deployment orchestration | Blocked - called by devops deployers |
+| `tools/shared/` | Common utilities (configs, deployments) | Blocked - required by deployment-cli |
+| `local/docker/` | Docker Compose, Dockerfiles, scripts | Stays - project-specific builds |
+| `local/configs/` | Environment files | Partially migrated |
+| `config-registry.yaml` | Single source of truth | Blocked - used by deployment-cli |
 
 ---
 
@@ -86,24 +89,43 @@ devops/
 
 ## What Stays in srvthreds
 
+### Current State (Post Phase 5.1/5.2)
+```
+srvthreds/
+└── infrastructure/
+    ├── config-registry.yaml          # Used by deployment-cli (blocked)
+    ├── tools/
+    │   ├── deployment-cli/           # Called by devops deployers (blocked)
+    │   ├── shared/
+    │   │   └── configs/
+    │   │       └── deployments/      # Build/deploy configurations
+    │   └── scripts/
+    └── local/
+        ├── docker/
+        │   ├── compose/
+        │   │   ├── docker-compose-db.yml
+        │   │   └── docker-compose-services.yml
+        │   ├── dockerfiles/
+        │   │   ├── Dockerfile
+        │   │   ├── Dockerfile.builder
+        │   │   └── Dockerfile.cmdRunner
+        │   └── scripts/
+        │       └── setup-repl.sh     # MongoDB replica setup
+        └── configs/
+```
+
+### Target State (After Phase 8)
 ```
 srvthreds/
 └── infrastructure/
     └── local/
-        └── docker/
+        └── docker/                   # Only Docker build artifacts stay
             ├── compose/
-            │   ├── docker-compose-db.yml
-            │   └── docker-compose-services.yml
             ├── dockerfiles/
-            │   ├── Dockerfile
-            │   ├── Dockerfile.builder
-            │   └── Dockerfile.cmdRunner
-            └── configs/
-                ├── .env.local
-                └── .env.docker
+            └── scripts/
 ```
 
-**Rationale:** Local Docker development should be self-contained within the project for quick developer onboarding and testing.
+**Rationale:** Local Docker development should be self-contained within the project for quick developer onboarding and testing. The `deployment-cli` will be migrated to devops as part of Phase 8.
 
 ---
 
@@ -144,13 +166,31 @@ Migration of local Kubernetes simulation environment.
 - [x] Update minikube scripts for new paths
 - [x] **TEST**: Minikube CLI runs from devops (`npm run minikube:deploy -- --help`)
 
-### Phase 5: Cleanup srvthreds
+### Phase 5: Cleanup srvthreds (Partial)
 Remove migrated code from source project.
 
-- [ ] Remove migrated folders from `srvthreds/infrastructure/`
-- [ ] Update `srvthreds/package.json` scripts
-- [ ] Keep only local Docker configurations
-- [ ] Test local development workflow still works
+#### 5.1 Remove Migrated Cloud Infrastructure ✅ COMPLETE
+- [x] Remove `srvthreds/infrastructure/cloud/terraform/` (migrated to devops/terraform/)
+- [x] Remove `srvthreds/infrastructure/cloud/kubernetes/` (migrated to devops/kubernetes/)
+- [x] Remove empty `srvthreds/infrastructure/cloud/` folder
+
+#### 5.2 Remove Migrated CLI Tools ✅ COMPLETE
+- [x] Remove `srvthreds/infrastructure/tools/terraform-cli/` (migrated to devops/tools/)
+- [x] Remove `srvthreds/infrastructure/tools/kubernetes-deployer/` (migrated to devops/tools/)
+- [x] **TEST**: Verify devops terraform-cli still works
+- [x] **TEST**: Verify devops kubernetes-deployer still works
+
+#### 5.3 Items Blocked (Awaiting Phase 8)
+The following items cannot be removed yet because devops deployers still depend on them:
+
+| Item | Location | Blocked By |
+|------|----------|------------|
+| `deployment-cli/` | `srvthreds/infrastructure/tools/` | AKSDeployer/MinikubeDeployer call `npm run deploymentCli` |
+| `shared/` | `srvthreds/infrastructure/tools/` | Required by deployment-cli |
+| `docker/` | `srvthreds/infrastructure/local/` | Dockerfiles, compose files, scripts for builds |
+| `config-registry.yaml` | `srvthreds/infrastructure/` | Used by deployment-cli build process |
+
+**Resolution**: Port `deployment-cli` to devops as part of Phase 8 (Unified Deployment Framework)
 
 ### Phase 6: Multi-Project Support (Future)
 Refactor tooling for enterprise multi-project support.
@@ -255,8 +295,10 @@ Code consolidation and documentation.
 2. ~~Migrate terraform-cli and shared tools~~
 3. ~~Test terraform commands work from new location~~
 4. ~~Proceed to kubernetes deployment migration~~
-5. Complete Phase 5 cleanup of srvthreds
-6. Begin Unified Deployment Framework analysis (Phase 8)
+5. ~~Complete Phase 5.1/5.2 cleanup of srvthreds (migrated cloud + CLI tools)~~
+6. **Port `deployment-cli` to devops** (enables Phase 5.3 completion)
+7. Complete Phase 5.3 cleanup (remove deployment-cli from srvthreds)
+8. Begin Unified Deployment Framework (Phase 8)
 
 ---
 

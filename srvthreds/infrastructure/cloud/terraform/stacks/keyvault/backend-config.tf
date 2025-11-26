@@ -1,1 +1,0 @@
-../_shared/backend-config.tf

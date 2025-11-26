@@ -200,10 +200,11 @@ export class TerraformManager {
     });
 
     if (!result.success) {
-      throw new TerraformError(`Terraform plan failed in ${stackPath}:\r\n${result.stderr}`);
+      throw new TerraformError(`Terraform plan failed in ${stackPath}:\r\nExitCode: ${result.exitCode}\r\n${result.stderr}`);
     }
 
-    logger.info(`Terraform plan:\r\n${result.stdout}`, 'terraform');
+    logger.info(`Terraform planning successful: ${result.success}`, 'terraform');
+    logger.debug(`Terraform plan:\r\n${result.stdout}`, 'terraform');
     return planFile;
   }
 
