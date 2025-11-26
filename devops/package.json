@@ -2,7 +2,7 @@
   "name": "devops",
   "version": "1.0.0",
   "type": "module",
-  "description": "DevOps tooling and infrastructure for the threds monorepo",
+  "description": "DevOps tooling and infrastructure for the deploying monorepo",
   "private": true,
   "scripts": {
     "terraform": "tsx tools/terraform-cli/cli.ts",
