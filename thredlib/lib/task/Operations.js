@@ -19,6 +19,7 @@ export class Operations {
       Update Ops
     */
     static ADD_OP = Operations.OPERATOR_PREFIX + 'add';
+    static PUSH_OP = Operations.OPERATOR_PREFIX + 'push';
     static REMOVE_OP = Operations.OPERATOR_PREFIX + 'remove';
     static NOW_OP = Operations.OPERATOR_PREFIX + 'now';
     static INC_OP = Operations.OPERATOR_PREFIX + 'inc';

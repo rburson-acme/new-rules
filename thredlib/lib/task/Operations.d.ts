@@ -14,6 +14,7 @@ export declare class Operations {
     static readonly RUN_OP = "run";
     static readonly OPERATOR_PREFIX = "$";
     static readonly ADD_OP: string;
+    static readonly PUSH_OP: string;
     static readonly REMOVE_OP: string;
     static readonly NOW_OP: string;
     static readonly INC_OP: string;

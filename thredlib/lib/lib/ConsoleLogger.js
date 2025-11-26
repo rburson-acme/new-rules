@@ -60,7 +60,7 @@ ${message}
                 if (error) {
                     consoleFn(args, error);
                 }
-                else if (typeof args === 'object') {
+                else {
                     consoleFn(args);
                 }
             };

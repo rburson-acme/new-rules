@@ -137,10 +137,25 @@ export class RemoteQService<T> implements QService<T> {
     await this.broker.purge();
   }
 
-  // move this to the remote (and abstract) broker
-  async unsubscribeAll(): Promise<void> {
+  async unsubscribeAll(timeoutMs: number = 5000): Promise<void> {
     // Note: if there are unack'd messages unsubscribeAll and shutdown will block indefinitely
-    await this.broker.unsubscribeAll();
+    // Use a timeout to prevent indefinite blocking during shutdown
+    try {
+      await Promise.race([
+        this.broker.unsubscribeAll(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('unsubscribeAll timeout')), timeoutMs)),
+      ]);
+      Logger.info('Successfully unsubscribed from all queues');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'unsubscribeAll timeout') {
+        Logger.warn(
+          `unsubscribeAll timed out after ${timeoutMs}ms - likely due to unacknowledged messages. Proceeding with shutdown.`,
+        );
+      } else {
+        Logger.error('Error during unsubscribeAll:', err);
+        throw err;
+      }
+    }
   }
 
   /*

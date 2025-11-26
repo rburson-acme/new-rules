@@ -65,9 +65,10 @@ export declare class EventManager {
      * Subscribe to a single event and remove subscription after receiving the first event that matches the filter.
      * @param options.filter - filter expression to apply to event
      *  e.g. { filter: "$event.type = 'example.event'" }
+     *  @param event - optional event to publish after subscribing
      * @returns {Promise<Event>} - Promise that resolves with the first event that matches the filter
      */
-    subscribeOnceWithPromise(options?: SubscriberOptions): Promise<Event>;
+    subscribeOnceWithPromise(options?: SubscriberOptions, event?: Event): Promise<Event>;
     /**
      * Remove a subscription
      * @param notifyFn - subscription to remove

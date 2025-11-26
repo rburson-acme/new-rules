@@ -12,9 +12,6 @@ import { Sessions } from './sessions/Sessions.js';
 import { SessionStorage } from './sessions/storage/SessionStorage.js';
 import { StorageFactory } from './storage/StorageFactory.js';
 import { Event, Logger, Message, PatternModel, Timers } from './thredlib/index.js';
-
-const patternModelsOverride: PatternModel[] = [] as PatternModel[];
-
 import path from 'node:path';
 import url from 'node:url';
 import { SystemController } from './persistence/controllers/SystemController.js';
@@ -35,6 +32,10 @@ import {
 import { EngineConfig } from './config/EngineConfig.js';
 import { RascalConfig } from './config/RascalConfig.js';
 import { PinoLogger } from './logger/PinoLogger.js';
+
+import sync_test_pattern from '../../run-profiles/dev/patterns/sync_test.pattern.json' with { type: 'json' };
+
+const patternModelsOverride: PatternModel[] = [sync_test_pattern] as PatternModel[];
 
 Logger.loggerDelegate = new PinoLogger();
 

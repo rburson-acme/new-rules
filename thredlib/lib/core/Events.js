@@ -120,7 +120,7 @@ export class Events {
     static valueNamed(event, name) {
         const values = this.getValues(event);
         const result = this._valueNamed(values, name);
-        if (!result)
+        if (result === null || result === undefined)
             Logger.debug({ message: Logger.h2(`Event value named ${name} not found`), thredId: event.thredId });
         return result;
     }
@@ -128,16 +128,16 @@ export class Events {
         if (Array.isArray(value)) {
             for (const item of value) {
                 const result = this._valueNamed(item, name);
-                if (result)
+                if (result !== null && result !== undefined)
                     return result;
             }
         }
         if (typeof value === 'object') {
-            if (value?.[name])
+            if (value?.[name] !== null && value?.[name] !== undefined)
                 return value[name];
             for (const key in value) {
                 const result = this._valueNamed(value[key], name);
-                if (result)
+                if (result !== null && result !== undefined)
                     return result;
             }
         }

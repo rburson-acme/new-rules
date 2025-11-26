@@ -232,7 +232,7 @@
                     "type": "string"
                 },
                 "op": {
-                    "type": "string"
+                    "$ref": "#/definitions/Operation"
                 },
                 "options": {
                     "type": "object"
@@ -521,6 +521,20 @@
                 "display"
             ],
             "type": "object"
+        },
+        "Operation": {
+            "enum": [
+                "put",
+                "getOne",
+                "get",
+                "update",
+                "upsert",
+                "replace",
+                "delete",
+                "count",
+                "run"
+            ],
+            "type": "string"
         },
         "Resource": {
             "additionalProperties": false,

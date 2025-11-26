@@ -1,4 +1,4 @@
-import { errorCodes, errorKeys, Logger, Parallel, addressToArray } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
@@ -16,7 +16,6 @@ import { Topics } from '../pubsub/Topics.js';
 import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
-import { ThredStore } from './store/ThredStore.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
 
 const { debug, error, info, crit, h1, h2, logObject } = Logger;
@@ -110,16 +109,18 @@ export class Engine implements MessageHandler {
       await this.inboundQ.reject(message, e as Error).catch(error);
       // update the event with the error
       await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
-      await this.handleError(e, message.payload);
+      await this.handleErrorNotification(e, message.payload);
       // @TODO figure out on what types of Errors it makes sense to requeue
       // await this.inboundQ.requeue(message, e).catch(Logger.error);
     }
   }
 
   /*
-    Respond to the source of the event with an error event
-  */
-  private async handleError(e: any, inboundEvent: Event): Promise<void> {
+   * Handle error notification based on error 'scope'
+   * The error is either sent to the originating participant or to all participants in the thred if any
+   * This method does not sent errors to service addresses
+   */
+  private async handleErrorNotification(e: any, inboundEvent: Event): Promise<void> {
     try {
       const cause = serializableError(e.eventError ? e.eventError.cause : e);
       // if e is a ThredThrowable, it will have an eventError otherwise create it
@@ -133,8 +134,14 @@ export class Engine implements MessageHandler {
       });
       // translate 'directives' in the 'to' field to actual participantIds
       const resolvedTo = await System.getSessions().getParticipantIdsFor(to, e.thredContext);
-      // send the error message
-      await this.handleMessage({ event: outboundEvent, to: resolvedTo });
+      const { participantAddresses: resolvedToParticipants } = System.getSessions()
+        .getAddressResolver()
+        .filterServiceAddresses(resolvedTo);
+      // only send to participant addresses
+      if (resolvedToParticipants.length > 0) {
+        // send the error message
+        await this.handleMessage({ event: outboundEvent, to: resolvedToParticipants });
+      }
     } catch (e) {
       error({
         message: crit(`Engine::Failed handle error for event id: ${inboundEvent.id}`),

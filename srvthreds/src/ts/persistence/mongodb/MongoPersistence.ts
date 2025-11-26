@@ -75,16 +75,11 @@ export class MongoPersistence implements Persistence {
   async upsert(query: Query, options?: any): Promise<string | string[] | void> {
     if (!query.matcher) throw Error(`No matcher specified for query`);
     if (!query.values) throw Error(`No values specified for query`);
-    const exists = await this.count({ type: query.type, matcher: query.matcher }, options);
-    if (exists) {
-      return this.update(query, options);
-    } else {
-      // if the filter contained the objects id, copy it over to the values to be inserted
-      if (query.matcher[Operations.ID]) {
-        (query.values as Record<string, any>)[Operations.ID] = query.matcher[Operations.ID];
-      }
-      return this.put(query, options);
-    }
+    const mappedMatcher = MongoOperations.mapMatcherValues(query.matcher);
+    const mappedValues = MongoOperations.mapUpdateValues(query.values);
+    const _options = this.mapOptions(options);
+    const mongoOptions = { _options, upsert: true };
+    await this.getCollection(query.type).updateOne(mappedMatcher, mappedValues, mongoOptions);
   }
 
   async replace(query: Query, options?: any): Promise<void> {

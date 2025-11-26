@@ -72,8 +72,8 @@ ${message}
       this[loggerName] = (args: LogArgs, error?: Error) => {
         if (error) {
           consoleFn(args, error);
-        } else if (typeof args === 'object') {
-          consoleFn(args as LogObj);
+        } else {
+          consoleFn(args);
         }
       };
     }
