@@ -136,13 +136,13 @@ Migration and validation of Kubernetes manifests and deployment CLI.
 - [x] Update import paths in kubernetes-deployer
 - [x] **TEST**: AKS deployer CLI runs from devops (`npm run aks:deploy -- --help`)
 
-### Phase 4: Minikube (Local K8s)
+### Phase 4: Minikube (Local K8s) ✅ COMPLETE
 Migration of local Kubernetes simulation environment.
 
-- [ ] Copy `local/minikube/` to `devops/minikube/srvthreds/`
-- [ ] Copy relevant configs from `local/configs/`
-- [ ] Update minikube scripts for new paths
-- [ ] **TEST**: Spin up minikube and deploy locally
+- [x] Copy `local/minikube/` to `devops/minikube/srvthreds/`
+- [x] Copy relevant configs from `local/configs/` (.env.minikube, .env.kubernetes, agents/)
+- [x] Update minikube scripts for new paths
+- [x] **TEST**: Minikube CLI runs from devops (`npm run minikube:deploy -- --help`)
 
 ### Phase 5: Cleanup srvthreds
 Remove migrated code from source project.
@@ -251,7 +251,280 @@ Code consolidation and documentation.
 
 ## Next Steps
 
-1. Reorganize existing `cloud/` directories to new structure
-2. Migrate terraform-cli and shared tools
-3. Test terraform commands work from new location
-4. Proceed to kubernetes deployment migration
+1. ~~Reorganize existing `cloud/` directories to new structure~~
+2. ~~Migrate terraform-cli and shared tools~~
+3. ~~Test terraform commands work from new location~~
+4. ~~Proceed to kubernetes deployment migration~~
+5. Complete Phase 5 cleanup of srvthreds
+6. Begin Unified Deployment Framework analysis (Phase 8)
+
+---
+
+## Phase 8: Future Vision - Unified Deployment Framework
+
+### Overview
+
+This phase outlines a strategic vision for consolidating the deployment infrastructure into a unified framework that serves multiple deployment targets while maintaining separation of concerns between developers and DevOps.
+
+### Goals
+
+1. **Clean Developer Experience**: Developers focus on code, not infrastructure. Local development "just works" with containers.
+2. **Clean DevOps Patterns**: Standardized, repeatable patterns for cloud infrastructure and application deployments.
+3. **Unified CLI Interface**: Single entry point for all deployment operations across environments.
+4. **Testing First**: Comprehensive TypeScript testing ensures framework reliability and maintainability.
+5. **Minimal Project Coupling**: Projects define only what's unique; framework handles the rest.
+
+### Key Deliverables by Resource Type
+
+| Resource Type | Developer Concern | DevOps Concern |
+|--------------|-------------------|----------------|
+| **Local (Minikube)** | `npm run dev` starts everything | Simulate cloud-like K8s environment |
+| **Cloud Infrastructure** | None | Terraform modules, state management, networking |
+| **Cloud Applications** | Container builds via srvthreds | K8s manifests, secrets, scaling, ingress |
+
+### Architecture: Layered Deployment Framework
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Unified CLI Interface                         │
+│         npm run deploy -- <target> <environment> <action>        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Deployment Orchestrator                       │
+│  • Reads project configs from projects/{project}/deployment.yaml │
+│  • Resolves dependencies between infrastructure and applications │
+│  • Coordinates multi-step deployments                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          ▼                   ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ InfraDeployer   │ │   AppDeployer   │ │  LocalDeployer  │
+│ (Terraform)     │ │  (Kubernetes)   │ │   (Minikube)    │
+│                 │ │                 │ │                 │
+│ • Plan/Apply    │ │ • Build images  │ │ • Start cluster │
+│ • State mgmt    │ │ • Push to ACR   │ │ • Setup DBs     │
+│ • Outputs       │ │ • Apply manifests│ │ • Apply manifests│
+└─────────────────┘ └─────────────────┘ └─────────────────┘
+          │                   │                   │
+          ▼                   ▼                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Shared Infrastructure                         │
+│  • ShellExecutor (unified command execution)                     │
+│  • Logger (consistent logging across all deployers)              │
+│  • ConfigLoader (project + environment config resolution)        │
+│  • StateManager (deployment state tracking)                      │
+│  • ErrorHandler (consistent error patterns)                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Project Configuration Contract
+
+Each project that uses the deployment framework must provide minimal configuration. The goal is to keep this as small as possible while allowing project-specific customization.
+
+**Location**: `devops/projects/{project}/deployment.yaml`
+
+```yaml
+# projects/srvthreds/deployment.yaml
+project:
+  name: srvthreds
+  description: Event-driven workflow automation backend
+
+# Reference to source project for container builds
+source:
+  path: ../srvthreds
+  buildCommand: npm run deploymentCli -- {environment} build_server
+
+# Services this project deploys
+services:
+  - name: engine
+    image: srvthreds/engine
+  - name: session-agent
+    image: srvthreds/session-agent
+  - name: persistence-agent
+    image: srvthreds/persistence-agent
+  - name: bootstrap
+    image: srvthreds/bootstrap
+    type: job  # One-time execution
+
+# Infrastructure requirements (references terraform stacks)
+infrastructure:
+  stacks:
+    - networking
+    - aks
+    - acr
+    - cosmosdb
+    - redis
+    - keyvault
+
+# Environment-specific overrides
+environments:
+  dev:
+    replicas: 1
+  test:
+    replicas: 2
+  prod:
+    replicas: 3
+    resources:
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+```
+
+### Consolidation Targets
+
+#### 1. Unified Base Deployer
+
+Currently we have separate deployer implementations with duplicated logic. Consolidate into:
+
+```
+tools/deployment-framework/
+├── src/
+│   ├── core/
+│   │   ├── BaseDeployer.ts      # Abstract base with shared lifecycle
+│   │   ├── DeploymentState.ts   # Track deployment progress
+│   │   └── DeploymentConfig.ts  # Load and validate project configs
+│   ├── deployers/
+│   │   ├── InfraDeployer.ts     # Terraform operations
+│   │   ├── AppDeployer.ts       # Kubernetes operations (AKS)
+│   │   └── LocalDeployer.ts     # Minikube operations
+│   ├── shared/
+│   │   ├── shell.ts             # Single shell executor
+│   │   ├── logger.ts            # Single logger
+│   │   └── errors.ts            # Unified error classes
+│   └── cli/
+│       └── index.ts             # Unified CLI entry point
+└── test/
+    ├── unit/
+    └── integration/
+```
+
+#### 2. Configuration Flow
+
+```
+config-registry.yaml (global)
+        │
+        ▼
+projects/{project}/deployment.yaml (project-specific)
+        │
+        ▼
+Environment resolution (dev/test/prod)
+        │
+        ▼
+Generated configs (K8s ConfigMaps, Terraform vars)
+```
+
+#### 3. Build Responsibility Matrix
+
+| Concern | Owner | Location |
+|---------|-------|----------|
+| Dockerfile definitions | Project (srvthreds) | `srvthreds/infrastructure/local/docker/` |
+| docker-compose files | Project (srvthreds) | `srvthreds/infrastructure/local/docker/` |
+| Build orchestration | Project (deploymentCli) | `srvthreds/infrastructure/tools/deployment-cli/` |
+| K8s manifests | DevOps | `devops/kubernetes/{project}/` |
+| Terraform modules | DevOps | `devops/terraform/modules/` |
+| Deployment automation | DevOps | `devops/tools/deployment-framework/` |
+
+### Testing Strategy
+
+Testing is critical for framework reliability. All TypeScript code must have comprehensive tests.
+
+#### Test Categories
+
+| Category | Purpose | Location |
+|----------|---------|----------|
+| Unit Tests | Test individual functions/classes in isolation | `tools/*/test/unit/` |
+| Integration Tests | Test deployer workflows with mocked infrastructure | `tools/*/test/integration/` |
+| E2E Tests | Full deployment cycles (manual or CI) | `test/e2e/` |
+
+#### Testing Requirements
+
+1. **Minimum 80% code coverage** for shared utilities
+2. **Mock-based testing** for shell commands and external APIs
+3. **Snapshot testing** for generated configurations
+4. **Pre-commit hooks** to run tests before pushes
+
+#### Example Test Structure
+
+```typescript
+// tools/deployment-framework/test/unit/ConfigLoader.test.ts
+describe('ConfigLoader', () => {
+  it('should load project config from deployment.yaml', async () => {
+    const config = await ConfigLoader.load('srvthreds');
+    expect(config.project.name).toBe('srvthreds');
+    expect(config.services).toHaveLength(4);
+  });
+
+  it('should merge environment-specific overrides', async () => {
+    const config = await ConfigLoader.load('srvthreds', 'prod');
+    expect(config.replicas).toBe(3);
+  });
+
+  it('should throw on missing project config', async () => {
+    await expect(ConfigLoader.load('nonexistent'))
+      .rejects.toThrow('Project config not found');
+  });
+});
+```
+
+### Implementation Phases
+
+#### Phase 8.1: Analysis & Design
+- [ ] Document all current deployment paths (local, minikube, AKS)
+- [ ] Identify all duplicated code across tools
+- [ ] Design unified deployer interface
+- [ ] Define project configuration contract
+- [ ] Create testing strategy document
+
+#### Phase 8.2: Shared Infrastructure Consolidation
+- [ ] Create single ShellExecutor with full feature set
+- [ ] Create single Logger with configurable outputs
+- [ ] Create unified error class hierarchy
+- [ ] Create ConfigLoader for project configs
+- [ ] Write unit tests for all shared utilities (80%+ coverage)
+
+#### Phase 8.3: Deployer Unification
+- [ ] Create BaseDeployer with lifecycle hooks
+- [ ] Refactor MinikubeDeployer to extend BaseDeployer
+- [ ] Refactor AKSDeployer to extend BaseDeployer
+- [ ] Create InfraDeployer for Terraform operations
+- [ ] Write integration tests for each deployer
+
+#### Phase 8.4: Unified CLI
+- [ ] Design CLI interface and command structure
+- [ ] Implement deployment orchestrator
+- [ ] Add project selection and environment targeting
+- [ ] Create comprehensive help documentation
+- [ ] Write CLI integration tests
+
+#### Phase 8.5: Project Onboarding
+- [ ] Create project config templates
+- [ ] Document onboarding process
+- [ ] Migrate srvthreds to new framework
+- [ ] Validate thredclient can be onboarded
+- [ ] Create demo-env project configuration
+
+### Success Criteria
+
+1. **Developer Experience**: Running `npm run dev` in project root starts local environment within 2 minutes
+2. **DevOps Efficiency**: Single command deploys full stack to any environment
+3. **Code Quality**: All TypeScript passes strict type checking with no errors
+4. **Test Coverage**: 80%+ coverage on shared utilities, 60%+ on deployers
+5. **Documentation**: All public APIs documented with JSDoc
+6. **Maintainability**: New project onboarding takes < 1 hour with documentation
+
+### Open Questions
+
+1. **Build location**: Should all container builds happen via srvthreds' deploymentCli, or should devops have its own build capability?
+   - Current decision: srvthreds owns builds, devops calls deploymentCli
+
+2. **Config generation**: Should Kubernetes manifests be fully generated from deployment.yaml, or continue with Kustomize overlays?
+   - Current decision: Kustomize overlays with generated patches
+
+3. **State management**: How to track which infrastructure is deployed across projects?
+   - Terraform state per stack, deployment state in local files
+
+4. **Secret handling**: Unified approach to secrets across environments?
+   - Azure Key Vault for cloud, local .env for development

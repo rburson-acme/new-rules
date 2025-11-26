@@ -5,13 +5,11 @@
 
 import { BaseDeployer } from './BaseDeployer.js';
 import { KubernetesClient } from '../operations/KubernetesClient.js';
-import { Logger } from '../utils/logger.js';
 import { ShellExecutor } from '../utils/shell.js';
 import { retry } from '../utils/retry.js';
 import {
   PreDeploymentCheckError,
   ImageBuildError,
-  ImagePushError,
   ManifestApplicationError,
   ValidationError,
 } from '../utils/errors.js';
@@ -26,6 +24,8 @@ export interface MinikubeDeployerOptions extends DeployerOptions {
   cpus?: number;
   memory?: number;
   diskSize?: string;
+  /** Path to srvthreds project root (relative to devops or absolute) */
+  srvthredsPath?: string;
 }
 
 /**
@@ -36,6 +36,7 @@ export class MinikubeDeployer extends BaseDeployer {
   private k8s: KubernetesClient;
   private manifestPath: string;
   private skipDatabaseSetup: boolean;
+  private srvthredsPath: string;
   private minikubeConfig: {
     cpus: number;
     memory: number;
@@ -49,6 +50,7 @@ export class MinikubeDeployer extends BaseDeployer {
     this.k8s = new KubernetesClient({ context: 'minikube', verbose: options.verbose });
     this.manifestPath = options.manifestPath || 'minikube/srvthreds/';
     this.skipDatabaseSetup = options.skipDatabaseSetup || false;
+    this.srvthredsPath = options.srvthredsPath || '../srvthreds';
 
     this.minikubeConfig = {
       cpus: options.cpus || 4,
@@ -58,6 +60,7 @@ export class MinikubeDeployer extends BaseDeployer {
 
     this.logger.section('Minikube Deployer Initialized');
     this.logger.info(`Manifest path: ${this.manifestPath}`);
+    this.logger.info(`Srvthreds path: ${this.srvthredsPath}`);
   }
 
   /**
@@ -95,13 +98,13 @@ export class MinikubeDeployer extends BaseDeployer {
       const statusResult = await this.shell.exec(
         'minikube',
         ['status', '--format', '{{.Host}}'],
-        { silent: true }
+        { silent: true, logErrors: false }
       );
       minikubeStatus = statusResult.stdout.trim();
     } catch (error) {
       // minikube status exits with 85 when profile doesn't exist
       // This is expected for first-time setup
-      this.logger.info('Minikube cluster not found');
+      this.logger.debug('Minikube cluster not found (expected for first-time setup)');
     }
 
     if (minikubeStatus !== 'Running') {
@@ -171,42 +174,63 @@ export class MinikubeDeployer extends BaseDeployer {
   }
 
   /**
+   * Parse Minikube docker-env output and return environment variables
+   */
+  private async getMinikubeDockerEnv(): Promise<Record<string, string>> {
+    const dockerEnvResult = await this.shell.exec('minikube', ['docker-env', '--shell', 'bash']);
+    const envVars: Record<string, string> = {};
+
+    dockerEnvResult.stdout.split('\n').forEach((line) => {
+      const exportMatch = line.match(/export (.+)="(.+)"/);
+      if (exportMatch) {
+        const [, key, value] = exportMatch;
+        if (key && value) {
+          envVars[key] = value;
+        }
+      }
+    });
+
+    return envVars;
+  }
+
+  /**
    * Build Docker images in Minikube environment
+   *
+   * Uses srvthreds' deploymentCli to build images. This ensures:
+   * - Dynamic docker-compose files are generated correctly
+   * - thredlib symlink dependency is resolved
+   * - Pre/post build commands from deployment configs are executed
    */
   protected async buildImages(): Promise<void> {
     this.logger.section('Building Docker Images');
 
     if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would build images');
+      this.logger.info('[DRY RUN] Would build images via srvthreds deploymentCli');
       return;
     }
 
     try {
       // Set Docker environment to Minikube
       this.logger.info('Configuring Docker to use Minikube environment...');
-      const dockerEnvResult = await this.shell.exec('minikube', ['docker-env', '--shell', 'bash']);
+      const envVars = await this.getMinikubeDockerEnv();
 
-      // Parse and set environment variables
-      const envVars: Record<string, string> = {};
-      dockerEnvResult.stdout.split('\n').forEach((line) => {
-        const exportMatch = line.match(/export (.+)="(.+)"/);
-        if (exportMatch) {
-          const [, key, value] = exportMatch;
-          if (key && value) {
-            envVars[key] = value;
-          }
-        }
-      });
-
-      // Build server image using deployment CLI
-      this.logger.info('Building server images...');
+      // Build server images using srvthreds' deploymentCli
+      // This runs from srvthreds directory to ensure correct paths for:
+      // - thredlib symlink (additional_contexts in docker-compose)
+      // - Dynamic docker-compose file generation
+      // - Deployment config pre/post commands
+      this.logger.info('Building server images via deploymentCli...');
       await this.shell.exec(
         'npm',
         ['run', 'deploymentCli', '--', 'minikube', 'build_server'],
-        { env: envVars, timeout: 300000 }
+        {
+          env: envVars,
+          timeout: 300000,
+          cwd: this.srvthredsPath,
+        }
       );
 
-      // Tag builder image as srvthreds:dev
+      // Tag builder image as srvthreds:dev for convenience
       this.logger.info('Tagging builder image...');
       await this.shell.exec(
         'docker',
@@ -240,7 +264,10 @@ export class MinikubeDeployer extends BaseDeployer {
   }
 
   /**
-   * Setup host databases (MongoDB, Redis, RabbitMQ)
+   * Setup host databases (MongoDB, Redis) for Minikube
+   *
+   * Uses srvthreds' deploymentCli to start databases. For Minikube,
+   * this starts mongo-repl-1 and redis on the host Docker (not Minikube's Docker).
    */
   private async setupHostDatabases(): Promise<void> {
     if (this.skipDatabaseSetup) {
@@ -251,21 +278,26 @@ export class MinikubeDeployer extends BaseDeployer {
     this.logger.section('Setting Up Host Databases');
 
     if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would set up host databases');
+      this.logger.info('[DRY RUN] Would set up host databases via srvthreds deploymentCli');
       return;
     }
 
     try {
       // Reset Docker environment to host (not Minikube)
+      // This ensures databases run on host Docker, accessible via host.minikube.internal
       this.logger.info('Resetting Docker environment to host...');
       await this.shell.exec('minikube', ['docker-env', '--unset']);
 
-      // Start databases on host Docker
-      this.logger.info('Starting host databases...');
+      // Start databases on host Docker using srvthreds' deploymentCli
+      // This runs from srvthreds directory to use the correct deployment configs
+      this.logger.info('Starting host databases via deploymentCli...');
       await this.shell.exec(
         'npm',
         ['run', 'deploymentCli', '--', 'minikube', 's_a_dbs'],
-        { timeout: 120000 }
+        {
+          timeout: 120000,
+          cwd: this.srvthredsPath,
+        }
       );
 
       // Verify MongoDB replica set health
@@ -315,7 +347,7 @@ export class MinikubeDeployer extends BaseDeployer {
 
       await this.shell.exec(
         'bash',
-        ['../srvthreds/infrastructure/local/docker/scripts/setup-repl.sh'],
+        [`${this.srvthredsPath}/infrastructure/local/docker/scripts/setup-repl.sh`],
         { timeout: 60000 }
       );
 
@@ -454,11 +486,13 @@ export class MinikubeDeployer extends BaseDeployer {
     const notReady = pods.filter((p) => !p.ready);
     if (notReady.length > 0) {
       validation.healthy = false;
+      const podDetails = notReady.map((p) => `${p.name} (${p.status})`).join(', ');
       validation.issues.push({
         severity: 'error',
-        message: `${notReady.length} pods are not ready: ${notReady.map((p) => p.name).join(', ')}`,
+        message: `${notReady.length} pods are not ready: ${podDetails}`,
         resource: 'pods',
       });
+      this.logger.warn(`Pods not ready: ${podDetails}`);
     } else {
       this.logger.success(`All ${pods.length} pods are ready`);
     }
@@ -475,6 +509,31 @@ export class MinikubeDeployer extends BaseDeployer {
     }
 
     return validation;
+  }
+
+  /**
+   * Rollout restart deployments
+   */
+  protected async rolloutRestart(): Promise<void> {
+    this.logger.section('Rollout Restarting Deployments');
+
+    if (this.options.dryRun) {
+      this.logger.info('[DRY RUN] Would rollout restart deployments');
+      return;
+    }
+
+    const deployments = [
+      'srvthreds-engine',
+      'srvthreds-session-agent',
+      'srvthreds-persistence-agent',
+    ];
+
+    for (const deploymentName of deployments) {
+      this.logger.info(`Restarting ${deploymentName}...`);
+      await this.k8s.restartDeployment(deploymentName, 'srvthreds');
+    }
+
+    this.logger.success('Rollout restart complete');
   }
 
   /**

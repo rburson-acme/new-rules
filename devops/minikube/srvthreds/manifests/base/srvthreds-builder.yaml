@@ -1,0 +1,35 @@
+# Auto-generated from config-registry.yaml
+# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srvthreds-builder
+  namespace: srvthreds
+  labels:
+    app: srvthreds-builder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: srvthreds-builder
+  template:
+    metadata:
+      labels:
+        app: srvthreds-builder
+    spec:
+      containers:
+        - name: srvthreds-builder
+          image: srvthreds:dev
+          imagePullPolicy: Never
+          ports: []
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 200m

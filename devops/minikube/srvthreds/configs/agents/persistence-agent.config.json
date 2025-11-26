@@ -1,0 +1,26 @@
+{
+  "name": "Handles data persistence operations",
+  "description": "Handles data persistence operations",
+  "command": {
+    "entrypoint": "node",
+    "args": [
+      "dist-server/agent/agent.js",
+      "-c",
+      "persistence_agent",
+      "-i",
+      "org.wt.persistence1",
+      "-d"
+    ]
+  },
+  "ports": {},
+  "resources": {
+    "memory": {
+      "request": "256Mi",
+      "limit": "512Mi"
+    },
+    "cpu": {
+      "request": "200m",
+      "limit": "400m"
+    }
+  }
+}

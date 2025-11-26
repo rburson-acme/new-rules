@@ -30,7 +30,7 @@ async function main() {
     verbose,
     dryRun,
     skipDatabaseSetup: skipDb,
-    manifestPath: 'infrastructure/local/minikube/manifests/minikube/',
+    manifestPath: 'minikube/srvthreds/manifests/minikube/',
   });
 
   try {
@@ -89,7 +89,7 @@ async function main() {
         console.error('   minikube delete && minikube start');
       } else if (error.message.includes('MongoDB')) {
         console.error('\n💡 MongoDB issue detected. Try:');
-        console.error('   bash infrastructure/local/docker/scripts/setup-repl.sh');
+        console.error('   bash ../srvthreds/infrastructure/local/docker/scripts/setup-repl.sh');
       }
     } else {
       console.error('Unknown error:', error);

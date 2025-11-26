@@ -155,7 +155,8 @@ export class KubernetesClient {
    */
   async getNamespace(namespace: string): Promise<Namespace> {
     try {
-      const result = await this.exec(['get', 'namespace', namespace, '-o', 'json']);
+      // Suppress error logging - namespace not found is an expected condition
+      const result = await this.exec(['get', 'namespace', namespace, '-o', 'json'], { logErrors: false });
       const data = JSON.parse(result.stdout);
       return {
         name: data.metadata.name,
@@ -518,7 +519,7 @@ export class KubernetesClient {
   /**
    * Execute kubectl command
    */
-  private async exec(args: string[]): Promise<ExecResult> {
+  private async exec(args: string[], options: { logErrors?: boolean } = {}): Promise<ExecResult> {
     const kubectlArgs = [...this.buildGlobalArgs(), ...args];
 
     if (this.options.verbose) {
@@ -527,6 +528,7 @@ export class KubernetesClient {
 
     const result = await this.shell.exec('kubectl', kubectlArgs, {
       throwOnError: true,
+      logErrors: options.logErrors,
     });
 
     return result;
@@ -560,7 +562,13 @@ export class KubernetesClient {
     const status: PodStatus = data.status?.phase || 'Unknown';
     const containerStatuses = data.status?.containerStatuses || [];
 
-    const ready = containerStatuses.every((c: any) => c.ready);
+    // A pod is considered "ready" if:
+    // 1. All containers are ready (for running pods), OR
+    // 2. The pod has Succeeded (completed jobs like bootstrap)
+    const isSucceeded = status === 'Succeeded';
+    const allContainersReady = containerStatuses.every((c: any) => c.ready);
+    const ready = isSucceeded || allContainersReady;
+
     const restarts = containerStatuses.reduce(
       (sum: number, c: any) => sum + (c.restartCount || 0),
       0

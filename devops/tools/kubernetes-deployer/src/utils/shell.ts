@@ -28,6 +28,8 @@ export interface ExecOptions {
   silent?: boolean;
   throwOnError?: boolean;
   streamOutput?: boolean; // If true, stream output in real-time
+  /** If false, suppress error logging on failure (useful for expected failures) */
+  logErrors?: boolean;
 }
 
 /**
@@ -79,11 +81,14 @@ export class ShellExecutor {
       const stdout = error.stdout?.toString().trim() || '';
       const stderr = error.stderr?.toString().trim() || '';
 
-      this.logger.error(`Command failed: ${fullCommand}`, error, {
-        exitCode,
-        stdout,
-        stderr
-      });
+      // Only log errors if logErrors is not explicitly false
+      if (options.logErrors !== false) {
+        this.logger.error(`Command failed: ${fullCommand}`, error, {
+          exitCode,
+          stdout,
+          stderr
+        });
+      }
 
       throw new Error(
         `Command failed with exit code ${exitCode}: ${stderr || stdout || error.message}`
@@ -120,11 +125,14 @@ export class ShellExecutor {
           // This callback runs when the process completes
           if (error) {
             const exitCode = (error as any).code || 1;
-            this.logger.error(`Command failed: ${fullCommand}`, error, {
-              exitCode,
-              stdout: stdout.trim(),
-              stderr: stderr.trim(),
-            });
+            // Only log errors if logErrors is not explicitly false
+            if (options.logErrors !== false) {
+              this.logger.error(`Command failed: ${fullCommand}`, error, {
+                exitCode,
+                stdout: stdout.trim(),
+                stderr: stderr.trim(),
+              });
+            }
             return reject(error);
           }
 
@@ -202,11 +210,14 @@ export class ShellExecutor {
       const stdout = error.stdout?.toString().trim() || '';
       const stderr = error.stderr?.toString().trim() || '';
 
-      this.logger.error(`Command failed: ${fullCommand}`, error, {
-        exitCode,
-        stdout,
-        stderr
-      });
+      // Only log errors if logErrors is not explicitly false
+      if (options.logErrors !== false) {
+        this.logger.error(`Command failed: ${fullCommand}`, error, {
+          exitCode,
+          stdout,
+          stderr
+        });
+      }
 
       throw new Error(
         `Command failed with exit code ${exitCode}: ${stderr || stdout || error.message}`

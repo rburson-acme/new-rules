@@ -6,7 +6,8 @@
       "description": "Creates the base image used by all services.",
       "environments": [
         "local",
-        "minikube"
+        "minikube",
+        "aks"
       ],
       "target": {
         "composing": "service",
@@ -42,6 +43,20 @@
             "preBuildCommands": [
               {
                 "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
+                "command": "touch ./infrastructure/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find infrastructure/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "aks": {
+            "preBuildCommands": [
+              {
+                "description": "Create empty .env placeholder (AKS uses ConfigMap/Secrets instead)",
                 "command": "touch ./infrastructure/tools/deployment-cli/assets/.env"
               }
             ],

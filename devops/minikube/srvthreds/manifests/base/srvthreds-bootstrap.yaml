@@ -1,0 +1,43 @@
+# Auto-generated from config-registry.yaml
+# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srvthreds-bootstrap
+  namespace: srvthreds
+  labels:
+    app: srvthreds-bootstrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: srvthreds-bootstrap
+  template:
+    metadata:
+      labels:
+        app: srvthreds-bootstrap
+    spec:
+      containers:
+        - name: srvthreds-bootstrap
+          image: srvthreds:dev
+          imagePullPolicy: Never
+          ports: []
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 200m
+          command:
+            - npm
+          args:
+            - run
+            - bootstrap
+            - '--'
+            - '-p'
+            - ef-detection

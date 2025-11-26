@@ -28,6 +28,8 @@ export interface AKSDeployerOptions extends DeployerOptions {
   manifestPath?: string;
   imageTag?: string;
   namespace?: string;
+  /** Path to srvthreds project root (relative to devops or absolute) */
+  srvthredsPath?: string;
 }
 
 /**
@@ -61,6 +63,7 @@ export class AKSDeployer extends BaseDeployer {
     namespace: string;
   };
   private naming: AzureNaming;
+  private srvthredsPath: string;
 
   constructor(options: AKSDeployerOptions) {
     // Map environment to full Environment type
@@ -84,6 +87,7 @@ export class AKSDeployer extends BaseDeployer {
     };
 
     this.shell = new ShellExecutor('AKSDeployer');
+    this.srvthredsPath = options.srvthredsPath || '../srvthreds';
 
     // KubernetesClient will be initialized after getting AKS credentials
     this.k8s = new KubernetesClient({
@@ -97,6 +101,7 @@ export class AKSDeployer extends BaseDeployer {
     this.logger.info(`Cluster: ${this.aksOptions.clusterName}`);
     this.logger.info(`ACR: ${this.aksOptions.acrName}`);
     this.logger.info(`Namespace: ${this.aksOptions.namespace}`);
+    this.logger.info(`Srvthreds path: ${this.srvthredsPath}`);
   }
 
   /**
@@ -260,12 +265,17 @@ export class AKSDeployer extends BaseDeployer {
 
   /**
    * Build Docker images
+   *
+   * Uses srvthreds' deploymentCli to build images. This ensures:
+   * - Dynamic docker-compose files are generated correctly
+   * - thredlib symlink dependency is resolved
+   * - Pre/post build commands from deployment configs are executed
    */
   protected async buildImages(): Promise<void> {
     this.logger.section('Building Docker Images');
 
     if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would build Docker images');
+      this.logger.info('[DRY RUN] Would build images via srvthreds deploymentCli');
       return;
     }
 
@@ -273,18 +283,7 @@ export class AKSDeployer extends BaseDeployer {
     const imageTag = this.aksOptions.imageTag;
 
     try {
-      this.logger.info('Building server images...');
-
-      // Run pre-build commands (config generation and validation)
-      // Note: These tools are now in devops/tools/shared/config/
-      this.logger.info('Generating configurations...');
-      await this.shell.exec('npm', ['run', 'config:generate']);
-
-      this.logger.info('Validating configuration consistency...');
-      await this.shell.exec('npm', ['run', 'config:validate']);
-
-      // Build all service images using docker compose
-      // IMPORTANT: Build for linux/amd64 since AKS nodes run on x86_64, not arm64
+      // Build for linux/amd64 since AKS nodes run on x86_64, not arm64
       this.logger.info('Building all service images for linux/amd64 platform...');
       this.logger.info('This may take several minutes...');
 
@@ -294,50 +293,19 @@ export class AKSDeployer extends BaseDeployer {
         DOCKER_DEFAULT_PLATFORM: 'linux/amd64',
       };
 
-      // Step 1: Build the builder image first (other images depend on it)
-      this.logger.info('Step 1: Building srvthreds-builder image...');
+      // Build server images using srvthreds' deploymentCli
+      // This runs from srvthreds directory to ensure correct paths for:
+      // - thredlib symlink (additional_contexts in docker-compose)
+      // - Dynamic docker-compose file generation
+      // - Deployment config pre/post commands
+      this.logger.info('Building server images via deploymentCli...');
       await this.shell.exec(
-        'docker',
-        [
-          'compose',
-          '--progress=plain',
-          '-f',
-          '../srvthreds/infrastructure/local/docker/compose/docker-compose-services.yml',
-          'build',
-          '--no-cache',
-          '--build-arg',
-          'BUILDPLATFORM=linux/amd64',
-          'srvthreds-builder',
-        ],
+        'npm',
+        ['run', 'deploymentCli', '--', 'aks', 'build_server'],
         {
+          env: buildEnv,
           timeout: 600000, // 10 minute timeout for build
-          streamOutput: true, // Enable real-time output for Docker builds
-          env: buildEnv
-        }
-      );
-
-      // Step 2: Build all services that depend on builder
-      this.logger.info('Step 2: Building service images (bootstrap, engine, session-agent, persistence-agent)...');
-      await this.shell.exec(
-        'docker',
-        [
-          'compose',
-          '--progress=plain',
-          '-f',
-          '../srvthreds/infrastructure/local/docker/compose/docker-compose-services.yml',
-          'build',
-          '--no-cache',
-          '--build-arg',
-          'BUILDPLATFORM=linux/amd64',
-          'srvthreds-bootstrap',
-          'srvthreds-engine',
-          'srvthreds-session-agent',
-          'srvthreds-persistence-agent',
-        ],
-        {
-          timeout: 600000, // 10 minute timeout for build
-          streamOutput: true, // Enable real-time output for Docker builds
-          env: buildEnv
+          cwd: this.srvthredsPath,
         }
       );
 
@@ -358,8 +326,6 @@ export class AKSDeployer extends BaseDeployer {
       }
 
       this.state.addMetadata('acrImages', acrImages);
-
-      // Note: Docker build assets cleanup removed - docker compose files remain in srvthreds
 
       this.logger.success(`Images built and tagged successfully (${acrImages.length} images)`);
     } catch (error) {
