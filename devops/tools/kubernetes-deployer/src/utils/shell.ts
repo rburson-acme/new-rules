@@ -4,7 +4,7 @@
 
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import { Logger } from './logger.js';
+import { ContextLogger as Logger } from '../../../shared/logger.js';
 
 const execAsync = promisify(exec);
 

@@ -156,7 +156,7 @@ class ConfigValidator {
   private validateDockerComposeServices(compose: any, type: 'services' | 'databases', filePath: string) {
     const sourceConfig = type === 'services' ? this.config.services : this.config.databases;
 
-    for (const [key, expected] of Object.entries(sourceConfig)) {
+    for (const [_, expected] of Object.entries(sourceConfig)) {
       const serviceName = (expected as any).name;
       const actual = compose.services?.[serviceName];
 
@@ -213,7 +213,7 @@ class ConfigValidator {
     const k8sMinikubePath = path.join(INFRA_BASE, 'local/minikube/manifests/minikube');
 
     // Validate service manifests
-    for (const [key, config] of Object.entries(this.config.services)) {
+    for (const [_, config] of Object.entries(this.config.services)) {
       const manifestPath = path.join(k8sBasePath, `${(config as any).name}.yaml`);
       if (fs.existsSync(manifestPath)) {
         this.validateK8sManifest(manifestPath, config);
@@ -221,7 +221,7 @@ class ConfigValidator {
     }
 
     // Validate database manifests
-    for (const [key, config] of Object.entries(this.config.databases)) {
+    for (const [_, config] of Object.entries(this.config.databases)) {
       const manifestPath = path.join(k8sMinikubePath, `${(config as any).name}.yaml`);
       if (fs.existsSync(manifestPath)) {
         this.validateK8sManifest(manifestPath, config);

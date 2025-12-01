@@ -50,16 +50,16 @@ This document outlines the migration of infrastructure code from `srvthreds/infr
 
 **Goal:** Eliminate bash scripts, move logic into TypeScript commands
 
-#### B.1: Minikube Scripts
-| Script | Action |
+#### B.1: Minikube Scripts ✅ COMPLETE
+| Script | Status |
 |--------|--------|
-| `setup-minikube.sh` | Already in MinikubeDeployer.startMinikube() - DELETE |
-| `reset-minikube.sh` | Already in MinikubeDeployer.resetDeployment() - DELETE |
-| `cleanup-minikube.sh` | Already in MinikubeDeployer.destroyCluster() - DELETE |
-| `validate-minikube.sh` | Move to MinikubeDeployer.validate() method - DELETE |
-| `switch-to-minikube.sh` | One-liner, document in README - DELETE |
-| `list-contexts.sh` | One-liner, document in README - DELETE |
-| `debug-mongodb.sh` | Keep as utility or move to troubleshooting docs |
+| `setup-minikube.sh` | ✅ DELETED - covered by MinikubeDeployer.startMinikube() |
+| `reset-minikube.sh` | ✅ DELETED - covered by MinikubeDeployer.resetDeployment() |
+| `cleanup-minikube.sh` | ✅ DELETED - covered by MinikubeDeployer.destroyCluster() |
+| `validate-minikube.sh` | ✅ DELETED - covered by MinikubeDeployer.runValidation() |
+| `switch-to-minikube.sh` | ✅ DELETED - use `kubectl config use-context minikube` |
+| `list-contexts.sh` | ✅ DELETED - use `kubectl config get-contexts` |
+| `debug-mongodb.sh` | KEPT - useful troubleshooting utility |
 
 #### B.2: Terraform Scripts
 | Script | Action |

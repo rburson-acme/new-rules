@@ -110,7 +110,7 @@ class ConfigGenerator {
     const services: Record<string, any> = {};
     const sourceConfig = type === 'services' ? this.config.services : this.config.databases;
 
-    for (const [key, config] of Object.entries(sourceConfig)) {
+    for (const [_, config] of Object.entries(sourceConfig)) {
       // Handle special service types
       if (config.buildOnly) {
         // Builder service - build stage only, don't run as container
@@ -227,12 +227,12 @@ class ConfigGenerator {
     fs.mkdirSync(k8sMinikubePath, { recursive: true });
 
     // Generate service manifests (always Deployments)
-    for (const [key, config] of Object.entries(this.config.services)) {
+    for (const [_, config] of Object.entries(this.config.services)) {
       this.generateK8sResourceManifest(config, k8sBasePath, true);
     }
 
     // Generate database manifests (Deployment or StatefulSet based on config)
-    for (const [key, config] of Object.entries(this.config.databases)) {
+    for (const [_, config] of Object.entries(this.config.databases)) {
       const useStatefulSet = config.kubernetes?.kind === 'StatefulSet';
 
       if (useStatefulSet) {
@@ -322,7 +322,7 @@ class ConfigGenerator {
     // Add volumes if present
     if (config.volumes) {
       const volumes = Array.isArray(config.volumes) ? config.volumes : [config.volumes];
-      deployment.spec.template.spec.volumes = volumes.map((v: any, idx: number) => ({
+      deployment.spec.template.spec.volumes = volumes.map((_: any, idx: number) => ({
         name: `${serviceName}-storage-${idx}`,
         emptyDir: {}
       }));

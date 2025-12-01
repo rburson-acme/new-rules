@@ -1,19 +1,10 @@
 /**
  * Shared logging utilities for devops CLIs
  *
- * Wraps thredlib's Logger for consistency across the monorepo.
- * Re-exports thredlib's Logger types and provides convenience methods.
+ * Uses console directly for CLI output. thredlib's Logger is designed for
+ * server-side structured logging and doesn't output plain strings properly.
  */
 
-import { Logger, LoggerLevel } from 'thredlib';
-
-// Re-export thredlib's types for convenience
-export { Logger, LoggerLevel };
-
-/**
- * LogLevel enum for backwards compatibility with existing code.
- * Maps to thredlib's LoggerLevel.
- */
 export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
@@ -21,28 +12,21 @@ export enum LogLevel {
   ERROR = 'ERROR',
 }
 
+// Track current log level
+let currentLogLevel: LogLevel = LogLevel.INFO;
+
 /**
- * Map LogLevel to thredlib's LoggerLevel
+ * Check if a message at the given level should be logged
  */
-function toLoggerLevel(level: LogLevel): LoggerLevel {
-  switch (level) {
-    case LogLevel.DEBUG:
-      return LoggerLevel.DEBUG;
-    case LogLevel.INFO:
-      return LoggerLevel.INFO;
-    case LogLevel.WARN:
-      return LoggerLevel.WARN;
-    case LogLevel.ERROR:
-      return LoggerLevel.ERROR;
-    default:
-      return LoggerLevel.INFO;
-  }
+function shouldLog(level: LogLevel): boolean {
+  const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
+  return levels.indexOf(level) >= levels.indexOf(currentLogLevel);
 }
 
 /**
- * DevOps logger wrapper around thredlib's Logger.
+ * DevOps logger for CLI output.
  *
- * Provides additional convenience methods for CLI output:
+ * Provides convenience methods for CLI output:
  * - section() for visual grouping
  * - success() / failure() for status indicators
  */
@@ -51,17 +35,19 @@ class DevOpsLogger {
    * Set the global log level
    */
   setLevel(level: LogLevel): void {
-    Logger.setLevel(toLoggerLevel(level));
+    currentLogLevel = level;
   }
 
   /**
    * Log a debug message
    */
   debug(message: string, context?: string, data?: any): void {
+    if (!shouldLog(LogLevel.DEBUG)) return;
+    const formatted = context ? `[${context}] ${message}` : message;
     if (data) {
-      Logger.debug({ message: context ? `[${context}] ${message}` : message, obj: data });
+      console.debug(formatted, data);
     } else {
-      Logger.debug(context ? `[${context}] ${message}` : message);
+      console.debug(formatted);
     }
   }
 
@@ -69,10 +55,12 @@ class DevOpsLogger {
    * Log an info message
    */
   info(message: string, context?: string, data?: any): void {
+    if (!shouldLog(LogLevel.INFO)) return;
+    const formatted = context ? `[${context}] ${message}` : message;
     if (data) {
-      Logger.info({ message: context ? `[${context}] ${message}` : message, obj: data });
+      console.log(formatted, data);
     } else {
-      Logger.info(context ? `[${context}] ${message}` : message);
+      console.log(formatted);
     }
   }
 
@@ -80,10 +68,12 @@ class DevOpsLogger {
    * Log a warning message
    */
   warn(message: string, context?: string, data?: any): void {
+    if (!shouldLog(LogLevel.WARN)) return;
+    const formatted = context ? `[${context}] ${message}` : message;
     if (data) {
-      Logger.warn({ message: context ? `[${context}] ${message}` : message, obj: data });
+      console.warn(formatted, data);
     } else {
-      Logger.warn(context ? `[${context}] ${message}` : message);
+      console.warn(formatted);
     }
   }
 
@@ -91,12 +81,12 @@ class DevOpsLogger {
    * Log an error message
    */
   error(message: string, context?: string, data?: any): void {
-    if (data instanceof Error) {
-      Logger.error({ message: context ? `[${context}] ${message}` : message, err: data });
-    } else if (data) {
-      Logger.error({ message: context ? `[${context}] ${message}` : message, obj: data });
+    if (!shouldLog(LogLevel.ERROR)) return;
+    const formatted = context ? `[${context}] ${message}` : message;
+    if (data) {
+      console.error(formatted, data);
     } else {
-      Logger.error(context ? `[${context}] ${message}` : message);
+      console.error(formatted);
     }
   }
 
@@ -104,21 +94,29 @@ class DevOpsLogger {
    * Log a section header for visual grouping in CLI output
    */
   section(title: string): void {
-    Logger.info(Logger.h1(title));
+    if (!shouldLog(LogLevel.INFO)) return;
+    console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║  ${title.padEnd(60)}║
+╚════════════════════════════════════════════════════════════════╝`);
   }
 
   /**
    * Log a success message with checkmark
    */
   success(message: string, context?: string): void {
-    Logger.info(context ? `[${context}] ✓ ${message}` : `✓ ${message}`);
+    if (!shouldLog(LogLevel.INFO)) return;
+    const formatted = context ? `[${context}] ✓ ${message}` : `✓ ${message}`;
+    console.log(formatted);
   }
 
   /**
    * Log a failure message with X mark
    */
   failure(message: string, context?: string): void {
-    Logger.error(context ? `[${context}] ✗ ${message}` : `✗ ${message}`);
+    if (!shouldLog(LogLevel.ERROR)) return;
+    const formatted = context ? `[${context}] ✗ ${message}` : `✗ ${message}`;
+    console.error(formatted);
   }
 }
 
@@ -165,7 +163,12 @@ export class ContextLogger {
 
   error(message: string, error?: Error, metadata?: Record<string, unknown>): void {
     if (error) {
-      Logger.error({ message: `[${this.context}] ${message}`, err: error, obj: metadata });
+      const formatted = `[${this.context}] ${message}`;
+      if (metadata) {
+        console.error(formatted, error, metadata);
+      } else {
+        console.error(formatted, error);
+      }
     } else {
       logger.error(message, this.context, metadata);
     }
@@ -176,7 +179,7 @@ export class ContextLogger {
   }
 
   section(title: string): void {
-    Logger.info(Logger.h1(`[${this.context}] ${title}`));
+    logger.section(`[${this.context}] ${title}`);
   }
 }
 
