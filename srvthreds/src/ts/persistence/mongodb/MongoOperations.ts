@@ -40,6 +40,7 @@ export class MongoOperations {
 
   static readonly UPDATE_OP_MAP: StringMap<any> = {
     [Operations.ADD_OP]: '$addToSet',
+    [Operations.PUSH_OP]: '$push',
     [Operations.REMOVE_OP]: '$pull',
     [Operations.NOW_OP]: '$currentDate',
     [Operations.INC_OP]: '$inc',

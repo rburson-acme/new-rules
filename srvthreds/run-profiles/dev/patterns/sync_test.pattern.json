@@ -1,0 +1,78 @@
+{
+    "meta": {
+        "active": true
+    },
+    "name": "Sync Test Pattern",
+    "id": "sync_test",
+    "reactions": [
+        {
+            "name": "save_seqId",
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.sync.event'",
+                "onTrue": {
+                    "xpr": "$setLocal('req_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
+                },
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Sync Event Detected",
+                        "content": {
+                            "tasks": [
+                                {
+                                    "name": "save_sync_data",
+                                    "options": {
+                                        "dbname": "test"
+                                    },
+                                    "op": "upsert",
+                                    "params": {
+                                        "type": "SyncObject",
+                                        "matcher": {
+                                            "id": "sync_count_id"
+                                        },
+                                        "values": {
+                                            "$push": {
+                                                "seqIds": "$xpr( $valueNamed('seqId') )"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "transition": {
+                    "name": "$next"
+                },
+                "publish": {
+                    "to": "org.wt.persistence"
+                }
+            }
+        },
+        {
+            "name": "notify_participant",
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.persistence'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Thred started",
+                        "description": "Thred started",
+                        "content": {
+                            "values": {
+                                "seqId": "$xpr( $local('req_data').seqId )"
+                            }
+                        }
+                    }
+                },
+                "transition": {
+                    "name": "save_seqId"
+                },
+                "publish": {
+                    "to": [
+                        "$xpr( $local('req_data').sourceId )"
+                    ]
+                }
+            }
+        }
+    ]
+}

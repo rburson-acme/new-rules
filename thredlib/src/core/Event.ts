@@ -1,4 +1,5 @@
 import { TemplateModel } from "../model/TemplateModel.js";
+import { Operation } from "../task/Operations.js";
 
 /**
  * @interface Event
@@ -92,7 +93,7 @@ export interface InlineItem {
 }
 
 export interface EventTask {
-    readonly op: string;
+    readonly op: Operation;
     readonly name?: string;
     readonly params?: EventTaskParams;
     readonly options?: Record<string, any>;

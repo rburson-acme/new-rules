@@ -93,12 +93,15 @@ export class EventManager {
      * Subscribe to a single event and remove subscription after receiving the first event that matches the filter.
      * @param options.filter - filter expression to apply to event
      *  e.g. { filter: "$event.type = 'example.event'" }
+     *  @param event - optional event to publish after subscribing
      * @returns {Promise<Event>} - Promise that resolves with the first event that matches the filter
      */
-    subscribeOnceWithPromise(options = {}) {
+    subscribeOnceWithPromise(options = {}, event) {
         return new Promise((resolve, reject) => {
             try {
                 this.subscribeOnce(resolve, { ...options, evict: true });
+                if (event)
+                    this.publish(event);
             }
             catch (e) {
                 Logger.error(`EventManager::Error in subscribeOnceWithPromise: ${e.message}`, e);

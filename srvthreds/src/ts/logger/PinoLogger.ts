@@ -41,6 +41,8 @@ export class PinoLogger implements LoggerDelegate {
     }
   }
 
+  public trace: LogSignature = (args: LogArgs, errorOrObject?: Error | any) =>
+    this.pinoInstance.trace(this.formatArgs(args, errorOrObject));
   public debug: LogSignature = (args: LogArgs, errorOrObject?: Error | any) =>
     this.pinoInstance.debug(this.formatArgs(args, errorOrObject));
   public info: LogSignature = (args: LogArgs, errorOrObject?: Error | any) =>
@@ -49,8 +51,6 @@ export class PinoLogger implements LoggerDelegate {
     this.pinoInstance.warn(this.formatArgs(args, errorOrObject));
   public error: LogSignature = (args: LogArgs, errorOrObject?: Error | any) =>
     this.pinoInstance.error(this.formatArgs(args, errorOrObject));
-  public trace: LogSignature = (args: LogArgs, errorOrObject?: Error | any) =>
-    this.pinoInstance.trace(this.formatArgs(args, errorOrObject));
   public logObject = (args: any) => {
     this.pinoInstance.debug(args);
   };
