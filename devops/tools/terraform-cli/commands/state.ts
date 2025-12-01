@@ -6,7 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { logger } from '../../shared/logger.js';
-import { requireString, ValidationError } from '../../shared/error-handler.js';
+import { execCommand } from '../../shared/shell.js';
+import { requireString, ValidationError, confirmAction } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager, EnvironmentConfig } from '../utils/terraform.js';
 
@@ -28,9 +29,9 @@ interface EnvironmentsConfig {
   [key: string]: EnvironmentConfig;
 }
 
-const STATE_COMMANDS = ['backup', 'validate', 'repair', 'clean', 'show'];
+const STATE_COMMANDS = ['backup', 'validate', 'repair', 'recover', 'clean', 'show'];
 
-export const STATE_COMMAND_DESCRIPTION = 'Manage Terraform state (backup, validate, repair, clean)';
+export const STATE_COMMAND_DESCRIPTION = 'Manage Terraform state (backup, validate, repair, recover, clean)';
 
 export async function stateCommand(args: string[]): Promise<void> {
   if (args.length === 0 || args.includes('--help')) {
@@ -44,6 +45,7 @@ SUBCOMMANDS:
   backup      Backup state files with timestamp
   validate    Check state consistency and configuration
   repair      Refresh state from Azure
+  recover     Detect and fix out-of-sync resources (already exists errors)
   clean       Remove orphaned resources from state
   show        Display current state
 
@@ -60,6 +62,9 @@ EXAMPLES:
   # Repair state from Azure
   terraform-cli state repair dev networking
 
+  # Recover out-of-sync state (resources that exist but aren't in state)
+  terraform-cli state recover dev cosmosdb --dry-run
+
   # Show state for a stack
   terraform-cli state show dev networking
 `);
@@ -70,9 +75,7 @@ EXAMPLES:
   const environment = requireString(args[1], 'environment');
 
   if (!STATE_COMMANDS.includes(subcommand)) {
-    throw new ValidationError(
-      `Invalid state subcommand: ${subcommand}. Valid options: ${STATE_COMMANDS.join(', ')}`
-    );
+    throw new ValidationError(`Invalid state subcommand: ${subcommand}. Valid options: ${STATE_COMMANDS.join(', ')}`);
   }
 
   // Load configuration
@@ -91,7 +94,7 @@ EXAMPLES:
   // Validate environment
   if (!deployConfig.environments.includes(environment)) {
     throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`,
     );
   }
 
@@ -105,9 +108,10 @@ EXAMPLES:
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
   const requestedStacks = args.slice(2).filter((a) => !a.startsWith('--'));
-  const stacksToProcess = requestedStacks.length > 0
-    ? deployConfig.stacks.filter((s) => requestedStacks.includes(s.name))
-    : deployConfig.stacks;
+  const stacksToProcess =
+    requestedStacks.length > 0
+      ? deployConfig.stacks.filter((s) => requestedStacks.includes(s.name))
+      : deployConfig.stacks;
 
   switch (subcommand) {
     case 'backup':
@@ -120,6 +124,12 @@ EXAMPLES:
 
     case 'repair':
       await repairState(stacksToProcess, terraform);
+      break;
+
+    case 'recover':
+      const dryRun = args.includes('--dry-run');
+      const force = args.includes('--force');
+      await recoverState(stacksToProcess, terraformDir, environment, dryRun, force);
       break;
 
     case 'clean':
@@ -219,3 +229,155 @@ async function showState(stacks: StackConfig[], terraform: TerraformManager): Pr
   }
 }
 
+/**
+ * Recover out-of-sync state - detects resources that exist in Azure but not in Terraform state
+ * Migrated from: terraform/scripts/recover-state.sh
+ */
+async function recoverState(
+  stacks: StackConfig[],
+  terraformDir: string,
+  environment: string,
+  dryRun: boolean,
+  force: boolean,
+): Promise<void> {
+  logger.section('STATE RECOVERY');
+
+  for (const stack of stacks) {
+    const stackDir = path.join(terraformDir, stack.path);
+    const tfvarsFile = `${environment}.tfvars`;
+    const tfvarsPath = path.join(stackDir, tfvarsFile);
+
+    logger.info(`Analyzing ${stack.name}...`, 'recover');
+
+    // Check if tfvars exists
+    if (!fs.existsSync(tfvarsPath)) {
+      logger.warn(`No ${tfvarsFile} found for ${stack.name}, skipping`, 'recover');
+      continue;
+    }
+
+    // Check if we can access state
+    const stateListResult = execCommand('terraform state list', {
+      cwd: stackDir,
+      context: 'recover',
+    });
+
+    if (!stateListResult.success) {
+      logger.warn(`Cannot access state for ${stack.name}: ${stateListResult.stderr}`, 'recover');
+      logger.info('Possible causes:', 'recover');
+      console.log('  1. Backend not initialized');
+      console.log('  2. Backend credentials missing');
+      console.log('  3. State file corrupted');
+      continue;
+    }
+
+    // Show current resources in state
+    const resourceCount = stateListResult.stdout.trim().split('\n').filter(Boolean).length;
+    logger.info(`Found ${resourceCount} resources in state`, 'recover');
+
+    // Run terraform plan to detect out-of-sync resources
+    logger.info('Running terraform plan to detect out-of-sync resources...', 'recover');
+
+    const planResult = execCommand(`terraform plan -var-file="${tfvarsFile}" -detailed-exitcode 2>&1`, {
+      cwd: stackDir,
+      context: 'recover',
+    });
+
+    // Check for "already exists" errors
+    const alreadyExistsMatch =
+      planResult.stdout.match(/already exists/gi) || planResult.stderr.match(/already exists/gi);
+
+    if (!alreadyExistsMatch) {
+      if (planResult.exitCode === 0) {
+        logger.success(`${stack.name} state is in sync - no changes needed`);
+      } else if (planResult.exitCode === 2) {
+        logger.info(`${stack.name} has pending changes but no out-of-sync resources`, 'recover');
+      } else {
+        logger.warn(`${stack.name} plan had errors but no 'already exists' issues detected`, 'recover');
+      }
+      continue;
+    }
+
+    // Found out-of-sync resources
+    logger.warn(`Detected resource(s) that exist in Azure but not in Terraform state`, 'recover');
+    console.log('');
+
+    // Extract relevant error lines
+    const planOutput = planResult.stdout + planResult.stderr;
+    const errorLines = planOutput
+      .split('\n')
+      .filter((line) => line.includes('already exists') || line.includes('Error:'));
+
+    for (const line of errorLines.slice(0, 10)) {
+      console.log(`  ${line.trim()}`);
+    }
+
+    console.log('');
+
+    // Show recovery options
+    logger.info('Recovery Options:', 'recover');
+    console.log('  1. Import existing resources into state');
+    console.log('     terraform import <resource_address> <azure_resource_id>');
+    console.log('');
+    console.log('  2. Refresh state (may resolve some drift)');
+    console.log(`     terraform refresh -var-file="${tfvarsFile}"`);
+    console.log('');
+    console.log('  3. Remove from state and recreate');
+    console.log('     terraform state rm <resource_address>');
+    console.log('');
+
+    if (dryRun) {
+      logger.warn('[DRY RUN] No changes will be made', 'recover');
+      logger.info('Would execute:', 'recover');
+      console.log(`  cd ${stackDir}`);
+      console.log(`  terraform refresh -var-file="${tfvarsFile}"`);
+      continue;
+    }
+
+    // Attempt recovery via refresh
+    if (!force) {
+      console.log('');
+      const confirmed = await confirmAction('Attempt state refresh to recover?');
+      if (!confirmed) {
+        logger.warn('Recovery skipped', 'recover');
+        continue;
+      }
+    }
+
+    logger.info('Refreshing Terraform state...', 'recover');
+
+    const refreshResult = execCommand(`terraform refresh -var-file="${tfvarsFile}"`, {
+      cwd: stackDir,
+      context: 'recover',
+      verbose: true,
+    });
+
+    if (refreshResult.success) {
+      logger.success('State refresh completed');
+
+      // Verify the fix
+      logger.info('Verifying fix...', 'recover');
+      const verifyResult = execCommand(`terraform plan -var-file="${tfvarsFile}" -detailed-exitcode`, {
+        cwd: stackDir,
+        context: 'recover',
+      });
+
+      if (verifyResult.exitCode === 0 || verifyResult.exitCode === 2) {
+        logger.success('State is now in sync!');
+        if (verifyResult.exitCode === 2) {
+          logger.info('There are pending changes - run terraform apply when ready', 'recover');
+        }
+      } else {
+        logger.warn('State may still be out of sync', 'recover');
+        logger.info(`Run: terraform plan -var-file="${tfvarsFile}" for details`, 'recover');
+      }
+    } else {
+      logger.failure('State refresh failed');
+      logger.info('Manual recovery required:', 'recover');
+      console.log('  1. Review the error above');
+      console.log('  2. Use: terraform import <resource> <resource-id>');
+      console.log('  3. Or use: terraform state rm <resource> (if resource should not exist)');
+    }
+  }
+
+  logger.info('State recovery analysis complete', 'recover');
+}

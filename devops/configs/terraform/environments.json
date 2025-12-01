@@ -1,15 +1,18 @@
 {
   "dev": {
+    "subscriptionId": "f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed",
     "resourceGroupName": "CAZ-SRVTHREDS-D-E-RG",
     "stateBackendResourceGroup": "srvthreds-terraform-rg",
     "stateBackendStorageAccount": "srvthredstfstatei274ht"
   },
   "test": {
+    "subscriptionId": "f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed",
     "resourceGroupName": "CAZ-SRVTHREDS-T-E-RG",
     "stateBackendResourceGroup": "srvthreds-terraform-rg",
     "stateBackendStorageAccount": "srvthredstfstatei274ht"
   },
   "prod": {
+    "subscriptionId": "f7fbbdc6-d360-49a8-9ceb-a4ba6ee415ed",
     "resourceGroupName": "CAZ-SRVTHREDS-P-E-RG",
     "stateBackendResourceGroup": "srvthreds-terraform-rg",
     "stateBackendStorageAccount": "srvthredstfstatei274ht"

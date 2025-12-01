@@ -2,10 +2,10 @@
 
 /**
  * Terraform Infrastructure CLI
- * 
+ *
  * Manages Azure infrastructure deployments with type-safe configuration
  * and comprehensive error handling.
- * 
+ *
  * Usage:
  *   terraform-cli deploy <environment> [stacks...]
  *   terraform-cli state <command> <environment>
@@ -18,18 +18,17 @@
 // import * as path from 'path';
 import { logger, LogLevel } from '../shared/logger.js';
 import { handleError } from '../shared/error-handler.js';
-import {
-  deployCommand,
-  planCommand,
-  DEPLOY_COMMAND_DESCRIPTION,
-  PLAN_COMMAND_DESCRIPTION
-} from './commands/deploy.js';
+import { deployCommand, planCommand, DEPLOY_COMMAND_DESCRIPTION, PLAN_COMMAND_DESCRIPTION } from './commands/deploy.js';
 import { destroyCommand, DESTROY_COMMAND_DESCRIPTION } from './commands/destroy.js';
 import { stateCommand, STATE_COMMAND_DESCRIPTION } from './commands/state.js';
 import { cleanupCommand, CLEANUP_COMMAND_DESCRIPTION } from './commands/cleanup.js';
 import { bootstrapCommand, BOOTSTRAP_COMMAND_DESCRIPTION } from './commands/bootstrap.js';
 import { statusCommand, STATUS_COMMAND_DESCRIPTION } from './commands/status.js';
 import { outputCommand, OUTPUT_COMMAND_DESCRIPTION } from './commands/output.js';
+import { fixSymlinksCommand, FIX_SYMLINKS_COMMAND_DESCRIPTION } from './commands/fix-symlinks.js';
+import { validateSecurityCommand, VALIDATE_SECURITY_COMMAND_DESCRIPTION } from './commands/validate-security.js';
+import { importCommand, IMPORT_COMMAND_DESCRIPTION } from './commands/import.js';
+import { initCommand, INIT_COMMAND_DESCRIPTION } from './commands/init.js';
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -90,7 +89,7 @@ const commands: Map<string, Command> = new Map([
     },
   ],
   [
-    'bootstrap',  // Keep as alias for backward compatibility
+    'bootstrap', // Keep as alias for backward compatibility
     {
       name: 'bootstrap (deprecated, use state-backend)',
       description: BOOTSTRAP_COMMAND_DESCRIPTION,
@@ -111,6 +110,38 @@ const commands: Map<string, Command> = new Map([
       name: 'output',
       description: OUTPUT_COMMAND_DESCRIPTION,
       handler: outputCommand,
+    },
+  ],
+  [
+    'fix-symlinks',
+    {
+      name: 'fix-symlinks',
+      description: FIX_SYMLINKS_COMMAND_DESCRIPTION,
+      handler: fixSymlinksCommand,
+    },
+  ],
+  [
+    'validate-security',
+    {
+      name: 'validate-security',
+      description: VALIDATE_SECURITY_COMMAND_DESCRIPTION,
+      handler: validateSecurityCommand,
+    },
+  ],
+  [
+    'import',
+    {
+      name: 'import',
+      description: IMPORT_COMMAND_DESCRIPTION,
+      handler: importCommand,
+    },
+  ],
+  [
+    'init',
+    {
+      name: 'init',
+      description: INIT_COMMAND_DESCRIPTION,
+      handler: initCommand,
     },
   ],
 ]);
@@ -140,6 +171,9 @@ OPTIONS:
   --force                 Skip confirmations (use with caution)
 
 EXAMPLES:
+  # Initialize all stacks for an environment (first time setup)
+  terraform-cli init dev
+
   # Preview changes before deploying
   terraform-cli plan dev
 
@@ -157,6 +191,18 @@ EXAMPLES:
 
   # Check deployment status
   terraform-cli status dev
+
+  # Fix symlink consistency issues
+  terraform-cli fix-symlinks --check
+
+  # Validate Azure security configuration
+  terraform-cli validate-security prod srvthreds-prod-rg
+
+  # Import existing Azure resource
+  terraform-cli import cosmosdb cosmosdb_account main "/subscriptions/.../..."
+
+  # Recover out-of-sync state
+  terraform-cli state recover dev cosmosdb --dry-run
 
 For detailed help on a command:
   terraform-cli <command> --help
@@ -198,4 +244,3 @@ async function main(): Promise<void> {
 main().catch((error) => {
   handleError(error, 'terraform-cli');
 });
-

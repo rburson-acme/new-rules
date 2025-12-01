@@ -61,17 +61,109 @@ This document outlines the migration of infrastructure code from `srvthreds/infr
 | `list-contexts.sh` | ✅ DELETED - use `kubectl config get-contexts` |
 | `debug-mongodb.sh` | KEPT - useful troubleshooting utility |
 
-#### B.2: Terraform Scripts
-| Script | Action |
-|--------|--------|
-| `pre-commit-hook.sh` | Keep - git hooks need to be shell |
-| `install-git-hooks.sh` | Keep - installs shell hooks |
-| `validate-security.sh` | Move to terraform-cli `validate` command |
-| `fix-symlink-consistency.sh` | Move to terraform-cli `fix-symlinks` command |
-| `recover-state.sh` | Move to terraform-cli `recover` command |
-| `import-resource.sh` | Move to terraform-cli `import` command |
+#### B.2: Terraform Scripts ✅ COMPLETE
 
-**Outcome:** Only git hook scripts remain as bash.
+**Scripts Kept (Git Hooks):**
+| Script | Reason |
+|--------|--------|
+| `pre-commit-hook.sh` | Git hooks must be shell scripts |
+| `install-git-hooks.sh` | Installs shell hooks |
+
+**Scripts Migrated:**
+
+| Script | Target Command | Status |
+|--------|----------------|--------|
+| `fix-symlink-consistency.sh` | `terraform-cli fix-symlinks` | ✅ DELETED |
+| `validate-security.sh` | `terraform-cli validate-security <env> <rg>` | ✅ DELETED |
+| `import-resource.sh` | `terraform-cli import <stack> <type> <name> <id>` | ✅ DELETED |
+| `recover-state.sh` | `terraform-cli state recover <stack> <env>` | ✅ DELETED |
+
+**Implementation Tasks:**
+- [x] B.2.1: Create `tools/terraform-cli/commands/fix-symlinks.ts`
+  - Port symlink validation and fix logic from bash
+  - Add `--check` flag for validation-only mode
+  - Integrate with CLI in `cli.ts`
+
+- [x] B.2.2: Create `tools/terraform-cli/commands/validate-security.ts`
+  - Port Azure security checks (NSG, private endpoints, AKS, RBAC, encryption)
+  - Use Azure CLI via shell utility
+  - Return structured pass/warn/fail results
+  - Support `--json` output for CI integration
+
+- [x] B.2.3: Create `tools/terraform-cli/commands/import.ts`
+  - Port resource import logic from bash
+  - Auto-detect module vs direct resource addressing
+  - Support `--dry-run` flag
+  - Require explicit confirmation before import
+
+- [x] B.2.4: Add `recover` subcommand to `tools/terraform-cli/commands/state.ts`
+  - Integrate recover-state.sh functionality
+  - Analyze plan output for "already exists" errors
+  - Support `--dry-run` and `--force` flags
+  - Provide guided recovery options
+
+- [x] B.2.5: Update `tools/terraform-cli/cli.ts` with new commands
+  - Register fix-symlinks command
+  - Register validate-security command
+  - Register import command
+  - Update help text
+
+- [x] B.2.6: Delete migrated bash scripts
+  - Remove `terraform/scripts/fix-symlink-consistency.sh`
+  - Remove `terraform/scripts/validate-security.sh`
+  - Remove `terraform/scripts/import-resource.sh`
+  - Remove `terraform/scripts/recover-state.sh`
+
+- [ ] B.2.7: Update any documentation referencing old scripts (if needed)
+
+**New CLI Commands:**
+
+Commands can be run via the base `npm run terraform` script or convenience shortcuts:
+
+| npm Script | Description |
+|------------|-------------|
+| `npm run tf:init` | Initialize and pull remote state for an environment |
+| `npm run tf:fix-symlinks` | Validate/fix backend symlinks |
+| `npm run tf:validate-security` | Azure security validation |
+| `npm run tf:import` | Import Azure resources |
+| `npm run tf:state` | State management (backup, recover, etc.) |
+
+**Usage Examples:**
+```bash
+# Initialize all stacks and pull remote state (first time setup or sync)
+npm run tf:init -- dev                     # Initialize dev environment
+npm run tf:init -- prod                    # Initialize prod environment
+npm run tf:init -- dev networking keyvault # Initialize specific stacks only
+
+# Fix symlink consistency issues
+npm run tf:fix-symlinks                    # Fix issues
+npm run tf:fix-symlinks -- --check         # Check only (for CI)
+
+# Validate Azure security configuration (resource group auto-resolved from config)
+npm run tf:validate-security -- dev        # Uses CAZ-SRVTHREDS-D-E-RG from config
+npm run tf:validate-security -- prod       # Uses CAZ-SRVTHREDS-P-E-RG from config
+npm run tf:validate-security -- prod --json                    # JSON output for CI
+npm run tf:validate-security -- prod my-custom-rg              # Override resource group
+
+# Import existing Azure resource into Terraform state (subscription/RG auto-resolved)
+npm run tf:import -- cosmosdb cosmosdb_account main mycosmosdb-dev --dry-run
+npm run tf:import -- keyvault key_vault main mykv-dev
+ENVIRONMENT=prod npm run tf:import -- aks kubernetes_cluster main myaks-prod
+# Use --full-id for custom resource groups or unsupported types
+npm run tf:import -- cosmosdb cosmosdb_account main "/subscriptions/xxx/..." --full-id
+
+# Recover out-of-sync state
+npm run tf:state -- recover dev cosmosdb --dry-run
+npm run tf:state -- recover dev --force    # Skip prompts
+
+# Get help for any command
+npm run terraform -- fix-symlinks --help
+npm run terraform -- validate-security --help
+npm run terraform -- import --help
+npm run terraform -- state --help
+```
+
+**Outcome:** Only git hook scripts remain as bash. ✅
 
 ---
 

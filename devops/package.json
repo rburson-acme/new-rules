@@ -7,11 +7,16 @@
   "scripts": {
     "terraform": "tsx tools/terraform-cli/cli.ts",
     "deploy": "tsx tools/deployment-cli/cli.ts",
+    "tf:init": "npm run terraform -- init",
     "tf:plan": "npm run terraform -- plan",
     "tf:apply": "npm run terraform -- deploy",
     "tf:destroy": "npm run terraform -- destroy",
     "tf:status": "npm run terraform -- status",
     "tf:bootstrap": "npm run terraform -- bootstrap",
+    "tf:fix-symlinks": "npm run terraform -- fix-symlinks",
+    "tf:validate-security": "npm run terraform -- validate-security",
+    "tf:import": "npm run terraform -- import",
+    "tf:state": "npm run terraform -- state",
     "aks:deploy": "tsx tools/kubernetes-deployer/cli/deploy-to-aks.ts",
     "minikube:deploy": "tsx tools/kubernetes-deployer/cli/deploy-to-minikube.ts",
     "minikube:reset": "tsx tools/kubernetes-deployer/cli/reset-minikube.ts",
@@ -20,12 +25,15 @@
     "config:validate": "tsx tools/shared/config/validator.ts",
     "test": "vitest --run --bail=1",
     "check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "cd .. && husky devops/.husky"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "@types/yargs": "^17.0.33",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4",
@@ -38,8 +46,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm test -- --changed",
-      "prettier --write ."
+      "prettier --write"
     ]
   }
 }
