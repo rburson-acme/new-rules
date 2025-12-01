@@ -600,8 +600,9 @@ export class MinikubeDeployer extends BaseDeployer {
       if (options.deleteDatabases) {
         this.logger.info('MinikubeDeployer Stopping host databases...');
         try {
-          await this.shell.exec('npm', ['run', 'deploy-local-down-databases'], {
+          await this.shell.exec('npm', ['run', 'deploymentCli', '--', 'minikube', 'd_a_dbs'], {
             silent: true,
+            cwd: this.srvthredsPath,
           });
           this.logger.success('Host databases stopped');
         } catch (error) {
