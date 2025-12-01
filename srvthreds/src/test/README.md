@@ -408,4 +408,4 @@ const provider = new MongoPersistenceProvider();
 - [MongoDB Connection String Options](https://www.mongodb.com/docs/manual/reference/connection-string/)
 - [Vitest Configuration](https://vitest.dev/config/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Infrastructure Setup Guide](../../infrastructure/docs/DEPLOYMENT.md)
+- [Container Setup Guide](../../deploy-containers/docs/DEPLOYMENT.md)

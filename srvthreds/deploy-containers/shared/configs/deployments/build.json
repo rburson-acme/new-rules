@@ -1,0 +1,64 @@
+{
+  "deployments": [
+    {
+      "name": "Create Base Image",
+      "shortName": "build_server",
+      "description": "Creates the base image used by all services.",
+      "environments": [
+        "local",
+        "minikube",
+        "aks"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "build",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "--progress=plain srvthreds-builder",
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ./deploy-containers/local/configs/.env.local.example ./deploy-containers/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
+                "command": "touch ./deploy-containers/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "aks": {
+            "preBuildCommands": [
+              {
+                "description": "Create empty .env placeholder (AKS uses ConfigMap/Secrets instead)",
+                "command": "touch ./deploy-containers/tools/deployment-cli/assets/.env"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

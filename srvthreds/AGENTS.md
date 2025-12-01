@@ -92,7 +92,7 @@ Microservices architecture:
 #### 4. Configuration System
 - **Patterns** (run-profiles/*/patterns/ or src/test/config/patterns/): Workflow definitions in JSON
 - **Sessions** (run-profiles/*/sessions/): Participant group definitions
-- **Agent configs** (infrastructure/local/configs/agents/): Service definitions and routing
+- **Agent configs** (deploy-containers/local/configs/agents/): Service definitions and routing
 - **Runtime configs** (run-profiles/[dev|test|ef-detection]/): Environment-specific settings
 - **Rascal config**: Message queue routing topology (rascal_config.json)
 - **Resolver config**: Address resolution for participants (resolver_config.json)
@@ -141,7 +141,7 @@ Microservices architecture:
 ### Creating New Agents
 1. Extend base Agent implementation (see SessionAgent or PersistenceAgent)
 2. Implement required adapters (e.g., PersistenceAdapter)
-3. Add agent configuration JSON in infrastructure/local/configs/agents/
+3. Add agent configuration JSON in deploy-containers/local/configs/agents/
 4. Update resolver configuration to include new agent addresses
 5. Add npm script for starting the agent
 

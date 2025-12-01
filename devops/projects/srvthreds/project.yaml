@@ -1,0 +1,44 @@
+# Project Configuration: srvthreds
+# Event-driven workflow automation backend
+
+name: srvthreds
+description: Event-driven workflow automation backend
+
+source:
+  # Path relative to devops directory
+  path: ../srvthreds
+  # Where docker-compose files live (relative to source.path)
+  composePath: infrastructure/local/docker/compose
+  # Where deployment configs live (relative to source.path)
+  configPath: infrastructure/shared/configs/deployments
+
+docker:
+  builderImage: srvthreds/builder
+  services:
+    - name: bootstrap
+      image: srvthreds/bootstrap
+    - name: engine
+      image: srvthreds/engine
+    - name: session-agent
+      image: srvthreds/session-agent
+    - name: persistence-agent
+      image: srvthreds/persistence-agent
+
+kubernetes:
+  namespace: srvthreds
+  deployments:
+    - srvthreds-engine
+    - srvthreds-session-agent
+    - srvthreds-persistence-agent
+
+minikube:
+  # Manifest path relative to devops directory
+  manifestPath: local/minikube/srvthreds/manifests/minikube/
+
+aks:
+  # Manifest path relative to devops directory
+  manifestPath: cloud/kubernetes/srvthreds/
+  environments:
+    - dev
+    - test
+    - prod
