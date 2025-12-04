@@ -14,6 +14,7 @@
  * const engineConfig = configManager.getConfig<EngineConfig>('engine-config');
  * ```
  */
+import { Logger } from '../thredlib/index.js';
 import { Config } from './Config.js';
 import { ConfigLoader } from './ConfigLoader.js';
 
@@ -47,6 +48,7 @@ export class ConfigManager {
     const configDef = (await ConfigLoader.loadFromNameOrPath(configName, configPath)) as D;
     await config.updateConfig(configDef);
     this.configs[type] = config;
+    Logger.debug(`ConfigManager: Loaded ${configName ?? configPath} for type ${type}`);
     return config;
   }
 

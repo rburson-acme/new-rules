@@ -92,8 +92,8 @@ export class SystemController {
     return this.persistence.get({ type: Types.PatternModel, matcher: { meta: { active: true } } });
   }
 
-  async upsertPattern(pattern: PatternModel): Promise<string | string[] | void> {
-    return this.persistence.upsert({ type: Types.PatternModel, matcher: { id: pattern.id }, values: pattern });
+  async replacePattern(pattern: PatternModel): Promise<string | string[] | void> {
+    return this.persistence.replace({ type: Types.PatternModel, matcher: { id: pattern.id }, values: pattern });
   }
 
   async getActivePattern(patternId: string): Promise<PatternModel | null> {

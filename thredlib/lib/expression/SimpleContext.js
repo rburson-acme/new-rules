@@ -9,4 +9,8 @@ export class SimpleContext {
     getLocal(name) {
         return this.scope[name];
     }
+    // return the thredId if it exists in the scope
+    getThredId() {
+        return this.scope['thredId'];
+    }
 }

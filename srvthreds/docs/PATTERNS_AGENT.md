@@ -75,6 +75,8 @@ Pattern = JSON workflow definition. Thred = running pattern instance. Reaction =
 
 **Rule:** Deepest transform/publish/transition wins. Avoid onTrue side effects in first reaction (runs during pattern matching).
 
+**Divergent Behaviors:** When each OR operand should trigger different actions (different transforms, publish targets, or transitions), place all directives (onTrue, transform, publish, transition) within each operand. The first matching operand's directives will execute. If operands share the same behavior, directives can be at the parent OR level.
+
 ## Transforms
 ```json
 {
@@ -147,6 +149,9 @@ Pattern = JSON workflow definition. Thred = running pattern instance. Reaction =
 - `$valueNamed(name)` - get value from event
 - `$local(name)` - get from local storage
 - `$setLocal(name, value)` - store in local storage (persisted to Redis)
+
+**Important**
+- When targeting specific values (key names) in the event payload values object, using the $valueNamed(name) operator is often the best approach.  It will search all arrays and objects in a depth-first search until it encounters the key/value you've specificed in $valueNamed(name). It will return the first occurance that it encounters.  This is often a better approach than trying to accurately predict the returned object and array structure.
 
 **Operators:** `=` `!=` `>` `<` `>=` `<=` `and` `or` `not()` `&` (concat) `+` `-` `*` `/` `%` `$count()` `$exists()` `$millis()` `$now()` array[index]
 
@@ -260,6 +265,16 @@ Send → Wait with Expiry → [Response|Timeout] → Handle
 Step1 → Step2 (input:forward) → Step3 (input:forward) → Terminate
 ```
 
+**Cleanup with Confirmation:**
+```
+Operation → Send Results → Cleanup (input:forward) → Wait Confirmation → Terminate
+```
+
+**Sequential Operations with Notifications:**
+```
+Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data → Send Results → Cleanup → Wait Confirmation → Terminate
+```
+
 ## Pattern Generation Steps
 
 1. **Identify reactions** from workflow steps
@@ -284,14 +299,15 @@ Step1 → Step2 (input:forward) → Step3 (input:forward) → Terminate
 - [ ] $xpr() properly formatted
 
 ## Common Errors
-1. Missing initial reaction for trigger event
-2. Undefined transition targets
-3. Using $local() without $setLocal()
-4. onTrue in first reaction (side effects during matching)
-5. Missing required fields (condition.type, condition.xpr, publish.to)
-6. input:local without localName
-7. No termination path
-8. Circular transitions without exit
+1. Trying to create multiple different events in one reaction (use sequential reactions with transitions instead)
+2. Missing initial reaction for trigger event
+3. Undefined transition targets
+4. Using $local() without $setLocal()
+5. onTrue in first reaction (side effects during matching)
+6. Missing required fields (condition.type, condition.xpr, publish.to)
+7. input:local without localName
+8. No termination path
+9. Circular transitions without exit
 
 ## Complete Minimal Examples
 
@@ -507,6 +523,7 @@ Step1 → Step2 (input:forward) → Step3 (input:forward) → Terminate
 ```
 
 ## Key Rules
+- **ONE EVENT PER REACTION** - A reaction can only create ONE outbound event. You cannot publish different event types to multiple recipients with different transforms in a single reaction. To send multiple different events, chain reactions sequentially using transitions.
 - **Unbound event** (no thredId) → pattern matching → creates Thred
 - **Bound event** (has thredId) → routes to existing Thred
 - **First reaction** = entry point, avoid onTrue side effects
@@ -525,6 +542,8 @@ Step1 → Step2 (input:forward) → Step3 (input:forward) → Terminate
 - **Multiple patterns** can match same unbound event, all create Threds
 - **Reactions auto-named** as {patternName}_{index} if name not provided
 - **Broadcast** requires broadcastAllowed:true in pattern
+- **Per-instance isolation** - Use `$event.thredId` as document ID when each thred needs its own data (e.g., `"matcher": {"id": "$xpr($event.thredId)"}`)
+- **Cleanup confirmation** - When performing critical operations (delete, cleanup), wait for persistence response before terminating to ensure completion
 
 ## Schema Compliance
 Pattern must validate against ../thredlib/src/schemas/patternModel.json. Critical fields: name (string), reactions (array of ReactionModel), each reaction has condition (ConditionModel) with type (filter|and|or) and type-specific requirements.

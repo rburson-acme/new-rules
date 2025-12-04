@@ -700,6 +700,11 @@ These variables and functions are available in all JSONata expressions:
 | `$advice` | Event advice section | `$advice.eventType` |
 | `$valueNamed(name)` | Get value by name from event | `$valueNamed('sensorId')` |
 
+**Important**
+- When targeting specific values (key names) in the event payload values object, using the $valueNamed(name) operator is of
+ten the best approach.  It will search all arrays and objects in a depth-first search until it encounters the key/value you've specificed in $valueNamed(name). It will return the first occurance that it encounters.  This is often a better approac
+h than trying to accurately predict the returned object and array structure.
+
 #### Context Management
 
 | Binding | Description | Example |

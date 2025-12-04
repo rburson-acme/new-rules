@@ -161,16 +161,23 @@ export class EventManager {
   }
 
   private connectionListener = async (event: Event): Promise<void> => {
-    return Series.forEach([...this.subscribers], async (subscriber) => {
+    Logger.debug(`EventManager::Received event: ${event.type} (${event.id})`);
+    const matches = await Series.map([...this.subscribers], async (subscriber) => {
       if (await this.matchesFilter(event, subscriber.options?.filter)) {
         try {
           if (subscriber.options?.evict) this.subscribers.delete(subscriber);
           subscriber.notifyFn(event);
+          return true;
         } catch (e: any) {
           Logger.error(`EventManager::Error in subscriber: ${e.message}`, e);
         }
       }
+      return false;
     });
+    if(!matches.includes(true)) {
+      Logger.warn(`EventManager::No subscribers matched for event: ${event.type} (${event.id})`);
+      Logger.trace(`EventManager::Event details: ${JSON.stringify(event, null, 2)}`);
+    }
   };
 
   private async matchesFilter(event: Event, filter?: string): Promise<boolean> {
