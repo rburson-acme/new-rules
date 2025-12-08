@@ -19,13 +19,13 @@
             "preBuildCommands": [
               {
                 "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ./deploy-containers/local/configs/.env.local.example ./deploy-containers/tools/deployment-cli/assets/.env"
+                "command": "cp ./deploy/local/configs/.env.local.example ./deploy/tools/deployment-cli/assets/.env"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+                "command": "find deploy/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           },
@@ -33,13 +33,13 @@
             "preBuildCommands": [
               {
                 "description": "Create empty .env placeholder (Kubernetes uses ConfigMap instead)",
-                "command": "touch ./deploy-containers/tools/deployment-cli/assets/.env"
+                "command": "touch ./deploy/tools/deployment-cli/assets/.env"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+                "command": "find deploy/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           },
@@ -47,13 +47,13 @@
             "preBuildCommands": [
               {
                 "description": "Create empty .env placeholder (AKS uses ConfigMap/Secrets instead)",
-                "command": "touch ./deploy-containers/tools/deployment-cli/assets/.env"
+                "command": "touch ./deploy/tools/deployment-cli/assets/.env"
               }
             ],
             "postUpCommands": [
               {
                 "description": "Cleanup deployment assets directory",
-                "command": "find deploy-containers/tools/deployment-cli/assets/ -mindepth 1 -delete"
+                "command": "find deploy/tools/deployment-cli/assets/ -mindepth 1 -delete"
               }
             ]
           }

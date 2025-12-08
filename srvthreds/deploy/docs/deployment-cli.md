@@ -119,7 +119,7 @@ If testing Docker builds after changes:
 npm run deploy-local-down-services
 
 # Rebuild (navigate to compose directory)
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 
 # Restart services
@@ -137,7 +137,7 @@ npm run build-all
 cd ../srvthreds
 
 # If using Docker, rebuild builder image
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 
 # Restart services
@@ -307,9 +307,9 @@ npm run deploymentCli -- local "Start All"
 
 ### CLI Architecture
 
-The deployment CLI (`deploy-containers/tools/deployment-cli/cli.ts`) provides:
+The deployment CLI (`deploy/tools/deployment-cli/cli.ts`) provides:
 
-- **Configuration-driven deployments**: Definitions in `deploy-containers/shared/configs/deployments/`
+- **Configuration-driven deployments**: Definitions in `deploy/shared/configs/deployments/`
 - **Environment overrides**: Environment-specific behaviors
 - **Hook system**: Pre-build and post-up commands
 - **Multi-file composition**: Sequential execution of multiple compose files
@@ -318,8 +318,8 @@ The deployment CLI (`deploy-containers/tools/deployment-cli/cli.ts`) provides:
 
 Deployment configurations are defined in JSON files:
 
-**Database deployments**: `deploy-containers/shared/configs/deployments/databases.json`
-**Service deployments**: `deploy-containers/shared/configs/deployments/services.json`
+**Database deployments**: `deploy/shared/configs/deployments/databases.json`
+**Service deployments**: `deploy/shared/configs/deployments/services.json`
 
 Each deployment defines:
 - Name and short code
@@ -414,7 +414,7 @@ npm run deploy-local-databases
 
 **Clear cache and rebuild**:
 ```bash
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 ```
 
@@ -427,7 +427,7 @@ npm run check
 
 **Manually run setup script**:
 ```bash
-./deploy-containers/local/docker/scripts/setup-repl.sh
+./deploy/local/docker/scripts/setup-repl.sh
 ```
 
 **Verify status**:
@@ -444,7 +444,7 @@ If you want to preserve data when stopping:
 npm run deploy-local-down-services
 
 # Manually stop databases without removing volumes
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-db.yml stop
 ```
 
@@ -492,7 +492,7 @@ docker logs -f srvthreds-engine
 
 # After code changes (Docker)
 npm run deploy-local-down-services
-cd deploy-containers/local/docker/compose && docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
+cd deploy/local/docker/compose && docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 npm run deploy-local-services
 
 # Clean everything

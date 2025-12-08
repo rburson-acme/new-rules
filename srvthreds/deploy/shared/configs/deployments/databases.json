@@ -21,7 +21,7 @@
             "postUpCommands": [
               {
                 "description": "Setting up MongoDB replica set...",
-                "command": "deploy-containers/local/docker/scripts/setup-repl.sh"
+                "command": "deploy/local/docker/scripts/setup-repl.sh"
               }
             ]
           },

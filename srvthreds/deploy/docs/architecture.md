@@ -184,7 +184,7 @@ RUN npm ci && npm run build
 
 # Copy runtime configs
 COPY run-profiles/ ./dist-server/run-profiles/
-COPY deploy-containers/tools/deployment-cli/assets/*.* ./dist-server/
+COPY deploy/tools/deployment-cli/assets/*.* ./dist-server/
 ```
 
 **Purpose**: Contains all build artifacts
@@ -367,7 +367,7 @@ docker compose down -v
 **Volume Backup**:
 ```bash
 # Create backup
-tar -czf backup.tar.gz deploy-containers/local/docker/compose/.docker/
+tar -czf backup.tar.gz deploy/local/docker/compose/.docker/
 
 # Restore backup
 tar -xzf backup.tar.gz

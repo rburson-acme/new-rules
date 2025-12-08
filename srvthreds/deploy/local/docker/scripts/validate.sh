@@ -28,7 +28,7 @@ docker exec srvthreds-session-agent env | grep -E "(MONGO|REDIS)"
 
 docker exec srvthreds-session-agent ls -la /app/dist-server/persistence/mongodb/
 
-grep -n "# - MONGO_HOST" /deploy-containers/local/compose/docker-compose-services.yml
+grep -n "# - MONGO_HOST" /deploy/local/compose/docker-compose-services.yml
 
 docker ps --filter "name=mongo" && docker exec mongo-repl-1 mongosh --eval "db.runCommand('ping')"
 

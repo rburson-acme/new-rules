@@ -147,7 +147,7 @@ docker logs -f srvthreds-engine
 docker logs -f srvthreds-session-agent
 
 # Or navigate to compose directory for all logs
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml logs -f
 ```
 
@@ -191,7 +191,7 @@ npm run deploy-local-databases
 
 ```bash
 # Copy local environment template
-cp deploy-containers/local/configs/.env.local.example .env
+cp deploy/local/configs/.env.local.example .env
 
 # Bootstrap data (one time)
 npm run bootstrap -- -p dev
@@ -227,11 +227,11 @@ Use the full Docker setup when you need to:
 # Using Docker (slower iteration)
 # 1. Edit code
 # 2. Rebuild builder
-docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
 
 # 3. Restart services
-npx tsx deploy-containers/tools/deployment-cli/cli.ts local d_a_s
-npx tsx deploy-containers/tools/deployment-cli/cli.ts local s_a_s
+npx tsx deploy/tools/deployment-cli/cli.ts local d_a_s
+npx tsx deploy/tools/deployment-cli/cli.ts local s_a_s
 ```
 
 #### If Changing thredlib
@@ -248,7 +248,7 @@ npm run start-dev  # Will use updated thredlib
 
 # 3b. For Docker
 # Must rebuild builder image
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 npm run deploy-local-down-services
 npm run deploy-local-services
@@ -263,7 +263,7 @@ npm run deploy-local-services
 npm run bootstrap -- -p dev
 
 # Or in Docker (navigate to compose directory):
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml up srvthreds-bootstrap
 ```
 
@@ -458,7 +458,7 @@ npm run deploy-local-down-all
 docker logs -f srvthreds-engine
 
 # Rebuild builder (navigate to compose directory)
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 
 # Restart services
@@ -466,7 +466,7 @@ npm run deploy-local-down-services
 npm run deploy-local-services
 
 # Run bootstrap (navigate to compose directory)
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml up srvthreds-bootstrap
 
 # Clean everything

@@ -3,7 +3,7 @@ services:
     image: srvthreds/builder:latest
     build:
       context: ../../../../
-      dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile.builder
+      dockerfile: deploy/local/docker/dockerfiles/Dockerfile.builder
       additional_contexts:
         thredlib: ../../../../../thredlib
     profiles:
@@ -29,7 +29,7 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     build:
       context: ../../../../
-      dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile.cmdRunner
+      dockerfile: deploy/local/docker/dockerfiles/Dockerfile.cmdRunner
       additional_contexts:
         thredlib: ../../../../../thredlib
       args:
@@ -54,7 +54,7 @@ services:
       - '8082:8082'
     build:
       context: ../../../../
-      dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+      dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
       args:
@@ -86,7 +86,7 @@ services:
       - '3001:3001'
     build:
       context: ../../../../
-      dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+      dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
       args:
@@ -115,7 +115,7 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
     build:
       context: ../../../../
-      dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+      dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
       args:

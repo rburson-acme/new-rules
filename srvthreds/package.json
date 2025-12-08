@@ -34,7 +34,7 @@
     "start-persistence-agent-dev": "tsx src/ts/agent/agent.ts -c persistence_agent -i org.wt.persistence1 -d",
     "start-robot-agent-dev": "tsx src/ts/agent/remote-agent.ts --cp run-profiles/dev/run-config/robot_agent.json -i org.wt.robot1 -d",
     "sync-test": "npx tsx src/test/syncRunner.ts",
-    "deploymentCli": "tsx deploy-containers/tools/deployment-cli/cli.ts",
+    "deploymentCli": "tsx deploy/tools/deployment-cli/cli.ts",
     "deploy-local-databases": "npm run deploymentCli -- local s_a_dbs",
     "deploy-local-down-databases": "npm run deploymentCli -- local d_a_dbs",
     "deploy-local-services": "npm run deploymentCli -- local s_a_s",

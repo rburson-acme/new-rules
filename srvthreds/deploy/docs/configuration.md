@@ -1,6 +1,6 @@
 # Configuration Reference
 
-Complete reference for all configuration options in the deploy-containers system.
+Complete reference for all configuration options in the deploy system.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ Two environment file templates are provided for different deployment scenarios.
 
 Used when all services run in Docker containers.
 
-**Location**: `deploy-containers/local/configs/.env.docker`
+**Location**: `deploy/local/configs/.env.docker`
 
 ```bash
 # JWT Configuration
@@ -47,7 +47,7 @@ RABBITMQ_HOST=rabbitmq               # Container hostname (no port)
 
 Used when application runs on host machine with databases in Docker.
 
-**Location**: `deploy-containers/local/configs/.env.local.example`
+**Location**: `deploy/local/configs/.env.local.example`
 
 ```bash
 # JWT Configuration
@@ -69,7 +69,7 @@ RABBITMQ_HOST=localhost              # Use localhost from host machine
 
 **Usage**: Copy to project root as `.env` for local development:
 ```bash
-cp deploy-containers/local/configs/.env.local.example .env
+cp deploy/local/configs/.env.local.example .env
 ```
 
 ### Environment Variable Reference
@@ -106,7 +106,7 @@ environment:
 
 Database infrastructure services configuration.
 
-**Location**: `deploy-containers/local/docker/compose/docker-compose-db.yml`
+**Location**: `deploy/local/docker/compose/docker-compose-db.yml`
 
 **Note**: These compose files are manually maintained and can be edited directly.
 
@@ -218,7 +218,7 @@ rabbitmq:
 
 Application services configuration.
 
-**Location**: `deploy-containers/local/docker/compose/docker-compose-services.yml`
+**Location**: `deploy/local/docker/compose/docker-compose-services.yml`
 
 **Note**: These compose files are manually maintained and can be edited directly.
 
@@ -229,7 +229,7 @@ srvthreds-builder:
   image: srvthreds/builder:latest
   build:
     context: ../../../../
-    dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile.builder
+    dockerfile: deploy/local/docker/dockerfiles/Dockerfile.builder
     additional_contexts:
       thredlib: ../../../../../thredlib
   profiles:
@@ -262,7 +262,7 @@ srvthreds-bootstrap:
     - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
   build:
     context: ../../../../
-    dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile.cmdRunner
+    dockerfile: deploy/local/docker/dockerfiles/Dockerfile.cmdRunner
     additional_contexts:
       thredlib: ../../../../../thredlib
     args:
@@ -296,7 +296,7 @@ srvthreds-engine:
     - '8082:8082'
   build:
     context: ../../../../
-    dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+    dockerfile: deploy/local/docker/dockerfiles/Dockerfile
     additional_contexts:
       thredlib: ../../../../../thredlib
     args:
@@ -339,7 +339,7 @@ srvthreds-session-agent:
     - '3001:3001'                  # HTTP API
   build:
     context: ../../../../
-    dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+    dockerfile: deploy/local/docker/dockerfiles/Dockerfile
     additional_contexts:
       thredlib: ../../../../../thredlib
     args:
@@ -378,7 +378,7 @@ srvthreds-persistence-agent:
     - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
   build:
     context: ../../../../
-    dockerfile: deploy-containers/local/docker/dockerfiles/Dockerfile
+    dockerfile: deploy/local/docker/dockerfiles/Dockerfile
     additional_contexts:
       thredlib: ../../../../../thredlib
     args:
@@ -393,7 +393,7 @@ Deployment configurations define how to start, stop, and manage services using t
 
 ### Database Deployments
 
-**Location**: `deploy-containers/shared/configs/deployments/databases.json`
+**Location**: `deploy/shared/configs/deployments/databases.json`
 
 ```json
 {
@@ -414,7 +414,7 @@ Deployment configurations define how to start, stop, and manage services using t
             "postUpCommands": [
               {
                 "description": "Setting up MongoDB replica set...",
-                "command": "deploy-containers/local/docker/scripts/setup-repl.sh"
+                "command": "deploy/local/docker/scripts/setup-repl.sh"
               }
             ]
           }
@@ -437,7 +437,7 @@ Deployment configurations define how to start, stop, and manage services using t
 
 ### Service Deployments
 
-**Location**: `deploy-containers/shared/configs/deployments/services.json`
+**Location**: `deploy/shared/configs/deployments/services.json`
 
 Contains deployment definitions for:
 - **Start Services** (s_a_s): Start all application services
@@ -464,7 +464,7 @@ Contains deployment definitions for:
         "postUpCommands": [
           {
             "description": "Setting up MongoDB replica set...",
-            "command": "chmod +x ./deploy-containers/local/docker/scripts/setup-repl.sh && ./deploy-containers/local/docker/scripts/setup-repl.sh"
+            "command": "chmod +x ./deploy/local/docker/scripts/setup-repl.sh && ./deploy/local/docker/scripts/setup-repl.sh"
           }
         ]
       },
@@ -474,7 +474,7 @@ Contains deployment definitions for:
         "preBuildCommands": [
           {
             "description": "Building base builder image...",
-            "command": "docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+            "command": "docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
           }
         ]
       }
@@ -584,13 +584,13 @@ Default locations for bind mounts:
 | RabbitMQ Data | `./.docker/rabbitmq/data` | `/var/lib/rabbitmq` |
 | RabbitMQ Logs | `./.docker/rabbitmq/logs` | `/var/log/rabbitmq` |
 
-**Note**: Paths are relative to `deploy-containers/local/docker/compose/` directory.
+**Note**: Paths are relative to `deploy/local/docker/compose/` directory.
 
 ### Volume Backup
 
 ```bash
 # Backup MongoDB
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 tar -czf mongodb-backup-$(date +%Y%m%d).tar.gz .docker/mongodb/
 
 # Restore MongoDB
@@ -709,27 +709,27 @@ build:
 
 ```bash
 # Check syntax
-docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml config
+docker compose -f deploy/local/docker/compose/docker-compose-db.yml config
 
 # Check without resolving environment variables
-docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml config --no-interpolate
+docker compose -f deploy/local/docker/compose/docker-compose-db.yml config --no-interpolate
 ```
 
 ### Validate Environment Variables
 
 ```bash
 # Check if all required variables are set
-docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml config | grep -i "MONGO_HOST"
+docker compose -f deploy/local/docker/compose/docker-compose-services.yml config | grep -i "MONGO_HOST"
 ```
 
 ### Validate JSON Configuration
 
 ```bash
 # Validate JSON syntax
-cat deploy-containers/shared/configs/deployments/services.json | jq empty
+cat deploy/shared/configs/deployments/services.json | jq empty
 
 # Pretty print
-cat deploy-containers/shared/configs/deployments/services.json | jq '.'
+cat deploy/shared/configs/deployments/services.json | jq '.'
 ```
 
 ## Migration Guide

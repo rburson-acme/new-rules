@@ -75,7 +75,7 @@ docker inspect <container-name> --format='{{.State.ExitCode}}'
    - **Solution**:
      ```bash
      # Rebuild with no cache
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
      ```
 
 2. **Port Already in Use**
@@ -87,9 +87,9 @@ docker inspect <container-name> --format='{{.State.ExitCode}}'
      netstat -ano | findstr :8082  # Windows
 
      # Kill the process or change port in docker-compose.yml
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml down
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml down
      # Edit docker-compose-services.yml to change ports
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml up -d
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml up -d
      ```
 
 3. **Database Connection Failure**
@@ -104,7 +104,7 @@ docker inspect <container-name> --format='{{.State.ExitCode}}'
      docker exec -it mongo-repl-1 mongosh --eval "rs.status()"
 
      # Re-initialize replica set if needed
-     ./deploy-containers/local/docker/scripts/setup-repl.sh
+     ./deploy/local/docker/scripts/setup-repl.sh
      ```
 
 4. **Environment Variable Missing**
@@ -118,7 +118,7 @@ docker inspect <container-name> --format='{{.State.ExitCode}}'
      docker exec srvthreds-engine ls -la /app/dist-server/.env
 
      # Rebuild if needed
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
      ```
 
 ### Container Restarts Continuously
@@ -169,7 +169,7 @@ docker logs <container-name> --tail 100
 **Diagnosis**:
 ```bash
 # Check if waiting for dependencies
-docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml ps
+docker compose -f deploy/local/docker/compose/docker-compose-services.yml ps
 
 # Check logs
 docker logs srvthreds-bootstrap -f
@@ -190,8 +190,8 @@ docker logs srvthreds-bootstrap -f
    - **Solution**:
      ```bash
      # Force stop and restart
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml down
-     docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml up -d --wait
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml down
+     docker compose -f deploy/local/docker/compose/docker-compose-services.yml up -d --wait
      ```
 
 ## Database Problems
@@ -208,7 +208,7 @@ docker logs srvthreds-bootstrap -f
 docker exec -it mongo-repl-1 mongosh --eval "rs.status()"
 
 # If not initialized, run setup script
-./deploy-containers/local/docker/scripts/setup-repl.sh
+./deploy/local/docker/scripts/setup-repl.sh
 
 # Verify initialization
 docker exec -it mongo-repl-1 mongosh --eval "rs.status().members"
@@ -235,7 +235,7 @@ docker exec -it mongo-repl-1 mongosh --eval "db.adminCommand('ping')"
 
 1. **Container Not Running**:
    ```bash
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1
    ```
 
 2. **Wrong Connection String**:
@@ -249,7 +249,7 @@ docker exec -it mongo-repl-1 mongosh --eval "db.adminCommand('ping')"
 
    # Recreate network if needed
    docker network rm srvthreds-net
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d
    ```
 
 #### Data Corruption
@@ -259,17 +259,17 @@ docker exec -it mongo-repl-1 mongosh --eval "db.adminCommand('ping')"
 **Solution**:
 ```bash
 # Stop MongoDB
-docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml down
+docker compose -f deploy/local/docker/compose/docker-compose-db.yml down
 
 # Backup corrupted data
-mv deploy-containers/local/docker/compose/.docker/mongodb deploy-containers/local/docker/compose/.docker/mongodb.backup
+mv deploy/local/docker/compose/.docker/mongodb deploy/local/docker/compose/.docker/mongodb.backup
 
 # Start fresh
-docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1
-./deploy-containers/local/docker/scripts/setup-repl.sh
+docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1
+./deploy/local/docker/scripts/setup-repl.sh
 
 # Re-bootstrap data
-docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml up srvthreds-bootstrap
+docker compose -f deploy/local/docker/compose/docker-compose-services.yml up srvthreds-bootstrap
 ```
 
 ### Redis Issues
@@ -396,7 +396,7 @@ docker system df
 **Solution**:
 ```bash
 # Check .dockerignore exists
-cat deploy-containers/local/docker/dockerfiles/Dockerfile.builder.dockerignore
+cat deploy/local/docker/dockerfiles/Dockerfile.builder.dockerignore
 
 # Ensure node_modules is ignored
 # Add to .dockerignore if needed:
@@ -416,7 +416,7 @@ echo "dist-server" >> .dockerignore
    curl -I https://registry.npmjs.org
 
    # Retry build with no cache
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+   docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
    ```
 
 2. **Package Lock Issue**:
@@ -426,7 +426,7 @@ echo "dist-server" >> .dockerignore
    npm install
 
    # Rebuild
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+   docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
    ```
 
 #### TypeScript Compilation Errors
@@ -440,7 +440,7 @@ npm run check
 
 # Fix TypeScript errors in source code
 # Then rebuild
-docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
+docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
 ```
 
 ## Network Issues
@@ -467,8 +467,8 @@ docker exec srvthreds-engine nc -zv redis 6379
    docker network create srvthreds-net
 
    # Restart services
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml down
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml down
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d
    ```
 
 2. **Wrong Network Configuration**:
@@ -531,13 +531,13 @@ netstat -ano | findstr :27017  # Windows
 2. **Disable Unnecessary Services**:
    ```bash
    # Start only what you need
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1 redis
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d mongo-repl-1 redis
    ```
 
 3. **Use Host Development**:
    ```bash
    # Keep databases in Docker, run app on host
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-db.yml up -d
+   docker compose -f deploy/local/docker/compose/docker-compose-db.yml up -d
    npm run start-dev
    ```
 
@@ -557,7 +557,7 @@ netstat -ano | findstr :27017  # Windows
 2. **Layer Caching**:
    ```bash
    # Build incrementally, not with --no-cache
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml build srvthreds-builder
+   docker compose -f deploy/local/docker/compose/docker-compose-services.yml build srvthreds-builder
    ```
 
 3. **Optimize Dockerfile**:
@@ -631,7 +631,7 @@ docker logs srvthreds-bootstrap
    # All databases should show "healthy" status
 
    # Manually run bootstrap after databases ready
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml up srvthreds-bootstrap
+   docker compose -f deploy/local/docker/compose/docker-compose-services.yml up srvthreds-bootstrap
    ```
 
 2. **Pattern Errors**:
@@ -643,7 +643,7 @@ docker logs srvthreds-bootstrap
 3. **Wrong Profile**:
    ```bash
    # Specify correct profile
-   docker compose -f deploy-containers/local/docker/compose/docker-compose-services.yml run srvthreds-bootstrap npm run bootstrap -- -p dev
+   docker compose -f deploy/local/docker/compose/docker-compose-services.yml run srvthreds-bootstrap npm run bootstrap -- -p dev
    ```
 
 ### Data Not Persisting
@@ -656,7 +656,7 @@ docker logs srvthreds-bootstrap
 docker inspect mongo-repl-1 --format='{{range .Mounts}}{{.Source}}:{{.Destination}}{{end}}'
 
 # Check volume data exists
-ls -la deploy-containers/local/docker/compose/.docker/mongodb/data/db
+ls -la deploy/local/docker/compose/.docker/mongodb/data/db
 ```
 
 **Solutions**:
@@ -669,7 +669,7 @@ ls -la deploy-containers/local/docker/compose/.docker/mongodb/data/db
 2. **Permissions Issue**:
    ```bash
    # Fix permissions on volume directory
-   sudo chown -R $(id -u):$(id -g) deploy-containers/local/docker/compose/.docker
+   sudo chown -R $(id -u):$(id -g) deploy/local/docker/compose/.docker
    ```
 
 3. **Using Named Volumes vs Bind Mounts**:
@@ -729,7 +729,7 @@ If all else fails, complete reset:
 
 ```bash
 # WARNING: This deletes all data
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 
 # Stop and remove everything
 docker compose -f docker-compose-services.yml down -v --rmi local
@@ -746,7 +746,7 @@ docker system prune -a --volumes
 
 # Start fresh
 docker compose -f docker-compose-db.yml up -d --wait
-./deploy-containers/local/docker/scripts/setup-repl.sh
+./deploy/local/docker/scripts/setup-repl.sh
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
 docker compose -f docker-compose-services.yml up -d --wait
 ```

@@ -1,4 +1,4 @@
-# Deploy Containers
+# Deploy
 
 Container deployment infrastructure for SrvThreds - an event-driven workflow automation system.
 
@@ -63,7 +63,7 @@ This provides a numbered menu to choose from all available deployments. Useful f
 ## Directory Structure
 
 ```
-deploy-containers/
+deploy/
 ├── README.md                           # This file
 ├── docs/                               # Detailed documentation
 │   ├── getting-started.md             # Step-by-step setup guide
@@ -168,7 +168,7 @@ docker logs -f srvthreds-session-agent
 docker logs -f mongo-repl-1
 
 # All services (navigate to compose directory)
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 docker compose -f docker-compose-services.yml logs -f
 ```
 
@@ -176,7 +176,7 @@ docker compose -f docker-compose-services.yml logs -f
 
 ```bash
 # After code changes, navigate to compose directory
-cd deploy-containers/local/docker/compose
+cd deploy/local/docker/compose
 
 # Rebuild builder image
 docker compose -f docker-compose-services.yml build --no-cache srvthreds-builder
