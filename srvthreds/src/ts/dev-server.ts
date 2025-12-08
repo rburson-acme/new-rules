@@ -33,7 +33,7 @@ import { EngineConfig } from './config/EngineConfig.js';
 import { RascalConfig } from './config/RascalConfig.js';
 import { PinoLogger } from './logger/PinoLogger.js';
 
-import sync_test_pattern from '../../run-profiles/dev/patterns/sync_test.pattern.json' with { type: 'json' };
+import sync_test_pattern from '../../run-profiles/test/patterns/client_sync_test.pattern.json' with { type: 'json' };
 
 const patternModelsOverride: PatternModel[] = [sync_test_pattern] as PatternModel[];
 

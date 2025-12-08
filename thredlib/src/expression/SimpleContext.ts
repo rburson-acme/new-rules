@@ -16,4 +16,9 @@ export class SimpleContext implements ExpressionContext {
         return this.scope[name];
     }
 
+    // return the thredId if it exists in the scope
+    getThredId(): string | undefined {
+        return this.scope['thredId'];
+    }
+
 }

@@ -2,6 +2,10 @@
 
 This file provides guidance for coding agents
 
+## Important instructions
+- if there is any uncertainly about how to perform a task, ask me (the user).
+- please request further clarification and specification if there is any ambiguity in a request
+
 ## Essential Commands
 
 ### Development

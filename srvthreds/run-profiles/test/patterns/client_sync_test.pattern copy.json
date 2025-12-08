@@ -1,0 +1,186 @@
+{
+    "meta": {
+        "active": true
+    },
+    "name": "Sync Test Pattern",
+    "id": "sync_test",
+    "reactions": [
+        {
+            "name": "save_seqId",
+            "condition": {
+                "type": "or",
+                "operands": [
+                    {
+                        "type": "filter",
+                        "xpr": "$event.type = 'org.sync.event' and $valueNamed('action') = 'seq'",
+                        "onTrue": {
+                            "xpr": "$setLocal('req_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
+                        },
+                        "transform": {
+                            "eventDataTemplate": {
+                                "title": "Sync Event Detected",
+                                "content": {
+                                    "tasks": [
+                                        {
+                                            "name": "save_sync_data",
+                                            "options": {
+                                                "dbname": "test"
+                                            },
+                                            "op": "upsert",
+                                            "params": {
+                                                "type": "SyncObject",
+                                                "matcher": {
+                                                    "id": "$xpr($event.thredId)"
+                                                },
+                                                "values": {
+                                                    "$push": {
+                                                        "seqIds": "$xpr( $valueNamed('seqId') )"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "transition": {
+                            "name": "notify_participant"
+                        },
+                        "publish": {
+                            "to": "org.wt.persistence"
+                        }
+                    },
+                    {
+                        "type": "filter",
+                        "xpr": "$event.type = 'org.sync.event' and $valueNamed('action') = 'finish'",
+                        "transform": {
+                            "eventDataTemplate": {
+                                "title": "Getting Sync Data",
+                                "content": {
+                                    "tasks": [
+                                        {
+                                            "name": "get_sync_data",
+                                            "options": {
+                                                "dbname": "test"
+                                            },
+                                            "op": "get",
+                                            "params": {
+                                                "type": "SyncObject",
+                                                "matcher": {
+                                                    "id": "$xpr($event.thredId)"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "publish": {
+                            "to": "org.wt.persistence"
+                        },
+                        "transition": {
+                            "name": "send_results"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "notify_participant",
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.persistence'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Sequence Stored",
+                        "description": "Sequence ID stored successfully",
+                        "content": {
+                            "values": {
+                                "seqId": "$xpr( $local('req_data').seqId )"
+                            }
+                        }
+                    }
+                },
+                "transition": {
+                    "name": "save_seqId"
+                },
+                "publish": {
+                    "to": [
+                        "$xpr( $local('req_data').sourceId )"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "send_results",
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.persistence'",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Final Test Results",
+                        "content": {
+                            "values": {
+                                "seqIds": "$xpr( $valueNamed('seqIds') )"
+                            }
+                        }
+                    }
+                },
+                "publish": {
+                    "to": [
+                        "$xpr( $local('req_data').sourceId )"
+                    ]
+                },
+                "transition": {
+                    "name": "cleanup",
+                    "input": "forward"
+                }
+            }
+        },
+        {
+            "name": "cleanup",
+            "condition": {
+                "type": "filter",
+                "xpr": "true",
+                "transform": {
+                    "eventDataTemplate": {
+                        "title": "Cleanup Test Data",
+                        "content": {
+                            "tasks": [
+                                {
+                                    "name": "delete_sync_data",
+                                    "options": {
+                                        "dbname": "test"
+                                    },
+                                    "op": "delete",
+                                    "params": {
+                                        "type": "SyncObject",
+                                        "matcher": {
+                                            "id": "$xpr($event.thredId)"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "publish": {
+                    "to": "org.wt.persistence"
+                },
+                "transition": {
+                    "name": "$next"
+                }
+            }
+        },
+        {
+            "name": "wait_cleanup_response",
+            "condition": {
+                "type": "filter",
+                "xpr": "$event.type = 'org.wt.persistence'",
+                "transition": {
+                    "name": "$terminate"
+                }
+            }
+        }
+    ]
+}

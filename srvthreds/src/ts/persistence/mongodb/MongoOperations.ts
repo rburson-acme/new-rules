@@ -50,7 +50,7 @@ export class MongoOperations {
   };
 
   static readonly INBOUND_FIELD_BLACKLIST = [MongoOperations._ID, Operations.CREATED, Operations.MODIFIED];
-  static readonly UPDATE_FIELD_BLACKLIST = [...MongoOperations.INBOUND_FIELD_BLACKLIST, Operations.ID];
+  static readonly UPDATE_FIELD_BLACKLIST = [...MongoOperations.INBOUND_FIELD_BLACKLIST];
   static readonly MATCHER_FIELD_BLACKLIST = [];
   static readonly OUTBOUND_FIELD_BLACKLIST = [];
 

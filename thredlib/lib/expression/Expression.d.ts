@@ -10,13 +10,14 @@ export declare class Expression {
     apply(params: ExpressionParams, bindings?: Record<string, string>): Promise<any>;
     bindingSetup(bindings: Record<string, string>, params: ExpressionParams): {
         event: Event;
-        data: import("../core/Event.js").EventData | undefined;
+        thredId: string | undefined;
         advice: {
             eventType: string;
             title?: string;
             template?: import("../index.js").TemplateModel;
         } | undefined;
         content: import("../core/Event.js").EventContent | undefined;
+        data: import("../core/Event.js").EventData | undefined;
         values: Record<string, any> | Record<string, any>[] | undefined;
         valueNamed: (name: string, _event?: Event) => any;
         local: (name: string) => any;

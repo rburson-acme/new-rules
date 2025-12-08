@@ -41,7 +41,7 @@ function retrievePatterns(directory: string): any[] {
 
 async function persistPatterns(patterns: any[]): Promise<void> {
   await Series.forEach(patterns, async (pattern) => {
-    await SystemController.get().upsertPattern(pattern);
+    await SystemController.get().replacePattern(pattern);
   });
 }
 
