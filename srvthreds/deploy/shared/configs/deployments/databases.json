@@ -5,10 +5,7 @@
       "shortName": "s_a_dbs",
       "description": "Starts the database containers (Mongo, Redis, RabbitMQ).",
       "environments": [
-        "local",
-        "minikube",
-        "dev",
-        "test"
+        "local"
       ],
       "target": {
         "type": "docker-compose",
@@ -24,9 +21,6 @@
                 "command": "deploy/local/docker/scripts/setup-repl.sh"
               }
             ]
-          },
-          "minikube": {
-            "defaultArgs": "mongo-repl-1 redis -d --wait"
           }
         }
       }
@@ -36,21 +30,13 @@
       "shortName": "d_a_dbs",
       "description": "Stops and removes the database containers and their volumes.",
       "environments": [
-        "local",
-        "minikube",
-        "dev",
-        "test"
+        "local"
       ],
       "target": {
         "composing": "databases",
         "deployCommand": "down",
         "composeFile": "docker-compose-db.yml",
-        "defaultArgs": "-v",
-        "environmentOverrides": {
-          "minikube": {
-            "defaultArgs": "mongo-repl-1 redis -v"
-          }
-        }
+        "defaultArgs": "-v"
       }
     }
   ]

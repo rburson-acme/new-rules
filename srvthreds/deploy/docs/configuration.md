@@ -402,7 +402,7 @@ Deployment configurations define how to start, stop, and manage services using t
       "name": "Start Databases",
       "shortName": "s_a_dbs",
       "description": "Starts the database containers (Mongo, Redis, RabbitMQ).",
-      "environments": ["local", "minikube", "dev", "test"],
+      "environments": ["local"],
       "target": {
         "type": "docker-compose",
         "composing": "databases",

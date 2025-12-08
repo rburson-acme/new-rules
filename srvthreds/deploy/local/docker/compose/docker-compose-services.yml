@@ -60,7 +60,8 @@ services:
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
-      - srvthreds-bootstrap
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
   srvthreds-session-agent:
     image: srvthreds/session-agent:latest
     container_name: srvthreds-session-agent
@@ -92,7 +93,8 @@ services:
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
-      - srvthreds-bootstrap
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
   srvthreds-persistence-agent:
     image: srvthreds/persistence-agent:latest
     container_name: srvthreds-persistence-agent
@@ -121,7 +123,8 @@ services:
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
-      - srvthreds-bootstrap
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
 networks:
   srvthreds-net:
     external: true

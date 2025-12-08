@@ -15,6 +15,7 @@
 .github/
 config/
 deploy/
+!deploy/tools/deployment-cli/assets/
 node_modules/
 scripts/
 .vscode/
