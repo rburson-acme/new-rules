@@ -254,30 +254,31 @@ npm run deploymentCli
    ```
    Select an environment:
    1. local
-   2. dev
-   3. staging
-   4. Cancel
+   2. Cancel
 
    Please enter the number of your choice:
    ```
 
+   Note: Currently only `local` environment is configured. Additional environments can be added by defining deployments with different `environments` arrays in the JSON configs.
+
 2. **Select Deployment**:
    ```
    Select a deployment:
-   1. Start Databases (s_a_dbs) - Starts the database containers
-   2. Stop Databases (d_a_dbs) - Stops and removes the database containers
-   3. Start Services (s_a_s) - Starts the application services
-   4. Stop Services (d_a_s) - Stops and removes the application services
-   5. Start All (s_a_dbs_s) - Starts all databases and application services
-   6. Stop All (d_a_dbs_s) - Stops all databases and application services
-   7. Start Server (s_s) - Starts the application server service
-   8. Stop Server (d_s) - Stops and removes the application server services
-   9. Start Session Agent Service (s_sa) - Starts the session agent
-   10. Stop Session Agent Services (d_sa) - Stops the session agent
-   11. Start Persistence Agent Service (s_pa) - Starts the persistence agent
-   12. Stop Persistence Agent Service (d_pa) - Stops the persistence agent
-   13. Run bootstrap for data (bootstrap) - Bootstrap the database
-   14. Cancel
+   1. Create Base Image (build_server) - Creates the base image used by all services.
+   2. Start Databases (s_a_dbs) - Starts the database containers (Mongo, Redis, RabbitMQ).
+   3. Stop Databases (d_a_dbs) - Stops and removes the database containers and their volumes.
+   4. Start Services (s_a_s) - Starts the application services.
+   5. Stop Services (d_a_s) - Stops and removes the application services.
+   6. Start All (s_a_dbs_s) - Starts all databases and application services.
+   7. Stop All (d_a_dbs_s) - Stops all databases and application services.
+   8. Start Server (s_s) - Starts the application server service.
+   9. Stop Server (d_s) - Stops and removes the application server services.
+   10. Start Session Agent Service (s_sa) - Starts the application session agent service.
+   11. Stop Session Agent Services (d_sa) - Stops and removes the application session agent service.
+   12. Start Persistence Agent Service (s_pa) - Starts the application persistence agent service.
+   13. Stop Persistence Agent Service (d_pa) - Stops the application persistence agent service.
+   14. Run bootstrap for data (bootstrap) - Bootstrap the database with configuration data.
+   15. Cancel
 
    Please enter the number of your choice:
    ```
@@ -288,7 +289,7 @@ npm run deploymentCli
 - Exploring available deployment options
 - One-off deployments not covered by npm scripts
 - Learning what deployments are available
-- Running deployments for non-local environments (dev, staging)
+- Running individual service deployments
 
 ### Direct CLI Usage (Advanced)
 

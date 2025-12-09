@@ -89,13 +89,14 @@ deploy/
 ├── shared/                             # Shared deployment configurations
 │   └── configs/
 │       └── deployments/               # Deployment definitions
+│           ├── build.json             # Build-only deployment configs
 │           ├── databases.json         # Database deployment configs
 │           └── services.json          # Service deployment configs
 └── tools/                              # Deployment automation tools
     └── deployment-cli/                # CLI deployment tool
         ├── cli.ts                     # CLI entry point
         ├── deployment.ts              # Deployment logic
-        └── assets/                    # Build-time assets staging
+        └── assets/                    # Build-time assets staging (auto-cleaned)
 ```
 
 ## Services

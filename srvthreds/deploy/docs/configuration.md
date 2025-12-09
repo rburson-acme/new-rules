@@ -19,27 +19,38 @@ Two environment file templates are provided for different deployment scenarios.
 
 #### .env.docker
 
-Used when all services run in Docker containers.
+Used when all services run in Docker containers. Contains development secrets for local Docker deployments.
 
 **Location**: `deploy/local/configs/.env.docker`
 
 ```bash
-# JWT Configuration
-JWT_SECRET=                          # Required in production - used for token signing
+NODE_ENV=development
+LOG_LEVEL=debug
+
+# JWT Configuration (development secrets pre-configured)
+JWT_SECRET=<dev-secret>              # Pre-populated for development
 JWT_EXPIRE_TIME=1h                   # Token expiration duration
-REFRESH_TOKEN_SECRET=                # Required in production - refresh token signing
+REFRESH_TOKEN_SECRET=<dev-secret>    # Pre-populated for development
 REFRESH_TOKEN_EXPIRE_TIME=7d         # Refresh token expiration
 
+# Remote Agent Authentication (optional, for remote agent connections)
+AUTH_TOKEN=                          # Token to connect to session service
+AUTHORIZED_TOKENS=                   # Comma-separated allowed tokens
+ROBOT_AGENT_AUTH_TOKEN=<dev-token>   # Pre-configured robot agent token
+ROBOT_AGENT_AUTHORIZED_TOKENS=
+
 # Database Configuration
-MONGO_HOST=mongo-repl-1:27017       # Container hostname (not localhost)
+MONGO_HOST=localhost:27017           # Uses localhost (port-forwarded from Docker)
 MONGO_DIRECT_CONNECTION=true         # Required for single-node replica sets
 
 # Cache and Storage
-REDIS_HOST=redis:6379                # Container hostname
+REDIS_HOST=localhost:6379            # Uses localhost (port-forwarded from Docker)
 
 # Message Queue
-RABBITMQ_HOST=rabbitmq               # Container hostname (no port)
+RABBITMQ_HOST=localhost              # Uses localhost (port-forwarded from Docker)
 ```
+
+**Note**: The .env.docker file uses `localhost` addresses because Docker Compose sets container-specific environment variables with defaults that override these when running inside containers (e.g., `MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}`).
 
 **Usage**: Automatically copied to builder image during Docker builds.
 
@@ -302,7 +313,8 @@ srvthreds-engine:
     args:
       BUILDER_IMAGE: srvthreds/builder:latest
   depends_on:
-    - srvthreds-bootstrap
+    srvthreds-bootstrap:
+      condition: service_completed_successfully
 ```
 
 **Customization**:
@@ -345,7 +357,8 @@ srvthreds-session-agent:
     args:
       BUILDER_IMAGE: srvthreds/builder:latest
   depends_on:
-    - srvthreds-bootstrap
+    srvthreds-bootstrap:
+      condition: service_completed_successfully
 ```
 
 **Customization**:
@@ -384,7 +397,8 @@ srvthreds-persistence-agent:
     args:
       BUILDER_IMAGE: srvthreds/builder:latest
   depends_on:
-    - srvthreds-bootstrap
+    srvthreds-bootstrap:
+      condition: service_completed_successfully
 ```
 
 ## Deployment Configurations

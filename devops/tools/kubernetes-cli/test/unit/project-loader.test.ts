@@ -37,10 +37,10 @@ describe('project-loader', () => {
       deployments: ['test-api', 'test-worker'],
     },
     minikube: {
-      manifestPath: 'local/minikube/test/',
+      manifestPath: 'minikube/test/manifests/minikube/',
     },
     aks: {
-      manifestPath: 'cloud/kubernetes/test/',
+      manifestPath: 'kubernetes/test/',
       environments: ['dev', 'test', 'prod'],
     },
   };
@@ -169,7 +169,7 @@ describe('project-loader', () => {
       vi.mocked(yaml.load).mockReturnValue({
         ...validProjectYaml,
         aks: {
-          manifestPath: 'cloud/kubernetes/test/',
+          manifestPath: 'kubernetes/test/',
           environments: [], // Empty environments
         },
       });

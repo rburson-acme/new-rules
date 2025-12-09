@@ -33,11 +33,11 @@ kubernetes:
 
 minikube:
   # Manifest path relative to devops directory
-  manifestPath: local/minikube/srvthreds/manifests/minikube/
+  manifestPath: minikube/srvthreds/manifests/minikube/
 
 aks:
   # Manifest path relative to devops directory
-  manifestPath: cloud/kubernetes/srvthreds/
+  manifestPath: kubernetes/srvthreds/
   environments:
     - dev
     - test

@@ -1,27 +1,22 @@
 # DevOps - Infrastructure & Deployment Platform
 
-A comprehensive, configuration-driven DevOps platform for managing multi-project deployments across local development (Minikube) and Azure cloud environments (AKS + Terraform).
+A configuration-driven DevOps platform for managing deployments across local development (Minikube) and Azure cloud environments (AKS + Terraform).
 
 ## Overview
 
-This DevOps platform provides a unified infrastructure-as-code solution for deploying and managing applications in the threds monorepo. It combines Terraform for Azure infrastructure provisioning and Kubernetes for container orchestration, with sophisticated TypeScript-based CLI tools for deployment automation.
+This platform provides infrastructure-as-code for deploying and managing applications in the threds monorepo. It combines Terraform for Azure infrastructure provisioning and Kubernetes for container orchestration, with TypeScript-based CLI tools for deployment automation.
 
 ### Key Features
 
-- **Multi-Environment Support**: Deploy to local (Minikube), development, testing, and production Azure environments
-- **Configuration-Driven**: Single source of truth ([config-registry.yaml](configs/config-registry.yaml)) for all deployment configurations
-- **Type-Safe CLIs**: TypeScript-based command-line tools with comprehensive error handling
+- **Multi-Environment Support**: Deploy to local (Minikube), dev, test, and prod Azure environments
+- **Configuration-Driven**: Single source of truth ([config-registry.yaml](configs/config-registry.yaml)) for deployment configurations
+- **Type-Safe CLIs**: TypeScript command-line tools with comprehensive error handling
 - **Infrastructure as Code**: Terraform modules for Azure resources (AKS, ACR, Key Vault, Cosmos DB, Redis, etc.)
 - **Kubernetes Automation**: Kustomize-based manifest management for environment-specific configurations
-- **Project Extensibility**: Designed to support multiple projects beyond srvthreds
 
-### Supported Projects
+### Primary Project
 
-Currently configured for:
-- **srvthreds** - Event-driven workflow automation backend (primary)
-- **thredclient** - Client application (configurable)
-- **thredlib** - Shared library (configurable)
-- **demo-env** - Demo environment (configurable)
+Currently configured for **srvthreds** - Event-driven workflow automation backend.
 
 ## Quick Start
 
@@ -38,19 +33,12 @@ Currently configured for:
 **Installation:**
 
 ```bash
-# Clone the repository
 cd devops
-
-# Install dependencies
 npm install
-
-# Verify setup
 npm run check
 ```
 
 ### Local Development (Minikube)
-
-Deploy srvthreds to your local Minikube cluster:
 
 ```bash
 # Deploy to Minikube (creates cluster if needed)
@@ -67,8 +55,6 @@ npm run minikube:cleanup
 ```
 
 ### Azure Cloud Deployment
-
-Deploy infrastructure and applications to Azure:
 
 ```bash
 # 1. Bootstrap Terraform state backend (one-time setup)
@@ -91,95 +77,125 @@ npm run aks:status -- dev
 npm run tf:status -- dev
 ```
 
-## Architecture
-
-### Directory Structure
+## Directory Structure
 
 ```
 devops/
-├── cloud/                      # Cloud deployment configurations
-│   ├── kubernetes/             # AKS Kubernetes manifests (Kustomize)
-│   │   └── srvthreds/          # srvthreds AKS configurations
-│   │       ├── base/           # Base manifests (shared)
-│   │       ├── dev/            # Dev environment overlays
-│   │       ├── test/           # Test environment overlays
-│   │       └── prod/           # Production environment overlays
-│   └── terraform/              # Terraform infrastructure modules
-│       ├── modules/            # Reusable Terraform modules
-│       │   ├── networking/     # VNet, subnets, NSGs
-│       │   ├── aks/            # Azure Kubernetes Service
-│       │   ├── acr/            # Azure Container Registry
-│       │   ├── keyvault/       # Azure Key Vault
-│       │   ├── cosmosdb/       # Cosmos DB (MongoDB API)
-│       │   ├── redis/          # Azure Cache for Redis
-│       │   └── rabbitmq/       # RabbitMQ (VM-based)
-│       └── stacks/             # Environment-specific stacks
-│           ├── dev/            # Development stack
-│           ├── test/           # Test stack
-│           └── prod/           # Production stack
+├── configs/                      # Configuration files
+│   ├── config-registry.yaml      # Service definitions, ports, resources
+│   └── terraform/
+│       ├── stacks.json           # Stack definitions & dependencies
+│       └── environments.json     # Environment metadata
 │
-├── local/                      # Local development configurations
-│   ├── minikube/               # Minikube Kubernetes manifests
-│   │   └── srvthreds/          # srvthreds Minikube configurations
-│   │       └── manifests/      # Kustomize manifests
-│   └── configs/                # Local environment configs
+├── docs/                         # Documentation
+│   ├── AZURE_DEPLOYMENT.md
+│   ├── MINIKUBE_DEPLOYMENT.md
+│   ├── PROJECT_CONFIGURATION.md
+│   └── TROUBLESHOOTING.md
 │
-├── configs/                    # Configuration management
-│   ├── config-registry.yaml    # Single source of truth
-│   └── terraform/              # Terraform stack definitions
-│       ├── stacks.json         # Stack configurations
-│       └── environments.json   # Environment configurations
+├── kubernetes/                   # AKS manifests (Kustomize)
+│   └── srvthreds/
+│       ├── base/                 # Shared manifests
+│       ├── dev/                  # Dev environment overlay
+│       ├── test/                 # Test environment overlay
+│       └── prod/                 # Production overlay
 │
-├── projects/                   # Project-specific configurations
-│   ├── srvthreds/              # srvthreds project config
-│   │   └── project.yaml        # Project metadata & paths
-│   ├── thredclient/            # thredclient project config
-│   ├── thredlib/               # thredlib project config
-│   └── demo-env/               # demo-env project config
+├── minikube/                     # Local Kubernetes development
+│   └── srvthreds/
+│       ├── configs/agents/       # Agent configuration files
+│       ├── manifests/
+│       │   ├── base/             # Base manifests
+│       │   ├── minikube/         # Minikube-specific overlay
+│       │   └── prod/             # Prod overlay
+│       └── scripts/              # Helper scripts
 │
-├── tools/                      # CLI tooling (TypeScript)
-│   ├── terraform-cli/          # Terraform management CLI
-│   │   ├── cli.ts              # Main CLI entry point
-│   │   ├── commands/           # Command implementations
-│   │   └── utils/              # Terraform utilities
-│   ├── kubernetes-cli/         # Kubernetes deployment CLI
-│   │   ├── cli.ts              # Main CLI entry point
-│   │   ├── commands/           # Command implementations
-│   │   │   ├── minikube.ts     # Minikube commands
-│   │   │   ├── aks.ts          # AKS commands
-│   │   │   └── config.ts       # Config management
-│   │   └── config/             # Configuration loaders
-│   ├── kubernetes-deployer/    # Core deployment framework
-│   │   └── src/
-│   │       ├── deployers/      # Deployer implementations
-│   │       │   ├── BaseDeployer.ts        # Abstract base
-│   │       │   ├── MinikubeDeployer.ts    # Minikube deployer
-│   │       │   └── AKSDeployer.ts         # AKS deployer
-│   │       ├── operations/     # Kubernetes operations
-│   │       │   └── KubernetesClient.ts    # kubectl wrapper
-│   │       ├── state/          # Deployment state management
-│   │       ├── types/          # TypeScript type definitions
-│   │       └── utils/          # Shared utilities
-│   └── shared/                 # Shared utilities
-│       ├── logger.ts           # Logging framework
-│       ├── shell.ts            # Shell command executor
-│       ├── error-handler.ts    # Error handling
-│       └── config/             # Config generation & validation
+├── projects/                     # Project-specific configs
+│   └── srvthreds/
+│       └── project.yaml          # Project metadata & paths
 │
-├── docs/                       # Documentation
-│   ├── PROJECT_CONFIGURATION.md    # How to configure projects
-│   ├── AZURE_DEPLOYMENT.md         # Azure deployment guide
-│   ├── MINIKUBE_DEPLOYMENT.md      # Minikube deployment guide
-│   └── TROUBLESHOOTING.md          # Common issues & solutions
+├── terraform/                    # Infrastructure as Code
+│   ├── azure-pipelines/          # CI/CD pipelines
+│   ├── modules/
+│   │   ├── azure/                # Azure modules (11)
+│   │   │   ├── acr/              # Container Registry
+│   │   │   ├── aks/              # Kubernetes Service
+│   │   │   ├── appgateway/       # Application Gateway
+│   │   │   ├── cosmosdb/         # Cosmos DB (MongoDB API)
+│   │   │   ├── keyvault/         # Key Vault
+│   │   │   ├── monitoring/       # Log Analytics, App Insights
+│   │   │   ├── networking/       # VNet, subnets, NSGs
+│   │   │   ├── private-endpoint/ # Private endpoints
+│   │   │   ├── rbac/             # Role-based access control
+│   │   │   ├── redis/            # Cache for Redis
+│   │   │   └── servicebus/       # Service Bus
+│   │   ├── eks/                  # AWS EKS modules
+│   │   ├── mongodb-atlas/        # MongoDB Atlas modules
+│   │   └── networking/           # Cross-cloud networking
+│   ├── stacks/srvthreds/         # srvthreds environment stacks
+│   │   ├── _shared/              # Shared backend config
+│   │   ├── acr/
+│   │   ├── aks/
+│   │   ├── appgateway/
+│   │   ├── common/
+│   │   ├── cosmosdb/
+│   │   ├── keyvault/
+│   │   ├── monitoring/
+│   │   ├── networking/
+│   │   ├── nginx-ingress/
+│   │   ├── redis/
+│   │   └── servicebus/
+│   └── state-backend/            # Terraform state bootstrap
 │
-└── test/                       # Tests
-    ├── unit/                   # Unit tests
-    └── integration/            # Integration tests
+└── tools/                        # CLI tools (TypeScript)
+    ├── kubernetes-cli/           # K8s deployment CLI
+    │   ├── cli.ts                # Entry point (yargs)
+    │   ├── commands/
+    │   │   ├── aks.ts            # AKS commands
+    │   │   ├── config.ts         # Config commands
+    │   │   └── minikube.ts       # Minikube commands
+    │   ├── config/
+    │   │   └── project-loader.ts # Project config loader
+    │   ├── test/
+    │   └── utils/
+    │       └── output.ts
+    ├── kubernetes-deployer/      # Core deployment framework
+    │   ├── src/
+    │   │   ├── deployers/        # Deployer implementations
+    │   │   ├── index.ts
+    │   │   ├── operations/       # K8s operations
+    │   │   ├── state/            # Deployment state
+    │   │   ├── types/
+    │   │   └── utils/
+    │   └── test/
+    ├── shared/                   # Shared utilities
+    │   ├── config/
+    │   │   └── validator.ts      # Config validation
+    │   ├── config-loader.ts
+    │   ├── error-handler.ts      # Error classes
+    │   ├── logger.ts             # Logging framework
+    │   └── shell.ts              # Shell command executor
+    └── terraform-cli/            # Terraform management CLI
+        ├── cli.ts                # Entry point
+        ├── commands/             # 11 command files
+        │   ├── bootstrap.ts
+        │   ├── cleanup.ts
+        │   ├── deploy.ts         # deploy + plan commands
+        │   ├── destroy.ts
+        │   ├── fix-symlinks.ts
+        │   ├── import.ts
+        │   ├── init.ts
+        │   ├── output.ts
+        │   ├── state.ts
+        │   ├── status.ts
+        │   └── validate-security.ts
+        ├── test/
+        ├── types/
+        └── utils/
 ```
 
-### Component Overview
+## Configuration
 
-#### 1. Configuration Registry (`configs/config-registry.yaml`)
+### Configuration Registry (`configs/config-registry.yaml`)
 
 Single source of truth defining:
 - Service definitions (images, ports, resources, replicas)
@@ -187,341 +203,85 @@ Single source of truth defining:
 - Build paths and Docker contexts
 - Connection strings (local, docker, kubernetes, minikube)
 - Security settings (JWT, TLS)
-- Cloud-specific configurations
 
-#### 2. Terraform CLI (`tools/terraform-cli/`)
+**Services defined:**
+- `builder` - Base builder image with compiled artifacts
+- `bootstrap` - Database initialization and seeding
+- `engine` - Main event processing engine
+- `session-agent` - User session and participant management
+- `persistence-agent` - Data persistence operations
 
-Manages Azure infrastructure with commands:
-- `init` - Initialize Terraform for an environment
-- `plan` - Preview infrastructure changes
-- `deploy` - Apply infrastructure changes
-- `destroy` - Tear down infrastructure
-- `status` - Check deployment status
-- `bootstrap` - Initialize state backend
-- `validate-security` - Validate security configurations
-- `import` - Import existing Azure resources
-- `state` - Manage Terraform state
+**Databases defined:**
+- `mongodb` - MongoDB replica set
+- `redis` - Redis cache server
+- `rabbitmq` - RabbitMQ message broker
 
-#### 3. Kubernetes CLI (`tools/kubernetes-cli/`)
+### Project Configuration (`projects/srvthreds/project.yaml`)
 
-Manages Kubernetes deployments with commands:
-- `minikube deploy` - Deploy to local Minikube
-- `minikube reset` - Reset Minikube deployment
-- `minikube cleanup` - Destroy Minikube cluster
-- `minikube status` - Check Minikube status
-- `aks deploy <env>` - Deploy to Azure AKS
-- `aks status <env>` - Check AKS deployment status
-- `config list` - List available projects
+Project-specific settings:
+- Source paths to the project
+- Docker image definitions
+- Kubernetes namespace and deployments
+- Manifest paths for Minikube and AKS
 
-#### 4. Kubernetes Deployer Framework (`tools/kubernetes-deployer/`)
+### Terraform Stack Dependencies
 
-Core framework providing:
-- Abstract base deployer with deployment lifecycle
-- Minikube deployer for local development
-- AKS deployer for Azure cloud
-- Kubernetes client for kubectl operations
-- Retry logic with exponential backoff
-- Comprehensive error handling
-- Deployment state management
+Stacks are defined in `configs/terraform/stacks.json` with dependencies:
 
-## Configuration Management
-
-### Configuration Registry Structure
-
-The [config-registry.yaml](configs/config-registry.yaml) defines all deployment configurations:
-
-```yaml
-# Application metadata
-metadata:
-  name: srvthreds
-  namespace: srvthreds
-  version: "1.0.0"
-
-# Service definitions
-services:
-  engine:
-    name: srvthreds-engine
-    image:
-      repository: srvthreds/engine
-      tag: latest
-    ports:
-      http: 8082
-    resources:
-      memory:
-        request: 256Mi
-        limit: 512Mi
-      cpu:
-        request: 200m
-        limit: 500m
-    replicas:
-      dev: 1
-      staging: 2
-      production: 3
-
-# Database definitions
-databases:
-  mongodb:
-    name: mongo-repl-1
-    port: 27017
-    resources: {...}
-  redis:
-    name: redis
-    port: 6379
-    resources: {...}
-  rabbitmq:
-    name: rabbitmq
-    ports:
-      amqp: 5672
-      management: 15672
-    resources: {...}
-
-# Connection strings for different environments
-connectionStrings:
-  local:
-    mongodb: "localhost:27017"
-    redis: "localhost:6379"
-    rabbitmq: "localhost"
-  kubernetes:
-    mongodb: "mongodb-service:27017"
-    redis: "redis-service:6379"
-    rabbitmq: "rabbitmq-service"
-  minikube:
-    mongodb: "host.minikube.internal:27017"
-    redis: "host.minikube.internal:6379"
-    rabbitmq: "rabbitmq-service"
 ```
+networking (root)
+├── keyvault
+├── acr
+├── cosmosdb
+├── redis
+└── monitoring
 
-### Project Configuration
-
-Each project has a `project.yaml` file in `projects/<project-name>/`:
-
-```yaml
-name: srvthreds
-description: Event-driven workflow automation backend
-
-source:
-  path: ../srvthreds
-  composePath: infrastructure/local/docker/compose
-  configPath: infrastructure/shared/configs/deployments
-
-docker:
-  builderImage: srvthreds/builder
-  services:
-    - name: engine
-      image: srvthreds/engine
-    - name: session-agent
-      image: srvthreds/session-agent
-
-kubernetes:
-  namespace: srvthreds
-  deployments:
-    - srvthreds-engine
-    - srvthreds-session-agent
-
-minikube:
-  manifestPath: local/minikube/srvthreds/manifests/minikube/
-
-aks:
-  manifestPath: cloud/kubernetes/srvthreds/
-  environments:
-    - dev
-    - test
-    - prod
+aks (depends on: networking, acr)
+└── nginx-ingress (depends on: aks, networking)
 ```
-
-## Deployment Workflows
-
-### Minikube Deployment Flow
-
-1. **Pre-deployment Checks**
-   - Verify Docker daemon is running
-   - Check Minikube installation
-   - Start Minikube cluster if needed (with configured resources)
-   - Configure kubectl context
-   - Ensure namespace exists
-
-2. **Build Images**
-   - Configure Docker to use Minikube environment
-   - Build images using project's deployment CLI
-   - Tag images for Minikube
-
-3. **Setup Databases**
-   - Start MongoDB and Redis on host Docker (accessible via host.minikube.internal)
-   - Initialize MongoDB replica set
-   - Verify database health
-
-4. **Apply Manifests**
-   - Apply Kustomize manifests to cluster
-   - Create ConfigMaps, Secrets, Deployments, Services
-
-5. **Wait for Readiness**
-   - Monitor deployment rollout status
-   - Check pod readiness probes
-   - Verify all replicas are ready
-
-6. **Validation**
-   - Check pod status
-   - Verify services are running
-   - Report any issues
-
-### AKS Deployment Flow
-
-1. **Pre-deployment Checks**
-   - Verify Azure CLI installation and authentication
-   - Check AKS cluster exists and is accessible
-   - Get AKS credentials and configure kubectl
-   - Verify ACR (Azure Container Registry) access
-   - Ensure namespace exists
-
-2. **Build Images**
-   - Build images for linux/amd64 platform
-   - Tag images for ACR
-
-3. **Push Images**
-   - Login to Azure Container Registry
-   - Push all images to ACR
-   - Verify successful push
-
-4. **Apply Manifests**
-   - Apply Kustomize manifests to AKS cluster
-   - Use server-side apply for better conflict resolution
-   - Create environment-specific resources
-
-5. **Wait for Readiness**
-   - Monitor deployment rollout
-   - Check replica counts
-   - Verify health checks pass
-
-6. **Validation**
-   - Validate pod status
-   - Check service endpoints
-   - Report deployment health
-
-### Terraform Deployment Flow
-
-1. **Bootstrap** (one-time setup)
-   - Create Azure resource group for Terraform state
-   - Create storage account and container
-   - Configure backend authentication
-
-2. **Initialize**
-   - Initialize Terraform working directory
-   - Download provider plugins
-   - Configure remote state backend
-
-3. **Plan**
-   - Generate and review execution plan
-   - Show resource changes (create, update, delete)
-   - Estimate costs (if configured)
-
-4. **Apply**
-   - Execute planned changes
-   - Create/update Azure resources
-   - Update state file
-
-5. **Validation**
-   - Verify resource creation
-   - Check resource health
-   - Output important values (connection strings, endpoints)
-
-## Environment-Specific Configuration
-
-### Development Environment
-
-- **Terraform Stack**: `cloud/terraform/stacks/dev/`
-- **AKS Manifests**: `cloud/kubernetes/srvthreds/dev/`
-- **Naming Convention**: `CAZ-SRVTHREDS-D-E-*`
-- **Resources**: Lower tier (cost-optimized)
-- **Replicas**: 1 per service
-
-### Test Environment
-
-- **Terraform Stack**: `cloud/terraform/stacks/test/`
-- **AKS Manifests**: `cloud/kubernetes/srvthreds/test/`
-- **Naming Convention**: `CAZ-SRVTHREDS-T-E-*`
-- **Resources**: Mid-tier
-- **Replicas**: 2 per service
-
-### Production Environment
-
-- **Terraform Stack**: `cloud/terraform/stacks/prod/`
-- **AKS Manifests**: `cloud/kubernetes/srvthreds/prod/`
-- **Naming Convention**: `CAZ-SRVTHREDS-P-E-*`
-- **Resources**: Production-grade (high availability)
-- **Replicas**: 3+ per service
 
 ## CLI Reference
 
 ### Terraform Commands
 
-```bash
-# Initialize Terraform for an environment
-npm run tf:init -- <env>
-
-# Preview changes
-npm run tf:plan -- <env>
-
-# Apply changes
-npm run tf:apply -- <env>
-
-# Destroy infrastructure
-npm run tf:destroy -- <env>
-
-# Check status
-npm run tf:status -- <env>
-
-# Bootstrap state backend (one-time)
-npm run tf:bootstrap
-
-# Fix symlink issues
-npm run tf:fix-symlinks
-
-# Validate security configuration
-npm run tf:validate-security -- <env> <resource-group>
-
-# Import existing resource
-npm run tf:import -- <stack> <resource-type> <resource-name> <azure-id>
-
-# Manage state
-npm run tf:state -- <command> <env>
-```
+| Command | Description |
+|---------|-------------|
+| `npm run tf:init -- <env>` | Initialize Terraform for environment |
+| `npm run tf:plan -- <env>` | Preview infrastructure changes |
+| `npm run tf:apply -- <env>` | Deploy infrastructure |
+| `npm run tf:destroy -- <env>` | Tear down infrastructure |
+| `npm run tf:status -- <env>` | Check deployment status |
+| `npm run tf:bootstrap` | Initialize state backend |
+| `npm run tf:fix-symlinks` | Fix symlink consistency |
+| `npm run tf:validate-security -- <env>` | Validate security config |
+| `npm run tf:import -- <args>` | Import existing resources |
+| `npm run tf:state -- <cmd> <env>` | Manage Terraform state |
 
 ### Kubernetes Commands
 
-```bash
-# Minikube deployment
-npm run minikube:deploy        # Deploy to Minikube
-npm run minikube:reset         # Reset deployment
-npm run minikube:cleanup       # Destroy cluster
-npm run minikube:status        # Check status
-
-# AKS deployment
-npm run aks:deploy -- <env>    # Deploy to AKS (dev|test|prod)
-npm run aks:status -- <env>    # Check AKS status
-
-# Configuration
-npm run config:generate        # Generate configs from registry
-npm run config:validate        # Validate configuration
-```
+| Command | Description |
+|---------|-------------|
+| `npm run minikube:deploy` | Deploy to Minikube |
+| `npm run minikube:reset` | Reset deployment (keeps cluster) |
+| `npm run minikube:cleanup` | Destroy Minikube cluster |
+| `npm run minikube:status` | Check Minikube status |
+| `npm run aks:deploy -- <env>` | Deploy to AKS |
+| `npm run aks:status -- <env>` | Check AKS status |
 
 ### Development Commands
 
-```bash
-# Type checking
-npm run check
+| Command | Description |
+|---------|-------------|
+| `npm run check` | TypeScript type checking |
+| `npm run test` | Run tests |
+| `npm run format` | Format code with Prettier |
+| `npm run config:validate` | Validate configuration |
 
-# Run tests
-npm test
-
-# Format code
-npm run format
-```
-
-## Advanced Features
+## Advanced Usage
 
 ### Dry Run Mode
 
-Test deployments without making actual changes:
+Preview deployments without making changes:
 
 ```bash
 # Preview Minikube deployment
@@ -536,7 +296,7 @@ npm run tf:plan -- dev
 
 ### Verbose Logging
 
-Enable detailed logging for debugging:
+Enable detailed logging:
 
 ```bash
 # Kubernetes deployments
@@ -544,18 +304,6 @@ npm run k8s -- minikube deploy -v
 
 # Terraform operations
 npm run terraform -- deploy dev --debug
-```
-
-### Project Selection
-
-Deploy specific projects:
-
-```bash
-# Deploy a specific project to Minikube
-npm run k8s -- minikube deploy --project demo-env
-
-# List available projects
-npm run k8s -- config list
 ```
 
 ### Selective Stack Deployment
@@ -570,23 +318,19 @@ npm run terraform -- deploy dev networking aks
 npm run terraform -- deploy dev cosmosdb redis
 ```
 
-## Security Considerations
+## Security
 
 ### Execution Policy
 
-**READ-ONLY commands (no approval needed):**
+**READ-ONLY (no approval needed):**
 - `kubectl get`, `kubectl describe`, `kubectl logs`
 - `az show`, `az list`
 - `terraform plan`, `terraform show`
-- All status and info commands
 
-**WRITE commands (require explicit approval):**
+**WRITE (require approval):**
 - `terraform apply`, `terraform destroy`
 - `kubectl apply`, `kubectl delete`
-- Any Azure resource modifications
-- Database operations
-
-See [.claude/CLAUDE.md](.claude/CLAUDE.md) for AI assistant execution policies.
+- Azure resource modifications
 
 ### Secrets Management
 
@@ -595,76 +339,25 @@ See [.claude/CLAUDE.md](.claude/CLAUDE.md) for AI assistant execution policies.
 - No secrets committed to version control
 - `.env` files in `.gitignore`
 
-### Network Security
-
-- Network Security Groups (NSGs) for traffic filtering
-- Private endpoints for databases
-- TLS/SSL for all external connections
-- Service mesh (future consideration)
-
-## Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suites
-npm test -- --grep "terraform"
-npm test -- --grep "kubernetes"
-
-# Run with coverage
-npm test -- --coverage
-```
-
 ## Documentation
 
-Detailed guides are available in the [docs/](docs/) directory:
+- [Azure Deployment Guide](docs/AZURE_DEPLOYMENT.md)
+- [Minikube Deployment Guide](docs/MINIKUBE_DEPLOYMENT.md)
+- [Project Configuration Guide](docs/PROJECT_CONFIGURATION.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
 
-- [Project Configuration Guide](docs/PROJECT_CONFIGURATION.md) - How to add and configure new projects
-- [Azure Deployment Guide](docs/AZURE_DEPLOYMENT.md) - Comprehensive Azure deployment instructions
-- [Minikube Deployment Guide](docs/MINIKUBE_DEPLOYMENT.md) - Local development setup and workflows
-- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
-
-## Contributing
+## Development
 
 ### Code Style
 
 - TypeScript for all tooling
-- Functional programming patterns preferred
-- Comprehensive error handling required
+- Comprehensive error handling
 - Logging at appropriate levels
 
-### Pull Request Process
+### Testing
 
-1. Run type checking: `npm run check`
-2. Run tests: `npm test`
-3. Format code: `npm run format`
-4. Update documentation as needed
-5. Test deployment in dev environment
-
-### Adding New Projects
-
-See [Project Configuration Guide](docs/PROJECT_CONFIGURATION.md) for detailed instructions on adding new projects to the platform.
-
-## Roadmap
-
-- [ ] Support for additional cloud providers (AWS, GCP)
-- [ ] GitOps integration (ArgoCD, Flux)
-- [ ] Service mesh integration (Istio, Linkerd)
-- [ ] Observability stack (Prometheus, Grafana, Jaeger)
-- [ ] Cost optimization and reporting
-- [ ] Multi-region deployments
-- [ ] Disaster recovery automation
-- [ ] Infrastructure drift detection
-- [ ] Automated security scanning
-
-## License
-
-Internal use only - part of the threds monorepo.
-
-## Support
-
-For issues, questions, or contributions:
-- Create an issue in the monorepo
-- Contact the DevOps team
-- Refer to [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+```bash
+npm run test              # Run all tests
+npm run check             # Type checking
+npm run format            # Format code
+```

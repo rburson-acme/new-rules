@@ -1,6 +1,3 @@
-# Auto-generated from config-registry.yaml
-# DO NOT EDIT MANUALLY - regenerate using: npm run generate:config
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:

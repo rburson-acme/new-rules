@@ -230,8 +230,8 @@ Use the full Docker setup when you need to:
 docker compose -f deploy/local/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder
 
 # 3. Restart services
-npx tsx deploy/tools/deployment-cli/cli.ts local d_a_s
-npx tsx deploy/tools/deployment-cli/cli.ts local s_a_s
+npm run deploy-local-down-services
+npm run deploy-local-services
 ```
 
 #### If Changing thredlib

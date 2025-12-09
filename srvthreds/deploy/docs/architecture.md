@@ -78,7 +78,7 @@ SrvThreds uses a microservices architecture deployed via Docker containers. The 
 - **Image**: `redis:latest`
 - **Purpose**: In-memory cache, session storage, pub/sub messaging
 - **Configuration**:
-  - AOF persistence (save 20 1)
+  - RDB persistence (--save 20 1: snapshot every 20 seconds if at least 1 key changed)
   - Keyspace notifications enabled (KA)
   - Warning level logging
 - **Volumes**: Persistent data in `.docker/redis-data`
@@ -217,7 +217,8 @@ USER srvthreds
 #### Stage 3: Command Runner (Dockerfile.cmdRunner)
 
 ```dockerfile
-FROM srvthreds-builder
+ARG BUILDER_IMAGE=srvthreds/builder:latest
+FROM ${BUILDER_IMAGE}
 WORKDIR /app/srvthreds
 CMD ["npm", "run", "bootstrap", "--", "-p", "dev"]
 ```
@@ -225,6 +226,7 @@ CMD ["npm", "run", "bootstrap", "--", "-p", "dev"]
 **Purpose**: Utility container for running commands
 **Use Case**: Bootstrap, migrations, one-off tasks
 **Advantage**: Has full dev environment from builder
+**Note**: The default CMD uses `dev` profile, but docker-compose-services.yml overrides this with `ef-detection` profile
 
 ### Build Optimization
 

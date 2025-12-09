@@ -102,7 +102,7 @@ interface K8sResource {
   spec?: K8sDeploymentSpec;
 }
 
-const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../config-registry.yaml');
+const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../configs/config-registry.yaml');
 const INFRA_BASE = path.join(__dirname, '../../..');
 
 class ConfigValidator {
@@ -127,7 +127,7 @@ class ConfigValidator {
 
     this.printResults();
 
-    return this.issues.filter(i => i.severity === 'error').length === 0;
+    return this.issues.filter((i) => i.severity === 'error').length === 0;
   }
 
   /**
@@ -164,7 +164,7 @@ class ConfigValidator {
         this.issues.push({
           severity: 'error',
           file: filePath,
-          issue: `Missing service definition for ${serviceName}`
+          issue: `Missing service definition for ${serviceName}`,
         });
         continue;
       }
@@ -181,7 +181,7 @@ class ConfigValidator {
             file: filePath,
             issue: `Port mismatch for ${serviceName}`,
             expected: expectedPort,
-            actual: actualPorts
+            actual: actualPorts,
           });
         }
       } else if ((expected as any).ports) {
@@ -195,7 +195,7 @@ class ConfigValidator {
               file: filePath,
               issue: `Port mismatch for ${serviceName}.${portName}`,
               expected: expectedPort,
-              actual: actualPorts
+              actual: actualPorts,
             });
           }
         }
@@ -234,24 +234,27 @@ class ConfigValidator {
    */
   private validateK8sManifest(manifestPath: string, expectedConfig: any) {
     const content = fs.readFileSync(manifestPath, 'utf8');
-    const docs = content.split('---').map(doc => {
-      try {
-        return yaml.load(doc);
-      } catch {
-        return null;
-      }
-    }).filter(Boolean);
+    const docs = content
+      .split('---')
+      .map((doc) => {
+        try {
+          return yaml.load(doc);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
 
     // Support both Deployment and StatefulSet
-    const deployment = docs.find((doc: any): doc is K8sResource =>
-      doc?.kind === 'Deployment' || doc?.kind === 'StatefulSet'
+    const deployment = docs.find(
+      (doc: any): doc is K8sResource => doc?.kind === 'Deployment' || doc?.kind === 'StatefulSet',
     );
 
     if (!deployment) {
       this.issues.push({
         severity: 'warning',
         file: manifestPath,
-        issue: `No Deployment or StatefulSet found in manifest (may be Job or other kind)`
+        issue: `No Deployment or StatefulSet found in manifest (may be Job or other kind)`,
       });
       return;
     }
@@ -262,7 +265,7 @@ class ConfigValidator {
       this.issues.push({
         severity: 'error',
         file: manifestPath,
-        issue: `No container definition found`
+        issue: `No container definition found`,
       });
       return;
     }
@@ -276,7 +279,7 @@ class ConfigValidator {
         this.issues.push({
           severity: 'error',
           file: manifestPath,
-          issue: `Missing volumeClaimTemplates for StatefulSet`
+          issue: `Missing volumeClaimTemplates for StatefulSet`,
         });
       } else if (vct.spec?.resources?.requests?.storage !== expectedVct.storage) {
         this.issues.push({
@@ -284,7 +287,7 @@ class ConfigValidator {
           file: manifestPath,
           issue: `Storage size mismatch`,
           expected: expectedVct.storage,
-          actual: vct.spec?.resources?.requests?.storage
+          actual: vct.spec?.resources?.requests?.storage,
         });
       }
     }
@@ -301,7 +304,7 @@ class ConfigValidator {
           file: manifestPath,
           issue: `Port mismatch in containerPort`,
           expected: expectedPort,
-          actual: actualPorts.map((p: any) => p.containerPort)
+          actual: actualPorts.map((p: any) => p.containerPort),
         });
       }
     } else if (expectedConfig.ports) {
@@ -315,7 +318,7 @@ class ConfigValidator {
             file: manifestPath,
             issue: `Port mismatch for ${portName} in containerPort`,
             expected: expectedPort,
-            actual: actualPorts.map((p: any) => p.containerPort)
+            actual: actualPorts.map((p: any) => p.containerPort),
           });
         }
       }
@@ -329,7 +332,7 @@ class ConfigValidator {
         this.issues.push({
           severity: 'warning',
           file: manifestPath,
-          issue: `Missing resource definitions`
+          issue: `Missing resource definitions`,
         });
       } else {
         // Check memory
@@ -339,7 +342,7 @@ class ConfigValidator {
             file: manifestPath,
             issue: `Memory request mismatch`,
             expected: expectedConfig.resources.memory?.request,
-            actual: actualResources.requests?.memory
+            actual: actualResources.requests?.memory,
           });
         }
 
@@ -350,7 +353,7 @@ class ConfigValidator {
             file: manifestPath,
             issue: `CPU request mismatch`,
             expected: expectedConfig.resources.cpu?.request,
-            actual: actualResources.requests?.cpu
+            actual: actualResources.requests?.cpu,
           });
         }
       }
@@ -362,8 +365,7 @@ class ConfigValidator {
       const expectedImage = `${expectedConfig.image.repository}:${expectedConfig.image.tag}`;
 
       // Allow exact match OR 'srvthreds:dev' for services
-      const isValidImage = actualImage === expectedImage ||
-                           actualImage === 'srvthreds:dev';
+      const isValidImage = actualImage === expectedImage || actualImage === 'srvthreds:dev';
 
       if (!isValidImage && !expectedConfig.buildOnly) {
         this.issues.push({
@@ -371,7 +373,7 @@ class ConfigValidator {
           file: manifestPath,
           issue: `Image mismatch`,
           expected: expectedImage,
-          actual: actualImage
+          actual: actualImage,
         });
       }
     }
@@ -392,7 +394,7 @@ class ConfigValidator {
         this.issues.push({
           severity: 'warning',
           file: configPath,
-          issue: `Agent config file not found`
+          issue: `Agent config file not found`,
         });
         continue;
       }
@@ -410,7 +412,7 @@ class ConfigValidator {
               file: configPath,
               issue: `Port mismatch for ${portName}`,
               expected: expectedPort,
-              actual: actualPort
+              actual: actualPort,
             });
           }
         }
@@ -427,7 +429,7 @@ class ConfigValidator {
             file: configPath,
             issue: `Memory request mismatch`,
             expected: expectedMem,
-            actual: actualMem
+            actual: actualMem,
           });
         }
       }
@@ -453,7 +455,7 @@ class ConfigValidator {
           file: envExamplePath,
           issue: `MONGO_HOST mismatch`,
           expected: localConnStrings.mongodb,
-          actual: 'Check file manually'
+          actual: 'Check file manually',
         });
       }
 
@@ -464,7 +466,7 @@ class ConfigValidator {
           file: envExamplePath,
           issue: `REDIS_HOST mismatch`,
           expected: localConnStrings.redis,
-          actual: 'Check file manually'
+          actual: 'Check file manually',
         });
       }
     }
@@ -476,9 +478,9 @@ class ConfigValidator {
   private printResults() {
     logger.info('\n📊 Validation Results:\n');
 
-    const errors = this.issues.filter(i => i.severity === 'error');
-    const warnings = this.issues.filter(i => i.severity === 'warning');
-    const infos = this.issues.filter(i => i.severity === 'info');
+    const errors = this.issues.filter((i) => i.severity === 'error');
+    const warnings = this.issues.filter((i) => i.severity === 'warning');
+    const infos = this.issues.filter((i) => i.severity === 'info');
 
     if (errors.length === 0 && warnings.length === 0) {
       logger.info('✅ All configurations are valid!\n');
@@ -487,20 +489,20 @@ class ConfigValidator {
 
     if (errors.length > 0) {
       logger.info(`❌ Errors (${errors.length}):\n`);
-      errors.forEach(issue => this.printIssue(issue));
+      errors.forEach((issue) => this.printIssue(issue));
     }
 
     if (warnings.length > 0) {
       logger.info(`\n⚠️  Warnings (${warnings.length}):\n`);
-      warnings.forEach(issue => this.printIssue(issue));
+      warnings.forEach((issue) => this.printIssue(issue));
     }
 
     if (infos.length > 0) {
       logger.info(`\nℹ️  Info (${infos.length}):\n`);
-      infos.forEach(issue => this.printIssue(issue));
+      infos.forEach((issue) => this.printIssue(issue));
     }
 
-    logger.info('\n💡 Run `npm run generate:config` to regenerate configurations from config-registry.yaml\n');
+    logger.info('\n💡 Update the static configuration files to match config-registry.yaml\n');
   }
 
   /**

@@ -23,7 +23,6 @@
     "minikube:reset": "npm run k8s -- minikube reset",
     "minikube:cleanup": "npm run k8s -- minikube cleanup",
     "minikube:status": "npm run k8s -- minikube status",
-    "config:generate": "tsx tools/shared/config/generator.ts",
     "config:validate": "tsx tools/shared/config/validator.ts",
     "test": "vitest --run --bail=1",
     "check": "tsc --noEmit",
