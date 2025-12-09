@@ -38,7 +38,7 @@ data "terraform_remote_state" "networking" {
 
 # Monitoring module
 module "monitoring" {
-  source = "../../../modules/azure/monitoring"
+  source = "../../../../../terraform/modules/azure/monitoring"
 
   environment         = var.environment
   location            = var.location

@@ -10,12 +10,7 @@ import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager } from '../utils/terraform.js';
 
 // Import types from centralized location
-import type {
-  StackConfig,
-  DeployConfig,
-  EnvironmentsConfig,
-  EnvironmentConfig
-} from '../types/index.js';
+import type { StackConfig, DeployConfig, EnvironmentsConfig, EnvironmentConfig } from '../types/index.js';
 
 import { COMMAND_DESCRIPTIONS } from '../types/constants.js';
 
@@ -30,9 +25,7 @@ export function getDestructionOrder(stacks: StackConfig[], requestedStacks?: str
   const processed = new Set<string>();
   const order: StackConfig[] = [];
 
-  const toProcess = requestedStacks && requestedStacks.length > 0
-    ? requestedStacks
-    : stacks.map((s) => s.name);
+  const toProcess = requestedStacks && requestedStacks.length > 0 ? requestedStacks : stacks.map((s) => s.name);
 
   function addStack(name: string): void {
     if (processed.has(name)) return;
@@ -66,11 +59,14 @@ export function getDestructionOrder(stacks: StackConfig[], requestedStacks?: str
 /**
  * Load and validate configuration
  */
-function loadConfiguration(environment: string): {
+function loadConfiguration(
+  environment: string,
+  project: string = 'srvthreds',
+): {
   deployConfig: DeployConfig;
   envConfig: EnvironmentConfig;
 } {
-  const configDir = path.join(__dirname, '../../..', 'configs', 'terraform');
+  const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, 'destroy');
 
   let deployConfig: DeployConfig;
@@ -85,7 +81,7 @@ function loadConfiguration(environment: string): {
 
   if (!deployConfig.environments.includes(environment)) {
     throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`,
     );
   }
 
@@ -152,7 +148,9 @@ WARNING:
   const requestedStacks = args.filter((a) => !a.startsWith('--') && a !== environment);
 
   if (requestedStacks.length === 0) {
-    throw new ValidationError('You must specify at least one stack to destroy. To destroy all stacks, list them explicitly.');
+    throw new ValidationError(
+      'You must specify at least one stack to destroy. To destroy all stacks, list them explicitly.',
+    );
   }
 
   // Load and validate configuration
@@ -182,7 +180,9 @@ WARNING:
 
     // Double confirmation for production
     if (environment === 'prod') {
-      const doubleConfirmed = await confirmAction(`Type "${environment}" to confirm destruction of PRODUCTION resources:`);
+      const doubleConfirmed = await confirmAction(
+        `Type "${environment}" to confirm destruction of PRODUCTION resources:`,
+      );
       if (!doubleConfirmed) {
         logger.info('Destruction cancelled - confirmation did not match', 'destroy');
         return;
@@ -191,7 +191,9 @@ WARNING:
   }
 
   // Execute destruction
-  const terraformDir = path.join(__dirname, '../../..', 'terraform');
+  // TODO: Add --project flag to CLI
+  const project = 'srvthreds';
+  const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
   for (const stack of destructionOrder) {

@@ -68,7 +68,9 @@ EXAMPLES:
   const requestedStacks = args.slice(1).filter((a) => !a.startsWith('--'));
 
   // Load configuration
-  const configDir = path.join(__dirname, '../../..', 'configs', 'terraform');
+  // TODO: Add --project flag to CLI
+  const project = 'srvthreds';
+  const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, 'status');
 
   let deployConfig: DeployConfig;
@@ -84,7 +86,7 @@ EXAMPLES:
   // Validate environment
   if (!deployConfig.environments.includes(environment)) {
     throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`,
     );
   }
 
@@ -94,13 +96,14 @@ EXAMPLES:
     throw new ValidationError(`Environment configuration not found for: ${environment}`);
   }
 
-  const stacksToCheck = requestedStacks.length > 0
-    ? deployConfig.stacks.filter((s) => requestedStacks.includes(s.name))
-    : deployConfig.stacks;
+  const stacksToCheck =
+    requestedStacks.length > 0
+      ? deployConfig.stacks.filter((s) => requestedStacks.includes(s.name))
+      : deployConfig.stacks;
 
   logger.section('DEPLOYMENT STATUS');
 
-  const terraformDir = path.join(__dirname, '../../..', 'terraform');
+  const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
   const azure = new AzureManager();
 
@@ -256,4 +259,3 @@ EXAMPLES:
     throw error;
   }
 }
-

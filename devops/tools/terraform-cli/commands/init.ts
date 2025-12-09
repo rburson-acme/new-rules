@@ -56,7 +56,9 @@ export async function initCommand(args: string[]): Promise<void> {
   const requestedStacks = args.slice(1).filter((a) => !a.startsWith('--'));
 
   // Load configuration
-  const configDir = path.join(__dirname, '../../..', 'configs', 'terraform');
+  // TODO: Add --project flag to CLI
+  const project = 'srvthreds';
+  const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, CONTEXT);
 
   let deployConfig: DeployConfig;
@@ -113,7 +115,7 @@ async function runInit(
   logger.info(`Stacks to initialize: ${stacks.length}`, CONTEXT);
   console.log('');
 
-  const terraformDir = path.join(__dirname, '../../..', 'terraform');
+  const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
   const results: InitResult[] = [];

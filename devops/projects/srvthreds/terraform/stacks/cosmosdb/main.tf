@@ -53,7 +53,7 @@ data "terraform_remote_state" "networking" {
 
 # CosmosDB Module
 module "cosmosdb" {
-  source = "../../../modules/azure/cosmosdb"
+  source = "../../../../../terraform/modules/azure/cosmosdb"
 
   environment         = var.environment
   location            = var.location

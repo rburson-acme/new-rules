@@ -3,44 +3,43 @@
   "stacks": [
     {
       "name": "networking",
-      "path": "stacks/srvthreds/networking",
+      "path": "stacks/networking",
       "dependencies": []
     },
     {
       "name": "keyvault",
-      "path": "stacks/srvthreds/keyvault",
+      "path": "stacks/keyvault",
       "dependencies": ["networking"]
     },
     {
       "name": "acr",
-      "path": "stacks/srvthreds/acr",
+      "path": "stacks/acr",
       "dependencies": ["networking"]
     },
     {
       "name": "cosmosdb",
-      "path": "stacks/srvthreds/cosmosdb",
+      "path": "stacks/cosmosdb",
       "dependencies": ["networking"]
     },
     {
       "name": "redis",
-      "path": "stacks/srvthreds/redis",
+      "path": "stacks/redis",
       "dependencies": ["networking"]
     },
     {
       "name": "monitoring",
-      "path": "stacks/srvthreds/monitoring",
+      "path": "stacks/monitoring",
       "dependencies": ["networking"]
     },
     {
       "name": "aks",
-      "path": "stacks/srvthreds/aks",
+      "path": "stacks/aks",
       "dependencies": ["networking", "acr"]
     },
     {
-      "name": "nginx-ingress",
-      "path": "stacks/srvthreds/nginx-ingress",
-      "dependencies": ["aks", "networking"]
+      "name": "appgateway",
+      "path": "stacks/appgateway",
+      "dependencies": ["networking"]
     }
   ]
 }
-

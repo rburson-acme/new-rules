@@ -61,7 +61,7 @@ data "terraform_remote_state" "keyvault" {
 
 # Service Bus Module
 module "servicebus" {
-  source = "../../../modules/azure/servicebus"
+  source = "../../../../../terraform/modules/azure/servicebus"
 
   environment         = var.environment
   location            = var.location

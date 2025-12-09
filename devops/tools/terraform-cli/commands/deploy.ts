@@ -10,12 +10,7 @@ import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager } from '../utils/terraform.js';
 
 // Import types from centralized location
-import type {
-  StackConfig,
-  DeployConfig,
-  EnvironmentsConfig,
-  EnvironmentConfig
-} from '../types/index.js';
+import type { StackConfig, DeployConfig, EnvironmentsConfig, EnvironmentConfig } from '../types/index.js';
 
 import { COMMAND_DESCRIPTIONS } from '../types/constants.js';
 
@@ -30,9 +25,7 @@ export function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: stri
   const deployed = new Set<string>();
   const order: StackConfig[] = [];
 
-  const toProcess = requestedStacks && requestedStacks.length > 0
-    ? requestedStacks
-    : stacks.map((s) => s.name);
+  const toProcess = requestedStacks && requestedStacks.length > 0 ? requestedStacks : stacks.map((s) => s.name);
 
   function addStack(name: string): void {
     if (deployed.has(name)) return;
@@ -61,11 +54,14 @@ export function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: stri
 /**
  * Load and validate configuration
  */
-function loadConfiguration(environment: string): {
+function loadConfiguration(
+  environment: string,
+  project: string = 'srvthreds',
+): {
   deployConfig: DeployConfig;
   envConfig: EnvironmentConfig;
 } {
-  const configDir = path.join(__dirname, '../../..', 'configs', 'terraform');
+  const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, 'deploy');
 
   let deployConfig: DeployConfig;
@@ -80,7 +76,7 @@ function loadConfiguration(environment: string): {
 
   if (!deployConfig.environments.includes(environment)) {
     throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`,
     );
   }
 
@@ -147,9 +143,7 @@ EXAMPLES:
   const { deployConfig, envConfig } = loadConfiguration(environment);
 
   // Get deployment order
-  const stacksToProcess = requestedStacks.length > 1
-    ? requestedStacks.slice(1)
-    : undefined;
+  const stacksToProcess = requestedStacks.length > 1 ? requestedStacks.slice(1) : undefined;
 
   const deploymentOrder = getDeploymentOrder(deployConfig.stacks, stacksToProcess);
 
@@ -171,7 +165,9 @@ EXAMPLES:
   }
 
   // Execute deployment
-  const terraformDir = path.join(__dirname, '../../..', 'terraform');
+  // TODO: Add --project flag to CLI and pass to loadConfiguration and here
+  const project = 'srvthreds';
+  const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
   for (const stack of deploymentOrder) {
@@ -203,8 +199,6 @@ EXAMPLES:
 
   logger.success(`All stacks deployed to ${environment}`);
 }
-
-
 
 /**
  * Plan command - Preview infrastructure changes without applying
@@ -241,9 +235,7 @@ EXAMPLES:
   const { deployConfig, envConfig } = loadConfiguration(environment);
 
   // Get deployment order
-  const stacksToProcess = requestedStacks.length > 1
-    ? requestedStacks.slice(1)
-    : undefined;
+  const stacksToProcess = requestedStacks.length > 1 ? requestedStacks.slice(1) : undefined;
 
   const deploymentOrder = getDeploymentOrder(deployConfig.stacks, stacksToProcess);
 
@@ -253,7 +245,9 @@ EXAMPLES:
   displayDeploymentPlan(deploymentOrder, 'Plan Order');
 
   // Execute plan
-  const terraformDir = path.join(__dirname, '../../..', 'terraform');
+  // TODO: Add --project flag to CLI and pass to loadConfiguration and here
+  const project = 'srvthreds';
+  const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
   for (const stack of deploymentOrder) {

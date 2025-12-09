@@ -52,7 +52,7 @@ data "terraform_remote_state" "networking" {
 
 # Azure Container Registry with private endpoint
 module "acr" {
-  source = "../../../modules/azure/acr"
+  source = "../../../../../terraform/modules/azure/acr"
 
   environment         = var.environment
   location            = var.location

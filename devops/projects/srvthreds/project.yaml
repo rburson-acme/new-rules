@@ -5,14 +5,14 @@ name: srvthreds
 description: Event-driven workflow automation backend
 
 source:
-  # Path relative to devops directory
-  path: ../srvthreds
-  # Where docker-compose files live (relative to source.path)
-  composePath: infrastructure/local/docker/compose
-  # Where deployment configs live (relative to source.path)
-  configPath: infrastructure/shared/configs/deployments
+  # Path to source code relative to project directory
+  path: ../../../srvthreds
 
 docker:
+  # Paths relative to project directory
+  composePath: docker/compose
+  dockerfilePath: docker/dockerfiles
+  assetsPath: docker/assets
   builderImage: srvthreds/builder
   services:
     - name: bootstrap
@@ -24,6 +24,15 @@ docker:
     - name: persistence-agent
       image: srvthreds/persistence-agent
 
+deployments:
+  # Path relative to project directory
+  configPath: deployments
+
+terraform:
+  # Paths relative to project directory
+  stacksPath: terraform/stacks
+  configPath: terraform
+
 kubernetes:
   namespace: srvthreds
   deployments:
@@ -32,12 +41,12 @@ kubernetes:
     - srvthreds-persistence-agent
 
 minikube:
-  # Manifest path relative to devops directory
-  manifestPath: minikube/srvthreds/manifests/minikube/
+  # Manifest path relative to project directory
+  manifestPath: minikube/manifests/minikube/
 
 aks:
-  # Manifest path relative to devops directory
-  manifestPath: kubernetes/srvthreds/
+  # Manifest path relative to project directory
+  manifestPath: kubernetes/
   environments:
     - dev
     - test

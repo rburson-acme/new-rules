@@ -102,7 +102,10 @@ interface K8sResource {
   spec?: K8sDeploymentSpec;
 }
 
-const CONFIG_REGISTRY_PATH = path.join(__dirname, '../../../configs/config-registry.yaml');
+// Default project config path - can be overridden by passing project name
+const DEFAULT_PROJECT = 'srvthreds';
+const PROJECTS_DIR = path.join(__dirname, '../../../projects');
+const CONFIG_REGISTRY_PATH = path.join(PROJECTS_DIR, DEFAULT_PROJECT, 'config-registry.yaml');
 const INFRA_BASE = path.join(__dirname, '../../..');
 
 class ConfigValidator {

@@ -1,0 +1,10 @@
+# Command runner for SrvThreds bootstrap and utilities
+# Uses the builder image directly - no copying needed
+ARG BUILDER_IMAGE=srvthreds/builder:latest
+FROM ${BUILDER_IMAGE}
+
+# Set working directory to srvthreds (where everything is already built)
+WORKDIR /app/srvthreds
+
+# Default command - can be overridden in docker-compose
+CMD ["npm", "run", "bootstrap", "--", "-p", "dev"]

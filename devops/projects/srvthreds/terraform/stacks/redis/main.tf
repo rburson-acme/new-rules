@@ -62,7 +62,7 @@ data "terraform_remote_state" "monitoring" {
 
 # Redis Module
 module "redis" {
-  source = "../../../modules/azure/redis"
+  source = "../../../../../terraform/modules/azure/redis"
 
   environment         = var.environment
   location            = var.location

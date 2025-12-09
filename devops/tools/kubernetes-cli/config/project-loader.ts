@@ -33,16 +33,28 @@ export interface ProjectConfig {
   name: string;
   description: string;
   source: {
-    /** Absolute path to the project root */
+    /** Absolute path to the project source code */
     path: string;
+  };
+  docker: {
     /** Absolute path to docker-compose files */
     composePath: string;
+    /** Absolute path to dockerfiles */
+    dockerfilePath: string;
+    /** Absolute path to docker assets */
+    assetsPath: string;
+    builderImage: string;
+    services: DockerService[];
+  };
+  deployments: {
     /** Absolute path to deployment configs */
     configPath: string;
   };
-  docker: {
-    builderImage: string;
-    services: DockerService[];
+  terraform: {
+    /** Absolute path to terraform stacks */
+    stacksPath: string;
+    /** Absolute path to terraform config */
+    configPath: string;
   };
   kubernetes: {
     namespace: string;
@@ -60,19 +72,27 @@ export interface ProjectConfig {
 }
 
 /**
- * Raw YAML structure (paths are relative)
+ * Raw YAML structure (paths are relative to project directory)
  */
 interface RawProjectConfig {
   name: string;
   description: string;
   source: {
     path: string;
-    composePath: string;
-    configPath: string;
   };
   docker: {
+    composePath: string;
+    dockerfilePath: string;
+    assetsPath: string;
     builderImage: string;
     services: DockerService[];
+  };
+  deployments: {
+    configPath: string;
+  };
+  terraform: {
+    stacksPath: string;
+    configPath: string;
   };
   kubernetes: {
     namespace: string;
@@ -110,29 +130,40 @@ export function loadProjectConfig(projectName: string = DEFAULT_PROJECT): Projec
   validateRawConfig(raw, projectName);
 
   // Resolve relative paths to absolute paths
-  const sourcePath = path.resolve(DEVOPS_ROOT, raw.source.path);
+  // source.path is relative to project directory
+  const sourcePath = path.resolve(projectDir, raw.source.path);
 
   const config: ProjectConfig = {
     name: raw.name,
     description: raw.description,
     source: {
       path: sourcePath,
-      composePath: path.resolve(sourcePath, raw.source.composePath),
-      configPath: path.resolve(sourcePath, raw.source.configPath),
     },
     docker: {
+      // Docker paths are relative to project directory
+      composePath: path.resolve(projectDir, raw.docker.composePath),
+      dockerfilePath: path.resolve(projectDir, raw.docker.dockerfilePath),
+      assetsPath: path.resolve(projectDir, raw.docker.assetsPath),
       builderImage: raw.docker.builderImage,
       services: raw.docker.services,
+    },
+    deployments: {
+      configPath: path.resolve(projectDir, raw.deployments.configPath),
+    },
+    terraform: {
+      stacksPath: path.resolve(projectDir, raw.terraform.stacksPath),
+      configPath: path.resolve(projectDir, raw.terraform.configPath),
     },
     kubernetes: {
       namespace: raw.kubernetes.namespace,
       deployments: raw.kubernetes.deployments,
     },
     minikube: {
-      manifestPath: path.resolve(DEVOPS_ROOT, raw.minikube.manifestPath),
+      // Manifest paths are relative to project directory
+      manifestPath: path.resolve(projectDir, raw.minikube.manifestPath),
     },
     aks: {
-      manifestPath: path.resolve(DEVOPS_ROOT, raw.aks.manifestPath),
+      manifestPath: path.resolve(projectDir, raw.aks.manifestPath),
       environments: raw.aks.environments,
     },
   };
@@ -166,6 +197,13 @@ export function getDefaultProject(): string {
 }
 
 /**
+ * Get the project directory path
+ */
+export function getProjectDir(projectName: string = DEFAULT_PROJECT): string {
+  return path.join(PROJECTS_DIR, projectName);
+}
+
+/**
  * Validate raw config has required fields
  */
 function validateRawConfig(raw: RawProjectConfig, projectName: string): void {
@@ -173,10 +211,14 @@ function validateRawConfig(raw: RawProjectConfig, projectName: string): void {
 
   if (!raw.name) errors.push('name is required');
   if (!raw.source?.path) errors.push('source.path is required');
-  if (!raw.source?.composePath) errors.push('source.composePath is required');
-  if (!raw.source?.configPath) errors.push('source.configPath is required');
+  if (!raw.docker?.composePath) errors.push('docker.composePath is required');
+  if (!raw.docker?.dockerfilePath) errors.push('docker.dockerfilePath is required');
+  if (!raw.docker?.assetsPath) errors.push('docker.assetsPath is required');
   if (!raw.docker?.builderImage) errors.push('docker.builderImage is required');
   if (!raw.docker?.services?.length) errors.push('docker.services must have at least one service');
+  if (!raw.deployments?.configPath) errors.push('deployments.configPath is required');
+  if (!raw.terraform?.stacksPath) errors.push('terraform.stacksPath is required');
+  if (!raw.terraform?.configPath) errors.push('terraform.configPath is required');
   if (!raw.kubernetes?.namespace) errors.push('kubernetes.namespace is required');
   if (!raw.kubernetes?.deployments?.length) errors.push('kubernetes.deployments must have at least one deployment');
   if (!raw.minikube?.manifestPath) errors.push('minikube.manifestPath is required');
@@ -203,11 +245,11 @@ export function validateProjectPaths(config: ProjectConfig): {
   if (!fs.existsSync(config.source.path)) {
     missing.push(`source.path: ${config.source.path}`);
   }
-  if (!fs.existsSync(config.source.composePath)) {
-    missing.push(`source.composePath: ${config.source.composePath}`);
+  if (!fs.existsSync(config.docker.composePath)) {
+    missing.push(`docker.composePath: ${config.docker.composePath}`);
   }
-  if (!fs.existsSync(config.source.configPath)) {
-    missing.push(`source.configPath: ${config.source.configPath}`);
+  if (!fs.existsSync(config.deployments.configPath)) {
+    missing.push(`deployments.configPath: ${config.deployments.configPath}`);
   }
 
   return {

@@ -78,7 +78,7 @@ locals {
 
 # Networking Module
 module "networking" {
-  source = "../../../modules/azure/networking"
+  source = "../../../../../terraform/modules/azure/networking"
 
   environment         = var.environment
   location            = var.location

@@ -1,0 +1,402 @@
+{
+  "deployments": [
+    {
+      "name": "Start Services",
+      "shortName": "s_a_s",
+      "description": "Starts the application services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "services",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "-d --wait",
+        "preBuildCommands": [
+          {
+            "description": "Building base builder image (uses cache if available)...",
+            "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build srvthreds-builder"
+          }
+        ],
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy Docker environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Log out assets pushed to deployment assets folder",
+                "command": "echo '--- Docker Assets Copied ---' && ls -aF projects/srvthreds/docker/assets/ && cat projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Copy Minikube environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Stop Services",
+      "shortName": "d_a_s",
+      "description": "Stops and removes the application services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "services",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "-v --rmi local"
+      }
+    },
+    {
+      "name": "Start All",
+      "shortName": "s_a_dbs_s",
+      "description": "Starts all databases and application services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "all",
+        "deployCommand": "up",
+        "composeFiles": [
+          {
+            "composeFile": "docker-compose-db.yml",
+            "defaultArgs": "-d --wait",
+            "postUpCommands": [
+              {
+                "description": "Setting up MongoDB replica set...",
+                "command": "chmod +x projects/srvthreds/docker/scripts/setup-repl.sh && projects/srvthreds/docker/scripts/setup-repl.sh"
+              }
+            ]
+          },
+          {
+            "composeFile": "docker-compose-services.yml",
+            "defaultArgs": "-d --wait",
+            "skipBuild": false,
+            "preBuildCommands": [
+              {
+                "description": "Building base builder image (uses cache if available)...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+              }
+            ],
+            "environmentOverrides": {
+              "local": {
+                "preBuildCommands": [
+                  {
+                    "description": "Copy Docker environment config into assets folder for delivery.",
+                    "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
+                  },
+                  {
+                    "description": "Log out assets pushed to deployment assets folder",
+                    "command": "echo '--- Docker Assets Copied ---' && ls -aF projects/srvthreds/docker/assets/ && cat projects/srvthreds/docker/assets/.env"
+                  },
+                  {
+                    "description": "Building production-optimized builder image...",
+                    "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+                  }
+                ],
+                "postUpCommands": [
+                  {
+                    "description": "Cleanup deployment assets directory",
+                    "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+                  }
+                ]
+              },
+              "minikube": {
+                "preBuildCommands": [
+                  {
+                    "description": "Copy Minikube environment config into assets folder for delivery.",
+                    "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
+                  },
+                  {
+                    "description": "Building production-optimized builder image...",
+                    "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --progress=plain --no-cache srvthreds-builder"
+                  }
+                ],
+                "postUpCommands": [
+                  {
+                    "description": "Cleanup deployment assets directory",
+                    "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stop All",
+      "shortName": "d_a_dbs_s",
+      "description": "Stops all databases and application services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "all",
+        "deployCommand": "down",
+        "composeFiles": [
+          {
+            "composeFile": "docker-compose-db.yml",
+            "defaultArgs": "-v"
+          },
+          {
+            "composeFile": "docker-compose-services.yml",
+            "defaultArgs": "-v --rmi local"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Start Server",
+      "shortName": "s_s",
+      "description": "Starts the application server service.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-engine -d --wait",
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Stop Server",
+      "shortName": "d_s",
+      "description": "Stops and removes the application server services.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-engine -v --rmi local"
+      }
+    },
+    {
+      "name": "Start Session Agent Service",
+      "shortName": "s_sa",
+      "description": "Starts the application session agent service.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-session-agent -d --wait",
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Stop Session Agent Services",
+      "shortName": "d_sa",
+      "description": "Stops and removes the application session agent service.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-session-agent -v --rmi local"
+      }
+    },
+    {
+      "name": "Start Persistence Agent Service",
+      "shortName": "s_pa",
+      "description": "Starts the application persistence agent service.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-persistence-agent -d --wait",
+        "environmentOverrides": {
+          "local": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          },
+          "minikube": {
+            "preBuildCommands": [
+              {
+                "description": "Copy environment config into assets folder for delivery.",
+                "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
+              },
+              {
+                "description": "Building production-optimized builder image...",
+                "command": "docker compose -f projects/srvthreds/docker/compose/docker-compose-services.yml build --no-cache srvthreds-builder"
+              }
+            ],
+            "postUpCommands": [
+              {
+                "description": "Cleanup deployment assets directory",
+                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Stop Persistence Agent Service",
+      "shortName": "d_pa",
+      "description": "Stops the application persistence agent service.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "down",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-persistence-agent -v --rmi local"
+      }
+    },
+    {
+      "name": "Run bootstrap for data",
+      "shortName": "bootstrap",
+      "description": "Bootstrap the database with configuration data.",
+      "environments": [
+        "local",
+        "minikube"
+      ],
+      "target": {
+        "composing": "service",
+        "deployCommand": "up",
+        "composeFile": "docker-compose-services.yml",
+        "defaultArgs": "srvthreds-bootstrap -d --wait"
+      }
+    }
+  ]
+}

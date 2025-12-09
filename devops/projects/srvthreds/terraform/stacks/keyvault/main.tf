@@ -66,7 +66,7 @@ data "terraform_remote_state" "networking" {
 
 # Key Vault Module
 module "keyvault" {
-  source = "../../../modules/azure/keyvault"
+  source = "../../../../../terraform/modules/azure/keyvault"
 
   environment         = var.environment
   location            = var.location

@@ -81,7 +81,7 @@ data "terraform_remote_state" "keyvault" {
 
 # AKS Module
 module "aks" {
-  source = "../../../modules/azure/aks"
+  source = "../../../../../terraform/modules/azure/aks"
 
   environment         = var.environment
   location            = var.location

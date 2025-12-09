@@ -38,7 +38,7 @@ data "terraform_remote_state" "networking" {
 
 # Application Gateway module
 module "appgateway" {
-  source = "../../../modules/azure/appgateway"
+  source = "../../../../../terraform/modules/azure/appgateway"
 
   environment         = var.environment
   location            = var.location
