@@ -65,18 +65,23 @@ const showCommand: CommandModule<object, ShowOptions> = {
       logger.info(`  Description: ${config.description}`);
       logger.info('');
 
-      logger.section('Source Paths');
-      logger.info(`  Project Root:     ${config.source.path}`);
-      logger.info(`  Compose Files:    ${config.source.composePath}`);
-      logger.info(`  Deploy Configs:   ${config.source.configPath}`);
+      logger.section('Source');
+      logger.info(`  Source Code:      ${config.source.path}`);
       logger.info('');
 
       logger.section('Docker');
+      logger.info(`  Compose Path:     ${config.docker.composePath}`);
+      logger.info(`  Dockerfile Path:  ${config.docker.dockerfilePath}`);
+      logger.info(`  Assets Path:      ${config.docker.assetsPath}`);
       logger.info(`  Builder Image:    ${config.docker.builderImage}`);
       logger.info(`  Services:`);
       for (const svc of config.docker.services) {
         logger.info(`    - ${svc.name}: ${svc.image}`);
       }
+      logger.info('');
+
+      logger.section('Deployments');
+      logger.info(`  Config Path:      ${config.deployments.configPath}`);
       logger.info('');
 
       logger.section('Kubernetes');

@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Mock fs module
 vi.mock('fs');
@@ -22,15 +21,23 @@ describe('project-loader', () => {
     description: 'A test project',
     source: {
       path: '../test-project',
-      composePath: 'docker/compose',
-      configPath: 'configs/deployments',
     },
     docker: {
+      composePath: 'docker/compose',
+      dockerfilePath: 'docker/dockerfiles',
+      assetsPath: 'docker/assets',
       builderImage: 'test/builder',
       services: [
         { name: 'api', image: 'test/api' },
         { name: 'worker', image: 'test/worker' },
       ],
+    },
+    deployments: {
+      configPath: 'deployments',
+    },
+    terraform: {
+      stacksPath: 'terraform/stacks',
+      configPath: 'terraform',
     },
     kubernetes: {
       namespace: 'test-ns',
@@ -42,6 +49,11 @@ describe('project-loader', () => {
     aks: {
       manifestPath: 'kubernetes/test/',
       environments: ['dev', 'test', 'prod'],
+    },
+    azure: {
+      prefix: 'CAZ',
+      appCode: 'TESTPROJ',
+      regionCode: 'E',
     },
   };
 
@@ -82,19 +94,10 @@ describe('project-loader', () => {
       expect(() => loadProjectConfig('nonexistent')).toThrow("Project 'nonexistent' not found");
     });
 
-    it('should use default project when no name provided', async () => {
-      const yaml = await import('js-yaml');
-      vi.mocked(yaml.load).mockReturnValue({
-        ...validProjectYaml,
-        name: 'srvthreds',
-      });
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue('yaml content');
-
+    it('should throw error when no project name provided', async () => {
       const { loadProjectConfig } = await import('../../config/project-loader.js');
-      const config = loadProjectConfig();
 
-      expect(config.name).toBe('srvthreds');
+      expect(() => loadProjectConfig('')).toThrow('Project name is required');
     });
 
     it('should resolve relative paths to absolute paths', async () => {
@@ -108,8 +111,8 @@ describe('project-loader', () => {
 
       // Paths should be absolute (start with /)
       expect(config.source.path).toMatch(/^\//);
-      expect(config.source.composePath).toMatch(/^\//);
-      expect(config.source.configPath).toMatch(/^\//);
+      expect(config.docker.composePath).toMatch(/^\//);
+      expect(config.deployments.configPath).toMatch(/^\//);
       expect(config.minikube.manifestPath).toMatch(/^\//);
       expect(config.aks.manifestPath).toMatch(/^\//);
     });
@@ -210,7 +213,7 @@ describe('project-loader', () => {
         { name: 'another-project', isDirectory: () => true },
         { name: 'not-a-project', isDirectory: () => true },
         { name: 'some-file.txt', isDirectory: () => false },
-      ] as unknown as fs.Dirent[]);
+      ] as unknown as ReturnType<typeof fs.readdirSync>);
 
       const { listProjects } = await import('../../config/project-loader.js');
       const projects = listProjects();
@@ -223,9 +226,9 @@ describe('project-loader', () => {
   });
 
   describe('getDefaultProject', () => {
-    it('should return srvthreds as default project', async () => {
+    it('should return undefined (deprecated)', async () => {
       const { getDefaultProject } = await import('../../config/project-loader.js');
-      expect(getDefaultProject()).toBe('srvthreds');
+      expect(getDefaultProject()).toBeUndefined();
     });
   });
 
@@ -239,13 +242,20 @@ describe('project-loader', () => {
         description: 'test',
         source: {
           path: '/some/path',
-          composePath: '/some/compose',
-          configPath: '/some/config',
         },
-        docker: { builderImage: '', services: [] },
+        docker: {
+          composePath: '/some/compose',
+          dockerfilePath: '/some/dockerfiles',
+          assetsPath: '/some/assets',
+          builderImage: '',
+          services: [],
+        },
+        deployments: { configPath: '/some/config' },
+        terraform: { stacksPath: '/some/stacks', configPath: '/some/tfconfig' },
         kubernetes: { namespace: '', deployments: [] },
         minikube: { manifestPath: '' },
         aks: { manifestPath: '', environments: [] },
+        azure: { prefix: 'CAZ', appCode: 'TEST', regionCode: 'E' },
       });
 
       expect(result.valid).toBe(true);
@@ -264,13 +274,20 @@ describe('project-loader', () => {
         description: 'test',
         source: {
           path: '/exists/path',
-          composePath: '/missing/compose',
-          configPath: '/exists/config',
         },
-        docker: { builderImage: '', services: [] },
+        docker: {
+          composePath: '/missing/compose',
+          dockerfilePath: '/exists/dockerfiles',
+          assetsPath: '/exists/assets',
+          builderImage: '',
+          services: [],
+        },
+        deployments: { configPath: '/exists/config' },
+        terraform: { stacksPath: '/exists/stacks', configPath: '/exists/tfconfig' },
         kubernetes: { namespace: '', deployments: [] },
         minikube: { manifestPath: '' },
         aks: { manifestPath: '', environments: [] },
+        azure: { prefix: 'CAZ', appCode: 'TEST', regionCode: 'E' },
       });
 
       expect(result.valid).toBe(false);

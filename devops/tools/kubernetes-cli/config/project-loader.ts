@@ -16,7 +16,6 @@ const __dirname = path.dirname(__filename);
 // Root of devops project
 const DEVOPS_ROOT = path.resolve(__dirname, '..', '..', '..');
 const PROJECTS_DIR = path.join(DEVOPS_ROOT, 'projects');
-const DEFAULT_PROJECT = 'srvthreds';
 
 /**
  * Docker service definition
@@ -69,6 +68,14 @@ export interface ProjectConfig {
     manifestPath: string;
     environments: string[];
   };
+  azure: {
+    /** Company/organization prefix (e.g., 'CAZ') */
+    prefix: string;
+    /** Application code for Azure naming (e.g., 'SRVTHREDS') */
+    appCode: string;
+    /** Default region code (e.g., 'E' for East US) */
+    regionCode: string;
+  };
 }
 
 /**
@@ -105,6 +112,11 @@ interface RawProjectConfig {
     manifestPath: string;
     environments: string[];
   };
+  azure: {
+    prefix: string;
+    appCode: string;
+    regionCode: string;
+  };
 }
 
 /**
@@ -114,7 +126,10 @@ interface RawProjectConfig {
  * @returns Resolved ProjectConfig with absolute paths
  * @throws Error if project not found or config invalid
  */
-export function loadProjectConfig(projectName: string = DEFAULT_PROJECT): ProjectConfig {
+export function loadProjectConfig(projectName: string): ProjectConfig {
+  if (!projectName) {
+    throw new Error('Project name is required. Use --project flag to specify the project.');
+  }
   const projectDir = path.join(PROJECTS_DIR, projectName);
   const configFile = path.join(projectDir, 'project.yaml');
 
@@ -166,6 +181,11 @@ export function loadProjectConfig(projectName: string = DEFAULT_PROJECT): Projec
       manifestPath: path.resolve(projectDir, raw.aks.manifestPath),
       environments: raw.aks.environments,
     },
+    azure: {
+      prefix: raw.azure.prefix,
+      appCode: raw.azure.appCode,
+      regionCode: raw.azure.regionCode,
+    },
   };
 
   return config;
@@ -191,15 +211,20 @@ export function listProjects(): string[] {
 
 /**
  * Get the default project name
+ * @deprecated Projects should be explicitly specified, not defaulted
  */
-export function getDefaultProject(): string {
-  return DEFAULT_PROJECT;
+export function getDefaultProject(): string | undefined {
+  // Return undefined - callers must handle missing project explicitly
+  return undefined;
 }
 
 /**
  * Get the project directory path
  */
-export function getProjectDir(projectName: string = DEFAULT_PROJECT): string {
+export function getProjectDir(projectName: string): string {
+  if (!projectName) {
+    throw new Error('Project name is required. Use --project flag to specify the project.');
+  }
   return path.join(PROJECTS_DIR, projectName);
 }
 
@@ -224,6 +249,9 @@ function validateRawConfig(raw: RawProjectConfig, projectName: string): void {
   if (!raw.minikube?.manifestPath) errors.push('minikube.manifestPath is required');
   if (!raw.aks?.manifestPath) errors.push('aks.manifestPath is required');
   if (!raw.aks?.environments?.length) errors.push('aks.environments must have at least one environment');
+  if (!raw.azure?.prefix) errors.push('azure.prefix is required');
+  if (!raw.azure?.appCode) errors.push('azure.appCode is required');
+  if (!raw.azure?.regionCode) errors.push('azure.regionCode is required');
 
   if (errors.length > 0) {
     throw new Error(`Invalid project config '${projectName}':\n  - ${errors.join('\n  - ')}`);

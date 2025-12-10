@@ -102,17 +102,19 @@ interface K8sResource {
   spec?: K8sDeploymentSpec;
 }
 
-// Default project config path - can be overridden by passing project name
-const DEFAULT_PROJECT = 'srvthreds';
 const PROJECTS_DIR = path.join(__dirname, '../../../projects');
-const CONFIG_REGISTRY_PATH = path.join(PROJECTS_DIR, DEFAULT_PROJECT, 'config-registry.yaml');
 const INFRA_BASE = path.join(__dirname, '../../..');
 
 class ConfigValidator {
   private config: any;
   private issues: ValidationIssue[] = [];
+  private projectName: string;
 
-  constructor(configPath: string) {
+  constructor(configPath: string, projectName: string) {
+    if (!projectName) {
+      throw new Error('Project name is required');
+    }
+    this.projectName = projectName;
     const configContent = fs.readFileSync(configPath, 'utf8');
     this.config = yaml.load(configContent) as any;
   }
@@ -367,8 +369,9 @@ class ConfigValidator {
       const actualImage = container.image;
       const expectedImage = `${expectedConfig.image.repository}:${expectedConfig.image.tag}`;
 
-      // Allow exact match OR 'srvthreds:dev' for services
-      const isValidImage = actualImage === expectedImage || actualImage === 'srvthreds:dev';
+      // Allow exact match OR '<project>:dev' for local development services
+      const devImage = `${this.projectName.toLowerCase()}:dev`;
+      const isValidImage = actualImage === expectedImage || actualImage === devImage;
 
       if (!isValidImage && !expectedConfig.buildOnly) {
         this.issues.push({
@@ -527,7 +530,23 @@ class ConfigValidator {
 
 // CLI
 try {
-  const validator = new ConfigValidator(CONFIG_REGISTRY_PATH);
+  const args = process.argv.slice(2);
+  const projectIndex = args.findIndex((a) => a === '--project' || a === '-p');
+
+  if (projectIndex === -1 || !args[projectIndex + 1]) {
+    logger.error('❌ Missing required --project flag. Usage: validator --project <name>', 'ConfigValidator');
+    process.exit(1);
+  }
+
+  const projectName = args[projectIndex + 1];
+  const configRegistryPath = path.join(PROJECTS_DIR, projectName, 'config-registry.yaml');
+
+  if (!fs.existsSync(configRegistryPath)) {
+    logger.error(`❌ Config registry not found: ${configRegistryPath}`, 'ConfigValidator');
+    process.exit(1);
+  }
+
+  const validator = new ConfigValidator(configRegistryPath, projectName);
   const isValid = validator.validateAll();
 
   process.exit(isValid ? 0 : 1);

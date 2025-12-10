@@ -8,6 +8,7 @@ import { logger } from '../../shared/logger.js';
 import { requireString, ValidationError, confirmAction } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager } from '../utils/terraform.js';
+import { extractProject } from '../utils/args.js';
 
 // Import types from centralized location
 import type { StackConfig, DeployConfig, EnvironmentsConfig, EnvironmentConfig } from '../types/index.js';
@@ -56,7 +57,7 @@ export function getDeploymentOrder(stacks: StackConfig[], requestedStacks?: stri
  */
 function loadConfiguration(
   environment: string,
-  project: string = 'srvthreds',
+  project: string,
 ): {
   deployConfig: DeployConfig;
   envConfig: EnvironmentConfig;
@@ -105,42 +106,50 @@ export const DEPLOY_COMMAND_DESCRIPTION = COMMAND_DESCRIPTIONS.DEPLOY;
 export const PLAN_COMMAND_DESCRIPTION = COMMAND_DESCRIPTIONS.PLAN;
 
 export async function deployCommand(args: string[]): Promise<void> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (args.includes('--help')) {
     console.log(`
 Deploy infrastructure stacks to Azure
 
 USAGE:
-  terraform-cli deploy <environment> [stacks...]
+  terraform-cli deploy --project <project> <environment> [stacks...]
 
 ARGUMENTS:
   environment     Target environment (dev, test, prod)
   stacks          Specific stacks to deploy (optional, deploys all if not specified)
 
 OPTIONS:
+  --project, -p   Project name (required)
   --dry-run       Preview changes without applying
   --force         Skip confirmations
   --help          Show this help message
 
 EXAMPLES:
   # Deploy all stacks to dev
-  terraform-cli deploy dev
+  terraform-cli deploy -p srvthreds dev
 
   # Deploy specific stacks
-  terraform-cli deploy dev networking keyvault
+  terraform-cli deploy -p srvthreds dev networking keyvault
 
   # Preview changes
-  terraform-cli deploy dev --dry-run
+  terraform-cli deploy -p srvthreds dev --dry-run
 `);
     return;
   }
 
-  const environment = requireString(args[0], 'environment');
-  const dryRun = args.includes('--dry-run');
-  const force = args.includes('--force');
-  const requestedStacks = args.filter((a) => !a.startsWith('--'));
+  if (args.length === 0) {
+    throw new ValidationError('Missing required arguments. Use --help for usage.');
+  }
+
+  // Extract project from args (required)
+  const { project, remainingArgs } = extractProject(args);
+
+  const environment = requireString(remainingArgs[0], 'environment');
+  const dryRun = remainingArgs.includes('--dry-run');
+  const force = remainingArgs.includes('--force');
+  const requestedStacks = remainingArgs.filter((a) => !a.startsWith('--'));
 
   // Load and validate configuration
-  const { deployConfig, envConfig } = loadConfiguration(environment);
+  const { deployConfig, envConfig } = loadConfiguration(environment, project);
 
   // Get deployment order
   const stacksToProcess = requestedStacks.length > 1 ? requestedStacks.slice(1) : undefined;
@@ -165,8 +174,6 @@ EXAMPLES:
   }
 
   // Execute deployment
-  // TODO: Add --project flag to CLI and pass to loadConfiguration and here
-  const project = 'srvthreds';
   const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 
@@ -204,35 +211,43 @@ EXAMPLES:
  * Plan command - Preview infrastructure changes without applying
  */
 export async function planCommand(args: string[]): Promise<void> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (args.includes('--help')) {
     console.log(`
 Preview infrastructure changes without applying
 
 USAGE:
-  terraform-cli plan <environment> [stacks...]
+  terraform-cli plan --project <project> <environment> [stacks...]
 
 ARGUMENTS:
   environment     Target environment (dev, test, prod)
   stacks          Specific stacks to plan (optional, plans all if not specified)
 
 OPTIONS:
+  --project, -p   Project name (required)
   --help          Show this help message
 
 EXAMPLES:
   # Plan all stacks for dev
-  terraform-cli plan dev
+  terraform-cli plan -p srvthreds dev
 
   # Plan specific stacks
-  terraform-cli plan dev networking keyvault
+  terraform-cli plan -p srvthreds dev networking keyvault
 `);
     return;
   }
 
-  const environment = requireString(args[0], 'environment');
-  const requestedStacks = args.filter((a) => !a.startsWith('--'));
+  if (args.length === 0) {
+    throw new ValidationError('Missing required arguments. Use --help for usage.');
+  }
+
+  // Extract project from args (required)
+  const { project, remainingArgs } = extractProject(args);
+
+  const environment = requireString(remainingArgs[0], 'environment');
+  const requestedStacks = remainingArgs.filter((a) => !a.startsWith('--'));
 
   // Load and validate configuration
-  const { deployConfig, envConfig } = loadConfiguration(environment);
+  const { deployConfig, envConfig } = loadConfiguration(environment, project);
 
   // Get deployment order
   const stacksToProcess = requestedStacks.length > 1 ? requestedStacks.slice(1) : undefined;
@@ -245,8 +260,6 @@ EXAMPLES:
   displayDeploymentPlan(deploymentOrder, 'Plan Order');
 
   // Execute plan
-  // TODO: Add --project flag to CLI and pass to loadConfiguration and here
-  const project = 'srvthreds';
   const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 

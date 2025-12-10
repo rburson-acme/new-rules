@@ -7,7 +7,7 @@
 
 import type { CommandModule, Argv, ArgumentsCamelCase } from 'yargs';
 import { MinikubeDeployer } from '../../kubernetes-deployer/src/index.js';
-import { loadProjectConfig, getDefaultProject, type ProjectConfig } from '../config/project-loader.js';
+import { loadProjectConfig, type ProjectConfig } from '../config/project-loader.js';
 import { logger } from '../../shared/logger.js';
 import { formatDeploymentResult } from '../utils/output.js';
 
@@ -19,10 +19,18 @@ interface MinikubeOptions {
 interface DeployOptions extends MinikubeOptions {
   'dry-run'?: boolean;
   'skip-db'?: boolean;
+  deployment: string;
+}
+
+interface RunOptions extends MinikubeOptions {
+  deployment: string;
+  'dry-run'?: boolean;
+  'use-minikube-docker'?: boolean;
 }
 
 interface CleanupOptions extends MinikubeOptions {
   'delete-dbs'?: boolean;
+  'db-stop-deployment'?: string;
 }
 
 /**
@@ -32,8 +40,8 @@ function addProjectOption(yargs: Argv): Argv<MinikubeOptions> {
   return yargs.option('project', {
     alias: 'p',
     type: 'string',
-    description: 'Project to deploy',
-    default: getDefaultProject(),
+    description: 'Project to deploy (required)',
+    demandOption: true,
   }) as Argv<MinikubeOptions>;
 }
 
@@ -50,13 +58,19 @@ function getProjectConfig(projectName: string): ProjectConfig {
 }
 
 /**
- * Deploy to Minikube
+ * Deploy to Minikube (full K8s workflow)
  */
 const deployCommand: CommandModule<object, DeployOptions> = {
   command: 'deploy',
-  describe: 'Deploy project to Minikube',
+  describe: 'Deploy project to Minikube (full K8s workflow)',
   builder: (yargs) =>
     addProjectOption(yargs)
+      .option('deployment', {
+        alias: 'd',
+        type: 'string',
+        description: 'Deployment shortName for building images (from deployments/*.json)',
+        demandOption: true,
+      })
       .option('dry-run', {
         type: 'boolean',
         description: 'Preview changes without applying',
@@ -66,7 +80,7 @@ const deployCommand: CommandModule<object, DeployOptions> = {
         type: 'boolean',
         description: 'Skip database setup (assumes DBs are running)',
         default: false,
-      }),
+      }) as unknown as Argv<DeployOptions>,
   handler: async (argv: ArgumentsCamelCase<DeployOptions>) => {
     const config = getProjectConfig(argv.project);
 
@@ -77,11 +91,11 @@ const deployCommand: CommandModule<object, DeployOptions> = {
     }
 
     const deployer = new MinikubeDeployer({
+      project: argv.project,
       verbose: argv.verbose,
       dryRun: argv['dry-run'],
       skipDatabaseSetup: argv['skip-db'],
-      manifestPath: config.minikube.manifestPath,
-      srvthredsPath: config.source.path,
+      deployment: argv.deployment,
     });
 
     const startTime = Date.now();
@@ -91,6 +105,58 @@ const deployCommand: CommandModule<object, DeployOptions> = {
     formatDeploymentResult(result, config, 'minikube', duration);
 
     process.exit(result.success ? 0 : 1);
+  },
+};
+
+/**
+ * Run a specific deployment by shortName
+ */
+const runCommand: CommandModule<object, RunOptions> = {
+  command: 'run <deployment>',
+  describe: 'Execute a deployment configuration by shortName',
+  builder: (yargs) =>
+    addProjectOption(yargs)
+      .positional('deployment', {
+        type: 'string',
+        description: 'Deployment shortName from deployments/*.json',
+        demandOption: true,
+      })
+      .option('dry-run', {
+        type: 'boolean',
+        description: 'Preview changes without applying',
+        default: false,
+      })
+      .option('use-minikube-docker', {
+        type: 'boolean',
+        description: 'Use Minikube Docker environment (for builds)',
+        default: false,
+      }) as Argv<RunOptions>,
+  handler: async (argv: ArgumentsCamelCase<RunOptions>) => {
+    const config = getProjectConfig(argv.project);
+
+    logger.info(`Running deployment '${argv.deployment}' for ${config.name}\n`);
+
+    if (argv['dry-run']) {
+      logger.info('DRY RUN MODE - No actual changes will be made\n');
+    }
+
+    const deployer = new MinikubeDeployer({
+      project: argv.project,
+      verbose: argv.verbose,
+      dryRun: argv['dry-run'],
+    });
+
+    try {
+      await deployer.executeDeployment(argv.deployment, {
+        useMinikubeDocker: argv['use-minikube-docker'],
+      });
+
+      logger.success(`Deployment '${argv.deployment}' completed successfully`);
+      process.exit(0);
+    } catch (error) {
+      logger.failure(`Deployment failed: ${error instanceof Error ? error.message : error}`);
+      process.exit(1);
+    }
   },
 };
 
@@ -107,9 +173,8 @@ const resetCommand: CommandModule<object, MinikubeOptions> = {
     logger.info(`Resetting ${config.name} deployment in Minikube\n`);
 
     const deployer = new MinikubeDeployer({
+      project: argv.project,
       verbose: argv.verbose,
-      manifestPath: config.minikube.manifestPath,
-      srvthredsPath: config.source.path,
     });
 
     await deployer.resetDeployment();
@@ -128,27 +193,39 @@ const cleanupCommand: CommandModule<object, CleanupOptions> = {
   command: 'cleanup',
   describe: 'Full cleanup (deletes cluster)',
   builder: (yargs) =>
-    addProjectOption(yargs).option('delete-dbs', {
-      type: 'boolean',
-      description: 'Also delete host databases',
-      default: false,
-    }),
+    addProjectOption(yargs)
+      .option('delete-dbs', {
+        type: 'boolean',
+        description: 'Also delete host databases',
+        default: false,
+      })
+      .option('db-stop-deployment', {
+        type: 'string',
+        description: 'Deployment shortName to stop databases (required with --delete-dbs)',
+      }),
   handler: async (argv: ArgumentsCamelCase<CleanupOptions>) => {
     const config = getProjectConfig(argv.project);
+
+    if (argv['delete-dbs'] && !argv['db-stop-deployment']) {
+      logger.failure('--db-stop-deployment is required when using --delete-dbs');
+      process.exit(1);
+    }
 
     logger.info(`Cleaning up ${config.name} Minikube deployment\n`);
 
     if (argv['delete-dbs']) {
-      logger.warn('Will also delete host databases');
+      logger.warn(`Will also delete host databases using deployment: ${argv['db-stop-deployment']}`);
     }
 
     const deployer = new MinikubeDeployer({
+      project: argv.project,
       verbose: argv.verbose,
-      manifestPath: config.minikube.manifestPath,
-      srvthredsPath: config.source.path,
     });
 
-    await deployer.destroyCluster({ deleteDatabases: argv['delete-dbs'] });
+    await deployer.destroyCluster({
+      deleteDatabases: argv['delete-dbs'],
+      databaseStopDeployment: argv['db-stop-deployment'],
+    });
 
     logger.success('Cleanup complete.');
 
@@ -209,6 +286,7 @@ export const minikubeCommands: CommandModule = {
   builder: (yargs) =>
     yargs
       .command(deployCommand)
+      .command(runCommand)
       .command(resetCommand)
       .command(cleanupCommand)
       .command(statusCommand)

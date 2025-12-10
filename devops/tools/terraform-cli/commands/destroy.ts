@@ -8,6 +8,7 @@ import { logger } from '../../shared/logger.js';
 import { requireString, ValidationError, confirmAction } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager } from '../utils/terraform.js';
+import { extractProject } from '../utils/args.js';
 
 // Import types from centralized location
 import type { StackConfig, DeployConfig, EnvironmentsConfig, EnvironmentConfig } from '../types/index.js';
@@ -61,7 +62,7 @@ export function getDestructionOrder(stacks: StackConfig[], requestedStacks?: str
  */
 function loadConfiguration(
   environment: string,
-  project: string = 'srvthreds',
+  project: string,
 ): {
   deployConfig: DeployConfig;
   envConfig: EnvironmentConfig;
@@ -109,31 +110,32 @@ function displayDestructionPlan(destructionOrder: StackConfig[], title: string):
 export const DESTROY_COMMAND_DESCRIPTION = COMMAND_DESCRIPTIONS.DESTROY || 'Destroy infrastructure stacks from Azure';
 
 export async function destroyCommand(args: string[]): Promise<void> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (args.includes('--help')) {
     console.log(`
 Destroy infrastructure stacks from Azure
 
 USAGE:
-  terraform-cli destroy <environment> [stacks...]
+  terraform-cli destroy --project <project> <environment> [stacks...]
 
 ARGUMENTS:
   environment     Target environment (dev, test, prod)
   stacks          Specific stacks to destroy (optional, destroys all if not specified)
 
 OPTIONS:
+  --project, -p   Project name (required)
   --dry-run       Preview destruction plan without applying
   --force         Skip confirmations (DANGEROUS - use with extreme caution)
   --help          Show this help message
 
 EXAMPLES:
   # Destroy specific stack from dev
-  terraform-cli destroy dev servicebus
+  terraform-cli destroy -p srvthreds dev servicebus
 
   # Destroy multiple stacks
-  terraform-cli destroy dev servicebus redis
+  terraform-cli destroy -p srvthreds dev servicebus redis
 
   # Preview destruction plan
-  terraform-cli destroy dev servicebus --dry-run
+  terraform-cli destroy -p srvthreds dev servicebus --dry-run
 
 WARNING:
   This command permanently destroys infrastructure resources.
@@ -142,10 +144,17 @@ WARNING:
     return;
   }
 
-  const environment = requireString(args[0], 'environment');
-  const dryRun = args.includes('--dry-run');
-  const force = args.includes('--force');
-  const requestedStacks = args.filter((a) => !a.startsWith('--') && a !== environment);
+  if (args.length === 0) {
+    throw new ValidationError('Missing required arguments. Use --help for usage.');
+  }
+
+  // Extract project from args (required)
+  const { project, remainingArgs } = extractProject(args);
+
+  const environment = requireString(remainingArgs[0], 'environment');
+  const dryRun = remainingArgs.includes('--dry-run');
+  const force = remainingArgs.includes('--force');
+  const requestedStacks = remainingArgs.filter((a) => !a.startsWith('--') && a !== environment);
 
   if (requestedStacks.length === 0) {
     throw new ValidationError(
@@ -154,7 +163,7 @@ WARNING:
   }
 
   // Load and validate configuration
-  const { deployConfig, envConfig } = loadConfiguration(environment);
+  const { deployConfig, envConfig } = loadConfiguration(environment, project);
 
   // Get destruction order (reverse dependency order)
   const destructionOrder = getDestructionOrder(deployConfig.stacks, requestedStacks);
@@ -191,8 +200,6 @@ WARNING:
   }
 
   // Execute destruction
-  // TODO: Add --project flag to CLI
-  const project = 'srvthreds';
   const terraformDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const terraform = new TerraformManager(terraformDir, environment, envConfig);
 

@@ -29,6 +29,10 @@ interface EnvironmentConfigWithRG extends EnvironmentConfig {
   resourceGroupName: string;
 }
 
+interface EnvironmentsConfig {
+  [key: string]: EnvironmentConfigWithRG;
+}
+
 export const CLEANUP_COMMAND_DESCRIPTION = 'Cleanup infrastructure and state (with soft-delete handling)';
 
 export async function cleanupCommand(args: string[]): Promise<void> {
@@ -73,7 +77,8 @@ EXAMPLES:
 
   try {
     deployConfig = configLoader.loadConfig<DeployConfig>('stacks.json');
-    envConfig = configLoader.loadConfig<EnvironmentConfigWithRG>('environments.json')[environment];
+    const environmentsConfig = configLoader.loadConfig<EnvironmentsConfig>('environments.json');
+    envConfig = environmentsConfig[environment];
   } catch (error: any) {
     throw new ValidationError(`Failed to load configuration: ${error.message}`);
   }
@@ -85,7 +90,7 @@ EXAMPLES:
   // Validate environment
   if (!deployConfig.environments.includes(environment)) {
     throw new ValidationError(
-      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`
+      `Invalid environment: ${environment}. Valid options: ${deployConfig.environments.join(', ')}`,
     );
   }
 
@@ -108,7 +113,7 @@ EXAMPLES:
   if (!force && !dryRun) {
     const confirmed = await confirmDestructiveAction(
       'This will DELETE ALL infrastructure and state files!',
-      'DELETE EVERYTHING'
+      'DELETE EVERYTHING',
     );
 
     if (!confirmed) {
@@ -234,10 +239,10 @@ async function purgeSoftDeletedResources(azure: AzureManager): Promise<void> {
 }
 
 async function cleanupBootstrap(
-  terraformDir: string,
+  _terraformDir: string,
   terraform: TerraformManager,
   azure: AzureManager,
-  envConfig: EnvironmentConfig
+  envConfig: EnvironmentConfig,
 ): Promise<void> {
   logger.info('Cleaning up state backend infrastructure', 'cleanup');
 
@@ -261,4 +266,3 @@ async function cleanupBootstrap(
     logger.warn(`Failed to cleanup bootstrap: ${error.message}`, 'cleanup');
   }
 }
-

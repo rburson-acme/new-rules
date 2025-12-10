@@ -59,7 +59,7 @@ export function formatDeploymentResult(
     }
 
     logger.info('');
-    printTroubleshootingTips(target);
+    printTroubleshootingTips(target, config.kubernetes.namespace);
   }
 }
 
@@ -70,14 +70,17 @@ function printNextSteps(target: string, config: ProjectConfig): void {
   logger.info('Next Steps:');
 
   const namespace = config.kubernetes.namespace;
-  const mainDeployment = config.kubernetes.deployments[0] || 'srvthreds-engine';
+  const mainDeployment = config.kubernetes.deployments[0];
+
+  if (!mainDeployment) {
+    logger.warn('No deployments configured in project config');
+    return;
+  }
 
   if (target === 'minikube') {
     logger.info(`  1. Check pods:       kubectl get pods -n ${namespace}`);
     logger.info(`  2. View logs:        kubectl logs -f deployment/${mainDeployment} -n ${namespace}`);
-    logger.info(
-      `  3. Port forward:     kubectl port-forward svc/srvthreds-session-agent-service 3000:3000 -n ${namespace}`,
-    );
+    logger.info(`  3. Port forward:     kubectl port-forward svc/<service-name> 3000:3000 -n ${namespace}`);
     logger.info(`  4. Access at:        http://localhost:3000`);
     logger.info(`  5. Dashboard:        minikube dashboard`);
   } else {
@@ -91,18 +94,18 @@ function printNextSteps(target: string, config: ProjectConfig): void {
 /**
  * Print troubleshooting tips for failed deployments
  */
-function printTroubleshootingTips(target: string): void {
+function printTroubleshootingTips(target: string, namespace: string): void {
   logger.info('Troubleshooting:');
 
   if (target === 'minikube') {
     logger.info('  - Check Minikube status:   minikube status');
-    logger.info('  - View pod events:         kubectl describe pods -n srvthreds');
+    logger.info(`  - View pod events:         kubectl describe pods -n ${namespace}`);
     logger.info('  - Check Docker:            docker info');
-    logger.info('  - Reset cluster:           k8s minikube cleanup && k8s minikube deploy');
+    logger.info('  - Reset cluster:           k8s minikube cleanup && k8s minikube deploy -p <project>');
   } else {
     // AKS
     logger.info('  - Check Azure login:       az account show');
-    logger.info('  - View pod events:         kubectl describe pods -n srvthreds');
+    logger.info(`  - View pod events:         kubectl describe pods -n ${namespace}`);
     logger.info('  - Check AKS cluster:       az aks show -g <rg> -n <cluster>');
     logger.info('  - View AKS logs:           az aks browse -g <rg> -n <cluster>');
   }

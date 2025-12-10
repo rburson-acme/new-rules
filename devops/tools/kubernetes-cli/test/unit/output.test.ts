@@ -24,12 +24,20 @@ describe('output utilities', () => {
     description: 'A test project',
     source: {
       path: '/path/to/project',
-      composePath: '/path/to/compose',
-      configPath: '/path/to/config',
     },
     docker: {
+      composePath: '/path/to/compose',
+      dockerfilePath: '/path/to/dockerfiles',
+      assetsPath: '/path/to/assets',
       builderImage: 'test/builder',
       services: [{ name: 'api', image: 'test/api' }],
+    },
+    deployments: {
+      configPath: '/path/to/config',
+    },
+    terraform: {
+      stacksPath: '/path/to/terraform/stacks',
+      configPath: '/path/to/terraform/config',
     },
     kubernetes: {
       namespace: 'test-ns',
@@ -41,6 +49,11 @@ describe('output utilities', () => {
     aks: {
       manifestPath: '/path/to/aks',
       environments: ['dev', 'test', 'prod'],
+    },
+    azure: {
+      prefix: 'CAZ',
+      appCode: 'TESTPROJ',
+      regionCode: 'E',
     },
   };
 

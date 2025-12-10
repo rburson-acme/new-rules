@@ -6,18 +6,8 @@
 import { ShellExecutor, type ExecResult } from '../utils/shell.js';
 import { ContextLogger as Logger } from '../../../shared/logger.js';
 import { retry } from '../utils/retry.js';
-import {
-  type Pod,
-  type Deployment,
-  type Service,
-  type Namespace,
-  type PodStatus,
-} from '../types/kubernetes.types.js';
-import {
-  KubernetesError,
-  ResourceNotFoundError,
-  NamespaceNotFoundError,
-} from '../utils/errors.js';
+import { type Pod, type Deployment, type Service, type Namespace, type PodStatus } from '../types/kubernetes.types.js';
+import { KubernetesError, ResourceNotFoundError, NamespaceNotFoundError } from '../utils/errors.js';
 
 export interface KubernetesClientOptions {
   context?: string;
@@ -259,11 +249,7 @@ export class KubernetesClient {
   /**
    * Delete resources
    */
-  async delete(
-    resourceType: string,
-    name: string,
-    options: DeleteOptions = {}
-  ): Promise<void> {
+  async delete(resourceType: string, name: string, options: DeleteOptions = {}): Promise<void> {
     const args = ['delete', resourceType, name];
 
     if (options.namespace) {
@@ -348,9 +334,7 @@ export class KubernetesClient {
       const data = JSON.parse(result.stdout);
       return this.parseDeployment(data);
     } catch (error) {
-      throw new ResourceNotFoundError(
-        `Deployment ${name} not found in namespace ${namespace}`
-      );
+      throw new ResourceNotFoundError(`Deployment ${name} not found in namespace ${namespace}`);
     }
   }
 
@@ -372,19 +356,9 @@ export class KubernetesClient {
   /**
    * Wait for resource condition
    */
-  async waitFor(
-    resourceType: string,
-    name: string,
-    condition: string,
-    options: WaitOptions = {}
-  ): Promise<void> {
+  async waitFor(resourceType: string, name: string, condition: string, options: WaitOptions = {}): Promise<void> {
     const timeout = options.timeout || 300;
-    const args = [
-      'wait',
-      `${resourceType}/${name}`,
-      `--for=${condition}`,
-      `--timeout=${timeout}s`,
-    ];
+    const args = ['wait', `${resourceType}/${name}`, `--for=${condition}`, `--timeout=${timeout}s`];
 
     if (this.options.namespace) {
       args.push('-n', this.options.namespace);
@@ -404,20 +378,18 @@ export class KubernetesClient {
 
         if (deployment.replicas.ready === deployment.replicas.desired) {
           this.logger.success(
-            `Deployment ${name} is ready (${deployment.replicas.ready}/${deployment.replicas.desired})`
+            `Deployment ${name} is ready (${deployment.replicas.ready}/${deployment.replicas.desired})`,
           );
           return;
         }
 
-        throw new Error(
-          `Deployment ${name} not ready: ${deployment.replicas.ready}/${deployment.replicas.desired}`
-        );
+        throw new Error(`Deployment ${name} not ready: ${deployment.replicas.ready}/${deployment.replicas.desired}`);
       },
       {
         maxAttempts: Math.floor(timeout / 5),
         delay: 5000,
         backoff: 1,
-      }
+      },
     );
   }
 
@@ -442,7 +414,7 @@ export class KubernetesClient {
         maxAttempts: Math.floor(timeout / 5),
         delay: 5000,
         backoff: 1,
-      }
+      },
     );
   }
 
@@ -452,7 +424,7 @@ export class KubernetesClient {
   async getLogs(
     podName: string,
     namespace?: string,
-    options: { container?: string; tail?: number; follow?: boolean } = {}
+    options: { container?: string; tail?: number; follow?: boolean } = {},
   ): Promise<string> {
     const args = ['logs', podName];
 
@@ -568,10 +540,7 @@ export class KubernetesClient {
     const allContainersReady = containerStatuses.every((c: any) => c.ready);
     const ready = isSucceeded || allContainersReady;
 
-    const restarts = containerStatuses.reduce(
-      (sum: number, c: any) => sum + (c.restartCount || 0),
-      0
-    );
+    const restarts = containerStatuses.reduce((sum: number, c: any) => sum + (c.restartCount || 0), 0);
 
     return {
       name: data.metadata.name,
@@ -649,13 +618,12 @@ export class KubernetesClient {
 
     if (deployedService) {
       args.push('-f', `deployment.apps/${deployedService}`);
-    }
-    else {
+    } else {
       args.push('deployment');
     }
-    
+
     if (this.options.namespace) {
-      args.push('-n', 'srvthreds');
+      args.push('-n', this.options.namespace);
     }
 
     try {

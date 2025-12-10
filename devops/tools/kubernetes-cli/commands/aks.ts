@@ -7,7 +7,7 @@
 
 import type { CommandModule, Argv, ArgumentsCamelCase } from 'yargs';
 import { AKSDeployer } from '../../kubernetes-deployer/src/index.js';
-import { loadProjectConfig, getDefaultProject, type ProjectConfig } from '../config/project-loader.js';
+import { loadProjectConfig, type ProjectConfig } from '../config/project-loader.js';
 import { logger } from '../../shared/logger.js';
 import { formatDeploymentResult } from '../utils/output.js';
 
@@ -22,6 +22,7 @@ interface AKSOptions {
 interface DeployOptions extends AKSOptions {
   'dry-run'?: boolean;
   tag?: string;
+  deployment: string;
 }
 
 /**
@@ -50,8 +51,8 @@ function addAKSOptions(yargs: Argv): Argv<AKSOptions> {
     .option('project', {
       alias: 'p',
       type: 'string',
-      description: 'Project to deploy',
-      default: getDefaultProject(),
+      description: 'Project to deploy (required)',
+      demandOption: true,
     }) as Argv<AKSOptions>;
 }
 
@@ -75,6 +76,12 @@ const deployCommand: CommandModule<object, DeployOptions> = {
   describe: 'Deploy project to AKS environment',
   builder: (yargs) =>
     addAKSOptions(yargs)
+      .option('deployment', {
+        alias: 'd',
+        type: 'string',
+        description: 'Deployment shortName for building images (from deployments/*.json)',
+        demandOption: true,
+      })
       .option('dry-run', {
         type: 'boolean',
         description: 'Preview changes without applying',
@@ -84,7 +91,7 @@ const deployCommand: CommandModule<object, DeployOptions> = {
         type: 'string',
         description: 'Docker image tag',
         default: 'latest',
-      }),
+      }) as unknown as Argv<DeployOptions>,
   handler: async (argv: ArgumentsCamelCase<DeployOptions>) => {
     const config = getProjectConfig(argv.project);
     const env = validateEnvironment(argv.env, config);
@@ -96,13 +103,12 @@ const deployCommand: CommandModule<object, DeployOptions> = {
     }
 
     const deployer = new AKSDeployer({
+      project: argv.project,
       environment: env,
       verbose: argv.verbose,
       dryRun: argv['dry-run'],
       imageTag: argv.tag,
-      manifestPath: `${config.aks.manifestPath}${env}/`,
-      namespace: config.kubernetes.namespace,
-      srvthredsPath: config.source.path,
+      deployment: argv.deployment,
     });
 
     const startTime = Date.now();
@@ -132,7 +138,7 @@ const statusCommand: CommandModule<object, AKSOptions> = {
 
     try {
       // Get AKS credentials first
-      const naming = generateAzureNaming(env);
+      const naming = generateAzureNaming(env, config);
       logger.info(`Connecting to cluster: ${naming.clusterName}`);
 
       execSync(
@@ -177,7 +183,7 @@ const restartCommand: CommandModule<object, AKSOptions> = {
 
     try {
       // Get AKS credentials first
-      const naming = generateAzureNaming(env);
+      const naming = generateAzureNaming(env, config);
       execSync(
         `az aks get-credentials --resource-group ${naming.resourceGroup} --name ${naming.clusterName} --overwrite-existing`,
         { stdio: 'pipe' },
@@ -204,20 +210,21 @@ const restartCommand: CommandModule<object, AKSOptions> = {
 /**
  * Generate Azure resource names following naming convention
  */
-function generateAzureNaming(environment: AKSEnvironment): {
+function generateAzureNaming(
+  environment: AKSEnvironment,
+  config: ProjectConfig,
+): {
   resourceGroup: string;
   clusterName: string;
   acrName: string;
 } {
-  const caz = 'CAZ';
-  const appName = 'SRVTHREDS';
+  const { prefix, appCode, regionCode } = config.azure;
   const envCode = environment === 'dev' ? 'D' : environment === 'test' ? 'T' : 'P';
-  const region = 'E'; // East US
 
   return {
-    resourceGroup: `${caz}-${appName}-${envCode}-${region}-RG`,
-    clusterName: `${caz}-${appName}-${envCode}-${region}-AKS`,
-    acrName: `${caz}${appName}${envCode}${region}ACR`.toLowerCase().replace(/-/g, ''),
+    resourceGroup: `${prefix}-${appCode}-${envCode}-${regionCode}-RG`,
+    clusterName: `${prefix}-${appCode}-${envCode}-${regionCode}-AKS`,
+    acrName: `${prefix}${appCode}${envCode}${regionCode}ACR`.toLowerCase().replace(/-/g, ''),
   };
 }
 

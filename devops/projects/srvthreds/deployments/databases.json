@@ -5,33 +5,14 @@
       "shortName": "s_a_dbs",
       "description": "Starts the database containers (Mongo, Redis, RabbitMQ).",
       "environments": [
-        "local",
+        "development",
         "minikube"
       ],
       "target": {
         "type": "docker-compose",
-        "composing": "databases",
         "deployCommand": "up",
         "composeFile": "docker-compose-db.yml",
-        "defaultArgs": "-d --wait",
-        "environmentOverrides": {
-          "local": {
-            "postUpCommands": [
-              {
-                "description": "Setting up MongoDB replica set...",
-                "command": "projects/srvthreds/docker/scripts/setup-repl.sh"
-              }
-            ]
-          },
-          "minikube": {
-            "postUpCommands": [
-              {
-                "description": "Setting up MongoDB replica set...",
-                "command": "projects/srvthreds/docker/scripts/setup-repl.sh"
-              }
-            ]
-          }
-        }
+        "defaultArgs": "-d --wait"
       }
     },
     {
@@ -39,11 +20,10 @@
       "shortName": "d_a_dbs",
       "description": "Stops and removes the database containers and their volumes.",
       "environments": [
-        "local",
+        "development",
         "minikube"
       ],
       "target": {
-        "composing": "databases",
         "deployCommand": "down",
         "composeFile": "docker-compose-db.yml",
         "defaultArgs": "-v"

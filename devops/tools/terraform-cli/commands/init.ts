@@ -13,6 +13,7 @@ import { logger } from '../../shared/logger.js';
 import { requireString, ValidationError } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager } from '../utils/terraform.js';
+import { extractProject } from '../utils/args.js';
 
 import type { StackConfig, DeployConfig } from '../types/index.js';
 
@@ -43,21 +44,23 @@ interface InitResult {
 }
 
 export async function initCommand(args: string[]): Promise<void> {
-  if (args.includes('--help') || args.length === 0) {
+  if (args.includes('--help')) {
     printHelp();
-    if (args.length === 0 && !args.includes('--help')) {
-      throw new ValidationError('Missing required argument: <environment>');
-    }
     return;
   }
 
-  const environment = requireString(args[0], 'environment');
-  const showState = !args.includes('--no-state');
-  const requestedStacks = args.slice(1).filter((a) => !a.startsWith('--'));
+  if (args.length === 0) {
+    throw new ValidationError('Missing required argument: <environment>');
+  }
+
+  // Extract project from args (required)
+  const { project, remainingArgs } = extractProject(args);
+
+  const environment = requireString(remainingArgs[0], 'environment');
+  const showState = !remainingArgs.includes('--no-state');
+  const requestedStacks = remainingArgs.slice(1).filter((a) => !a.startsWith('--'));
 
   // Load configuration
-  // TODO: Add --project flag to CLI
-  const project = 'srvthreds';
   const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, CONTEXT);
 
@@ -98,7 +101,7 @@ export async function initCommand(args: string[]): Promise<void> {
     }
   }
 
-  await runInit(stacksToInit, environment, envConfig, showState);
+  await runInit(stacksToInit, environment, envConfig, showState, project);
 }
 
 async function runInit(
@@ -106,9 +109,11 @@ async function runInit(
   environment: string,
   envConfig: EnvironmentConfig,
   showState: boolean,
+  project: string,
 ): Promise<void> {
   logger.section(`INITIALIZE: ${environment.toUpperCase()}`);
 
+  logger.info(`Project: ${project}`, CONTEXT);
   logger.info(`Environment: ${environment}`, CONTEXT);
   logger.info(`Resource Group: ${envConfig.resourceGroupName}`, CONTEXT);
   logger.info(`State Backend: ${envConfig.stateBackendStorageAccount}`, CONTEXT);
@@ -207,13 +212,14 @@ function printHelp(): void {
 Initialize Terraform and pull remote state for an environment
 
 USAGE:
-  terraform-cli init <environment> [stacks...] [options]
+  terraform-cli init --project <project> <environment> [stacks...] [options]
 
 ARGUMENTS:
   environment     Environment name (dev, test, prod)
   stacks          Optional: specific stacks to initialize (default: all)
 
 OPTIONS:
+  --project, -p   Project name (required)
   --no-state      Skip showing resource counts (faster)
   --help          Show this help message
 
@@ -235,16 +241,16 @@ DESCRIPTION:
 
 EXAMPLES:
   # Initialize all stacks for dev environment
-  npm run tf:init -- dev
+  npm run tf:init -- -p srvthreds dev
 
   # Initialize specific stacks
-  npm run tf:init -- dev networking keyvault
+  npm run tf:init -- -p srvthreds dev networking keyvault
 
   # Initialize without showing state (faster)
-  npm run tf:init -- prod --no-state
+  npm run tf:init -- -p srvthreds prod --no-state
 
   # Initialize after fresh clone
   az login
-  npm run tf:init -- dev
+  npm run tf:init -- -p srvthreds dev
 `);
 }

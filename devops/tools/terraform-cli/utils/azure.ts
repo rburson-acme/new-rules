@@ -22,10 +22,14 @@ export interface AzureSoftDeletedResource {
 }
 
 export class AzureManager {
-  private subscriptionId?: string;
+  private _subscriptionId?: string;
 
   constructor(subscriptionId?: string) {
-    this.subscriptionId = subscriptionId;
+    this._subscriptionId = subscriptionId;
+  }
+
+  get subscriptionId(): string | undefined {
+    return this._subscriptionId;
   }
 
   /**
@@ -63,7 +67,7 @@ export class AzureManager {
       throw new AzureError(`Failed to set subscription to ${subscriptionId}`);
     }
 
-    this.subscriptionId = subscriptionId;
+    this._subscriptionId = subscriptionId;
   }
 
   /**
@@ -72,10 +76,9 @@ export class AzureManager {
   async listResources(resourceGroup: string): Promise<AzureResource[]> {
     logger.debug(`Listing resources in ${resourceGroup}`, 'azure');
 
-    const result = execCommand(
-      `az resource list --resource-group ${resourceGroup} --output json`,
-      { context: 'azure-list-resources' }
-    );
+    const result = execCommand(`az resource list --resource-group ${resourceGroup} --output json`, {
+      context: 'azure-list-resources',
+    });
 
     if (!result.success) {
       throw new AzureError(`Failed to list resources in ${resourceGroup}`);
@@ -94,10 +97,10 @@ export class AzureManager {
   async deleteResourceGroup(resourceGroup: string, options: ShellOptions = {}): Promise<void> {
     logger.info(`Deleting resource group ${resourceGroup}`, 'azure');
 
-    const result = execCommand(
-      `az group delete --name ${resourceGroup} --yes`,
-      { ...options, context: 'azure-delete-rg' }
-    );
+    const result = execCommand(`az group delete --name ${resourceGroup} --yes`, {
+      ...options,
+      context: 'azure-delete-rg',
+    });
 
     if (!result.success) {
       throw new AzureError(`Failed to delete resource group ${resourceGroup}`);
@@ -133,10 +136,9 @@ export class AzureManager {
   async purgeKeyVault(name: string, location: string): Promise<void> {
     logger.info(`Purging soft-deleted Key Vault ${name}`, 'azure');
 
-    const result = execCommand(
-      `az keyvault purge --name ${name} --location ${location}`,
-      { context: 'azure-purge-kv' }
-    );
+    const result = execCommand(`az keyvault purge --name ${name} --location ${location}`, {
+      context: 'azure-purge-kv',
+    });
 
     if (!result.success) {
       throw new AzureError(`Failed to purge Key Vault ${name}`);
@@ -172,10 +174,9 @@ export class AzureManager {
   async purgeStorageAccount(name: string, resourceGroup: string): Promise<void> {
     logger.info(`Purging soft-deleted Storage Account ${name}`, 'azure');
 
-    const result = execCommand(
-      `az storage account purge --name ${name} --resource-group ${resourceGroup}`,
-      { context: 'azure-purge-sa' }
-    );
+    const result = execCommand(`az storage account purge --name ${name} --resource-group ${resourceGroup}`, {
+      context: 'azure-purge-sa',
+    });
 
     if (!result.success) {
       throw new AzureError(`Failed to purge Storage Account ${name}`);
@@ -211,14 +212,12 @@ export class AzureManager {
   async deleteLock(lockName: string, resourceGroup: string): Promise<void> {
     logger.info(`Deleting lock ${lockName} on ${resourceGroup}`, 'azure');
 
-    const result = execCommand(
-      `az lock delete --name ${lockName} --resource-group ${resourceGroup}`,
-      { context: 'azure-delete-lock' }
-    );
+    const result = execCommand(`az lock delete --name ${lockName} --resource-group ${resourceGroup}`, {
+      context: 'azure-delete-lock',
+    });
 
     if (!result.success) {
       throw new AzureError(`Failed to delete lock ${lockName}`);
     }
   }
 }
-

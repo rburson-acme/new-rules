@@ -5,45 +5,15 @@
       "shortName": "build_server",
       "description": "Creates the base image used by all services.",
       "environments": [
-        "local",
         "minikube",
-        "aks"
+        "development",
+        "test",
+        "production"
       ],
       "target": {
-        "composing": "service",
         "deployCommand": "build",
         "composeFile": "docker-compose-services.yml",
-        "defaultArgs": "--progress=plain srvthreds-builder",
-        "environmentOverrides": {
-          "local": {
-            "preBuildCommands": [
-              {
-                "description": "Copy environment config into assets folder for delivery.",
-                "command": "cp ../srvthreds/deploy/local/configs/.env.docker projects/srvthreds/docker/assets/.env"
-              }
-            ],
-            "postUpCommands": [
-              {
-                "description": "Cleanup deployment assets directory",
-                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
-              }
-            ]
-          },
-          "minikube": {
-            "preBuildCommands": [
-              {
-                "description": "Copy minikube environment config into assets folder for delivery.",
-                "command": "cp ../srvthreds/deploy/local/configs/.env.minikube projects/srvthreds/docker/assets/.env"
-              }
-            ],
-            "postUpCommands": [
-              {
-                "description": "Cleanup deployment assets directory",
-                "command": "find projects/srvthreds/docker/assets/ -mindepth 1 -delete"
-              }
-            ]
-          }
-        }
+        "defaultArgs": "--progress=plain srvthreds-builder"
       }
     }
   ]

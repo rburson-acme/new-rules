@@ -51,3 +51,9 @@ aks:
     - dev
     - test
     - prod
+
+azure:
+  # Azure naming convention components
+  prefix: CAZ
+  appCode: SRVTHREDS
+  regionCode: E

@@ -3,6 +3,7 @@
  * Handles deployment to local Minikube cluster
  */
 
+import * as path from 'path';
 import { BaseDeployer } from './BaseDeployer.js';
 import { KubernetesClient } from '../operations/KubernetesClient.js';
 import { ShellExecutor } from '../utils/shell.js';
@@ -13,10 +14,16 @@ import {
   ManifestApplicationError,
   ValidationError,
 } from '../utils/errors.js';
-import type {
-  DeployerOptions,
-  ValidationResult,
-} from '../types/index.js';
+import type { DeployerOptions, ValidationResult } from '../types/index.js';
+import { loadProjectConfig, getProjectDir, type ProjectConfig } from '../../../kubernetes-cli/config/project-loader.js';
+import {
+  loadDeploymentConfigs,
+  findDeployment,
+  resolveMultiFileDeployment,
+  type DeploymentConfig,
+  type DeploymentCommand,
+  type ResolvedDeployment,
+} from '../config/deployment-config.js';
 
 export interface MinikubeDeployerOptions extends DeployerOptions {
   manifestPath?: string;
@@ -24,8 +31,10 @@ export interface MinikubeDeployerOptions extends DeployerOptions {
   cpus?: number;
   memory?: number;
   diskSize?: string;
-  /** Path to srvthreds project root (relative to devops or absolute) */
-  srvthredsPath?: string;
+  /** Project name to deploy */
+  project?: string;
+  /** Deployment shortName to execute (from deployments/*.json) */
+  deployment?: string;
 }
 
 /**
@@ -36,7 +45,10 @@ export class MinikubeDeployer extends BaseDeployer {
   private k8s: KubernetesClient;
   private manifestPath: string;
   private skipDatabaseSetup: boolean;
-  private srvthredsPath: string;
+  private projectConfig: ProjectConfig;
+  private projectDir: string;
+  private devopsRoot: string;
+  private deploymentConfigs: DeploymentConfig[];
   private minikubeConfig: {
     cpus: number;
     memory: number;
@@ -46,11 +58,21 @@ export class MinikubeDeployer extends BaseDeployer {
   constructor(options: MinikubeDeployerOptions = {}) {
     super('minikube', 'minikube', options);
 
+    if (!options.project) {
+      throw new Error('Project name is required. Use --project flag to specify the project.');
+    }
+    const projectName = options.project;
+    this.projectConfig = loadProjectConfig(projectName);
+    this.projectDir = getProjectDir(projectName);
+    this.devopsRoot = path.resolve(this.projectDir, '..', '..');
+
+    // Load deployment configurations from project
+    this.deploymentConfigs = loadDeploymentConfigs(this.projectConfig);
+
     this.shell = new ShellExecutor('MinikubeDeployer');
     this.k8s = new KubernetesClient({ context: 'minikube', verbose: options.verbose });
-    this.manifestPath = options.manifestPath || 'minikube/srvthreds/';
+    this.manifestPath = options.manifestPath || this.projectConfig.minikube.manifestPath;
     this.skipDatabaseSetup = options.skipDatabaseSetup || false;
-    this.srvthredsPath = options.srvthredsPath || '../srvthreds';
 
     this.minikubeConfig = {
       cpus: options.cpus || 4,
@@ -59,8 +81,11 @@ export class MinikubeDeployer extends BaseDeployer {
     };
 
     this.logger.section('Minikube Deployer Initialized');
+    this.logger.info(`Project: ${this.projectConfig.name}`);
     this.logger.info(`Manifest path: ${this.manifestPath}`);
-    this.logger.info(`Srvthreds path: ${this.srvthredsPath}`);
+    this.logger.info(`Docker compose path: ${this.projectConfig.docker.composePath}`);
+    this.logger.info(`Source path: ${this.projectConfig.source.path}`);
+    this.logger.info(`Deployment configs loaded: ${this.deploymentConfigs.length}`);
   }
 
   /**
@@ -73,10 +98,9 @@ export class MinikubeDeployer extends BaseDeployer {
     this.logger.info('Checking Docker daemon...');
     const dockerCheck = await this.shell.exec('docker', ['info'], { silent: true });
     if (dockerCheck.exitCode !== 0) {
-      throw new PreDeploymentCheckError(
-        'Docker daemon is not running. Please start Docker Desktop.',
-        { step: 'docker-check' }
-      );
+      throw new PreDeploymentCheckError('Docker daemon is not running. Please start Docker Desktop.', {
+        step: 'docker-check',
+      });
     }
     this.logger.success('Docker daemon is running');
 
@@ -84,10 +108,9 @@ export class MinikubeDeployer extends BaseDeployer {
     this.logger.info('Checking Minikube installation...');
     const minikubeExists = await this.shell.commandExists('minikube');
     if (!minikubeExists) {
-      throw new PreDeploymentCheckError(
-        'Minikube is not installed. Install from: https://minikube.sigs.k8s.io/',
-        { step: 'minikube-check' }
-      );
+      throw new PreDeploymentCheckError('Minikube is not installed. Install from: https://minikube.sigs.k8s.io/', {
+        step: 'minikube-check',
+      });
     }
 
     // 3. Check if Minikube cluster exists and is running
@@ -95,11 +118,10 @@ export class MinikubeDeployer extends BaseDeployer {
 
     let minikubeStatus = '';
     try {
-      const statusResult = await this.shell.exec(
-        'minikube',
-        ['status', '--format', '{{.Host}}'],
-        { silent: true, logErrors: false }
-      );
+      const statusResult = await this.shell.exec('minikube', ['status', '--format', '{{.Host}}'], {
+        silent: true,
+        logErrors: false,
+      });
       minikubeStatus = statusResult.stdout.trim();
     } catch (error) {
       // minikube status exits with 85 when profile doesn't exist
@@ -135,8 +157,8 @@ export class MinikubeDeployer extends BaseDeployer {
     this.logger.success('kubectl context set to minikube');
 
     // 5. Ensure namespace exists
-    await this.k8s.ensureNamespace('srvthreds');
-    this.logger.success('Namespace srvthreds ready');
+    await this.k8s.ensureNamespace(this.projectConfig.kubernetes.namespace);
+    this.logger.success(`Namespace ${this.projectConfig.kubernetes.namespace} ready`);
   }
 
   /**
@@ -194,49 +216,151 @@ export class MinikubeDeployer extends BaseDeployer {
   }
 
   /**
+   * Execute deployment commands (preBuildCommands or postUpCommands)
+   */
+  private async executeDeploymentCommands(
+    commands: DeploymentCommand[],
+    envVars?: Record<string, string>,
+  ): Promise<void> {
+    for (const cmd of commands) {
+      this.logger.info(`  ${cmd.description}`);
+
+      // Parse command - handle shell commands with pipes, etc.
+      const args = cmd.command.split(' ');
+      const executable = args[0];
+      const execArgs = args.slice(1);
+
+      await this.shell.exec(executable, execArgs, {
+        env: envVars,
+        cwd: this.devopsRoot,
+        timeout: 300000,
+      });
+    }
+  }
+
+  /**
+   * Execute a single resolved deployment
+   */
+  private async executeResolvedDeployment(
+    resolved: ResolvedDeployment,
+    envVars?: Record<string, string>,
+  ): Promise<void> {
+    this.logger.info(`Executing: ${resolved.name}`);
+    this.logger.info(`  Compose file: ${resolved.composeFilePath}`);
+    this.logger.info(`  Command: ${resolved.deployCommand}`);
+    this.logger.info(`  Args: ${resolved.defaultArgs}`);
+
+    // Execute pre-build commands
+    if (resolved.preBuildCommands.length > 0) {
+      this.logger.info('Running pre-build commands...');
+      await this.executeDeploymentCommands(resolved.preBuildCommands, envVars);
+    }
+
+    // Run the compose command
+    const composeArgs = resolved.defaultArgs.split(' ').filter((arg) => arg.length > 0);
+
+    await this.shell.exec(
+      'docker',
+      ['compose', '-f', resolved.composeFilePath, resolved.deployCommand, ...composeArgs],
+      {
+        env: envVars,
+        timeout: 300000,
+        cwd: this.devopsRoot,
+      },
+    );
+
+    // Execute post-up commands
+    if (resolved.postUpCommands.length > 0) {
+      this.logger.info('Running post-up commands...');
+      await this.executeDeploymentCommands(resolved.postUpCommands, envVars);
+    }
+  }
+
+  /**
+   * Execute a deployment by shortName
+   *
+   * This is the generic deployment execution method. It looks up the deployment
+   * configuration by shortName, resolves environment-specific overrides, and
+   * executes the configured commands (preBuildCommands, compose command, postUpCommands).
+   *
+   * @param shortName - The deployment shortName from deployments/*.json
+   * @param options - Execution options
+   */
+  async executeDeployment(shortName: string, options: { useMinikubeDocker?: boolean } = {}): Promise<void> {
+    this.logger.section(`Executing Deployment: ${shortName}`);
+
+    // Find deployment config
+    const deploymentConfig = findDeployment(this.deploymentConfigs, shortName);
+    if (!deploymentConfig) {
+      throw new Error(`Deployment configuration not found: ${shortName}`);
+    }
+
+    // Verify this deployment supports minikube environment
+    if (!deploymentConfig.environments.includes('minikube')) {
+      throw new Error(
+        `Deployment '${shortName}' does not support minikube environment. ` +
+          `Supported: ${deploymentConfig.environments.join(', ')}`,
+      );
+    }
+
+    if (this.options.dryRun) {
+      this.logger.info(`[DRY RUN] Would execute deployment: ${shortName}`);
+      const resolved = resolveMultiFileDeployment(deploymentConfig, 'minikube', this.projectConfig);
+      for (const r of resolved) {
+        this.logger.info(`  Compose file: ${r.composeFilePath}`);
+        this.logger.info(`  Command: ${r.deployCommand} ${r.defaultArgs}`);
+      }
+      return;
+    }
+
+    // Get environment variables (optionally use Minikube Docker)
+    let envVars: Record<string, string> | undefined;
+    if (options.useMinikubeDocker) {
+      this.logger.info('Configuring Docker to use Minikube environment...');
+      envVars = await this.getMinikubeDockerEnv();
+    }
+
+    // Resolve deployment for minikube environment (handles single or multi-file)
+    const resolvedDeployments = resolveMultiFileDeployment(deploymentConfig, 'minikube', this.projectConfig);
+
+    // Execute each resolved deployment in order
+    for (const resolved of resolvedDeployments) {
+      await this.executeResolvedDeployment(resolved, envVars);
+    }
+
+    this.logger.success(`Deployment '${shortName}' completed successfully`);
+  }
+
+  /**
    * Build Docker images in Minikube environment
    *
-   * Uses srvthreds' deploymentCli to build images. This ensures:
-   * - Dynamic docker-compose files are generated correctly
-   * - thredlib symlink dependency is resolved
-   * - Pre/post build commands from deployment configs are executed
+   * Uses the generic executeDeployment method with the deployment shortName
+   * specified in options, or falls back to 'build_server' for backwards compatibility.
    */
   protected async buildImages(): Promise<void> {
     this.logger.section('Building Docker Images');
 
-    if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would build images via srvthreds deploymentCli');
-      return;
+    // Deployment must be specified - no default assumptions
+    const deploymentShortName = (this.options as MinikubeDeployerOptions).deployment;
+    if (!deploymentShortName) {
+      throw new ImageBuildError(
+        'No deployment specified. Use --deployment flag to specify which deployment to execute.',
+        { step: 'build-images' },
+      );
     }
 
     try {
-      // Set Docker environment to Minikube
-      this.logger.info('Configuring Docker to use Minikube environment...');
-      const envVars = await this.getMinikubeDockerEnv();
+      await this.executeDeployment(deploymentShortName, { useMinikubeDocker: true });
 
-      // Build server images using srvthreds' deploymentCli
-      // This runs from srvthreds directory to ensure correct paths for:
-      // - thredlib symlink (additional_contexts in docker-compose)
-      // - Dynamic docker-compose file generation
-      // - Deployment config pre/post commands
-      this.logger.info('Building server images via deploymentCli...');
-      await this.shell.exec(
-        'npm',
-        ['run', 'deploymentCli', '--', 'minikube', 'build_server'],
-        {
-          env: envVars,
-          timeout: 300000,
-          cwd: this.srvthredsPath,
-        }
-      );
-
-      // Tag builder image as srvthreds:dev for convenience
-      this.logger.info('Tagging builder image...');
-      await this.shell.exec(
-        'docker',
-        ['tag', 'srvthreds/builder:latest', 'srvthreds:dev'],
-        { env: envVars }
-      );
+      // Tag builder image for convenience (only for build commands)
+      const deploymentConfig = findDeployment(this.deploymentConfigs, deploymentShortName);
+      if (deploymentConfig?.target.deployCommand === 'build') {
+        const envVars = await this.getMinikubeDockerEnv();
+        const builderImage = this.projectConfig.docker.builderImage;
+        const projectName = this.projectConfig.name.toLowerCase();
+        this.logger.info('Tagging builder image...');
+        await this.shell.exec('docker', ['tag', builderImage, `${projectName}:dev`], { env: envVars });
+      }
 
       const imageTag = this.options.imageTag || 'dev';
       this.state.setImageTag(imageTag);
@@ -246,7 +370,7 @@ export class MinikubeDeployer extends BaseDeployer {
       throw new ImageBuildError(
         `Failed to build images: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { step: 'build-images' },
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -264,12 +388,15 @@ export class MinikubeDeployer extends BaseDeployer {
   }
 
   /**
-   * Setup host databases (MongoDB, Redis) for Minikube
+   * Setup host databases for Minikube
    *
-   * Uses srvthreds' deploymentCli to start databases. For Minikube,
-   * this starts mongo-repl-1 and redis on the host Docker (not Minikube's Docker).
+   * Executes the specified database deployment on the host Docker (not Minikube's Docker).
+   * Any database-specific initialization (replica sets, etc.) should be configured
+   * in the deployment's postUpCommands.
+   *
+   * @param databaseDeployment - The deployment shortName for starting databases
    */
-  private async setupHostDatabases(): Promise<void> {
+  async setupHostDatabases(databaseDeployment: string): Promise<void> {
     if (this.skipDatabaseSetup) {
       this.logger.info('Skipping database setup (skipDatabaseSetup=true)');
       return;
@@ -277,96 +404,24 @@ export class MinikubeDeployer extends BaseDeployer {
 
     this.logger.section('Setting Up Host Databases');
 
-    if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would set up host databases via srvthreds deploymentCli');
-      return;
-    }
-
     try {
       // Reset Docker environment to host (not Minikube)
       // This ensures databases run on host Docker, accessible via host.minikube.internal
       this.logger.info('Resetting Docker environment to host...');
       await this.shell.exec('minikube', ['docker-env', '--unset']);
 
-      // Start databases on host Docker using srvthreds' deploymentCli
-      // This runs from srvthreds directory to use the correct deployment configs
-      this.logger.info('Starting host databases via deploymentCli...');
-      await this.shell.exec(
-        'npm',
-        ['run', 'deploymentCli', '--', 'minikube', 's_a_dbs'],
-        {
-          timeout: 120000,
-          cwd: this.srvthredsPath,
-        }
-      );
-
-      // Verify MongoDB replica set health
-      await this.verifyMongoDBReplicaSet();
+      // Execute the specified database deployment (without Minikube Docker env)
+      // The deployment's postUpCommands handle any initialization (e.g., replica set setup)
+      await this.executeDeployment(databaseDeployment, { useMinikubeDocker: false });
 
       this.logger.success('Host databases are ready');
     } catch (error) {
       throw new PreDeploymentCheckError(
         `Failed to set up host databases: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { step: 'database-setup' },
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
-  }
-
-  /**
-   * Verify MongoDB replica set is healthy
-   */
-  private async verifyMongoDBReplicaSet(): Promise<void> {
-    this.logger.info('Verifying MongoDB replica set health...');
-
-    const checkScript = `
-      try {
-        const status = rs.status();
-        if (status.ok === 1) {
-          const primaryCount = status.members.filter(m => m.stateStr === 'PRIMARY').length;
-          print(primaryCount);
-        } else {
-          print('0');
-        }
-      } catch(e) {
-        print('0');
-      }
-    `;
-
-    const result = await this.shell.exec(
-      'docker',
-      ['exec', 'mongo-repl-1', 'mongosh', '--quiet', '--eval', checkScript],
-      { silent: true }
-    );
-
-    const primaryCount = result.stdout.trim();
-
-    if (primaryCount !== '1') {
-      this.logger.warn('MongoDB replica set needs initialization');
-      this.logger.info('Running replica set setup...');
-
-      await this.shell.exec(
-        'bash',
-        [`${this.srvthredsPath}/infrastructure/local/docker/scripts/setup-repl.sh`],
-        { timeout: 60000 }
-      );
-
-      // Verify again
-      const retryResult = await this.shell.exec(
-        'docker',
-        ['exec', 'mongo-repl-1', 'mongosh', '--quiet', '--eval', checkScript],
-        { silent: true }
-      );
-
-      if (retryResult.stdout.trim() !== '1') {
-        throw new PreDeploymentCheckError(
-          'MongoDB replica set is not healthy after initialization',
-          { step: 'mongodb-health' }
-        );
-      }
-    }
-
-    this.logger.success('MongoDB replica set is healthy');
   }
 
   /**
@@ -375,27 +430,24 @@ export class MinikubeDeployer extends BaseDeployer {
   protected async applyManifests(manifestPath?: string): Promise<void> {
     this.logger.section('Applying Kubernetes Manifests');
 
-    const path = manifestPath || this.manifestPath;
+    const targetPath = manifestPath || this.manifestPath;
 
     if (this.options.dryRun) {
-      this.logger.info(`[DRY RUN] Would apply manifests from: ${path}`);
+      this.logger.info(`[DRY RUN] Would apply manifests from: ${targetPath}`);
       return;
     }
 
     try {
-      // First, setup host databases
-      await this.setupHostDatabases();
-
       // Apply Kubernetes manifests with kustomize
-      this.logger.info(`Applying manifests from: ${path}`);
-      await this.k8s.apply(path, { namespace: 'srvthreds', kustomize: true });
+      this.logger.info(`Applying manifests from: ${targetPath}`);
+      await this.k8s.apply(targetPath, { namespace: this.projectConfig.kubernetes.namespace, kustomize: true });
 
       this.logger.success('Manifests applied successfully');
     } catch (error) {
       throw new ManifestApplicationError(
         `Failed to apply manifests: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { manifestPath: path },
-        error instanceof Error ? error : undefined
+        { manifestPath: targetPath },
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -406,11 +458,7 @@ export class MinikubeDeployer extends BaseDeployer {
   protected async waitForReadiness(): Promise<void> {
     this.logger.section('Waiting for Deployments');
 
-    const deployments = [
-      'srvthreds-engine',
-      'srvthreds-session-agent',
-      'srvthreds-persistence-agent',
-    ];
+    const deployments = this.projectConfig.kubernetes.deployments;
 
     if (this.options.dryRun) {
       this.logger.info('[DRY RUN] Would wait for deployments to be ready');
@@ -423,30 +471,28 @@ export class MinikubeDeployer extends BaseDeployer {
 
         await retry(
           async () => {
-            const deployment = await this.k8s.getDeployment(deploymentName, 'srvthreds');
+            const deployment = await this.k8s.getDeployment(deploymentName, this.projectConfig.kubernetes.namespace);
 
             if (deployment.replicas.ready === deployment.replicas.desired) {
               this.logger.success(
-                `${deploymentName} is ready (${deployment.replicas.ready}/${deployment.replicas.desired})`
+                `${deploymentName} is ready (${deployment.replicas.ready}/${deployment.replicas.desired})`,
               );
               return;
             }
 
-            throw new Error(
-              `${deploymentName} not ready: ${deployment.replicas.ready}/${deployment.replicas.desired}`
-            );
+            throw new Error(`${deploymentName} not ready: ${deployment.replicas.ready}/${deployment.replicas.desired}`);
           },
           {
             maxAttempts: 60,
             delay: 5000,
             backoff: 1,
-          }
+          },
         );
 
         this.state.addDeployedResource({
           kind: 'Deployment',
           name: deploymentName,
-          namespace: 'srvthreds',
+          namespace: this.projectConfig.kubernetes.namespace,
           status: 'deployed',
         });
       }
@@ -456,7 +502,7 @@ export class MinikubeDeployer extends BaseDeployer {
       throw new ValidationError(
         `Deployments failed to become ready: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { step: 'wait-for-readiness' },
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -479,9 +525,11 @@ export class MinikubeDeployer extends BaseDeployer {
       return validation;
     }
 
+    const namespace = this.projectConfig.kubernetes.namespace;
+
     // Check pod status
     this.logger.info('Checking pod status...');
-    const pods = await this.k8s.getPods('srvthreds');
+    const pods = await this.k8s.getPods(namespace);
 
     const notReady = pods.filter((p) => !p.ready);
     if (notReady.length > 0) {
@@ -499,7 +547,7 @@ export class MinikubeDeployer extends BaseDeployer {
 
     // Check service endpoints
     this.logger.info('Checking services...');
-    const services = await this.k8s.getServices('srvthreds');
+    const services = await this.k8s.getServices(namespace);
     this.logger.success(`Found ${services.length} services`);
 
     if (validation.healthy) {
@@ -522,15 +570,12 @@ export class MinikubeDeployer extends BaseDeployer {
       return;
     }
 
-    const deployments = [
-      'srvthreds-engine',
-      'srvthreds-session-agent',
-      'srvthreds-persistence-agent',
-    ];
+    const namespace = this.projectConfig.kubernetes.namespace;
+    const deployments = this.projectConfig.kubernetes.deployments;
 
     for (const deploymentName of deployments) {
       this.logger.info(`Restarting ${deploymentName}...`);
-      await this.k8s.restartDeployment(deploymentName, 'srvthreds');
+      await this.k8s.restartDeployment(deploymentName, namespace);
     }
 
     this.logger.success('Rollout restart complete');
@@ -544,14 +589,14 @@ export class MinikubeDeployer extends BaseDeployer {
     this.logger.section('Cleanup');
 
     if (this.options.dryRun) {
-      this.logger.info('[DRY RUN] Would delete namespace srvthreds');
+      this.logger.info(`[DRY RUN] Would delete namespace ${this.projectConfig.kubernetes.namespace}`);
       return;
     }
 
     try {
       // Delete the namespace (removes all resources)
-      this.logger.info('Deleting srvthreds namespace...');
-      await this.k8s.deleteNamespace('srvthreds', { timeout: 60 });
+      this.logger.info(`Deleting ${this.projectConfig.kubernetes.namespace} namespace...`);
+      await this.k8s.deleteNamespace(this.projectConfig.kubernetes.namespace, { timeout: 60 });
       this.logger.success('Namespace deleted successfully');
     } catch (error) {
       this.logger.warn('Failed to delete namespace (may not exist)');
@@ -562,14 +607,21 @@ export class MinikubeDeployer extends BaseDeployer {
 
   /**
    * Full cleanup - deletes Minikube cluster entirely
+   *
+   * @param options.deleteDatabases - Whether to stop host databases
+   * @param options.databaseStopDeployment - The deployment shortName for stopping databases (required if deleteDatabases is true)
    */
-  async destroyCluster(options: { deleteDatabases?: boolean } = {}): Promise<void> {
+  async destroyCluster(options: { deleteDatabases?: boolean; databaseStopDeployment?: string } = {}): Promise<void> {
     this.logger.section('DESTROYING MINIKUBE CLUSTER');
+
+    if (options.deleteDatabases && !options.databaseStopDeployment) {
+      throw new Error('databaseStopDeployment is required when deleteDatabases is true');
+    }
 
     if (this.options.dryRun) {
       this.logger.info('[DRY RUN] Would destroy Minikube cluster');
       if (options.deleteDatabases) {
-        this.logger.info('[DRY RUN] Would delete host databases');
+        this.logger.info(`[DRY RUN] Would delete host databases using deployment: ${options.databaseStopDeployment}`);
       }
       return;
     }
@@ -578,7 +630,7 @@ export class MinikubeDeployer extends BaseDeployer {
       // 1. Delete namespace first
       this.logger.info('Deleting Kubernetes resources...');
       try {
-        await this.k8s.deleteNamespace('srvthreds', { timeout: 60 });
+        await this.k8s.deleteNamespace(this.projectConfig.kubernetes.namespace, { timeout: 60 });
       } catch (error) {
         this.logger.warn('Namespace deletion skipped (may not exist)');
       }
@@ -597,20 +649,17 @@ export class MinikubeDeployer extends BaseDeployer {
       this.logger.success('Minikube cluster deleted');
 
       // 4. Optionally delete host databases
-      if (options.deleteDatabases) {
-        this.logger.info('MinikubeDeployer Stopping host databases...');
+      if (options.deleteDatabases && options.databaseStopDeployment) {
+        this.logger.info('Stopping host databases...');
         try {
-          await this.shell.exec('npm', ['run', 'deploymentCli', '--', 'minikube', 'd_a_dbs'], {
-            silent: true,
-            cwd: this.srvthredsPath,
-          });
+          await this.executeDeployment(options.databaseStopDeployment, { useMinikubeDocker: false });
           this.logger.success('Host databases stopped');
         } catch (error) {
           this.logger.warn('Failed to stop databases, may need manual cleanup');
         }
       } else {
         this.logger.warn('Host databases left running');
-        this.logger.info('To stop databases: npm run deploymentCli -- local s_a_dbs');
+        this.logger.info('To stop databases, use: k8s minikube run <db-stop-deployment> -p <project>');
       }
 
       this.logger.success('Cluster destruction complete!');
@@ -639,11 +688,11 @@ export class MinikubeDeployer extends BaseDeployer {
       }
 
       // Delete namespace only
-      this.logger.info('Deleting srvthreds namespace...');
-      await this.k8s.deleteNamespace('srvthreds', { timeout: 60 });
+      this.logger.info(`Deleting ${this.projectConfig.kubernetes.namespace} namespace...`);
+      await this.k8s.deleteNamespace(this.projectConfig.kubernetes.namespace, { timeout: 60 });
 
       this.logger.success('Reset complete! Minikube cluster still running.');
-      this.logger.info('To redeploy: npm run minikube-deploy-ts');
+      this.logger.info('To redeploy: npm run minikube:deploy');
     } catch (error) {
       throw new Error(`Failed to reset deployment: ${error}`);
     }
@@ -661,27 +710,25 @@ export class MinikubeDeployer extends BaseDeployer {
 
   /**
    * Setup port forwarding for local access
+   *
+   * @param serviceName - The Kubernetes service name to forward to
+   * @param port - Local port to forward to (default 3000)
+   * @param targetPort - Target port on the service (default 3000)
    */
-  async setupPortForwarding(port: number = 3000): Promise<void> {
-    this.logger.info(`Setting up port forwarding to session-agent on port ${port}...`);
+  async setupPortForwarding(serviceName: string, port: number = 3000, targetPort: number = 3000): Promise<void> {
+    this.logger.info(`Setting up port forwarding to ${serviceName} on port ${port}...`);
 
     if (this.options.dryRun) {
       this.logger.info('[DRY RUN] Would setup port forwarding');
       return;
     }
 
+    const namespace = this.projectConfig.kubernetes.namespace;
+
     // Note: This runs in background, caller should manage the process
-    await this.shell.exec(
-      'kubectl',
-      [
-        'port-forward',
-        'svc/srvthreds-session-agent-service',
-        `${port}:3000`,
-        '-n',
-        'srvthreds',
-      ],
-      { timeout: 5000 }
-    );
+    await this.shell.exec('kubectl', ['port-forward', `svc/${serviceName}`, `${port}:${targetPort}`, '-n', namespace], {
+      timeout: 5000,
+    });
 
     this.logger.success(`Port forwarding established: http://localhost:${port}`);
   }

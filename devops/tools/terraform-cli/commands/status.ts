@@ -9,6 +9,7 @@ import { requireString, ValidationError } from '../../shared/error-handler.js';
 import { createConfigLoader } from '../../shared/config-loader.js';
 import { TerraformManager, EnvironmentConfig } from '../utils/terraform.js';
 import { AzureManager } from '../utils/azure.js';
+import { extractProject } from '../utils/args.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,7 +36,7 @@ interface EnvironmentsConfig {
 export const STATUS_COMMAND_DESCRIPTION = 'Check deployment status';
 
 export async function statusCommand(args: string[]): Promise<void> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (args.includes('--help')) {
     console.log(`
 Check deployment status
 
@@ -45,31 +46,37 @@ Shows the current state of infrastructure including:
 - Azure resource group status
 
 USAGE:
-  terraform-cli status <environment> [stacks...]
+  terraform-cli status --project <project> <environment> [stacks...]
 
 ARGUMENTS:
   environment     Target environment (dev, test, prod)
   stacks          Specific stacks to check (optional, checks all if not specified)
 
 OPTIONS:
+  --project, -p   Project name (required)
   --help          Show this help message
 
 EXAMPLES:
   # Check status of all stacks
-  terraform-cli status dev
+  terraform-cli status -p srvthreds dev
 
   # Check status of specific stacks
-  terraform-cli status dev networking keyvault
+  terraform-cli status -p srvthreds dev networking keyvault
 `);
     return;
   }
 
-  const environment = requireString(args[0], 'environment');
-  const requestedStacks = args.slice(1).filter((a) => !a.startsWith('--'));
+  if (args.length === 0) {
+    throw new ValidationError('Missing required arguments. Use --help for usage.');
+  }
+
+  // Extract project from args (required)
+  const { project, remainingArgs } = extractProject(args);
+
+  const environment = requireString(remainingArgs[0], 'environment');
+  const requestedStacks = remainingArgs.slice(1).filter((a) => !a.startsWith('--'));
 
   // Load configuration
-  // TODO: Add --project flag to CLI
-  const project = 'srvthreds';
   const configDir = path.join(__dirname, '../../..', 'projects', project, 'terraform');
   const configLoader = createConfigLoader(configDir, 'status');
 
