@@ -1,508 +1,539 @@
-# Troubleshooting and Environment Evaluation Guide
+# Troubleshooting Guide
 
-This guide covers how to diagnose issues, evaluate deployed environments, and verify that deployments are functioning correctly.
+This guide covers common issues and their solutions when working with the DevOps toolkit.
 
-## Quick Diagnostics Checklist
+## Quick Diagnostics
 
-Before diving deep, run through this checklist:
-
-| Check | Minikube | AKS |
-|-------|----------|-----|
-| Cluster running | `minikube status` | `az aks show --name <cluster> --resource-group <rg> --query powerState` |
-| kubectl context | `kubectl config current-context` | Same |
-| Namespace exists | `kubectl get ns srvthreds` | Same |
-| Pods running | `kubectl get pods -n srvthreds` | Same |
-| Services exposed | `kubectl get svc -n srvthreds` | Same |
-| Recent events | `kubectl get events -n srvthreds --sort-by='.lastTimestamp'` | Same |
-
----
-
-## Environment Evaluation
-
-After deploying, use these commands to verify your environment is healthy.
-
-### 1. Overall Deployment Status
+### Check Overall Status
 
 ```bash
-# Minikube
-npm run k8s -- minikube status -p srvthreds
+# Minikube cluster health
+minikube status
 
-# AKS
-npm run k8s -- aks status dev -p srvthreds
-```
+# Kubernetes cluster info
+kubectl cluster-info
 
-### 2. Pod Health Check
-
-```bash
-# List all pods with status
+# Pod status in namespace
 kubectl get pods -n srvthreds -o wide
 
-# Check for pods not in Running state
-kubectl get pods -n srvthreds --field-selector=status.phase!=Running
+# Recent events (shows errors)
+kubectl get events -n srvthreds --sort-by='.lastTimestamp' | tail -20
 
-# Get detailed pod status
-kubectl describe pods -n srvthreds
-```
-
-**What to look for:**
-- All pods should be `Running` with `READY` showing `1/1` (or `n/n`)
-- `RESTARTS` should be 0 or very low
-- `AGE` should match when you deployed
-
-### 3. Service Verification
-
-```bash
-# List services and their endpoints
-kubectl get svc -n srvthreds
-
-# Verify endpoints are bound
-kubectl get endpoints -n srvthreds
-
-# Check if service has pods backing it
-kubectl describe svc <service-name> -n srvthreds
-```
-
-**What to look for:**
-- Services should have `CLUSTER-IP` assigned
-- `EXTERNAL-IP` for LoadBalancer services (AKS)
-- Endpoints should list pod IPs (not `<none>`)
-
-### 4. Resource Usage
-
-```bash
-# Node resources (Minikube)
-kubectl top nodes
-
-# Pod resource usage
-kubectl top pods -n srvthreds
-
-# Check resource requests vs limits
-kubectl describe pods -n srvthreds | grep -A 5 "Requests\|Limits"
-```
-
-### 5. Log Analysis
-
-```bash
-# Stream logs from a deployment
-kubectl logs -f deployment/srvthreds-engine -n srvthreds
-
-# Get logs from all pods with a label
-kubectl logs -l app=srvthreds-engine -n srvthreds
-
-# Get logs from crashed container (previous instance)
-kubectl logs <pod-name> -n srvthreds --previous
-
-# Get logs with timestamps
-kubectl logs <pod-name> -n srvthreds --timestamps
-```
-
----
-
-## Common Issues and Solutions
-
-### Pod Issues
-
-#### Pods Stuck in `Pending`
-
-**Symptoms:** Pod status shows `Pending` indefinitely
-
-**Diagnosis:**
-```bash
-kubectl describe pod <pod-name> -n srvthreds
-# Look at Events section at bottom
-```
-
-**Common causes:**
-| Event Message | Solution |
-|--------------|----------|
-| `Insufficient cpu` / `Insufficient memory` | Scale down other pods or increase cluster resources |
-| `no nodes available` | Minikube: `minikube start`. AKS: Check node pool status |
-| `PersistentVolumeClaim not found` | Create the PVC or check storage class |
-
-#### Pods Stuck in `ContainerCreating`
-
-**Diagnosis:**
-```bash
-kubectl describe pod <pod-name> -n srvthreds
-kubectl get events -n srvthreds --field-selector involvedObject.name=<pod-name>
-```
-
-**Common causes:**
-| Event Message | Solution |
-|--------------|----------|
-| `ImagePullBackOff` | Image doesn't exist or auth failed (see Image Pull Errors below) |
-| `configmap not found` | Create missing ConfigMap |
-| `secret not found` | Create missing Secret |
-
-#### Pods in `CrashLoopBackOff`
-
-**Diagnosis:**
-```bash
-# Check exit code and reason
-kubectl describe pod <pod-name> -n srvthreds | grep -A 10 "Last State"
-
-# Check logs from crashed container
-kubectl logs <pod-name> -n srvthreds --previous
-```
-
-**Common causes:**
-| Exit Code | Meaning | Solution |
-|-----------|---------|----------|
-| 1 | Application error | Check logs for stack trace |
-| 137 | OOMKilled | Increase memory limits |
-| 139 | Segmentation fault | Check application code |
-| 143 | SIGTERM (graceful) | Usually normal during updates |
-
-### Image Pull Errors
-
-#### Minikube
-
-**Symptoms:** `ImagePullBackOff` or `ErrImagePull`
-
-**Solutions:**
-
-1. **Build images in Minikube's Docker:**
-```bash
-# Switch to Minikube's Docker
+# Docker containers (minikube host)
 eval $(minikube docker-env)
-
-# Rebuild images
-npm run k8s -- minikube run build_server -p srvthreds --use-minikube-docker
-
-# Verify images exist
-docker images | grep srvthreds
+docker ps
 ```
 
-2. **Check imagePullPolicy:**
-```bash
-# Should be Never or IfNotPresent for local images
-kubectl get pod <pod-name> -n srvthreds -o jsonpath='{.spec.containers[*].imagePullPolicy}'
-```
-
-#### AKS
-
-**Symptoms:** `ImagePullBackOff` with ACR authentication errors
-
-**Solutions:**
-
-1. **Re-authenticate to ACR:**
-```bash
-az acr login --name <acr-name>
-```
-
-2. **Verify image exists:**
-```bash
-az acr repository show-tags --name <acr-name> --repository <image-name>
-```
-
-3. **Check AKS-ACR integration:**
-```bash
-# Verify AKS can pull from ACR
-az aks check-acr --name <aks-cluster> --resource-group <rg> --acr <acr-name>
-```
-
-4. **Attach ACR to AKS (if not done):**
-```bash
-az aks update --name <aks-cluster> --resource-group <rg> --attach-acr <acr-name>
-```
-
-### Database Connectivity Issues
-
-#### MongoDB Not Connecting
-
-**From application pods:**
-```bash
-# Check if MongoDB is reachable
-kubectl exec -it <app-pod> -n srvthreds -- nc -zv mongo-repl-1 27017
-
-# Check MongoDB connection string in pod
-kubectl exec -it <app-pod> -n srvthreds -- printenv | grep MONGO
-```
-
-**From host (Minikube):**
-```bash
-# Check MongoDB containers running
-docker ps | grep mongo
-
-# Check MongoDB replica set status
-docker exec mongo-repl-1 mongosh --eval "rs.status()"
-
-# Check logs
-docker logs mongo-repl-1
-```
-
-**Common issues:**
-| Issue | Solution |
-|-------|----------|
-| `connect ECONNREFUSED` | MongoDB not running - run `npm run k8s -- minikube run s_a_dbs -p srvthreds` |
-| `ReplicaSetNoPrimary` | Re-initialize replica set - run the init script |
-| `authentication failed` | Check MONGO_URI has correct credentials |
-
-#### Redis Not Connecting
+### Full Status Check
 
 ```bash
-# Check Redis container
-docker ps | grep redis
-
-# Test Redis connectivity
-docker exec -it srvthreds-redis redis-cli ping
-# Should return: PONG
-
-# Check logs
-docker logs srvthreds-redis
+npm run minikube:status -p srvthreds
 ```
 
-### Network Issues
-
-#### Service Not Accessible
-
-```bash
-# Check service exists
-kubectl get svc <service-name> -n srvthreds
-
-# Check endpoints
-kubectl get endpoints <service-name> -n srvthreds
-
-# Port forward to test locally
-kubectl port-forward svc/<service-name> 8080:80 -n srvthreds
-# Then test: curl http://localhost:8080
-```
-
-#### DNS Resolution Failing
-
-```bash
-# Test DNS from within a pod
-kubectl exec -it <pod-name> -n srvthreds -- nslookup <service-name>
-
-# Check CoreDNS is running
-kubectl get pods -n kube-system -l k8s-app=kube-dns
-```
-
----
-
-## Minikube-Specific Issues
+## Minikube Issues
 
 ### Minikube Won't Start
 
+**Symptoms:**
+- `minikube start` hangs
+- "apiserver not responding" errors
+- Connection refused errors
+
+**Solutions:**
+
+1. **Delete and recreate cluster:**
 ```bash
-# Check Docker is running
-docker info
-
-# Check Minikube status
-minikube status
-
-# Delete and recreate (clean start)
-minikube delete
-minikube start --driver=docker --memory=4096 --cpus=2
+npm run minikube:delete
+minikube start --cpus 4 --memory 8192
 ```
 
-### Minikube Out of Disk Space
-
+2. **Check system resources:**
 ```bash
-# Check disk usage
-minikube ssh "df -h"
-
-# Clean up Docker images
-minikube ssh "docker system prune -a"
-
-# Or recreate with more disk
-minikube delete
-minikube start --disk-size=50g
+# Ensure Docker has enough resources
+docker system info | grep -E 'CPUs|Memory'
 ```
 
-### Cannot Access Services
-
-**Option 1: Port Forwarding**
+3. **Reset Docker (macOS):**
 ```bash
-kubectl port-forward svc/<service-name> <local-port>:<service-port> -n srvthreds
+# Restart Docker Desktop
+# Or from command line:
+osascript -e 'quit app "Docker"'
+open -a Docker
 ```
 
-**Option 2: Minikube Service**
+4. **Clean up old clusters:**
 ```bash
-minikube service <service-name> -n srvthreds
+minikube delete --all
+rm -rf ~/.minikube
 ```
 
-**Option 3: Minikube Tunnel (for LoadBalancer)**
+### Docker Environment Not Set
+
+**Symptoms:**
+- "Cannot connect to Docker daemon"
+- Images not visible in minikube
+
+**Solution:**
 ```bash
+# Set Docker to use minikube's daemon
+eval $(minikube docker-env)
+
+# Verify
+docker images | grep srvthreds
+```
+
+### Minikube IP Changed
+
+**Symptoms:**
+- Services unreachable after restart
+- DNS resolution failures
+
+**Solution:**
+```bash
+# Get new IP
+minikube ip
+
+# Restart tunnel if needed
 minikube tunnel
-# Keep running in background, then access via EXTERNAL-IP
 ```
 
----
+## Pod Issues
 
-## AKS-Specific Issues
+### Pods Stuck in Pending
 
-### Authentication/Authorization
+**Symptoms:**
+- Pod stays in `Pending` state
+- No events showing scheduling
 
+**Diagnosis:**
 ```bash
-# Re-authenticate Azure CLI
-az login
-
-# Get fresh AKS credentials
-az aks get-credentials --resource-group <rg> --name <cluster> --overwrite-existing
-
-# Verify current context
-kubectl config current-context
-
-# Test access
-kubectl get nodes
+kubectl describe pod <pod-name> -n srvthreds
 ```
 
-### Node Pool Issues
+**Common Causes & Solutions:**
 
+1. **Insufficient resources:**
 ```bash
-# Check node status
-kubectl get nodes
+# Check node resources
+kubectl describe nodes | grep -A 5 "Allocated resources"
 
-# Check node pool scaling
-az aks nodepool list --resource-group <rg> --cluster-name <cluster> -o table
-
-# Check node conditions
-kubectl describe nodes | grep -A 5 "Conditions:"
+# Reduce resource requests in manifests or increase minikube resources
+minikube stop
+minikube start --cpus 4 --memory 8192
 ```
 
-### Ingress Not Working
-
+2. **PersistentVolumeClaim not bound:**
 ```bash
-# Check ingress controller pods
-kubectl get pods -n ingress-nginx
-
-# Check ingress resources
-kubectl get ingress -n srvthreds
-
-# Check ingress controller logs
-kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
+kubectl get pvc -n srvthreds
+# If pending, check storage class
+kubectl get sc
 ```
 
----
+### Pods in CrashLoopBackOff
+
+**Symptoms:**
+- Pod repeatedly restarts
+- Status shows `CrashLoopBackOff`
+
+**Diagnosis:**
+```bash
+# Check current logs
+kubectl logs <pod-name> -n srvthreds
+
+# Check previous container logs (after crash)
+kubectl logs <pod-name> -n srvthreds --previous
+
+# Describe pod for events
+kubectl describe pod <pod-name> -n srvthreds
+```
+
+**Common Causes & Solutions:**
+
+1. **Application error:**
+- Check logs for stack traces
+- Verify environment variables in ConfigMap
+- Ensure dependencies (databases) are running
+
+2. **Wrong entrypoint/command:**
+```bash
+# Check the command in manifest
+kubectl get deployment <name> -n srvthreds -o yaml | grep -A 10 "containers:"
+```
+
+3. **Missing dependencies:**
+```bash
+# Verify bootstrap completed
+kubectl logs deployment/srvthreds-bootstrap -n srvthreds
+
+# Check services are running
+kubectl get services -n srvthreds
+```
+
+### ImagePullBackOff
+
+**Symptoms:**
+- Pod stuck in `ImagePullBackOff` or `ErrImagePull`
+
+**Diagnosis:**
+```bash
+kubectl describe pod <pod-name> -n srvthreds | grep -A 10 "Events:"
+```
+
+**Solutions:**
+
+1. **Minikube - Image not built:**
+```bash
+# Set Docker env and rebuild
+eval $(minikube docker-env)
+npm run minikube -p srvthreds --build
+```
+
+2. **Minikube - imagePullPolicy wrong:**
+```bash
+# Should be Never or IfNotPresent for local images
+# Check overlay kustomization.yaml
+```
+
+3. **AKS - ACR authentication:**
+```bash
+# Login to ACR
+az acr login --name cazsrvthredsdeacr
+
+# Verify AKS can pull
+az aks check-acr --resource-group CAZ-SRVTHREDS-D-E-RG \
+  --name CAZ-SRVTHREDS-D-E-AKS \
+  --acr cazsrvthredsdeacr.azurecr.io
+```
+
+### OOMKilled
+
+**Symptoms:**
+- Pod terminated with `OOMKilled`
+- Container restarting frequently
+
+**Diagnosis:**
+```bash
+kubectl describe pod <pod-name> -n srvthreds | grep -i oom
+```
+
+**Solution:**
+```bash
+# Increase memory limits in manifests
+# Edit manifests/base/<service>.yaml
+resources:
+  requests:
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+```
+
+## Service Connectivity Issues
+
+### Cannot Connect to Service
+
+**Symptoms:**
+- Connection refused
+- Timeout when accessing service
+
+**Diagnosis:**
+```bash
+# Check service exists
+kubectl get services -n srvthreds
+
+# Check endpoints (should have pod IPs)
+kubectl get endpoints -n srvthreds
+
+# Test from within cluster
+kubectl run test --rm -it --image=busybox -- wget -O- http://srvthreds-engine-service:8082/health
+```
+
+**Solutions:**
+
+1. **No endpoints:**
+- Check pod labels match service selector
+- Ensure pods are Running
+
+2. **Port forwarding:**
+```bash
+kubectl port-forward -n srvthreds svc/srvthreds-engine-service 8082:8082
+```
+
+### Database Connection Failed
+
+**Symptoms:**
+- Application logs show "connection refused" to MongoDB/Redis
+
+**For Minikube:**
+```bash
+# Check Docker containers are running
+docker ps | grep -E 'mongo|redis'
+
+# Check logs
+docker logs srvthreds-mongo-repl-1
+docker logs srvthreds-redis
+
+# Verify replica set initialized
+docker exec srvthreds-mongo-repl-1 mongosh --eval "rs.status()"
+```
+
+**ConfigMap check:**
+```bash
+kubectl get configmap srvthreds-config -n srvthreds -o yaml
+```
+
+For minikube, hosts should use `host.minikube.internal` to reach Docker containers.
+
+## Docker Compose Issues
+
+### Profile Not Starting
+
+**Symptoms:**
+- Services not appearing
+- "no such service" errors
+
+**Diagnosis:**
+```bash
+# List services by profile
+docker compose -f projects/srvthreds/docker-compose.generated.yaml config --profiles
+
+# Check profile assignment
+grep -A 5 "profiles:" projects/srvthreds/docker-compose.generated.yaml
+```
+
+**Solution:**
+```bash
+# Start specific profile
+docker compose -f projects/srvthreds/docker-compose.generated.yaml --profile infra up -d
+```
+
+### Build Context Errors
+
+**Symptoms:**
+- "unable to prepare context" errors
+- "no such file or directory"
+
+**Solutions:**
+
+1. **Regenerate compose file:**
+```bash
+npm run generate -p srvthreds
+```
+
+2. **Check source path exists:**
+```bash
+# Verify source directory
+ls -la $(grep "context:" projects/srvthreds/docker-compose.generated.yaml | head -1 | awk '{print $2}')
+```
+
+3. **Check additional contexts:**
+```bash
+# Verify all additional_contexts paths exist
+cat projects/srvthreds/project.yaml | grep -A 5 "additionalContexts:"
+```
+
+### Container Name Conflicts
+
+**Symptoms:**
+- "container name already in use"
+
+**Solution:**
+```bash
+# Stop and remove conflicting containers
+docker compose -f projects/srvthreds/docker-compose.generated.yaml down
+
+# Or force remove
+docker rm -f srvthreds-mongo-repl-1 srvthreds-redis
+```
 
 ## Terraform Issues
 
 ### State Lock
 
-**Symptoms:** `Error acquiring the state lock`
+**Symptoms:**
+- "Error acquiring the state lock"
 
+**Solutions:**
+
+1. **Wait for other operation to complete**
+
+2. **Force unlock (careful!):**
 ```bash
-# Break the lock (use carefully)
-npm run terraform -- state unlock dev <lock-id>
+cd projects/srvthreds/terraform/stacks/<stack>
+terraform force-unlock <LOCK_ID>
+```
+
+### Backend Authentication
+
+**Symptoms:**
+- "Error configuring the backend"
+- "access denied" to storage account
+
+**Solutions:**
+```bash
+# Re-authenticate
+az login
+
+# Set correct subscription
+az account set --subscription <subscription-id>
+
+# Verify access
+az storage account show --name srvthredstfstatei274ht
 ```
 
 ### State Drift
 
-**Symptoms:** Resources exist in Azure but not in state
+**Symptoms:**
+- Resources exist in Azure but not in state
+- "resource already exists" errors
 
+**Solutions:**
 ```bash
 # Import existing resource
-terraform import -var-file=... <resource_address> <azure_resource_id>
+npm run terraform -- import -p srvthreds dev <stack> <resource_address> <resource_id>
 
-# Or recover state
-npm run terraform -- state recover dev <stack>
+# Or refresh state
+cd projects/srvthreds/terraform/stacks/<stack>
+terraform refresh -var-file=../../../environments.json
 ```
 
-### Backend Configuration
+### Dependency Errors
 
-**Symptoms:** Backend initialization fails
+**Symptoms:**
+- "data source not found"
+- Stack fails because dependency not deployed
+
+**Solution:**
+```bash
+# Deploy dependencies first
+npm run terraform -- deploy -p srvthreds dev networking
+
+# Then deploy dependent stack
+npm run terraform -- deploy -p srvthreds dev aks
+```
+
+## CI/CD Issues
+
+### Workflow Not Triggering
+
+**Check:**
+1. Path filters in workflow file match changed files
+2. Branch protection rules allow the workflow
+3. Workflow is on default branch
+
+### OIDC Authentication Failed
+
+**Symptoms:**
+- "AADSTS700016: Application not found"
+- "Failed to get federated token"
+
+**Solutions:**
+
+1. **Verify GitHub OIDC configuration:**
+```bash
+# Check Azure AD app registration
+az ad app list --display-name "github-actions-srvthreds"
+```
+
+2. **Check federated credentials:**
+- Azure Portal → App Registrations → Certificates & secrets → Federated credentials
+- Verify subject matches: `repo:org/repo:ref:refs/heads/main`
+
+### ACR Push Failed
+
+**Symptoms:**
+- "unauthorized: authentication required"
+
+**Solutions:**
+```bash
+# Verify ACR credentials in GitHub secrets
+# Check AZURE_CLIENT_ID has AcrPush role
+
+az role assignment list --assignee <client-id> --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerRegistry/registries/<acr>
+```
+
+### AKS Deploy Failed
+
+**Symptoms:**
+- "error: unable to connect to the server"
+
+**Solutions:**
+
+1. **Check AKS credentials:**
+```bash
+az aks get-credentials --resource-group CAZ-SRVTHREDS-D-E-RG --name CAZ-SRVTHREDS-D-E-AKS
+```
+
+2. **Verify cluster is running:**
+```bash
+az aks show --resource-group CAZ-SRVTHREDS-D-E-RG --name CAZ-SRVTHREDS-D-E-AKS --query powerState
+```
+
+## Reset Procedures
+
+### Full Minikube Reset
 
 ```bash
-# Verify symlinks
-npm run terraform -- symlinks verify -p srvthreds
+# Stop everything
+npm run minikube:reset -p srvthreds
 
-# Fix symlinks
-npm run terraform -- symlinks fix -p srvthreds
+# If that fails, force clean
+docker compose -f projects/srvthreds/docker-compose.generated.yaml down -v --remove-orphans
+kubectl delete namespace srvthreds --ignore-not-found
+
+# Nuclear option
+npm run minikube:delete
+rm -rf ~/.minikube
+minikube start --cpus 4 --memory 8192
 ```
 
----
-
-## Log Aggregation Commands
-
-### Collecting All Logs
+### Regenerate All Configuration
 
 ```bash
-# All pods in namespace
-kubectl logs -n srvthreds --all-containers=true -l app.kubernetes.io/part-of=srvthreds > all-logs.txt
+# Regenerate docker-compose
+npm run generate -p srvthreds
 
-# With timestamps for correlation
-kubectl logs -n srvthreds --all-containers=true --timestamps -l app.kubernetes.io/part-of=srvthreds > all-logs.txt
+# Rebuild everything
+npm run minikube -p srvthreds --build --recreate
 ```
 
-### Filtering Logs
+### Clean Docker System
 
 ```bash
-# Errors only
-kubectl logs deployment/srvthreds-engine -n srvthreds | grep -i error
+# Remove unused resources
+docker system prune -a --volumes
 
-# Last 100 lines
-kubectl logs deployment/srvthreds-engine -n srvthreds --tail=100
-
-# Since specific time
-kubectl logs deployment/srvthreds-engine -n srvthreds --since=1h
+# Reset minikube docker
+minikube ssh -- docker system prune -a
 ```
 
----
+## Getting Help
 
-## Health Check Verification
-
-### HTTP Health Endpoints
+### Collecting Debug Information
 
 ```bash
-# Port forward first
-kubectl port-forward svc/srvthreds-session-agent-service 3000:3000 -n srvthreds &
-
-# Then check health
-curl http://localhost:3000/health
-curl http://localhost:3000/ready
+# Full status dump
+kubectl get all -n srvthreds -o yaml > debug-k8s.yaml
+docker compose -f projects/srvthreds/docker-compose.generated.yaml ps > debug-compose.txt
+kubectl describe nodes > debug-nodes.txt
+kubectl get events -n srvthreds --sort-by='.lastTimestamp' > debug-events.txt
 ```
 
-### Readiness/Liveness Probes
+### Log Locations
+
+| Component | Location |
+|-----------|----------|
+| Minikube | `~/.minikube/logs/` |
+| Docker | `docker logs <container>` |
+| Kubernetes | `kubectl logs -n srvthreds <pod>` |
+| CLI | Console output (use `--verbose` flag) |
+
+### Common Environment Variables
 
 ```bash
-# Check probe configuration
-kubectl get pod <pod-name> -n srvthreds -o jsonpath='{.spec.containers[*].readinessProbe}'
-kubectl get pod <pod-name> -n srvthreds -o jsonpath='{.spec.containers[*].livenessProbe}'
+# Enable verbose output
+DEBUG=true npm run minikube -p srvthreds
 
-# Check probe status in events
-kubectl describe pod <pod-name> -n srvthreds | grep -A 2 "Liveness\|Readiness"
+# Dry run (show commands without executing)
+npm run minikube -p srvthreds --dry-run
+npm run terraform -- plan -p srvthreds dev --dry-run
 ```
-
----
-
-## Cleanup and Reset
-
-### Minikube Full Reset
-
-```bash
-# Full cleanup (removes cluster and data)
-npm run k8s -- minikube cleanup -p srvthreds --delete-dbs --db-stop-deployment d_a_dbs
-
-# Namespace-only reset (keeps cluster)
-npm run k8s -- minikube reset -p srvthreds
-```
-
-### AKS Namespace Reset
-
-```bash
-# Delete and recreate namespace
-kubectl delete namespace srvthreds
-kubectl create namespace srvthreds
-
-# Then redeploy
-npm run k8s -- aks deploy dev -p srvthreds -d build_server
-```
-
----
-
-## Quick Reference Commands
-
-| Task | Command |
-|------|---------|
-| Check cluster status | `minikube status` / `az aks show...` |
-| List all resources | `kubectl get all -n srvthreds` |
-| Get pod logs | `kubectl logs <pod> -n srvthreds` |
-| Describe pod | `kubectl describe pod <pod> -n srvthreds` |
-| Get events | `kubectl get events -n srvthreds --sort-by='.lastTimestamp'` |
-| Shell into pod | `kubectl exec -it <pod> -n srvthreds -- /bin/sh` |
-| Port forward | `kubectl port-forward svc/<svc> <local>:<remote> -n srvthreds` |
-| Watch pods | `kubectl get pods -n srvthreds -w` |
-| Resource usage | `kubectl top pods -n srvthreds` |
-| Config map values | `kubectl get configmap <name> -n srvthreds -o yaml` |
-| Secret values | `kubectl get secret <name> -n srvthreds -o jsonpath='{.data}'` |

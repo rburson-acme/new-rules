@@ -1,224 +1,238 @@
 # srvthreds Project
 
-Event-driven workflow automation backend - deployment configuration and infrastructure.
+Event-driven workflow automation backend deployed to Minikube (local) and Azure AKS (cloud).
 
 ## Overview
 
-This directory contains all deployment configuration, infrastructure definitions, and Kubernetes manifests for the srvthreds application.
+srvthreds is a multi-service application consisting of:
 
-## Directory Structure
-
-```
-srvthreds/
-├── project.yaml           # Project configuration
-├── deployments/           # Deployment configurations
-│   ├── services.json      # Application service deployments
-│   ├── databases.json     # Database setup/teardown
-│   └── build.json         # Build configurations
-├── docker/
-│   ├── compose/           # Docker Compose files
-│   ├── dockerfiles/       # Dockerfile definitions
-│   └── assets/            # Docker build assets
-├── kubernetes/            # AKS Kubernetes manifests
-├── minikube/
-│   ├── manifests/         # Minikube-specific manifests
-│   └── configs/           # Agent configuration files
-└── terraform/
-    ├── stacks/            # Infrastructure stacks
-    ├── stacks.json        # Stack definitions
-    └── environments.json  # Environment configuration
-```
+| Service | Purpose | Ports |
+|---------|---------|-------|
+| `srvthreds-engine` | Main event processing engine | 8082 |
+| `srvthreds-session-agent` | Session management | 3000, 3001 |
+| `srvthreds-persistence-agent` | Data persistence handler | - |
+| `srvthreds-bootstrap` | One-time initialization | - |
 
 ## Quick Start
 
-### Local Development (Minikube)
-
 ```bash
-# 1. Start databases
-npm run k8s -- minikube run s_a_dbs -p srvthreds
+# From repository root
 
-# 2. Deploy to Minikube (with build config)
-npm run k8s -- minikube deploy -p srvthreds -d build_server
+# 1. Generate configuration
+npm run generate -p srvthreds
+
+# 2. Deploy to minikube
+npm run minikube -p srvthreds --build
 
 # 3. Check status
-npm run minikube:srvthreds:status
-
-# 4. Port forward to access
-kubectl port-forward svc/srvthreds-session-agent-service 3000:3000 -n srvthreds
-
-# 5. Access at http://localhost:3000
+npm run minikube:status -p srvthreds
 ```
 
-### Cloud Deployment (AKS)
+## Project Structure
 
-```bash
-# Deploy to dev (with build config)
-npm run k8s -- aks deploy dev -p srvthreds -d build_server
-
-# Deploy to production
-npm run k8s -- aks deploy prod -p srvthreds -d build_server --tag v1.0.0
+```
+projects/srvthreds/
+├── project.yaml                  # Configuration source of truth
+├── docker-compose.generated.yaml # Generated from project.yaml
+├── docker/
+│   ├── dockerfiles/
+│   │   ├── Dockerfile            # Production app image
+│   │   ├── Dockerfile.builder    # Build stage image
+│   │   └── Dockerfile.cmdRunner  # Bootstrap utility
+│   └── assets/                   # Build assets
+├── manifests/
+│   ├── base/                     # Base K8s resources
+│   │   ├── namespace.yaml
+│   │   ├── configmap.yaml
+│   │   ├── srvthreds-engine.yaml
+│   │   ├── srvthreds-session-agent.yaml
+│   │   ├── srvthreds-persistence-agent.yaml
+│   │   └── kustomization.yaml
+│   └── overlays/
+│       ├── minikube/             # Local development
+│       ├── dev/                  # Azure dev
+│       └── prod/                 # Azure production
+├── scripts/
+│   └── setup-repl.sh             # MongoDB replica set init
+└── terraform/
+    ├── stacks.json               # Stack definitions
+    ├── environments.json         # Environment configs
+    └── stacks/                   # Terraform modules
 ```
 
-## Services
-
-| Service | Description | Port |
-|---------|-------------|------|
-| srvthreds-engine | Core workflow engine | 3001 |
-| srvthreds-session-agent | Session management | 3000 |
-| srvthreds-persistence-agent | Data persistence | 3002 |
-
-## Infrastructure
-
-### Terraform Stacks
-
-| Stack | Description | Dependencies |
-|-------|-------------|--------------|
-| networking | VNet, subnets, NSGs | - |
-| keyvault | Azure Key Vault | networking |
-| acr | Container Registry | - |
-| servicebus | Azure Service Bus | networking |
-| cosmosdb | Cosmos DB | networking, keyvault |
-| redis | Azure Redis Cache | networking, keyvault |
-| aks | Kubernetes cluster | networking, keyvault, acr |
-| monitoring | Log Analytics, App Insights | aks |
-
-### Environments
-
-| Environment | Resource Group | Description |
-|-------------|----------------|-------------|
-| dev | CAZ-SRVTHREDS-D-E-RG | Development |
-| test | CAZ-SRVTHREDS-T-E-RG | Testing/Staging |
-| prod | CAZ-SRVTHREDS-P-E-RG | Production |
-
-## Deployment Configurations
-
-### Available Deployments
-
-| shortName | Name | Description |
-|-----------|------|-------------|
-| `s_a_dbs` | Start All Databases | Start MongoDB and Redis |
-| `d_a_dbs` | Stop All Databases | Stop database containers |
-| `s_a_s` | Start All Services | Start application services |
-| `build_server` | Build Server | Build all Docker images |
-
-### Usage
-
-```bash
-# Run a specific deployment
-npm run k8s -- minikube run <shortName> -p srvthreds
-
-# Examples
-npm run k8s -- minikube run s_a_dbs -p srvthreds
-npm run k8s -- minikube run build_server -p srvthreds --use-minikube-docker
-```
-
-## Configuration Files
+## Configuration
 
 ### project.yaml
 
-Main project configuration defining paths, services, and settings.
+The `project.yaml` file defines:
 
-Key sections:
-- `source.path` - Path to source code
-- `docker` - Docker configuration
-- `kubernetes` - K8s namespace and deployments
-- `azure` - Azure naming convention
+- **Images**: Docker images to build (builder, app, cmd-runner)
+- **Services**: Application services and their deployment targets
+- **Profiles**: Service groupings for selective deployment
+- **Environments**: Registry and ingress configuration per environment
 
-### deployments/*.json
+### Profiles
 
-Deployment definitions specifying:
-- Docker Compose commands
-- Pre/post build hooks
-- Environment-specific overrides
+| Profile | Services | Purpose |
+|---------|----------|---------|
+| `infra` | mongo-repl-1, redis | Database infrastructure |
+| `build` | srvthreds-builder | Compile application |
+| `app` | bootstrap, engine, agents | Application services |
+| `all` | infra → build → app | Complete deployment |
 
-See [Deployment Configs](../../docs/deployment-configs.md) for schema details.
+### Deployment Targets
 
-### terraform/stacks.json
-
-Infrastructure stack definitions with dependencies.
-
-### terraform/environments.json
-
-Environment-specific Azure configuration:
-- Subscription IDs
-- Resource group names
-- State backend settings
+| Target | Description |
+|--------|-------------|
+| `minikube` | Local Kubernetes via Docker Compose + K8s |
+| `dev` | Azure AKS development cluster |
+| `test` | Azure AKS test cluster |
+| `prod` | Azure AKS production cluster |
 
 ## Development Workflow
 
-### Making Changes
-
-1. **Infrastructure changes**: Modify Terraform stacks in `terraform/stacks/`
-2. **Deployment changes**: Update `deployments/*.json`
-3. **Kubernetes changes**: Update manifests in `kubernetes/` or `minikube/`
-
-### Testing Locally
+### Initial Setup
 
 ```bash
-# 1. Make changes
-# 2. Deploy to Minikube
-npm run minikube:srvthreds:deploy
-
-# 3. Test
-# 4. Reset if needed
-npm run minikube:srvthreds:reset
+npm run generate -p srvthreds
+npm run minikube -p srvthreds --build
 ```
 
-### Deploying to Cloud
+### Code Changes
 
 ```bash
-# 1. Deploy infrastructure
-npm run tf:srvthreds:apply -- dev
-
-# 2. Deploy application
-npm run aks:srvthreds:deploy -- dev
-
-# 3. Validate
-npm run aks:srvthreds:status -- dev
+# Rebuild and redeploy
+npm run minikube -p srvthreds --build
 ```
+
+### Infrastructure Only
+
+```bash
+npm run minikube -p srvthreds --profile infra
+```
+
+### Application Only (skip infra/build)
+
+```bash
+npm run minikube -p srvthreds --profile app
+```
+
+### Reset Everything
+
+```bash
+npm run minikube:reset -p srvthreds
+```
+
+## Accessing Services
+
+### Port Forwarding
+
+```bash
+# Engine API
+kubectl port-forward -n srvthreds svc/srvthreds-engine-service 8082:8082
+
+# Session Agent
+kubectl port-forward -n srvthreds svc/srvthreds-session-agent-service 3000:3000
+```
+
+### View Logs
+
+```bash
+# Engine logs
+kubectl logs -n srvthreds deployment/srvthreds-engine -f
+
+# All pods
+kubectl logs -n srvthreds -l app.kubernetes.io/part-of=srvthreds -f
+```
+
+## Azure Deployment
+
+### Prerequisites
+
+1. Terraform infrastructure deployed
+2. GitHub Actions configured with Azure OIDC
+
+### Manual Deployment
+
+```bash
+# Get AKS credentials
+az aks get-credentials --resource-group CAZ-SRVTHREDS-D-E-RG --name CAZ-SRVTHREDS-D-E-AKS
+
+# Deploy
+kubectl apply -k manifests/overlays/dev
+```
+
+### CI/CD Triggers
+
+- **Push to main**: Deploys to dev
+- **Version tag (v*)**: Deploys to dev → test → prod
+
+## Terraform Infrastructure
+
+### Stacks
+
+| Stack | Resources |
+|-------|-----------|
+| networking | VNet, subnets, NSGs |
+| keyvault | Key Vault + secrets |
+| acr | Container Registry |
+| cosmosdb | MongoDB (Cosmos DB) |
+| redis | Azure Cache for Redis |
+| monitoring | Log Analytics, App Insights |
+| aks | Kubernetes cluster |
+| nginx-ingress | Ingress controller |
+
+### Deploy Infrastructure
+
+```bash
+# Initialize
+npm run terraform -- init -p srvthreds dev
+
+# Preview
+npm run terraform -- plan -p srvthreds dev
+
+# Deploy
+npm run terraform -- deploy -p srvthreds dev
+```
+
+## Environment Variables
+
+Services receive configuration via ConfigMap:
+
+| Variable | Description |
+|----------|-------------|
+| `MONGO_HOST` | MongoDB connection |
+| `REDIS_HOST` | Redis connection |
+| `RABBITMQ_HOST` | RabbitMQ connection |
+| `NODE_ENV` | Environment mode |
+
+See `manifests/base/configmap.yaml` and overlay patches for environment-specific values.
 
 ## Troubleshooting
 
-### Common Issues
+### Pods Not Starting
 
-**Minikube deployment fails:**
 ```bash
-# Check Minikube status
-minikube status
-
-# Check pod logs
-kubectl logs -f <pod-name> -n srvthreds
-
-# Describe pod for events
-kubectl describe pod <pod-name> -n srvthreds
+kubectl describe pod -n srvthreds <pod-name>
+kubectl logs -n srvthreds <pod-name> --previous
 ```
 
-**Database connection issues:**
-```bash
-# Verify databases are running
-docker ps | grep mongo
-docker ps | grep redis
+### Database Connection Issues
 
-# Check database logs
-docker logs mongo-repl-1
+```bash
+# Check Docker containers (minikube)
+docker ps | grep -E 'mongo|redis'
+docker logs srvthreds-mongo-repl-1
+
+# Check ConfigMap
+kubectl get configmap srvthreds-config -n srvthreds -o yaml
 ```
 
-**AKS deployment fails:**
+### Full Reset
+
 ```bash
-# Check Azure login
-az account show
-
-# Get cluster credentials
-az aks get-credentials --resource-group CAZ-SRVTHREDS-D-E-RG --name CAZ-SRVTHREDS-D-E-AKS
-
-# Check pod status
-kubectl get pods -n srvthreds
+npm run minikube:reset -p srvthreds
+npm run minikube -p srvthreds --build
 ```
 
-## Related Documentation
-
-- [Configuration Guide](../../docs/configuration.md)
-- [Kubernetes CLI](../../docs/kubernetes-cli.md)
-- [Terraform CLI](../../docs/terraform-cli.md)
-- [Deployment Configs](../../docs/deployment-configs.md)
-- [Architecture](../../docs/architecture.md)
+See [Troubleshooting Guide](../../docs/troubleshooting.md) for more details.

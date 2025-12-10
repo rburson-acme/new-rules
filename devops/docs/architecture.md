@@ -1,330 +1,515 @@
-# System Architecture
+# Architecture Overview
 
-This document describes the architecture of the DevOps toolkit, including component relationships, design patterns, and data flow.
+This document describes the architecture of the DevOps toolkit, including system design, component relationships, and deployment patterns.
+
+## System Goals
+
+1. **Local-to-Cloud Parity**: Minikube deployments mirror AKS cloud deployments using identical patterns
+2. **Configuration-Driven**: All behavior derived from configuration files, not hardcoded values
+3. **Multi-Project Support**: Single toolkit supporting multiple independent projects
+4. **Reusable Infrastructure**: Terraform modules extensible across projects and environments
 
 ## High-Level Architecture
 
 ```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              DevOps Toolkit                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
+│  │   Main CLI      │    │  Terraform CLI  │    │  GitHub Actions │        │
+│  │  (tools/cli/)   │    │ (terraform-cli/)│    │   (.github/)    │        │
+│  └────────┬────────┘    └────────┬────────┘    └────────┬────────┘        │
+│           │                      │                      │                  │
+│           ▼                      ▼                      ▼                  │
+│  ┌─────────────────────────────────────────────────────────────────┐      │
+│  │                    Shared Utilities (tools/shared/)              │      │
+│  │              Logger │ Shell │ Error Handler │ Config Loader      │      │
+│  └─────────────────────────────────────────────────────────────────┘      │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                          Configuration Layer                                 │
+│                                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
+│  │  project.yaml   │    │   stacks.json   │    │ environments.json│        │
+│  │ (services,      │    │ (terraform      │    │ (Azure config)  │        │
+│  │  images,        │    │  dependencies)  │    │                 │        │
+│  │  profiles)      │    │                 │    │                 │        │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘        │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                           Deployment Targets                                 │
+│                                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
+│  │    Minikube     │    │   Azure AKS     │    │   Azure Infra   │        │
+│  │ (local K8s)     │    │  (cloud K8s)    │    │   (Terraform)   │        │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Component Architecture
+
+### 1. Main CLI (`tools/cli/`)
+
+The main CLI orchestrates local development workflows.
+
+```
+tools/cli/
+├── cli.ts                    # Entry point (yargs)
+├── commands/
+│   ├── generate.ts           # Generate docker-compose from project.yaml
+│   └── minikube.ts           # Minikube deployment orchestration
+├── generators/
+│   └── docker-compose.ts     # YAML generation logic
+├── schemas/
+│   └── project-config.ts     # TypeScript interfaces
+└── utils/
+    └── project-loader.ts     # YAML loading & validation
+```
+
+**Command Flow:**
+```
+npm run minikube -p srvthreds --build
+    │
+    ▼
+┌─────────────────────────────────────────────────────────┐
+│ 1. runPreflightChecks()                                 │
+│    - Verify Docker, minikube, kubectl installed         │
+│                                                         │
+│ 2. startMinikube()                                      │
+│    - Start cluster if not running                       │
+│    - Configure CPU, memory, addons                      │
+│                                                         │
+│ 3. expandProfileOrder() → [infra, build, app]           │
+│                                                         │
+│ 4. For each profile:                                    │
+│    ├─ infra:  startInfrastructure() [Docker Compose]    │
+│    │          runProfileHooks() [setup-repl.sh]         │
+│    ├─ build:  buildImages() [Minikube Docker daemon]    │
+│    └─ app:    deployToKubernetes() [kubectl apply -k]   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 2. Terraform CLI (`tools/terraform-cli/`)
+
+Orchestrates Azure infrastructure deployment with dependency management.
+
+```
+tools/terraform-cli/
+├── cli.ts                    # Entry point (custom dispatcher)
+├── commands/
+│   ├── deploy.ts             # Deploy with dependencies
+│   ├── destroy.ts            # Destroy in reverse order
+│   ├── init.ts               # Initialize & pull state
+│   ├── plan.ts               # Preview changes
+│   ├── state.ts              # State management
+│   ├── bootstrap.ts          # Setup backend
+│   └── ...                   # Other commands
+├── utils/
+│   ├── terraform.ts          # TerraformManager class
+│   └── args.ts               # Argument parsing
+└── types/
+    └── *.types.ts            # TypeScript interfaces
+```
+
+**Dependency Resolution:**
+```
+┌───────────────────────────────────────────────────────────┐
+│                    stacks.json                            │
+│                                                           │
+│  networking ──┬─► keyvault                                │
+│               ├─► acr ────────────┐                       │
+│               ├─► cosmosdb        │                       │
+│               ├─► redis           ▼                       │
+│               ├─► monitoring      aks ──► nginx-ingress   │
+│               └─► servicebus                              │
+│                                                           │
+│  Deployment Order (topological sort):                     │
+│  1. networking                                            │
+│  2. keyvault, acr, cosmosdb, redis, monitoring (parallel) │
+│  3. aks                                                   │
+│  4. nginx-ingress                                         │
+│                                                           │
+│  Destruction Order (reverse):                             │
+│  1. nginx-ingress                                         │
+│  2. aks                                                   │
+│  3. redis, cosmosdb, acr, keyvault, monitoring (parallel) │
+│  4. networking                                            │
+└───────────────────────────────────────────────────────────┘
+```
+
+### 3. Shared Utilities (`tools/shared/`)
+
+Common functionality used across all CLIs.
+
+| Module | Purpose |
+|--------|---------|
+| `logger.ts` | Context-aware logging with levels (DEBUG, INFO, WARN, ERROR) |
+| `shell.ts` | Sync/async command execution with streaming output |
+| `error-handler.ts` | Error hierarchy (CLIError, ValidationError, etc.) |
+| `config-loader.ts` | JSON config loading with caching |
+
+### 4. GitHub Actions (`.github/workflows/`)
+
+CI/CD pipelines for automated cloud deployments.
+
+```
+.github/workflows/
+├── _reusable-docker-build.yml   # Build & push to ACR
+├── _reusable-k8s-deploy.yml     # Deploy to AKS
+└── srvthreds-deploy.yml         # Project-specific orchestration
+```
+
+**Pipeline Flow:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    srvthreds-deploy.yml                     │
+│                                                             │
+│  Triggers:                                                  │
+│  - Push to main (projects/srvthreds/**)                     │
+│  - Tags (v*)                                                │
+│  - Manual (workflow_dispatch)                               │
+│                                                             │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐  │
+│  │ prepare │───►│  build  │───►│ dev     │───►│ test    │  │
+│  │ (tag)   │    │ (ACR)   │    │ (AKS)   │    │ (AKS)   │  │
+│  └─────────┘    └─────────┘    └─────────┘    └────┬────┘  │
+│                                                     │       │
+│                                              ┌──────▼──────┐│
+│                                              │    prod     ││
+│                                              │   (AKS)     ││
+│                                              │ + approval  ││
+│                                              └─────────────┘│
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Configuration Architecture
+
+### project.yaml - Single Source of Truth
+
+```yaml
+# Metadata
+name: srvthreds
+description: Event-driven workflow automation backend
+
+# Source code location
+source:
+  path: ../../../srvthreds
+
+# Docker images to build
+images:
+  builder:
+    dockerfile: docker/dockerfiles/Dockerfile.builder
+    additionalContexts:
+      thredlib: ../../../thredlib
+  app:
+    dockerfile: docker/dockerfiles/Dockerfile
+    dependsOn: builder
+
+# Services and their deployment targets
+services:
+  mongo-repl-1:
+    image: mongo:latest
+    profiles: [infra]
+    deploy: [minikube]        # Infrastructure only in local
+
+  srvthreds-engine:
+    image: app
+    profiles: [app]
+    deploy: [minikube, dev, test, prod]  # All environments
+
+# Profile execution order
+profiles:
+  all: [infra, build, app]
+  infra: [mongo-repl-1, redis]
+  build: [srvthreds-builder]
+  app: [srvthreds-bootstrap, srvthreds-engine, ...]
+
+# Hooks between profiles
+profileHooks:
+  infra:
+    postUp:
+      - script: scripts/setup-repl.sh
+
+# Environment-specific configuration
+environments:
+  minikube:
+    registry: local
+    namespace: srvthreds
+  dev:
+    registry: cazsrvthredsdeacr.azurecr.io
+    namespace: srvthreds
+```
+
+### Configuration Flow
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        Configuration Flow                                 │
+│                                                                          │
+│  project.yaml ──► npm run generate ──► docker-compose.generated.yaml    │
+│       │                                          │                       │
+│       │                                          ▼                       │
+│       │          ┌───────────────────────────────────────────────┐      │
+│       │          │         Docker Compose                        │      │
+│       │          │  - Services filtered by deploy: [minikube]    │      │
+│       │          │  - Build contexts resolved to absolute paths  │      │
+│       │          │  - Profiles for selective startup             │      │
+│       │          └───────────────────────────────────────────────┘      │
+│       │                                                                  │
+│       ▼                                                                  │
+│  ┌───────────────────────────────────────────────────────────────┐      │
+│  │                   Kubernetes Manifests                         │      │
+│  │                                                                │      │
+│  │  manifests/base/           manifests/overlays/                 │      │
+│  │  ├─ namespace.yaml         ├─ minikube/                       │      │
+│  │  ├─ configmap.yaml         │  ├─ kustomization.yaml           │      │
+│  │  ├─ srvthreds-engine.yaml  │  ├─ rabbitmq.yaml                │      │
+│  │  └─ ...                    │  └─ configmap-minikube.yaml      │      │
+│  │                            ├─ dev/                            │      │
+│  │                            │  ├─ kustomization.yaml           │      │
+│  │                            │  └─ image-pull-policy.yaml       │      │
+│  │                            └─ prod/                           │      │
+│  │                               ├─ kustomization.yaml           │      │
+│  │                               └─ configmap-prod.yaml          │      │
+│  └───────────────────────────────────────────────────────────────┘      │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+## Kubernetes Architecture
+
+### Kustomize Overlay Strategy
+
+```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                              CLI Layer                                   │
-├─────────────────────────────┬───────────────────────────────────────────┤
-│      terraform-cli          │           kubernetes-cli                   │
-│  (Infrastructure Mgmt)      │       (Deployment Orchestration)          │
-└──────────────┬──────────────┴──────────────────┬────────────────────────┘
-               │                                  │
-               ▼                                  ▼
-┌──────────────────────────┐    ┌─────────────────────────────────────────┐
-│    TerraformManager      │    │         kubernetes-deployer              │
-│  (Terraform Operations)  │    │  ┌─────────────┬─────────────────────┐  │
-└──────────────┬───────────┘    │  │ Minikube    │    AKS Deployer     │  │
-               │                │  │ Deployer    │                     │  │
-               │                │  └──────┬──────┴──────────┬──────────┘  │
-               │                │         │                 │              │
-               │                │         ▼                 ▼              │
-               │                │  ┌──────────────────────────────────┐   │
-               │                │  │      KubernetesClient            │   │
-               │                │  │    (kubectl wrapper)             │   │
-               │                │  └──────────────────────────────────┘   │
-               │                └─────────────────────────────────────────┘
-               │                                  │
-               ▼                                  ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           Shared Utilities                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────────┐  │
-│  │   Logger    │  │   Shell     │  │   Error     │  │    Config      │  │
-│  │             │  │  Executor   │  │  Handler    │  │    Loader      │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └────────────────┘  │
+│                         Base Manifests                                   │
+│                                                                         │
+│  manifests/base/                                                        │
+│  ├─ namespace.yaml      → Creates srvthreds namespace                   │
+│  ├─ configmap.yaml      → Base environment variables                    │
+│  ├─ srvthreds-engine.yaml                                               │
+│  │    └─ image: srvthreds:dev  (generic placeholder)                    │
+│  │    └─ imagePullPolicy: Never (local default)                         │
+│  └─ kustomization.yaml  → Lists all resources                           │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
-               │                                  │
-               ▼                                  ▼
+                                    │
+         ┌──────────────────────────┼──────────────────────────┐
+         ▼                          ▼                          ▼
+┌─────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
+│    Minikube     │    │        Dev          │    │       Prod          │
+│                 │    │                     │    │                     │
+│ images:         │    │ images:             │    │ images:             │
+│  srvthreds →    │    │  srvthreds →        │    │  srvthreds →        │
+│  srvthreds/app  │    │  cazsrvthredsdeacr  │    │  cazsrvthredspacr   │
+│  :latest        │    │  .azurecr.io/...    │    │  .azurecr.io/...    │
+│                 │    │                     │    │                     │
+│ patches:        │    │ patches:            │    │ replicas:           │
+│  configmap-     │    │  imagePullPolicy:   │    │  engine: 3          │
+│  minikube.yaml  │    │  Always             │    │  session-agent: 2   │
+│                 │    │                     │    │  persistence: 2     │
+│ resources:      │    │                     │    │                     │
+│  + rabbitmq.yaml│    │                     │    │ patches:            │
+│                 │    │                     │    │  configmap-prod     │
+└─────────────────┘    └─────────────────────┘    └─────────────────────┘
+```
+
+### Service Deployment Pattern
+
+All environments use the same deployment approach:
+
+```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Project Configuration                             │
-│                    projects/{project}/project.yaml                       │
-│                    projects/{project}/deployments/                       │
-│                    projects/{project}/terraform/                         │
+│                    Deployment Pattern                                    │
+│                                                                         │
+│  1. kubectl apply -k manifests/overlays/<env>                           │
+│     └─► Kustomize merges base + overlay                                 │
+│                                                                         │
+│  2. Resources created:                                                  │
+│     ├─ Namespace: srvthreds                                             │
+│     ├─ ConfigMap: srvthreds-config                                      │
+│     ├─ Deployments: engine, session-agent, persistence-agent            │
+│     └─ Services: ClusterIP for each deployment                          │
+│                                                                         │
+│  3. Image resolution:                                                   │
+│     ├─ Minikube: srvthreds/app:latest (local Docker daemon)             │
+│     ├─ Dev: cazsrvthredsdeacr.azurecr.io/srvthreds/app:sha-abc123       │
+│     └─ Prod: cazsrvthredspacr.azurecr.io/srvthreds/app:1.2.3            │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Responsibilities
+## Terraform Infrastructure Architecture
 
-### CLI Layer
-
-#### terraform-cli
-- Parses command-line arguments
-- Routes to appropriate command handlers
-- Manages Terraform operations (init, plan, apply, destroy)
-- Handles state management and recovery
-- Validates Azure security configuration
-
-#### kubernetes-cli
-- Parses command-line arguments using Yargs
-- Routes to minikube or AKS command handlers
-- Loads project configuration
-- Formats deployment results
-
-### Execution Layer
-
-#### TerraformManager
-- Executes Terraform commands
-- Manages backend configuration
-- Handles state file operations
-- Processes Terraform output
-
-#### kubernetes-deployer
-
-##### BaseDeployer (Abstract)
-Defines the deployment contract with lifecycle methods:
-1. `preDeployChecks()` - Verify prerequisites
-2. `buildImages()` - Build container images
-3. `pushImages()` - Push to registry
-4. `applyManifests()` - Apply Kubernetes manifests
-5. `waitForReadiness()` - Wait for pods
-6. `runValidation()` - Health checks
-
-##### MinikubeDeployer
-- Local development deployment
-- Docker environment configuration
-- Host database setup
-- No registry push (local Docker)
-
-##### AKSDeployer
-- Azure cloud deployment
-- ACR registry integration
-- Multi-environment support
-- Azure naming conventions
-
-##### KubernetesClient
-- Type-safe kubectl wrapper
-- Supports apply, delete, get, logs
-- Namespace and context management
-- Kustomize support
-
-### Shared Utilities
-
-| Utility | Purpose |
-|---------|---------|
-| **Logger** | Structured logging with levels and context |
-| **ShellExecutor** | Command execution with error handling |
-| **ErrorHandler** | Centralized error handling with exit codes |
-| **ConfigLoader** | JSON/YAML configuration loading with caching |
-
-## Data Flow
-
-### Terraform Deployment Flow
+### Stack Dependency Graph
 
 ```
-1. User: terraform-cli deploy -p srvthreds dev
-                    │
-2. CLI:             ▼
-   ┌────────────────────────────────────┐
-   │ Parse args, load project config    │
-   │ Load stacks.json, environments.json│
-   └────────────────┬───────────────────┘
-                    │
-3. Order:           ▼
-   ┌────────────────────────────────────┐
-   │ Sort stacks by dependencies        │
-   │ (networking → keyvault → aks)      │
-   └────────────────┬───────────────────┘
-                    │
-4. For each stack:  ▼
-   ┌────────────────────────────────────┐
-   │ terraform init                     │
-   │ terraform plan                     │
-   │ terraform apply (if not dry-run)   │
-   └────────────────┬───────────────────┘
-                    │
-5. Output:          ▼
-   ┌────────────────────────────────────┐
-   │ Display results, resources created │
-   └────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Infrastructure Stacks                                 │
+│                                                                         │
+│                          ┌─────────────┐                                │
+│                          │  networking │ (foundation)                   │
+│                          └──────┬──────┘                                │
+│                                 │                                       │
+│         ┌───────────┬───────────┼───────────┬───────────┐              │
+│         ▼           ▼           ▼           ▼           ▼              │
+│    ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐        │
+│    │keyvault │ │   acr   │ │cosmosdb │ │  redis  │ │monitoring│        │
+│    └────┬────┘ └────┬────┘ └─────────┘ └─────────┘ └──────────┘        │
+│         │           │                                                   │
+│         │           │    ┌─────────────────────────────────────┐       │
+│         └───────────┴───►│              aks                    │       │
+│                          │  - Private cluster                  │       │
+│                          │  - Workload Identity                │       │
+│                          │  - Key Vault CSI provider           │       │
+│                          └─────────────┬───────────────────────┘       │
+│                                        │                                │
+│                                        ▼                                │
+│                              ┌─────────────────┐                        │
+│                              │  nginx-ingress  │                        │
+│                              │  (Helm chart)   │                        │
+│                              └─────────────────┘                        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Kubernetes Deployment Flow
+### Azure Resources by Stack
+
+| Stack | Resources Created |
+|-------|-------------------|
+| **networking** | VNet, 5 Subnets, 5 NSGs |
+| **keyvault** | Key Vault + Private Endpoint |
+| **acr** | Container Registry + Private Endpoint |
+| **cosmosdb** | Cosmos DB (MongoDB API) + Private Endpoint |
+| **redis** | Azure Cache for Redis + Private Endpoint + Diagnostics |
+| **monitoring** | Log Analytics Workspace + Application Insights |
+| **aks** | AKS Cluster + Node Pool + Namespace + Workload Identity |
+| **nginx-ingress** | NGINX Ingress Controller (Helm) |
+
+### State Management
 
 ```
-1. User: k8s minikube deploy -p srvthreds
-                    │
-2. CLI:             ▼
-   ┌────────────────────────────────────┐
-   │ Parse args with Yargs              │
-   │ Load project.yaml                  │
-   └────────────────┬───────────────────┘
-                    │
-3. Deployer:        ▼
-   ┌────────────────────────────────────┐
-   │ Create MinikubeDeployer instance   │
-   │ Load deployment configs            │
-   └────────────────┬───────────────────┘
-                    │
-4. Pre-checks:      ▼
-   ┌────────────────────────────────────┐
-   │ Verify Docker running              │
-   │ Verify/start Minikube cluster      │
-   │ Set kubectl context                │
-   └────────────────┬───────────────────┘
-                    │
-5. Build:           ▼
-   ┌────────────────────────────────────┐
-   │ Execute deployment by shortName    │
-   │ Run preBuildCommands               │
-   │ Run docker compose build/up        │
-   │ Run postUpCommands                 │
-   └────────────────┬───────────────────┘
-                    │
-6. Deploy:          ▼
-   ┌────────────────────────────────────┐
-   │ Apply Kubernetes manifests         │
-   │ Wait for pod readiness             │
-   │ Run health checks                  │
-   └────────────────┬───────────────────┘
-                    │
-7. Output:          ▼
-   ┌────────────────────────────────────┐
-   │ Format and display results         │
-   │ Show next steps                    │
-   └────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Terraform State Backend                               │
+│                                                                         │
+│  Azure Storage Account: srvthredstfstatei274ht                          │
+│  Container: tfstate                                                     │
+│                                                                         │
+│  State File Pattern: stacks/{stack-name}/{environment}.tfstate          │
+│                                                                         │
+│  Examples:                                                              │
+│  ├─ stacks/networking/dev.tfstate                                       │
+│  ├─ stacks/aks/dev.tfstate                                              │
+│  ├─ stacks/networking/prod.tfstate                                      │
+│  └─ stacks/aks/prod.tfstate                                             │
+│                                                                         │
+│  Features:                                                              │
+│  ├─ Blob versioning (30-day retention)                                  │
+│  ├─ Geo-redundant storage (GRS)                                         │
+│  ├─ Management lock (CanNotDelete)                                      │
+│  └─ TLS 1.2 minimum                                                     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Design Patterns
+## Security Architecture
 
-### 1. Configuration-Driven Architecture
+### Network Security
 
-All behavior is driven by configuration files:
-- `project.yaml` - Project-level settings
-- `deployments/*.json` - Deployment definitions
-- `stacks.json` - Infrastructure stack definitions
-- `environments.json` - Environment-specific settings
-
-This enables:
-- No hardcoded values in code
-- Easy addition of new projects
-- Environment-specific overrides
-
-### 2. Dependency Graph Processing
-
-Infrastructure stacks declare dependencies:
-
-```json
-{
-  "stacks": [
-    { "name": "networking", "dependencies": [] },
-    { "name": "keyvault", "dependencies": ["networking"] },
-    { "name": "aks", "dependencies": ["networking", "keyvault"] }
-  ]
-}
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Network Security Model                                │
+│                                                                         │
+│  VNet: CAZ-SRVTHREDS-{ENV}-E-NET-VNET                                   │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  Gateway Subnet                                                  │   │
+│  │  └─ NSG: Allow 80/443/65200-65535 from Internet                 │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                              │                                          │
+│  ┌───────────────────────────▼─────────────────────────────────────┐   │
+│  │  AKS Subnet                                                      │   │
+│  │  └─ NSG: Allow from Gateway, AKS internal, Internet, LB         │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                              │                                          │
+│  ┌───────────────────────────▼─────────────────────────────────────┐   │
+│  │  Private Endpoint Subnet                                         │   │
+│  │  └─ NSG: Allow from AKS and Support subnets only                │   │
+│  │  └─ Services: ACR, Key Vault, Cosmos DB, Redis, Service Bus     │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  Data Subnet                                                     │   │
+│  │  └─ NSG: Allow from Private Endpoint subnet only                │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-The system:
-- Topologically sorts stacks for deployment
-- Reverse sorts for destruction
-- Validates no circular dependencies
+### Authentication Flow
 
-### 3. Template Method Pattern
-
-`BaseDeployer` defines the deployment algorithm skeleton:
-
-```typescript
-abstract class BaseDeployer {
-  async deploy(): Promise<DeploymentResult> {
-    await this.preDeployChecks();    // Subclass implements
-    await this.buildImages();         // Subclass implements
-    await this.pushImages();          // Subclass implements
-    await this.applyManifests();      // Subclass implements
-    await this.waitForReadiness();    // Subclass implements
-    return this.runValidation();      // Subclass implements
-  }
-}
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Workload Identity Flow                                │
+│                                                                         │
+│  ┌─────────────────┐                                                    │
+│  │  AKS Pod        │                                                    │
+│  │  (srvthreds-    │                                                    │
+│  │   engine)       │                                                    │
+│  └────────┬────────┘                                                    │
+│           │                                                             │
+│           │ ServiceAccount: srvthreds-workload                          │
+│           │ Annotation: azure.workload.identity/client-id               │
+│           ▼                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐     │
+│  │ Azure AD OIDC   │───►│ User-Assigned   │───►│   Key Vault     │     │
+│  │ Token Exchange  │    │ Managed Identity│    │   (Secrets)     │     │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘     │
+│                                                          │              │
+│                                                          ▼              │
+│                                               ┌─────────────────┐       │
+│                                               │ SecretProvider  │       │
+│                                               │ Class (CSI)     │       │
+│                                               │ - mongo-conn    │       │
+│                                               │ - redis-pass    │       │
+│                                               └─────────────────┘       │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-Subclasses (`MinikubeDeployer`, `AKSDeployer`) provide specific implementations.
+## Naming Conventions
 
-### 4. Strategy Pattern for Environments
+### Azure Resources
 
-Deployment behavior varies by environment:
+Pattern: `{prefix}-{appCode}-{envCode}-{regionCode}-{resourceType}`
 
-```typescript
-// In deployment config
-{
-  "target": {
-    "deployCommand": "up",
-    "environmentOverrides": {
-      "minikube": {
-        "preBuildCommands": [/* minikube-specific */]
-      },
-      "dev": {
-        "preBuildCommands": [/* AKS dev-specific */]
-      }
-    }
-  }
-}
-```
+| Component | Values | Example |
+|-----------|--------|---------|
+| prefix | CAZ | CAZ |
+| appCode | SRVTHREDS | SRVTHREDS |
+| envCode | D, T, P | D (dev) |
+| regionCode | E | E (East US) |
+| resourceType | RG, AKS, KEY, etc. | AKS |
 
-### 5. Centralized Error Handling
+**Examples:**
+- `CAZ-SRVTHREDS-D-E-RG` (Resource Group)
+- `CAZ-SRVTHREDS-D-E-AKS` (AKS Cluster)
+- `cazsrvthredsdeacr` (ACR - alphanumeric only)
 
-All errors flow through specialized error classes:
+### Kubernetes Resources
 
-```typescript
-class CLIError extends Error { exitCode = 1; }
-class ValidationError extends CLIError { exitCode = 2; }
-class ConfigError extends CLIError { exitCode = 3; }
-class ExecutionError extends CLIError { exitCode = 4; }
-class AzureError extends CLIError { exitCode = 5; }
-class TerraformError extends CLIError { exitCode = 6; }
-```
+| Resource | Naming Pattern | Example |
+|----------|---------------|---------|
+| Namespace | `{project}` | `srvthreds` |
+| Deployment | `{project}-{service}` | `srvthreds-engine` |
+| Service | `{deployment}-service` | `srvthreds-engine-service` |
+| ConfigMap | `{project}-config` | `srvthreds-config` |
 
-This enables:
-- Consistent error messages
-- Appropriate exit codes for scripting
-- Centralized error logging
+### Docker Images
 
-## State Management
-
-### Terraform State
-- Remote state stored in Azure Storage Account
-- Per-environment state files
-- Backend configuration in `environments.json`
-- State backup and recovery commands
-
-### Deployment State
-- `DeploymentState` class tracks deployment progress
-- Records: status, resources, timestamps, image tags
-- Enables rollback to previous deployments
-
-## Security Considerations
-
-### Azure Infrastructure
-- Security validation command checks:
-  - Resource group locks
-  - Network security (VNet, NSG)
-  - Private endpoints
-  - AKS cluster security
-  - RBAC configuration
-  - Encryption settings
-
-### CLI Security
-- No credentials stored in code
-- Uses Azure CLI authentication
-- Supports dry-run for all destructive operations
-- Confirmation prompts for destructive actions
-
-## Extension Points
-
-### Adding a New Project
-1. Create `projects/{project}/project.yaml`
-2. Create deployment configs in `projects/{project}/deployments/`
-3. Create Terraform stacks in `projects/{project}/terraform/`
-4. Create Kubernetes manifests
-5. Add npm scripts to `package.json`
-
-### Adding a New Deployer
-1. Extend `BaseDeployer`
-2. Implement all abstract methods
-3. Add to `kubernetes-deployer/src/index.ts` exports
-4. Create CLI command in `kubernetes-cli/commands/`
-
-### Adding a New Terraform Command
-1. Create command file in `terraform-cli/commands/`
-2. Export command function
-3. Add to command dispatcher in `cli.ts`
-4. Update help text
+| Context | Pattern | Example |
+|---------|---------|---------|
+| Local | `{project}/{image}:latest` | `srvthreds/app:latest` |
+| ACR | `{registry}/{project}/{image}:{tag}` | `cazsrvthredsdeacr.azurecr.io/srvthreds/app:sha-abc123` |

@@ -1,130 +1,131 @@
-# DevOps Infrastructure
+# DevOps Toolkit
 
-Enterprise-grade DevOps tooling for managing Azure infrastructure and Kubernetes deployments. This repository provides a complete infrastructure-as-code solution with type-safe CLI tools, multi-environment support, and comprehensive deployment automation.
+Enterprise DevOps toolkit for Azure infrastructure and Kubernetes deployments. Provides local-to-cloud parity using Minikube for development and AKS for production.
 
-## Overview
+## Features
 
-This DevOps toolkit consists of three main components:
-
-| Component | Purpose | Location |
-|-----------|---------|----------|
-| **Terraform CLI** | Azure infrastructure management | `tools/terraform-cli/` |
-| **Kubernetes CLI** | Kubernetes deployment orchestration | `tools/kubernetes-cli/` |
-| **Kubernetes Deployer** | Deployment execution library | `tools/kubernetes-deployer/` |
+- **Local Kubernetes Simulation** - Minikube environment mirrors cloud AKS deployments
+- **Configuration-Driven** - Single `project.yaml` defines all services, images, and deployment targets
+- **Unified CLI** - Same commands work for local and cloud deployments
+- **Infrastructure as Code** - Terraform modules for Azure resources with dependency management
+- **CI/CD Ready** - GitHub Actions workflows for automated deployments
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- Azure CLI (`az`) - logged in with appropriate permissions
-- Terraform 1.5+
-- kubectl configured for your clusters
-- Docker (for Minikube deployments)
-- Minikube (for local development)
+- Docker Desktop
+- Minikube (v1.30+)
+- kubectl
+- Node.js (v18+)
+- npm (v9+)
 
 ### Installation
 
 ```bash
-cd devops
 npm install
 ```
 
-### Common Commands
+### Local Development
 
 ```bash
-# Terraform Operations (for srvthreds project)
-npm run tf:srvthreds:init -- dev           # Initialize Terraform for dev
-npm run tf:srvthreds:plan -- dev           # Preview infrastructure changes
-npm run tf:srvthreds:apply -- dev          # Deploy infrastructure
-npm run tf:srvthreds:status -- dev         # Check deployment status
+# Generate configuration from project.yaml
+npm run generate -p srvthreds
 
-# Minikube (Local Development)
-npm run minikube:srvthreds:deploy          # Deploy to local Minikube
-npm run minikube:srvthreds:status          # Check Minikube status
-npm run minikube:srvthreds:cleanup         # Clean up Minikube
+# Start everything (infrastructure + build + deploy)
+npm run minikube -p srvthreds --build
 
-# AKS (Azure Kubernetes Service)
-npm run aks:srvthreds:deploy -- dev        # Deploy to AKS dev environment
-npm run aks:srvthreds:status -- dev        # Check AKS status
+# Check status
+npm run minikube:status -p srvthreds
+```
+
+### Useful Commands
+
+```bash
+# Stop services (keep data)
+npm run minikube:stop -p srvthreds
+
+# Full reset (delete all data)
+npm run minikube:reset -p srvthreds
+
+# Rebuild after code changes
+npm run minikube -p srvthreds --build
+
+# Deploy specific profile only
+npm run minikube -p srvthreds --profile infra
 ```
 
 ## Project Structure
 
 ```
 devops/
-├── projects/                    # Project-specific configurations
-│   └── srvthreds/              # Example project
-│       ├── project.yaml        # Project configuration
-│       ├── deployments/        # Deployment configurations
-│       ├── docker/             # Docker compose & Dockerfiles
-│       ├── kubernetes/         # AKS manifests
-│       ├── minikube/           # Minikube manifests
-│       └── terraform/          # Infrastructure stacks
-├── tools/
-│   ├── terraform-cli/          # Terraform management CLI
-│   ├── kubernetes-cli/         # Kubernetes deployment CLI
-│   ├── kubernetes-deployer/    # Deployment execution library
-│   └── shared/                 # Shared utilities
-├── docs/                       # Documentation
-└── package.json
+├── .github/workflows/         # CI/CD pipelines
+├── docs/                      # Documentation
+│   ├── architecture.md        # System design
+│   ├── deployment-guide.md    # Step-by-step deployment
+│   └── troubleshooting.md     # Common issues
+├── projects/                  # Project configurations
+│   └── srvthreds/
+│       ├── project.yaml       # Single source of truth
+│       ├── manifests/         # Kubernetes manifests
+│       │   ├── base/          # Base resources
+│       │   └── overlays/      # Environment overrides
+│       └── terraform/         # Infrastructure definitions
+├── terraform/modules/         # Reusable Terraform modules
+└── tools/
+    ├── cli/                   # Main DevOps CLI
+    ├── terraform-cli/         # Terraform orchestration
+    └── shared/                # Common utilities
 ```
+
+## CLI Reference
+
+### Main CLI (Minikube)
+
+| Command | What it does |
+|---------|--------------|
+| `npm run generate -p <project>` | Generate docker-compose.yaml from project.yaml |
+| `npm run minikube -p <project>` | **Deploy** project to minikube |
+| `npm run minikube -p <project> --build` | **Deploy** with image rebuild (use after code changes) |
+| `npm run minikube:stop -p <project>` | Stop project's services (keeps data) |
+| `npm run minikube:reset -p <project>` | Delete project's containers, volumes, K8s namespace |
+| `npm run minikube:status -p <project>` | Show project's service status |
+| `npm run minikube:delete` | Delete entire minikube cluster (all projects) |
+
+**Note:** `minikube` is the deploy command. Use `--build` when images need rebuilding.
+
+### Terraform CLI
+
+| Command | Description |
+|---------|-------------|
+| `npm run terraform -- init -p <project> <env>` | Initialize stacks |
+| `npm run terraform -- plan -p <project> <env>` | Preview changes |
+| `npm run terraform -- deploy -p <project> <env>` | Deploy infrastructure |
+| `npm run terraform -- destroy -p <project> <env>` | Destroy infrastructure |
+| `npm run terraform -- status -p <project> <env>` | Check status |
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/architecture.md) | System architecture and design patterns |
-| [Configuration Guide](docs/configuration.md) | Project and environment configuration |
-| [Terraform CLI](docs/terraform-cli.md) | Terraform command reference |
-| [Kubernetes CLI](docs/kubernetes-cli.md) | Kubernetes deployment guide |
-| [Deployment Configs](docs/deployment-configs.md) | Deployment JSON format reference |
+- [Architecture Overview](docs/architecture.md) - System design and component relationships
+- [Deployment Guide](docs/deployment-guide.md) - Step-by-step deployment instructions
+- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
 
-## Multi-Project Support
+## Adding a New Project
 
-This toolkit supports multiple projects. Each project is self-contained under `projects/{project-name}/` with its own:
+1. Create `projects/<name>/project.yaml`
+2. Create Kubernetes manifests in `manifests/base/` and `manifests/overlays/`
+3. Create Terraform configuration in `terraform/`
+4. Add CI/CD workflow in `.github/workflows/`
 
-- Project configuration (`project.yaml`)
-- Deployment definitions (`deployments/*.json`)
-- Infrastructure stacks (`terraform/`)
-- Kubernetes manifests (`kubernetes/`, `minikube/`)
+See [Deployment Guide](docs/deployment-guide.md#adding-a-new-project) for details.
 
-All CLI commands require the `--project` (or `-p`) flag to specify which project to operate on.
+## Technology Stack
 
-## Environments
-
-The system supports multiple deployment environments:
-
-| Environment | Target | Description |
-|-------------|--------|-------------|
-| `minikube` | Local | Local development cluster |
-| `dev` | AKS | Development environment |
-| `test` | AKS | Testing/staging environment |
-| `prod` | AKS | Production environment |
-
-## Key Features
-
-- **Type-Safe CLI**: Full TypeScript implementation with compile-time safety
-- **Multi-Environment**: Seamless deployment across local and cloud environments
-- **Dependency Management**: Automatic ordering of infrastructure stacks
-- **State Management**: Remote state with backup and recovery capabilities
-- **Security Validation**: Built-in Azure security best-practices validation
-- **Dry-Run Support**: Preview all changes before applying
-- **Rollback Support**: Automatic rollback on deployment failures
-
-## Development
-
-```bash
-# Run tests
-npm test
-
-# Type checking
-npm run check
-
-# Format code
-npm run format
-```
-
-## License
-
-Private - Internal use only.
+| Component | Technology |
+|-----------|------------|
+| Local K8s | Minikube |
+| Cloud K8s | Azure AKS |
+| Container Registry | Azure ACR |
+| Infrastructure | Terraform |
+| CI/CD | GitHub Actions |
+| Configuration | YAML (project.yaml, kustomize) |
