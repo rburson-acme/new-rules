@@ -123,8 +123,8 @@ npm run minikube -p <project> --profile infra  # Only infrastructure
 npm run minikube -p <project> --recreate   # Force recreate containers
 
 # Lifecycle management
-npm run minikube:stop -p <project>         # Stop services (keep data)
-npm run minikube:reset -p <project>        # Full reset (delete volumes)
+npm run minikube:stop -p <project>         # Stop services (keep data) - handles host & minikube Docker
+npm run minikube:reset -p <project>        # Full reset (delete volumes) - handles host & minikube Docker
 npm run minikube:status -p <project>       # Show service status
 npm run minikube:delete                    # Delete minikube cluster
 

@@ -333,6 +333,7 @@ export async function minikubeStop(options: MinikubeStopOptions): Promise<void> 
 
   logger.section(`Stopping minikube: ${project}`);
 
+  const config = loadProjectConfig(project);
   const projectDir = getProjectDir(project);
   const composePath = path.join(projectDir, 'docker-compose.generated.yaml');
 
@@ -340,21 +341,34 @@ export async function minikubeStop(options: MinikubeStopOptions): Promise<void> 
     throw new Error(`Generated compose file not found: ${composePath}`);
   }
 
-  const args = ['compose', '-f', composePath, '--profile', 'all', 'stop'];
+  // Get minikube docker environment
+  const dockerEnv = dryRun ? {} : await getMinikubeDockerEnv();
 
-  if (dryRun) {
-    log.info(`[DRY RUN] Would execute: docker ${args.join(' ')}`);
-  } else {
-    const result = await execCommandAsync('docker', args, {
-      cwd: projectDir,
-      context: 'docker',
-      verbose: true,
-    });
-    if (!result.success) {
-      throw new Error('Failed to stop services');
+  // Stop services by profile, using correct Docker environment for each
+  for (const profileName of ['infra', 'build', 'app']) {
+    const profileDef = config.profiles[profileName];
+    if (!profileDef) continue;
+
+    const runtime = getProfileRuntime(config, profileName);
+    const envToUse = runtime === 'host' ? {} : dockerEnv;
+    const runtimeLabel = runtime === 'host' ? 'host Docker' : "minikube's Docker";
+
+    const args = ['compose', '-f', composePath, '--profile', profileName, 'stop'];
+
+    if (dryRun) {
+      log.info(`[DRY RUN] Would stop ${profileName} profile on ${runtimeLabel}:`);
+      log.info(`  docker ${args.join(' ')}`);
+    } else {
+      log.info(`Stopping ${profileName} profile on ${runtimeLabel}...`);
+      await execCommandAsync('docker', args, {
+        cwd: projectDir,
+        env: { ...process.env, ...envToUse },
+        context: 'docker',
+      });
     }
-    logger.success('Services stopped');
   }
+
+  logger.success('Services stopped');
 }
 
 /**
@@ -374,21 +388,40 @@ export async function minikubeReset(options: MinikubeResetOptions): Promise<void
     throw new Error(`Generated compose file not found: ${composePath}`);
   }
 
-  const args = ['compose', '-f', composePath, '--profile', 'all', 'down', '-v'];
+  // Get minikube docker environment
+  const dockerEnv = dryRun ? {} : await getMinikubeDockerEnv();
 
+  // Remove services by profile, using correct Docker environment for each
+  for (const profileName of ['infra', 'build', 'app']) {
+    const profileDef = config.profiles[profileName];
+    if (!profileDef) continue;
+
+    const runtime = getProfileRuntime(config, profileName);
+    const envToUse = runtime === 'host' ? {} : dockerEnv;
+    const runtimeLabel = runtime === 'host' ? 'host Docker' : "minikube's Docker";
+
+    const args = ['compose', '-f', composePath, '--profile', profileName, 'down', '-v'];
+
+    if (dryRun) {
+      log.info(`[DRY RUN] Would remove ${profileName} profile on ${runtimeLabel}:`);
+      log.info(`  docker ${args.join(' ')}`);
+    } else {
+      log.info(`Removing ${profileName} profile on ${runtimeLabel}...`);
+      await execCommandAsync('docker', args, {
+        cwd: projectDir,
+        env: { ...process.env, ...envToUse },
+        context: 'docker',
+      });
+    }
+  }
+
+  logger.success('Containers and volumes removed');
+
+  // Delete K8s namespace if it exists
+  const namespace = config.environments.minikube.namespace || project;
   if (dryRun) {
-    log.info(`[DRY RUN] Would execute: docker ${args.join(' ')}`);
-    log.info(`[DRY RUN] Would delete K8s namespace: ${config.environments.minikube.namespace}`);
+    log.info(`[DRY RUN] Would delete K8s namespace: ${namespace}`);
   } else {
-    // Stop and remove containers, networks, volumes
-    await execCommandAsync('docker', args, {
-      cwd: projectDir,
-      context: 'docker',
-    });
-    logger.success('Containers and volumes removed');
-
-    // Delete K8s namespace if it exists
-    const namespace = config.environments.minikube.namespace || project;
     execCommand(`kubectl delete namespace ${namespace}`, { context: 'kubectl' });
     logger.success(`Namespace ${namespace} deleted (if existed)`);
   }

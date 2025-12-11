@@ -129,6 +129,11 @@ npm run minikube:stop -p srvthreds
 npm run minikube:reset -p srvthreds
 ```
 
+Both commands automatically handle services across different Docker environments:
+- Infrastructure (`runtime: host`) → stopped/removed on host Docker
+- Build/App services → stopped/removed on minikube's Docker
+- K8s namespace → deleted (reset only)
+
 #### Deleting Minikube Cluster
 
 ```bash
