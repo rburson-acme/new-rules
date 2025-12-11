@@ -260,7 +260,6 @@ export async function toYamlString(config: DockerComposeConfig, projectName: str
 
   const header = `# AUTO-GENERATED from project.yaml - do not edit directly
 # Regenerate with: npm run generate -p ${projectName}
-# Generated: ${new Date().toISOString()}
 
 `;
 

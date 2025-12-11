@@ -1,6 +1,5 @@
 # AUTO-GENERATED from project.yaml - do not edit directly
 # Regenerate with: npm run generate -p srvthreds
-# Generated: 2025-12-11T15:15:08.190Z
 
 services:
   mongo-repl-1:
