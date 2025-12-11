@@ -6,6 +6,7 @@ services:
       dockerfile: deploy/local/docker/dockerfiles/Dockerfile.builder
       additional_contexts:
         thredlib: ../../../../../thredlib
+        srvthreds: ../../../../../srvthreds
     profiles:
       - manual
   srvthreds-bootstrap:
@@ -32,6 +33,7 @@ services:
       dockerfile: deploy/local/docker/dockerfiles/Dockerfile.cmdRunner
       additional_contexts:
         thredlib: ../../../../../thredlib
+        srvthreds: ../../../../../srvthreds
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
   srvthreds-engine:
@@ -57,6 +59,7 @@ services:
       dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
+        srvthreds: ../../../../../srvthreds
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
@@ -90,6 +93,7 @@ services:
       dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
+        srvthreds: ../../../../../srvthreds
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
@@ -120,6 +124,7 @@ services:
       dockerfile: deploy/local/docker/dockerfiles/Dockerfile
       additional_contexts:
         thredlib: ../../../../../thredlib
+        srvthreds: ../../../../../srvthreds
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
     depends_on:
