@@ -1,0 +1,11 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: srvthreds-bootstrap
+  namespace: srvthreds
+spec:
+  template:
+    spec:
+      containers:
+        - name: srvthreds-bootstrap
+          image: srvthreds/cmd-runner:latest

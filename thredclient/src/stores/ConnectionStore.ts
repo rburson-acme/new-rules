@@ -84,6 +84,7 @@ export class ConnectionStore {
     if (Platform.OS === 'web') {
       // Todo: change this to the actual url
       url = 'localhost:3000';
+      //url = 'http://135.237.67.131';
     } else {
       url = 'http://10.0.2.2:3000';
     }

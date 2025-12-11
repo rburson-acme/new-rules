@@ -1,0 +1,137 @@
+# Reusable workflow: Deploy to Azure Kubernetes Service
+#
+# Applies Kustomize overlays to AKS cluster with image tag updates
+# Uses OIDC federation for Azure authentication
+
+name: Deploy to AKS
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'Project name (e.g., srvthreds)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment (dev, test, prod)'
+        required: true
+        type: string
+      image_tag:
+        description: 'Image tag to deploy'
+        required: true
+        type: string
+      images:
+        description: 'JSON array of images to update (e.g., ["app", "cmd-runner"])'
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load environment config
+        id: config
+        run: |
+          ENV_CONFIG=$(cat projects/${{ inputs.project }}/terraform/environments.json | jq -r '.${{ inputs.environment }}')
+          echo "subscription_id=$(echo $ENV_CONFIG | jq -r '.subscriptionId')" >> $GITHUB_OUTPUT
+          echo "resource_group=$(echo $ENV_CONFIG | jq -r '.resourceGroupName')" >> $GITHUB_OUTPUT
+
+          # Derive AKS cluster name from naming convention
+          PROJECT_CONFIG=$(cat projects/${{ inputs.project }}/project.yaml)
+          PREFIX=$(echo "$PROJECT_CONFIG" | yq -r '.azure.prefix')
+          APP_CODE=$(echo "$PROJECT_CONFIG" | yq -r '.azure.appCode')
+          REGION_CODE=$(echo "$PROJECT_CONFIG" | yq -r '.azure.regionCode')
+
+          # Map environment to code
+          case "${{ inputs.environment }}" in
+            dev) ENV_CODE="D" ;;
+            test) ENV_CODE="T" ;;
+            prod) ENV_CODE="P" ;;
+          esac
+
+          AKS_NAME="${PREFIX}-${APP_CODE}-${ENV_CODE}-${REGION_CODE}-AKS"
+          echo "aks_name=$AKS_NAME" >> $GITHUB_OUTPUT
+
+          # Get ACR registry
+          ACR_REGISTRY=$(echo "$PROJECT_CONFIG" | yq -r '.environments.${{ inputs.environment }}.registry')
+          echo "acr_registry=$ACR_REGISTRY" >> $GITHUB_OUTPUT
+
+          # Get namespace
+          NAMESPACE=$(echo "$PROJECT_CONFIG" | yq -r '.environments.${{ inputs.environment }}.namespace')
+          echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ steps.config.outputs.resource_group }} \
+            --name ${{ steps.config.outputs.aks_name }} \
+            --overwrite-existing
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update image tags in Kustomization
+        working-directory: projects/${{ inputs.project }}/manifests/overlays/${{ inputs.environment }}
+        run: |
+          IMAGES='${{ inputs.images }}'
+          ACR="${{ steps.config.outputs.acr_registry }}"
+          TAG="${{ inputs.image_tag }}"
+          PROJECT="${{ inputs.project }}"
+
+          # Update each image tag
+          for IMAGE in $(echo $IMAGES | jq -r '.[]'); do
+            echo "Setting image: $ACR/$PROJECT/$IMAGE:$TAG"
+            kustomize edit set image ${PROJECT}/${IMAGE}=${ACR}/${PROJECT}/${IMAGE}:${TAG}
+          done
+
+          echo "Updated kustomization.yaml:"
+          cat kustomization.yaml
+
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -k projects/${{ inputs.project }}/manifests/overlays/${{ inputs.environment }}
+
+      - name: Wait for rollout
+        run: |
+          NAMESPACE="${{ steps.config.outputs.namespace }}"
+
+          # Wait for deployments to be ready
+          kubectl rollout status deployment -n $NAMESPACE --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          NAMESPACE="${{ steps.config.outputs.namespace }}"
+
+          echo "=== Deployment Status ==="
+          kubectl get deployments -n $NAMESPACE
+
+          echo ""
+          echo "=== Pod Status ==="
+          kubectl get pods -n $NAMESPACE
+
+          echo ""
+          echo "=== Services ==="
+          kubectl get services -n $NAMESPACE

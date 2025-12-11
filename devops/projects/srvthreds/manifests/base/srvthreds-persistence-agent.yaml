@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srvthreds-persistence-agent
+  namespace: srvthreds
+  labels:
+    app: srvthreds-persistence-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: srvthreds-persistence-agent
+  template:
+    metadata:
+      labels:
+        app: srvthreds-persistence-agent
+    spec:
+      containers:
+        - name: srvthreds-persistence-agent
+          image: srvthreds:dev
+          imagePullPolicy: Never
+          ports: []
+          envFrom:
+            - configMapRef:
+                name: srvthreds-config
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 200m
+            limits:
+              memory: 512Mi
+              cpu: 400m
+          command:
+            - node
+          args:
+            - dist-server/src/ts/agent/agent.js
+            - '-c'
+            - persistence_agent
+            - '-i'
+            - org.wt.persistence1
+            - '-d'

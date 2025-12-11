@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: srvthreds-config
+  namespace: srvthreds
+data:
+  MONGO_HOST: host.minikube.internal:27017
+  REDIS_HOST: host.minikube.internal:6379
+  RABBITMQ_HOST: rabbitmq-service
+  REDIS_USE_TLS: 'false'
+  MONGO_DIRECT_CONNECTION: 'true'
+  JWT_EXPIRE_TIME: 1h
+  REFRESH_TOKEN_EXPIRE_TIME: 7d

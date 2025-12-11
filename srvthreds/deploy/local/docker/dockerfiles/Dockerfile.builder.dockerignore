@@ -1,0 +1,21 @@
+# ignore files
+*.md
+*.yml
+.DS_Store
+.gitignore
+
+*.log
+.prettier*
+*.eslint*
+
+# ignore folders
+.claude/
+.idea/
+.git/
+.github/
+config/
+deploy/
+!deploy/tools/deployment-cli/assets/
+node_modules/
+scripts/
+.vscode/

@@ -1,0 +1,153 @@
+# CI/CD Pipeline for srvthreds project
+#
+# Triggers:
+#   - Push to main: Build and deploy to dev
+#   - Tag v*: Build and deploy to dev → test → prod (with approvals)
+#   - Manual: workflow_dispatch for ad-hoc deployments
+#
+# Prerequisites:
+#   1. Azure OIDC federation configured for GitHub Actions
+#   2. GitHub environments (dev, test, prod) with protection rules
+#   3. ACR and AKS infrastructure deployed via Terraform
+
+name: srvthreds - Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'projects/srvthreds/**'
+      - '.github/workflows/srvthreds-*.yml'
+      - '.github/workflows/_reusable-*.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'projects/srvthreds/**'
+
+  # Version tags trigger full deployment pipeline
+  push:
+    tags:
+      - 'v*'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
+      skip_build:
+        description: 'Skip build (deploy existing images)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PROJECT: srvthreds
+  # Images to build and deploy (must match project.yaml images that deploy to cloud)
+  IMAGES: '["app", "cmd-runner"]'
+  SOURCE_PATH: '../srvthreds'
+  DOCKERFILE_PATH: 'docker/dockerfiles'
+
+jobs:
+  # Generate image tag from git context
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+      is_release: ${{ steps.tag.outputs.is_release }}
+    steps:
+      - name: Generate image tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Version tag: v1.0.0 → 1.0.0
+            TAG="${GITHUB_REF#refs/tags/v}"
+            echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          else
+            # Branch: sha-abc1234
+            TAG="sha-${GITHUB_SHA::7}"
+            echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Build images and push to ACR (dev environment for non-releases)
+  build:
+    name: Build Images
+    needs: prepare
+    if: github.event_name != 'workflow_dispatch' || !inputs.skip_build
+    uses: ./.github/workflows/_reusable-docker-build.yml
+    with:
+      project: srvthreds
+      environment: dev
+      image_tag: ${{ needs.prepare.outputs.image_tag }}
+      images: '["app", "cmd-runner"]'
+      source_path: '../srvthreds'
+      dockerfile_path: 'docker/dockerfiles'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  # Deploy to dev (automatic on main push)
+  deploy-dev:
+    name: Deploy to Dev
+    needs: [prepare, build]
+    if: |
+      always() &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/_reusable-k8s-deploy.yml
+    with:
+      project: srvthreds
+      environment: dev
+      image_tag: ${{ needs.prepare.outputs.image_tag }}
+      images: '["app", "cmd-runner"]'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  # Deploy to test (only for releases or manual dispatch)
+  deploy-test:
+    name: Deploy to Test
+    needs: [prepare, deploy-dev]
+    if: |
+      needs.prepare.outputs.is_release == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.environment == 'test')
+    uses: ./.github/workflows/_reusable-k8s-deploy.yml
+    with:
+      project: srvthreds
+      environment: test
+      image_tag: ${{ needs.prepare.outputs.image_tag }}
+      images: '["app", "cmd-runner"]'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  # Deploy to prod (only for releases, requires approval via GitHub environment)
+  deploy-prod:
+    name: Deploy to Production
+    needs: [prepare, deploy-test]
+    if: |
+      needs.prepare.outputs.is_release == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.environment == 'prod')
+    uses: ./.github/workflows/_reusable-k8s-deploy.yml
+    with:
+      project: srvthreds
+      environment: prod
+      image_tag: ${{ needs.prepare.outputs.image_tag }}
+      images: '["app", "cmd-runner"]'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

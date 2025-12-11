@@ -1,0 +1,53 @@
+{
+  "name": "devops",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "DevOps tooling and infrastructure used for deploying this monorepo",
+  "private": true,
+  "scripts": {
+    "cli": "tsx tools/cli/cli.ts",
+    "generate": "tsx tools/cli/cli.ts generate",
+    "minikube": "tsx tools/cli/cli.ts minikube",
+    "minikube:delete": "tsx tools/cli/cli.ts minikube:delete",
+    "minikube:stop": "tsx tools/cli/cli.ts minikube:stop",
+    "minikube:reset": "tsx tools/cli/cli.ts minikube:reset",
+    "minikube:status": "tsx tools/cli/cli.ts minikube:status",
+    "minikube:deploy:srvthreds": "npm run generate -- -p srvthreds && npm run minikube -- -p srvthreds --build",
+    "terraform": "tsx tools/terraform-cli/cli.ts",
+    "tf:srvthreds:init": "npm run terraform -- init -p srvthreds",
+    "tf:srvthreds:plan": "npm run terraform -- plan -p srvthreds",
+    "tf:srvthreds:apply": "npm run terraform -- deploy -p srvthreds",
+    "tf:srvthreds:destroy": "npm run terraform -- destroy -p srvthreds",
+    "tf:srvthreds:status": "npm run terraform -- status -p srvthreds",
+    "tf:srvthreds:bootstrap": "npm run terraform -- bootstrap -p srvthreds",
+    "tf:srvthreds:fix-symlinks": "npm run terraform -- fix-symlinks",
+    "tf:srvthreds:validate-security": "npm run terraform -- validate-security",
+    "tf:srvthreds:import": "npm run terraform -- import",
+    "tf:srvthreds:state": "npm run terraform -- state",
+    "test": "vitest --run --bail=1",
+    "check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "prepare": "cd .. && husky devops/.husky"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@types/yargs": "^17.0.33",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.6.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "thredlib": "file:../thredlib",
+    "yargs": "^17.7.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write"
+    ]
+  }
+}
