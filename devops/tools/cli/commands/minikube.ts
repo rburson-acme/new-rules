@@ -17,7 +17,7 @@ import * as path from 'path';
 import { loadProjectConfig, getProjectDir } from '../utils/project-loader.js';
 import { logger, createLogger } from '../../shared/logger.js';
 import { execCommand, execCommandAsync, commandExists } from '../../shared/shell.js';
-import type { ResolvedProjectConfig } from '../schemas/project-config.js';
+import type { ResolvedProjectConfig, ProfileConfig, ProfileRuntime } from '../schemas/project-config.js';
 
 const log = createLogger('minikube');
 
@@ -177,9 +177,12 @@ export async function minikubeUp(options: MinikubeUpOptions): Promise<void> {
 
   for (const profileToRun of profilesToRun) {
     if (profileToRun === 'infra') {
-      // Infrastructure runs via Docker Compose (not K8s)
-      // These are accessible from K8s via host.minikube.internal
-      await startInfrastructure(composePath, projectDir, dockerEnv, { build, recreate }, dryRun);
+      // Infrastructure runs via Docker Compose
+      // Check runtime: 'host' runs on host Docker, 'minikube' runs in minikube's Docker
+      const runtime = getProfileRuntime(config, profileToRun);
+      const envToUse = runtime === 'host' ? {} : dockerEnv;
+
+      await startInfrastructure(composePath, projectDir, envToUse, { build, recreate }, dryRun, runtime);
 
       // Run infra hooks (e.g., MongoDB replica set init)
       await runProfileHooks(config, profileToRun, projectDir, dryRun);
@@ -205,6 +208,7 @@ async function startInfrastructure(
   dockerEnv: Record<string, string>,
   options: { build?: boolean; recreate?: boolean },
   dryRun?: boolean,
+  runtime?: ProfileRuntime,
 ): Promise<void> {
   const args = ['compose', '-f', composePath, '--profile', 'infra', 'up', '-d'];
 
@@ -215,11 +219,14 @@ async function startInfrastructure(
     args.push('--force-recreate');
   }
 
+  const runtimeLabel = runtime === 'host' ? 'host Docker (simulating managed services)' : "minikube's Docker";
+
   if (dryRun) {
     log.info('[DRY RUN] Would start infrastructure:');
+    log.info(`  Runtime: ${runtimeLabel}`);
     log.info(`  docker ${args.join(' ')}`);
   } else {
-    log.info('Starting infrastructure services...');
+    log.info(`Starting infrastructure services on ${runtimeLabel}...`);
     const result = await execCommandAsync('docker', args, {
       cwd: projectDir,
       env: { ...process.env, ...dockerEnv },
@@ -545,6 +552,32 @@ async function runPreflightChecks(): Promise<void> {
 }
 
 /**
+ * Get the services array from a profile definition
+ * Handles both simple array format and object format with runtime config
+ */
+function getProfileServices(profileDef: string[] | ProfileConfig): string[] {
+  if (Array.isArray(profileDef)) {
+    return profileDef;
+  }
+  return profileDef.services;
+}
+
+/**
+ * Get the runtime for a profile
+ * Returns 'minikube' by default if not specified
+ */
+function getProfileRuntime(config: ResolvedProjectConfig, profileName: string): ProfileRuntime {
+  const profileDef = config.profiles[profileName];
+  if (!profileDef) {
+    return 'minikube';
+  }
+  if (Array.isArray(profileDef)) {
+    return 'minikube';
+  }
+  return profileDef.runtime || 'minikube';
+}
+
+/**
  * Expand a profile into ordered list of profiles to run
  *
  * If profile is 'all' and 'all' contains [infra, app], returns ['infra', 'app']
@@ -557,13 +590,15 @@ function expandProfileOrder(config: ResolvedProjectConfig, profileName: string):
     throw new Error(`Unknown profile: ${profileName}`);
   }
 
-  // Check if this profile contains other profiles (not services)
-  const containsProfiles = profileDef.every((item) => config.profiles[item] !== undefined);
+  const services = getProfileServices(profileDef);
 
-  if (containsProfiles && profileDef.length > 1) {
+  // Check if this profile contains other profiles (not services)
+  const containsProfiles = services.every((item) => config.profiles[item] !== undefined);
+
+  if (containsProfiles && services.length > 1) {
     // This is a composite profile like 'all: [infra, app]'
     // Return the sub-profiles in order
-    return profileDef;
+    return services;
   }
 
   // This is a leaf profile (contains services)

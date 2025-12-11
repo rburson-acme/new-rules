@@ -74,6 +74,21 @@ export interface ProfileHooks {
 }
 
 /**
+ * Runtime environment for profile services
+ */
+export type ProfileRuntime = 'host' | 'minikube';
+
+/**
+ * Profile configuration - can be a simple array of services or an object with runtime config
+ */
+export interface ProfileConfig {
+  /** Services in this profile */
+  services: string[];
+  /** Where to run these services: 'host' (outside minikube) or 'minikube' (inside minikube docker) */
+  runtime?: ProfileRuntime;
+}
+
+/**
  * Service dependency with optional condition
  */
 export interface ServiceDependency {
@@ -148,8 +163,8 @@ export interface ProjectConfig {
   /** Services to deploy */
   services: Record<string, ServiceConfig>;
 
-  /** Profile groupings (profile name -> list of profiles or service names) */
-  profiles: Record<string, string[]>;
+  /** Profile groupings (profile name -> list of profiles/services or profile config object) */
+  profiles: Record<string, string[] | ProfileConfig>;
 
   /** Profile hooks - scripts to run after profile services are up */
   profileHooks?: Record<string, ProfileHooks>;

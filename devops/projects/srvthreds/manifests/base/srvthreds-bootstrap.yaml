@@ -1,25 +1,23 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: srvthreds-bootstrap
   namespace: srvthreds
   labels:
     app: srvthreds-bootstrap
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: srvthreds-bootstrap
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
   template:
     metadata:
       labels:
         app: srvthreds-bootstrap
     spec:
+      restartPolicy: OnFailure
       containers:
         - name: srvthreds-bootstrap
           image: srvthreds:dev
           imagePullPolicy: Never
-          ports: []
           envFrom:
             - configMapRef:
                 name: srvthreds-config

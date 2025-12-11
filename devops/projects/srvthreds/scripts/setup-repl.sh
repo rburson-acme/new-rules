@@ -4,17 +4,14 @@
 #
 # Usage: ./setup-repl.sh [container-name]
 #   container-name: Name of the MongoDB container (default: mongo-repl-1)
+#
+# Note: This script runs against host Docker daemon (not minikube's Docker)
+# because infrastructure services run on host to simulate Azure managed services.
 
 set -e  # Exit on error
 
 # Container name from argument or default
 MONGO_CONTAINER="${1:-mongo-repl-1}"
-
-# Configure Docker to use Minikube's Docker daemon if minikube is running
-if command -v minikube &> /dev/null && minikube status --format='{{.Host}}' 2>/dev/null | grep -q "Running"; then
-  echo "🔧 Configuring Docker to use Minikube environment..."
-  eval $(minikube docker-env)
-fi
 
 echo "🔍 Checking MongoDB replica set status..."
 

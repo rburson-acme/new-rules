@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy both repositories from parent context
 COPY --from=thredlib . ./thredlib/
-COPY . ./srvthreds/
+COPY --from=srvthreds . ./srvthreds/
 
 # Build thredlib first
 WORKDIR /app/thredlib

@@ -17,12 +17,14 @@ images:
   builder:
     dockerfile: docker/dockerfiles/Dockerfile.builder
     additionalContexts:
+      srvthreds: ../../../srvthreds
       thredlib: ../../../thredlib
       devops-assets: docker/assets
 
   app:
     dockerfile: docker/dockerfiles/Dockerfile
     additionalContexts:
+      srvthreds: ../../../srvthreds
       thredlib: ../../../thredlib
     args:
       BUILDER_IMAGE: srvthreds/builder:latest
@@ -31,6 +33,7 @@ images:
   cmd-runner:
     dockerfile: docker/dockerfiles/Dockerfile.cmdRunner
     additionalContexts:
+      srvthreds: ../../../srvthreds
       thredlib: ../../../thredlib
     args:
       BUILDER_IMAGE: srvthreds/builder:latest
@@ -185,9 +188,13 @@ services:
 # Used with --profile flag: npm run minikube -p srvthreds --profile infra
 profiles:
   all: [infra, build, app]   # Everything (default) - build must come before app
-  infra: [mongo-repl-1, redis]
-  build: [srvthreds-builder]
-  app: [srvthreds-bootstrap, srvthreds-engine, srvthreds-session-agent, srvthreds-persistence-agent]
+  infra:
+    services: [mongo-repl-1, redis]
+    runtime: host  # Run on host Docker (outside minikube) - simulates Azure managed services
+  build:
+    services: [srvthreds-builder]
+  app:
+    services: [srvthreds-bootstrap, srvthreds-engine, srvthreds-session-agent, srvthreds-persistence-agent]
 
 # Hooks run after a profile's services are up
 # These run BEFORE the next profile starts (critical for initialization order)

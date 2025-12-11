@@ -14,6 +14,7 @@ images:
 
 patches:
 - path: configmap-minikube.yaml
+- path: srvthreds-bootstrap.yaml
 
 labels:
 - pairs:

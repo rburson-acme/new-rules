@@ -63,12 +63,16 @@ When you run `npm run minikube -p srvthreds --build`:
 2. **Starts minikube** - If not running (4 CPUs, ~8GB RAM)
 3. **Runs profiles in order:**
 
-| Step | Profile | Action |
-|------|---------|--------|
-| 1 | `infra` | Starts MongoDB, Redis via Docker Compose |
-| 2 | (hook) | Runs `setup-repl.sh` to init MongoDB replica set |
-| 3 | `build` | Builds Docker images into minikube's Docker daemon |
-| 4 | `app` | Runs `kubectl apply -k manifests/overlays/minikube` |
+| Step | Profile | Runtime | Action |
+|------|---------|---------|--------|
+| 1 | `infra` | `host` | Starts MongoDB, Redis via Docker Compose on **host Docker** |
+| 2 | (hook) | - | Runs `setup-repl.sh` to init MongoDB replica set |
+| 3 | `build` | `minikube` | Builds Docker images into **minikube's Docker daemon** |
+| 4 | `app` | - | Runs `kubectl apply -k manifests/overlays/minikube` |
+
+**Why runtime matters:**
+- `runtime: host` - Infrastructure runs on your machine's Docker, simulating Azure managed services (CosmosDB, Azure Redis). K8s pods connect via `host.minikube.internal`.
+- `runtime: minikube` (default) - Services run in minikube's Docker daemon, making images available to K8s.
 
 ### When to Use --build
 

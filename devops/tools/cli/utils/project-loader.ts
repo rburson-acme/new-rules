@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import type { ProjectConfig, ResolvedProjectConfig, DeployTarget } from '../schemas/project-config.js';
+import type { ProjectConfig, ResolvedProjectConfig, DeployTarget, ProfileConfig } from '../schemas/project-config.js';
 
 const PROJECTS_DIR = path.resolve(import.meta.dirname, '../../../projects');
 
@@ -147,14 +147,25 @@ export function getServicesForTarget(
 }
 
 /**
+ * Get services array from a profile definition
+ * Handles both simple array format and object format with runtime config
+ */
+function getProfileServices(profileDef: string[] | ProfileConfig): string[] {
+  if (Array.isArray(profileDef)) {
+    return profileDef;
+  }
+  return profileDef.services;
+}
+
+/**
  * Get services for a specific profile
  */
 export function getServicesForProfile(
   config: ProjectConfig,
   profileName: string,
 ): Record<string, (typeof config.services)[string]> {
-  const profileServices = config.profiles[profileName];
-  if (!profileServices) {
+  const profileDef = config.profiles[profileName];
+  if (!profileDef) {
     throw new Error(`Unknown profile: ${profileName}`);
   }
 
@@ -164,14 +175,15 @@ export function getServicesForProfile(
   const expandProfile = (names: string[]) => {
     for (const name of names) {
       // Check if it's a profile reference
-      if (config.profiles[name]) {
-        expandProfile(config.profiles[name]);
+      const nestedProfile = config.profiles[name];
+      if (nestedProfile) {
+        expandProfile(getProfileServices(nestedProfile));
       } else if (config.services[name]) {
         result[name] = config.services[name];
       }
     }
   };
 
-  expandProfile(profileServices);
+  expandProfile(getProfileServices(profileDef));
   return result;
 }

@@ -13,9 +13,8 @@
 .idea/
 .git/
 .github/
+.vscode/
 config/
 deploy/
-!deploy/tools/deployment-cli/assets/
+docks/
 node_modules/
-scripts/
-.vscode/

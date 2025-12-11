@@ -85,11 +85,25 @@ npm run minikube -p srvthreds --build
 │                                                         │
 │ 4. For each profile:                                    │
 │    ├─ infra:  startInfrastructure() [Docker Compose]    │
+│    │          - Check profile runtime (host vs minikube)│
+│    │          - runtime: host → uses host Docker daemon │
+│    │          - runtime: minikube → uses minikube Docker│
 │    │          runProfileHooks() [setup-repl.sh]         │
 │    ├─ build:  buildImages() [Minikube Docker daemon]    │
 │    └─ app:    deployToKubernetes() [kubectl apply -k]   │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**Profile Runtime:**
+
+Profiles can specify a `runtime` property to control where Docker Compose services run:
+
+| Runtime | Docker Daemon | Use Case |
+|---------|---------------|----------|
+| `host` | Host machine | Infrastructure simulating managed cloud services (CosmosDB, Redis) |
+| `minikube` | Minikube VM | Default - services/images available inside K8s cluster |
+
+This separation allows infrastructure services (MongoDB, Redis) to run on the host Docker, simulating how Azure managed services exist outside the Kubernetes cluster. Application pods connect via `host.minikube.internal`.
 
 ### 2. Terraform CLI (`tools/terraform-cli/`)
 
@@ -219,12 +233,17 @@ services:
     profiles: [app]
     deploy: [minikube, dev, test, prod]  # All environments
 
-# Profile execution order
+# Profile execution order with runtime configuration
 profiles:
   all: [infra, build, app]
-  infra: [mongo-repl-1, redis]
-  build: [srvthreds-builder]
-  app: [srvthreds-bootstrap, srvthreds-engine, ...]
+  infra:
+    services: [mongo-repl-1, redis]
+    runtime: host      # Run on host Docker (simulates Azure managed services)
+  build:
+    services: [srvthreds-builder]
+    # runtime: minikube (default - builds into minikube's Docker)
+  app:
+    services: [srvthreds-bootstrap, srvthreds-engine, ...]
 
 # Hooks between profiles
 profileHooks:

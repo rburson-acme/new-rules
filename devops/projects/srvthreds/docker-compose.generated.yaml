@@ -1,6 +1,6 @@
 # AUTO-GENERATED from project.yaml - do not edit directly
 # Regenerate with: npm run generate -p srvthreds
-# Generated: 2025-12-10T22:01:09.477Z
+# Generated: 2025-12-11T15:15:08.190Z
 
 services:
   mongo-repl-1:
@@ -62,6 +62,7 @@ services:
       context: ../../../srvthreds
       dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile.builder
       additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
         thredlib: /Users/aresha/Repos/new-rules/thredlib
         devops-assets: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/assets
     image: srvthreds/builder:latest
@@ -72,6 +73,7 @@ services:
       context: ../../../srvthreds
       dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile.cmdRunner
       additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
         thredlib: /Users/aresha/Repos/new-rules/thredlib
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
@@ -100,6 +102,7 @@ services:
       context: ../../../srvthreds
       dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
       additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
         thredlib: /Users/aresha/Repos/new-rules/thredlib
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
@@ -130,6 +133,7 @@ services:
       context: ../../../srvthreds
       dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
       additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
         thredlib: /Users/aresha/Repos/new-rules/thredlib
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
@@ -165,6 +169,7 @@ services:
       context: ../../../srvthreds
       dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
       additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
         thredlib: /Users/aresha/Repos/new-rules/thredlib
       args:
         BUILDER_IMAGE: srvthreds/builder:latest
