@@ -58,13 +58,6 @@ export class PatternsStore {
     await this.storePattern(patternStore, this.storage);
   }
 
-  // store a pattern in storage w/ lock
-  async storePattern(patternStore: PatternStore, storage: Storage): Promise<void> {
-    await this.withLock(patternStore.pattern.id, async () => {
-      await this.lock_storePatternStore(patternStore, storage);
-    });
-  }
-
   // gets a currently loaded pattern
   getPattern(patternId: string): Pattern {
     return this.patternStores[patternId]?.pattern;
@@ -85,14 +78,6 @@ export class PatternsStore {
     return Object.values(this.patternStores).map((patternStore) => patternStore.pattern);
   }
 
-  /*
-      acquire a lock on the given pattern and execute the operation, returning it's result
-      lock is released at the end of the operation
-  */
-  async withLock(patternId: string, op: () => Promise<any>, ttl?: number): Promise<any> {
-    return await this.storage.acquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
-  }
-
   // unload a pattern store
   async unloadPatternStore(patternId: string): Promise<void> {
     this.storage.acquire(
@@ -109,7 +94,56 @@ export class PatternsStore {
     );
   }
 
-  // Important - callers of thise methods should do so within a locked block
+  async decrementPatternInstanceCount(patternId: string): Promise<void> {
+    await this.withLock(patternId, async () => {
+      const patternStore = this.patternStore(patternId);
+      if (!patternStore) throw new Error(`PatternStore not found for patternId ${patternId}`);
+      const instanceCount = (await this.lock_retrievePatternInstanceCount(patternId)) || 0;
+      if (instanceCount > 0) {
+        await this.lock_storePatternInstanceCount(patternId, instanceCount - 1);
+      }
+    });
+  }
+
+  /*
+      acquire a lock for creating a new thread from the given pattern
+      checks pattern constraints (max instances, min interval) and updates usage stats
+  */
+  async withLockForNewThread<T>(patternId: string, op: () => Promise<T>, ttl?: number): Promise<T> {
+    return this.withLock(
+      patternId,
+      async () => {
+        const patternStore = this.patternStore(patternId);
+        if (!patternStore) throw new Error(`PatternStore not found for patternId ${patternId}`);
+        const { instanceCount, lastInstanceTs } = await this.lock_checkPatternInstanceCountAndTimestamp(patternId);
+        const result = await op();
+        await this.lock_storePatternInstanceCount(patternId, instanceCount + 1);
+        await this.lock_storePatternLastInstanceTimestamp(patternId, Date.now());
+        return result;
+      },
+      ttl,
+    );
+  }
+
+  /*
+      acquire a lock on the given pattern and execute the operation, returning it's result
+      lock is released at the end of the operation
+  */
+  private async withLock(patternId: string, op: () => Promise<any>, ttl?: number): Promise<any> {
+    const result = await this.storage.acquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
+    return result[0];
+  }
+
+  // store a pattern in storage w/ lock
+  private async storePattern(patternStore: PatternStore, storage: Storage): Promise<void> {
+    await this.withLock(patternStore.pattern.id, async () => {
+      await this.lock_storePatternStore(patternStore, storage);
+    });
+  }
+
+  //*****************************************************************************
+  // Important - callers of the below methods should do so within a locked block
+  //*****************************************************************************
 
   // requires lock
   private async lock_unloadPatternStore(patternId: string): Promise<void> {
@@ -136,5 +170,46 @@ export class PatternsStore {
     const { patternModel, timestamp } = patternStore.getState();
     await storage.save(Types.Pattern, patternModel, patternId);
     await storage.setMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY, timestamp);
+  }
+  // requires lock
+  private async lock_retrievePatternInstanceCount(patternId: string): Promise<number | null> {
+    const numInstances = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.NUM_INSTANCE_KEY);
+    return numInstances ? parseInt(numInstances) : null;
+  }
+  // requires lock
+  private async lock_storePatternInstanceCount(patternId: string, numInstances: number): Promise<void> {
+    await this.storage.setMetaValue(Types.Pattern, patternId, PatternStore.NUM_INSTANCE_KEY, numInstances);
+  }
+
+  // requires lock
+  private async lock_retrievePatternLastInstanceTimestamp(patternId: string): Promise<number | null> {
+    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.LAST_INSTANCE_TIMESTAMP_KEY);
+    return tsValue ? parseInt(tsValue) : null;
+  }
+
+  // requires lock
+  private async lock_storePatternLastInstanceTimestamp(patternId: string, timestamp: number): Promise<void> {
+    await this.storage.setMetaValue(Types.Pattern, patternId, PatternStore.LAST_INSTANCE_TIMESTAMP_KEY, timestamp);
+  }
+
+  // requires lock
+  private async lock_checkPatternInstanceCountAndTimestamp(
+    patternId: string,
+  ): Promise<{ instanceCount: number; lastInstanceTs: number }> {
+    const patternStore = this.patternStore(patternId);
+    const pattern = patternStore.pattern;
+    const maxInstances = pattern.patternModel.maxInstances || Infinity;
+    const instanceCount = (await this.lock_retrievePatternInstanceCount(patternId)) || 0;
+    const lastInstanceTs = (await this.lock_retrievePatternLastInstanceTimestamp(patternId)) || 0;
+    const now = Date.now();
+    if (instanceCount >= maxInstances) {
+      throw new Error(`Pattern ${patternId} has reached its maximum number of instances: ${maxInstances}`);
+    }
+    const minInterval = pattern.patternModel.instanceInterval || 0;
+    if (now - lastInstanceTs < minInterval) {
+      throw new Error(`Pattern ${patternId} cannot create a new instance yet. Minimum interval
+          between instances is ${minInterval} ms`);
+    }
+    return { instanceCount, lastInstanceTs };
   }
 }

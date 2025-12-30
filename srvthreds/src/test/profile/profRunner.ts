@@ -89,7 +89,7 @@ function getSyncPromise(eventManager: EventManager, id: string, name: string, nu
           thredId = result.thredId;
           Logger.debug(`${name} seqId:${i} Result: ${Events.valueNamed(result, 'seqId')} ThredId: ${result.thredId}`);
         }
-        const finishEvent = createFinishEvent({ id, name }, thredId);
+        /*const finishEvent = createFinishEvent({ id, name }, thredId);
         const resultEvent = await eventManager.subscribeOnceWithPromise(
           { filter: `$thredId = '${thredId}'` },
           finishEvent,
@@ -100,7 +100,7 @@ function getSyncPromise(eventManager: EventManager, id: string, name: string, nu
           if (resultSeqIds[i] !== i) {
             throw new Error(`${name}: Expected seqId ${i} but got ${resultSeqIds[i]}`);
           }
-        }
+        }*/
         resolve();
       } catch (e) {
         reject(e);

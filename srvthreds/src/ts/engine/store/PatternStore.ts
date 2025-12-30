@@ -3,6 +3,8 @@ import { Pattern } from '../Pattern.js';
 
 export class PatternStore {
   static TIMESTAMP_KEY = 'ts';
+  static NUM_INSTANCE_KEY = 'ni';
+  static LAST_INSTANCE_TIMESTAMP_KEY = 'li';
   readonly pattern: Pattern;
 
   constructor(

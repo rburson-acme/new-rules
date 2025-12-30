@@ -4,6 +4,10 @@ import { EngineConnectionManager, events, withDispatcherPromise, withReject } fr
 
 Logger.setLevel(LoggerLevel.INFO);
 
+/*
+  This tests stateless patterns where the state is not held in memory but is stored and retrieved from persistence as needed.
+  This allows the engine to be restarted and still have the threds continue from where they left off.
+*/
 describe('stateless', function () {
   beforeAll(async () => {
     connMan = await EngineConnectionManager.newEngineInstance(patternModels);

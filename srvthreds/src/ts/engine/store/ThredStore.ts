@@ -29,7 +29,7 @@ export class ThredStore {
     public reactionStore: ReactionStore,
     readonly thredContext: ThredContext,
     readonly startTime: number,
-    private status: ThredStatus,
+    private _status: ThredStatus,
     private endTime?: number,
   ) {
     const { reactionName } = reactionStore;
@@ -56,7 +56,7 @@ export class ThredStore {
     // thred is finished if there is no reaction
     if (!reaction) {
       this.endTime = now;
-      this.status = this.shouldTerminate() ? ThredStatus.TERMINATED : ThredStatus.FINISHED;
+      this._status = this.shouldTerminate() ? ThredStatus.TERMINATED : ThredStatus.FINISHED;
     }
   }
 
@@ -82,8 +82,8 @@ export class ThredStore {
   // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
   // this will ensure that it actually gets cleaned up
   terminate(): void {
-    if (this.status !== ThredStatus.FINISHED) this.finish();
-    this.status = ThredStatus.TERMINATED;
+    if (this._status !== ThredStatus.FINISHED) this.finish();
+    this._status = ThredStatus.TERMINATED;
   }
 
   addParticipantIds(participantIds: string | string[]) {
@@ -94,16 +94,20 @@ export class ThredStore {
     return this.thredContext.hasParticipant(participantId);
   }
 
+  get status(): ThredStatus {
+    return this._status;
+  }
+
   get isActive() {
-    return this.status === ThredStatus.ACTIVE;
+    return this._status === ThredStatus.ACTIVE;
   }
 
   get isFinished() {
-    return this.status === ThredStatus.FINISHED;
+    return this._status === ThredStatus.FINISHED;
   }
 
   get isTerminated() {
-    return this.status === ThredStatus.TERMINATED;
+    return this._status === ThredStatus.TERMINATED;
   }
 
   get reactionTimedOut(): boolean {
@@ -120,7 +124,7 @@ export class ThredStore {
       reactionStore: this.reactionStore?.getState(),
       startTime: this.startTime,
       endTime: this.endTime,
-      status: this.status,
+      status: this._status,
       lastUpdateTime: this.lastUpdateTime,
       meta: this.meta,
     };
@@ -139,7 +143,7 @@ export class ThredStore {
       },
       startTime: this.startTime,
       endTime: this.endTime,
-      status: this.status,
+      status: this._status,
       lastUpdateTime: this.lastUpdateTime,
       meta: this.meta,
     };
