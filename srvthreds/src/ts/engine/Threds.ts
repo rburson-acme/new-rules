@@ -20,7 +20,6 @@ import { SystemController as Sc } from '../persistence/controllers/SystemControl
 import { EventThrowable } from '../thredlib/core/Errors.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { ThredThrowable } from './ThredThrowable.js';
-import { T } from 'vitest/dist/chunks/environment.LoooBwUu.js';
 
 /**
  * The Threds class is the main entry point for dispatching Events to Threds (existing or new).
@@ -40,7 +39,7 @@ export class Threds {
   // handleAttached and handleDetached are the two main entry point for Thred locking (per thredId)
   // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
   consider(event: Event): Promise<void> {
-    return event.thredId !== null && event.thredId != undefined
+    return event.thredId !== null && event.thredId !== undefined
       ? this.handleBound(event.thredId, event)
       : this.handleUnbound(event);
   }
@@ -66,99 +65,76 @@ export class Threds {
   // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
   private async handleBound(thredId: string, event: Event): Promise<void> {
     const timestamp = Date.now();
-    // save the event before consideration
-    await Sc.get().replaceEvent({ event: { ...event, thredId }, timestamp });
+    await this.persistEvent(event, thredId);
+
     const { thredStatus, patternId } = await this.thredsStore.withThredStore(
       thredId,
-      async (thredStore?: ThredStore) => {
-        // @TODO @TEMP @DEMO // copy admin -----------
-        // await this.handleMessage{id: event.id, event, to: []});
-        // -------------------------------------------
-        if (!thredStore) {
-          await Sc.get().saveThredLogRecord({
-            thredId,
-            eventId: event.id,
-            type: ThredLogRecordType.NO_THRED,
-            timestamp,
-          });
-          throw EventThrowable.get({
-            message: `Thred ${thredId} does not, or no longer exists for event ${event.id} of type ${event.type}`,
-            code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
-          });
-        }
-        // handle (and throw) incoming error events from agents
-        this.throwErrorEvent(event, thredStore);
-
-        // handle all other events
-        await Thred.consider(event, thredStore, this);
-        return { thredStatus: thredStore.status, patternId: thredStore.pattern.id };
-      },
+      async (thredStore?: ThredStore) => this.processBoundEvent(event, thredStore, timestamp),
     );
-    if (thredStatus === ThredStatus.TERMINATED)
-      await this.thredsStore.patternsStore.decrementPatternInstanceCount(patternId);
+
+    await this.decrementIfTerminated(thredStatus, patternId);
   }
 
   private async handleUnbound(event: Event): Promise<void> {
-    const { patternsStore } = this.thredsStore;
-    const { patterns } = patternsStore;
-
+    const { patterns } = this.thredsStore.patternsStore;
     let matches = 0;
-    // if pattern is applicable, start a thred and continue matching
+
     await Series.forEach<Pattern>(patterns, async (pattern) => {
-      // don't want a failure to stop possible pattern matches
       try {
-        if (await pattern.consider(event, new ThredContext())) {
-          matches++;
-          L.info({
-            message: L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`),
-            thredId: event.thredId,
-          });
-          const thredStatus = await patternsStore.withLockForNewThread(pattern.id, async () => {
-            return this.startThred(pattern, event);
-          });
-          if (thredStatus === ThredStatus.TERMINATED) await patternsStore.decrementPatternInstanceCount(pattern.id);
-        }
+        if (await this.tryPatternMatch(pattern, event)) matches++;
       } catch (e) {
-        L.error({
-          message: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${e}`),
-          thredId: event.thredId,
-          err: e as Error,
-        });
-        throw EventThrowable.get({
-          message: `Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}`,
-          code: errorCodes[errorKeys.SERVER_ERROR].code,
-          cause: e,
-        });
+        this.handlePatternMatchError(pattern, event, e);
       }
     });
+
     if (matches === 0) {
-      // orphan event - no need to wait on this storage operation
-      await Sc.get().replaceEvent({ event: { ...event }, timestamp: Date.now() });
-      Sc.get().saveThredLogRecord({
-        eventId: event.id,
-        type: ThredLogRecordType.NO_PATTERN_MATCH,
-        timestamp: Date.now(),
-      });
-      L.info({
-        message: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
-        thredId: event.thredId,
-      });
+      await this.handleOrphanEvent(event);
     }
+
+  }
+
+  private async processBoundEvent(
+    event: Event,
+    thredStore: ThredStore | undefined,
+    timestamp: number,
+  ): Promise<{ thredStatus: ThredStatus; patternId: string }> {
+    if (!thredStore) {
+      await this.handleMissingThred(event.thredId!, event.id, event.type, timestamp);
+      // TypeScript doesn't know handleMissingThred always throws, so this is unreachable
+      throw new Error('Unreachable');
+    }
+    this.throwErrorEvent(event, thredStore);
+    await Thred.consider(event, thredStore, this);
+    return { thredStatus: thredStore.status, patternId: thredStore.pattern.id };
   }
 
   // top-level lock here - 'withNewThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
   private async startThred(pattern: Pattern, event: Event): Promise<ThredStatus> {
-    // Assign a thredId via a shallow copy of the event
     return this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
-      // @TODO @TEMP @DEMO (copy the admin user) ----
-      //await this.handleMessage({ id: event.id, event: { ...event, thredId: thredStore.id }, to: [] });
-      // ---------------------------------------------
-      // persist the event before consideration
-      await Sc.get().replaceEvent({ event: { ...event, thredId: thredStore.id }, timestamp: Date.now() });
-      await Thred.consider({ ...event, thredId: thredStore.id }, thredStore, this);
+      const boundEvent = { ...event, thredId: thredStore.id };
+      await this.persistEvent(boundEvent);
+      await Thred.consider(boundEvent, thredStore, this);
       return thredStore.status;
     });
+  }
+
+  private async tryPatternMatch(pattern: Pattern, event: Event): Promise<boolean> {
+    if (!(await pattern.consider(event, new ThredContext()))) {
+      return false;
+    }
+    L.info({
+      message: L.h2(`Pattern ${pattern.id} matched event ${event.id} of type ${event.type} - starting Thred`),
+      thredId: event.thredId,
+    });
+    // Note: this is a thred lock (startThred) within a pattern lock (withLockForNewThread)
+    // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
+    const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(
+      pattern.id,
+      async () => this.startThred(pattern, event),
+    );
+    await this.decrementIfTerminated(thredStatus, pattern.id);
+    return true;
   }
 
   private throwErrorEvent(event: Event, thredStore: ThredStore): void {
@@ -169,4 +145,59 @@ export class Threds {
       throw ThredThrowable.get(error, 'thred', thredStore.thredContext);
     }
   }
+
+  private async persistEvent(event: Event, thredId?: string): Promise<void> {
+    const timestamp = Date.now();
+    await Sc.get().replaceEvent({
+      event: thredId ? { ...event, thredId } : { ...event },
+      timestamp,
+    });
+  }
+
+  private async decrementIfTerminated(thredStatus: ThredStatus, patternId: string): Promise<void> {
+    if (thredStatus === ThredStatus.TERMINATED) {
+      await this.thredsStore.patternsStore.decrementPatternInstanceCount(patternId);
+    }
+  }
+
+  private async handleMissingThred(thredId: string, eventId: string, eventType: string, timestamp: number): Promise<never> {
+    await Sc.get().saveThredLogRecord({
+      thredId,
+      eventId,
+      type: ThredLogRecordType.NO_THRED,
+      timestamp,
+    });
+    throw EventThrowable.get({
+      message: `Thred ${thredId} does not, or no longer exists for event ${eventId} of type ${eventType}`,
+      code: errorCodes[errorKeys.THRED_DOES_NOT_EXIST].code,
+    });
+  }
+
+  private handlePatternMatchError(pattern: Pattern, event: Event, error: unknown): never {
+    L.error({
+      message: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${error}`),
+      thredId: event.thredId,
+      err: error as Error,
+    });
+    throw EventThrowable.get({
+      message: `Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}`,
+      code: errorCodes[errorKeys.SERVER_ERROR].code,
+      cause: error,
+    });
+  }
+
+  private async handleOrphanEvent(event: Event): Promise<void> {
+    const timestamp = Date.now();
+    await this.persistEvent(event);
+    Sc.get().saveThredLogRecord({
+      eventId: event.id,
+      type: ThredLogRecordType.NO_PATTERN_MATCH,
+      timestamp,
+    });
+    L.info({
+      message: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
+      thredId: event.thredId,
+    });
+  }
+
 }
