@@ -34,19 +34,13 @@
     "start-persistence-agent-dev": "tsx src/ts/agent/agent.ts -c persistence_agent -i org.wt.persistence1 -d",
     "start-robot-agent-dev": "tsx src/ts/agent/remote-agent.ts --cp run-profiles/dev/run-config/robot_agent.json -i org.wt.robot1 -d",
     "sync-test": "npx tsx src/test/syncRunner.ts",
-    "deploymentCli": "tsx infrastructure/tools/deployment-cli/cli.ts",
+    "deploymentCli": "tsx deploy/tools/deployment-cli/cli.ts",
     "deploy-local-databases": "npm run deploymentCli -- local s_a_dbs",
     "deploy-local-down-databases": "npm run deploymentCli -- local d_a_dbs",
     "deploy-local-services": "npm run deploymentCli -- local s_a_s",
     "deploy-local-down-services": "npm run deploymentCli -- local d_a_s",
     "deploy-local-up-all": "npm run deploymentCli -- local s_a_dbs_s",
-    "deploy-local-down-all": "npm run deploymentCli -- local d_a_dbs_s",
-    "minikube-create": "npm run deploymentCli -- minikube k8s_minikube",
-    "minikube-apply": "npm run deploymentCli -- minikube k8s_apply",
-    "minikube-reset": "npm run deploymentCli -- minikube k8s_reset",
-    "minikube-set-context": "npm run deploymentCli -- minikube set_context",
-    "minikube-validate": "npm run deploymentCli -- minikube k8s_validate",
-    "minikube-cleanup": "npm run deploymentCli -- minikube k8s_cleanup"
+    "deploy-local-down-all": "npm run deploymentCli -- local d_a_dbs_s"
   },
   "nodemonConfig": {
     "exec": "npm run dev",

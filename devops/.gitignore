@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Temp files
+*.tmp
+tmp/
+*.bak
+*.old
+
+# Environment files
+.env
+.env.*
+!.env*.example
+
+# Docker runtime data
+.docker/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfplan
+*.tfplan.binary
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Allow environment-specific tfvars (committed, not secrets)
+!dev.tfvars
+!test.tfvars
+!prod.tfvars
+
+# Keep terraform lock files for reproducibility
+!.terraform.lock.hcl

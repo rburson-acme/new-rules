@@ -20,10 +20,20 @@ export class MongoPersistenceProvider implements PersistenceProvider {
 
   constructor(hostString?: string, config?: { connectOptions?: MongoClientOptions }) {
     const _host = hostString || MongoPersistenceProvider.DEFAULT_HOST;
-    // Only add replicaSet parameter if not using directConnection
-    const connectionString = config?.connectOptions?.directConnection
-      ? `mongodb://${_host}/`
-      : `mongodb://${_host}/?replicaSet=rs0`;
+    // Add mongo configuration pattern to support both local and managed MongoDB instances
+    // If _host is already a full MongoDB connection string, use it as-is
+    // This supports Azure Cosmos DB and other managed services with pre-configured connection strings
+    let connectionString: string;
+    if (_host.startsWith('mongodb://') || _host.startsWith('mongodb+srv://')) {
+      connectionString = _host;
+    } else {
+      // Build connection string from host for local/traditional MongoDB
+      const replicaSet = process.env.MONGO_REPLICA_SET || 'rs0';
+      connectionString = config?.connectOptions?.directConnection
+        ? `mongodb://${_host}/`
+        : `mongodb://${_host}/?replicaSet=${replicaSet}`;
+    }
+
     this.client = new MongoClient(connectionString, config?.connectOptions);
   }
 

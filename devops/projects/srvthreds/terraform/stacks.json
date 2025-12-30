@@ -1,0 +1,45 @@
+{
+  "environments": ["dev", "test", "prod"],
+  "stacks": [
+    {
+      "name": "networking",
+      "path": "stacks/networking",
+      "dependencies": []
+    },
+    {
+      "name": "keyvault",
+      "path": "stacks/keyvault",
+      "dependencies": ["networking"]
+    },
+    {
+      "name": "acr",
+      "path": "stacks/acr",
+      "dependencies": ["networking"]
+    },
+    {
+      "name": "cosmosdb",
+      "path": "stacks/cosmosdb",
+      "dependencies": ["networking"]
+    },
+    {
+      "name": "redis",
+      "path": "stacks/redis",
+      "dependencies": ["networking"]
+    },
+    {
+      "name": "monitoring",
+      "path": "stacks/monitoring",
+      "dependencies": ["networking"]
+    },
+    {
+      "name": "aks",
+      "path": "stacks/aks",
+      "dependencies": ["networking", "acr"]
+    },
+    {
+      "name": "nginx-ingress",
+      "path": "stacks/nginx-ingress",
+      "dependencies": ["aks", "networking"]
+    }
+  ]
+}

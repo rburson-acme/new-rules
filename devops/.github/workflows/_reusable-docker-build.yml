@@ -1,0 +1,106 @@
+# Reusable workflow: Build and push Docker images to Azure Container Registry
+#
+# Called by project-specific workflows to build images defined in project.yaml
+# Uses OIDC federation for Azure authentication (no secrets stored)
+
+name: Build and Push to ACR
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'Project name (e.g., srvthreds)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment (dev, test, prod)'
+        required: true
+        type: string
+      image_tag:
+        description: 'Image tag (e.g., sha-abc1234, v1.0.0)'
+        required: true
+        type: string
+      images:
+        description: 'JSON array of images to build (e.g., ["app", "cmd-runner"])'
+        required: true
+        type: string
+      source_path:
+        description: 'Path to source code relative to repo root'
+        required: true
+        type: string
+      dockerfile_path:
+        description: 'Path to dockerfiles directory relative to project'
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+
+jobs:
+  build-and-push:
+    name: Build ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        image: ${{ fromJson(inputs.images) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load environment config
+        id: config
+        run: |
+          ENV_CONFIG=$(cat projects/${{ inputs.project }}/terraform/environments.json | jq -r '.${{ inputs.environment }}')
+          echo "subscription_id=$(echo $ENV_CONFIG | jq -r '.subscriptionId')" >> $GITHUB_OUTPUT
+
+          # Derive ACR name from project config
+          PROJECT_CONFIG=$(cat projects/${{ inputs.project }}/project.yaml)
+          ACR_REGISTRY=$(echo "$PROJECT_CONFIG" | yq -r '.environments.${{ inputs.environment }}.registry')
+          echo "acr_registry=$ACR_REGISTRY" >> $GITHUB_OUTPUT
+          echo "acr_name=$(echo $ACR_REGISTRY | cut -d'.' -f1)" >> $GITHUB_OUTPUT
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ steps.config.outputs.acr_name }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Load image build config
+        id: image_config
+        run: |
+          # Extract dockerfile path for this image from project.yaml
+          DOCKERFILE=$(cat projects/${{ inputs.project }}/project.yaml | yq -r '.images.${{ matrix.image }}.dockerfile')
+          echo "dockerfile=projects/${{ inputs.project }}/$DOCKERFILE" >> $GITHUB_OUTPUT
+
+          # Check for build args
+          BUILD_ARGS=$(cat projects/${{ inputs.project }}/project.yaml | yq -r '.images.${{ matrix.image }}.args // {} | to_entries | map("--build-arg " + .key + "=" + .value) | join(" ")')
+          echo "build_args=$BUILD_ARGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.source_path }}
+          file: ${{ steps.image_config.outputs.dockerfile }}
+          push: true
+          tags: |
+            ${{ steps.config.outputs.acr_registry }}/${{ inputs.project }}/${{ matrix.image }}:${{ inputs.image_tag }}
+            ${{ steps.config.outputs.acr_registry }}/${{ inputs.project }}/${{ matrix.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: ${{ steps.image_config.outputs.build_args }}

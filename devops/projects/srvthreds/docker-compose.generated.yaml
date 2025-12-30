@@ -1,0 +1,202 @@
+# AUTO-GENERATED from project.yaml - do not edit directly
+# Regenerate with: npm run generate -p srvthreds
+
+services:
+  mongo-repl-1:
+    image: mongo:latest
+    container_name: srvthreds-mongo-repl-1
+    restart: unless-stopped
+    profiles:
+      - infra
+    networks:
+      - srvthreds-net
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./.docker/mongodb/data/db:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=admin
+    command:
+      - mongod
+      - '--replSet'
+      - rs0
+      - '--bind_ip_all'
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - localhost:27017/admin
+        - '--quiet'
+        - '--eval'
+        - db.runCommand('ping').ok
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  redis:
+    image: redis:latest
+    container_name: srvthreds-redis
+    restart: unless-stopped
+    profiles:
+      - infra
+    networks:
+      - srvthreds-net
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./.docker/redis-data:/data
+    command:
+      - redis-server
+      - '--port'
+      - '6379'
+      - '--save'
+      - '20'
+      - '1'
+      - '--loglevel'
+      - warning
+      - '--notify-keyspace-events'
+      - KA
+  srvthreds-builder:
+    build:
+      context: ../../../srvthreds
+      dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile.builder
+      additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
+        thredlib: /Users/aresha/Repos/new-rules/thredlib
+        devops-assets: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/assets
+    image: srvthreds/builder:latest
+    profiles:
+      - build
+  srvthreds-bootstrap:
+    build:
+      context: ../../../srvthreds
+      dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile.cmdRunner
+      additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
+        thredlib: /Users/aresha/Repos/new-rules/thredlib
+      args:
+        BUILDER_IMAGE: srvthreds/builder:latest
+    image: srvthreds/cmd-runner:latest
+    container_name: srvthreds-srvthreds-bootstrap
+    restart: 'no'
+    profiles:
+      - app
+    networks:
+      - srvthreds-net
+    environment:
+      - NODE_ENV=development
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+    entrypoint:
+      - npm
+    command:
+      - run
+      - bootstrap
+      - '--'
+      - '-p'
+      - ef-detection
+  srvthreds-engine:
+    build:
+      context: ../../../srvthreds
+      dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
+      additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
+        thredlib: /Users/aresha/Repos/new-rules/thredlib
+      args:
+        BUILDER_IMAGE: srvthreds/builder:latest
+    image: srvthreds/app:latest
+    container_name: srvthreds-srvthreds-engine
+    restart: unless-stopped
+    profiles:
+      - app
+    networks:
+      - srvthreds-net
+    depends_on:
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - '8082:8082'
+    environment:
+      - NODE_ENV=development
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+    entrypoint:
+      - node
+    command:
+      - dist-server/src/ts/index.js
+      - '-d'
+  srvthreds-session-agent:
+    build:
+      context: ../../../srvthreds
+      dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
+      additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
+        thredlib: /Users/aresha/Repos/new-rules/thredlib
+      args:
+        BUILDER_IMAGE: srvthreds/builder:latest
+    image: srvthreds/app:latest
+    container_name: srvthreds-srvthreds-session-agent
+    restart: unless-stopped
+    profiles:
+      - app
+    networks:
+      - srvthreds-net
+    depends_on:
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+    entrypoint:
+      - node
+    command:
+      - dist-server/src/ts/agent/agent.js
+      - '-c'
+      - session_agent
+      - '-i'
+      - org.wt.session1
+      - '-d'
+  srvthreds-persistence-agent:
+    build:
+      context: ../../../srvthreds
+      dockerfile: /Users/aresha/Repos/new-rules/devops/projects/srvthreds/docker/dockerfiles/Dockerfile
+      additional_contexts:
+        srvthreds: /Users/aresha/Repos/new-rules/srvthreds
+        thredlib: /Users/aresha/Repos/new-rules/thredlib
+      args:
+        BUILDER_IMAGE: srvthreds/builder:latest
+    image: srvthreds/app:latest
+    container_name: srvthreds-srvthreds-persistence-agent
+    restart: unless-stopped
+    profiles:
+      - app
+    networks:
+      - srvthreds-net
+    depends_on:
+      srvthreds-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      - NODE_ENV=development
+      - MONGO_HOST=${MONGO_HOST:-mongo-repl-1:27017}
+      - REDIS_HOST=${REDIS_HOST:-redis:6379}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+    entrypoint:
+      - node
+    command:
+      - dist-server/src/ts/agent/agent.js
+      - '-c'
+      - persistence_agent
+      - '-i'
+      - org.wt.persistence1
+      - '-d'
+networks:
+  srvthreds-net:
+    driver: bridge
+    name: srvthreds-net
