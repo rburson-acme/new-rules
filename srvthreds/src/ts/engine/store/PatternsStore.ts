@@ -2,6 +2,7 @@ import { Pattern } from '../Pattern.js';
 import { PatternStore } from './PatternStore.js';
 import { Storage, Types } from '../../storage/Storage.js';
 import { Logger, PatternModel, Series } from '../../thredlib/index.js';
+import { LockManager } from '../../lib/lock/LockManager.js';
 
 /*****************************************************************************************************
  - Pattern locking is handled here and should be contained to this class
@@ -80,18 +81,13 @@ export class PatternsStore {
 
   // unload a pattern store
   async unloadPatternStore(patternId: string): Promise<void> {
-    this.storage.acquire(
-      [{ type: Types.Pattern, id: patternId }],
-      [
-        async () => {
-          try {
-            await this.lock_unloadPatternStore(patternId);
-          } catch (e) {
-            throw new Error(`Could not unload pattern store for patternId ${patternId}`, { cause: e });
-          }
-        },
-      ],
-    );
+    await LockManager.withLock(this.storage, Types.Pattern, patternId, async () => {
+      try {
+        await this.lock_unloadPatternStore(patternId);
+      } catch (e) {
+        throw new Error(`Could not unload pattern store for patternId ${patternId}`, { cause: e });
+      }
+    });
   }
 
   async decrementPatternInstanceCount(patternId: string): Promise<void> {
@@ -130,8 +126,7 @@ export class PatternsStore {
       lock is released at the end of the operation
   */
   private async withLock(patternId: string, op: () => Promise<any>, ttl?: number): Promise<any> {
-    const result = await this.storage.acquire([{ type: Types.Pattern, id: patternId }], [async () => await op()], ttl);
-    return result[0];
+    return LockManager.withLock(this.storage, Types.Pattern, patternId, op, ttl);
   }
 
   // store a pattern in storage w/ lock

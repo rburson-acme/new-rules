@@ -6,6 +6,7 @@ import { Logger, Parallel } from '../../thredlib/index.js';
 import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
 import { ParticipantsStore } from './ParticipantsStore.js';
 import { UserController } from '../../persistence/controllers/UserController.js';
+import { LockManager } from '../../lib/lock/LockManager.js';
 
 /**
  * The ThredsStore class is responsible for managing ThredStores, which are used to process events in the context of a Thred.
@@ -22,53 +23,51 @@ export class ThredsStore {
   /*
       Create and acquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
-      This method adds the thredStore to thredStores map and removes it after the operation 
+      This method adds the thredStore to thredStores map and removes it after the operation
   */
   async withNewThredStore(pattern: Pattern, op: (thredStore: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
     const thredStore = ThredStore.newInstance(pattern);
-    const results = await this.storage.acquire(
-      [{ type: Types.Thred, id: thredStore.id }],
-      [
-        async () => {
-          await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
-          await this.addThredStore(thredStore);
-          try {
-            const result = await op(thredStore);
-            await this.saveThredStore(thredStore);
-            return result;
-          } finally {
-            delete this.thredStores[thredStore.id];
-          }
-        },
-      ],
+    return LockManager.withLock(
+      this.storage,
+      Types.Thred,
+      thredStore.id,
+      async () => {
+        await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
+        await this.addThredStore(thredStore);
+        try {
+          const result = await op(thredStore);
+          await this.saveThredStore(thredStore);
+          return result;
+        } finally {
+          delete this.thredStores[thredStore.id];
+        }
+      },
       ttl,
     );
-    return results[0];
   }
 
   /*
       acquire a lock on the give thread and execute the operation, returning it's result
       lock is released at the end of the operation
-      This method adds the thredStore to thredStores map and removes it after the operation 
+      This method adds the thredStore to thredStores map and removes it after the operation
   */
   async withThredStore(thredId: string, op: (thredStore?: ThredStore) => Promise<any>, ttl?: number): Promise<any> {
-    const results = await this.storage.acquire(
-      [{ type: Types.Thred, id: thredId }],
-      [
-        async () => {
-          const thredStore = await this.getThreadStore(thredId);
-          try {
-            const result = await op(thredStore);
-            if (thredStore) await this.saveThredStore(thredStore);
-            return result;
-          } finally {
-            delete this.thredStores[thredId];
-          }
-        },
-      ],
+    return LockManager.withLock(
+      this.storage,
+      Types.Thred,
+      thredId,
+      async () => {
+        const thredStore = await this.getThreadStore(thredId);
+        try {
+          const result = await op(thredStore);
+          if (thredStore) await this.saveThredStore(thredStore);
+          return result;
+        } finally {
+          delete this.thredStores[thredId];
+        }
+      },
       ttl,
     );
-    return results[0];
   }
 
   get numThreds(): Promise<number> {
@@ -97,26 +96,21 @@ export class ThredsStore {
   async terminateAllThreds(): Promise<void> {
     const thredIds = await this.getAllThredIds();
     return Parallel.forEach(thredIds, async (thredId: string) => {
-      const results = await this.storage.acquire(
-        [{ type: Types.Thred, id: thredId }],
-        [
-          async () => {
-            try {
-              const thredStore = await this.getThreadStore(thredId);
-              if (thredStore) {
-                thredStore.terminate();
-                await this.deleteAndTerminateThred(thredId);
-              }
-            } catch (e) {
-              Logger.error({
-                message: `terminateAllThreds::Failed to properly terminate thred ${thredId}`,
-                thredId,
-                err: e as Error,
-              });
-            }
-          },
-        ],
-      );
+      await LockManager.withLock(this.storage, Types.Thred, thredId, async () => {
+        try {
+          const thredStore = await this.getThreadStore(thredId);
+          if (thredStore) {
+            thredStore.terminate();
+            await this.deleteAndTerminateThred(thredId);
+          }
+        } catch (e) {
+          Logger.error({
+            message: `terminateAllThreds::Failed to properly terminate thred ${thredId}`,
+            thredId,
+            err: e as Error,
+          });
+        }
+      });
     });
   }
 
