@@ -41,7 +41,7 @@ export class RedisSub implements Sub {
 
   private newClient() {
     const client = createClient(redisConfig());
-    
+
     client.on('error', function (error) {
       Logger.error(error);
     });

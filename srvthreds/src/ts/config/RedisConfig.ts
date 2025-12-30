@@ -1,4 +1,4 @@
-import { Logger } from "../thredlib/index.js";
+import { Logger } from '../thredlib/index.js';
 
 export interface RedisConfigDef {
   url: string;
@@ -26,5 +26,5 @@ export const redisConfig = (hostString: string = ''): RedisConfigDef => {
         return delay;
       },
     },
-  }
+  };
 };

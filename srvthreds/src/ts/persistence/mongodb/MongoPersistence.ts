@@ -164,10 +164,7 @@ export class MongoPersistence implements Persistence {
    * Creates an index for the specified sort fields.
    * Called automatically when CosmosDB rejects a query due to missing sort index.
    */
-  private async ensureIndexForSort(
-    collection: string,
-    sort: { field: string; desc?: boolean }[],
-  ): Promise<void> {
+  private async ensureIndexForSort(collection: string, sort: { field: string; desc?: boolean }[]): Promise<void> {
     const indexKey = `${collection}:${sort.map((s) => `${s.field}:${s.desc ? -1 : 1}`).join(',')}`;
     if (this.createdIndexes.has(indexKey)) return;
 

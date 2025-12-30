@@ -32,49 +32,86 @@ export class Thred {
     await Thred.synchronizeThredState(thredStore, threds);
 
     const fromReactionName = thredStore.currentReaction?.name;
+
     // loop wil continue as long as there is a currentReaction and an inputEvent
     transitionLoop: do {
-      // apply the event to the current state (or a builtin reaction). There will be a result if the event triggers a state change
-      const reactionResult: ReactionResult | undefined = BuiltInReaction.isBuiltInOp(inputEvent)
-        ? await BuiltInReaction.apply(inputEvent, thredStore)
-        : await thredStore.currentReaction?.apply(inputEvent, thredStore);
+      const reactionResult = await this.applyReaction(inputEvent, thredStore);
 
-      //if there's not a match, end the loop
+      // if there's not a match, end the loop
       if (!reactionResult) {
-        await Thred.logNoTransition(thredStore, event, fromReactionName);
-        L.debug({
-          message: L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReactionName}`),
-          thredId: thredStore.id,
-        });
+        await this.logTransitionResult(thredStore, event, fromReactionName, undefined, false);
         break transitionLoop;
       }
-      // run any effects
-      await Effects.run(inputEvent, thredStore, threds);
-      // attempt state change and retrieve next input
-      inputEvent = await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
 
-      // log the transition if any - thredStore may be updated with a new reaction
-      await Thred.logTransition(thredStore, event, fromReactionName, thredStore.currentReaction?.name);
-      L.debug({
-        message: L.h2(
-          `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReactionName} to ${thredStore.currentReaction?.name}`,
-        ),
-        thredId: thredStore.id,
-      });
-      // resolve and store the participant addresses
-      const to = reactionResult.messageTemplate
-        ? await this.resolveAndUpdateParticipants(
-            addressToArray(reactionResult.messageTemplate.to),
-            event.source.id,
-            thredStore,
-            threds,
-          )
-        : [];
-      // dispatch the message
-      reactionResult?.messageTemplate && (await threds.handleMessage({ ...reactionResult.messageTemplate, to }));
+      // run any effects, attempt state change and retrieve next input
+      inputEvent = await this.processTransition(thredStore, reactionResult, inputEvent, threds);
+
+      await this.logTransitionResult(thredStore, event, fromReactionName, thredStore.currentReaction?.name, true);
+
+      // resolve and store the participant addresses, then dispatch the message
+      await this.dispatchMessage(reactionResult.messageTemplate, event.source.id, thredStore, threds);
     } while (inputEvent);
   }
 
+  private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
+    // check for an expired reaction
+    if (thredStore.reactionTimedOut) await Thred.expireReaction(thredStore, threds);
+  }
+
+  // apply the event to the current state (or a builtin reaction). There will be a result if the event triggers a state change
+  private static async applyReaction(inputEvent: Event, thredStore: ThredStore): Promise<ReactionResult | undefined> {
+    return BuiltInReaction.isBuiltInOp(inputEvent)
+      ? await BuiltInReaction.apply(inputEvent, thredStore)
+      : await thredStore.currentReaction?.apply(inputEvent, thredStore);
+  }
+
+  // run any effects, attempt state change and retrieve next input
+  private static async processTransition(
+    thredStore: ThredStore,
+    reactionResult: ReactionResult,
+    inputEvent: Event,
+    threds: Threds,
+  ): Promise<Event | undefined> {
+    await Effects.run(inputEvent, thredStore, threds);
+    return await Thred.nextReaction(thredStore, reactionResult.transition, inputEvent);
+  }
+
+  // state transition - shift state to new reaction, if any and return the next input, if any
+  private static async nextReaction(
+    thredStore: ThredStore,
+    transition?: Transition,
+    currentEvent?: Event,
+  ): Promise<Event | undefined> {
+    const { id, pattern, thredContext } = thredStore;
+    // get the next reaction (if any)
+    thredStore.transitionTo(pattern.nextReaction(thredStore.currentReaction, transition));
+    thredStore.updateMeta({
+      label: currentEvent?.data?.title || pattern.name,
+      description: currentEvent?.data?.description || currentEvent?.type,
+      displayUri: currentEvent?.data?.display?.uri,
+    });
+    // get the next input event if any
+    return thredStore.isActive ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
+  }
+
+  // resolve and store the participant addresses, then dispatch the message
+  private static async dispatchMessage(
+    messageTemplate: MessageTemplate | undefined,
+    sourceId: string,
+    thredStore: ThredStore,
+    threds: Threds,
+  ): Promise<void> {
+    if (!messageTemplate) return;
+
+    // translate 'directives' in the 'to' field to actual participantIds
+    const to = await this.resolveAndUpdateParticipants(
+      addressToArray(messageTemplate.to),
+      sourceId,
+      thredStore,
+      threds,
+    );
+    await threds.handleMessage({ ...messageTemplate, to });
+  }
   // resolve the 'to' field in the message template to actual participantIds and store participantIds associations
   static async resolveAndUpdateParticipants(
     addresses: string[],
@@ -101,40 +138,15 @@ export class Thred {
   // specified by the transition (or the default if transition is undefined)
   // Note the Reaction must have an expiry property set
   static async expireReaction(thredStore: ThredStore, threds: Threds): Promise<void> {
-    const expiry = thredStore?.currentReaction?.expiry;
-    if (expiry) {
-      L.debug({
-        message: L.h2(
-          `Thred:expireReaction Expiring Reaction ${thredStore.currentReaction.name} for thredId: ${thredStore.id}`,
-        ),
-        thredId: thredStore.id,
-      });
-      const transtition = thredStore?.currentReaction?.expiry?.transition;
-      await Thred.transition(thredStore, threds, transtition);
-    }
-  }
+    const { currentReaction } = thredStore;
+    if (!currentReaction?.expiry) return;
 
-  // state transition - shift state to new reaction, if any and return the next input, if any
-  private static async nextReaction(
-    thredStore: ThredStore,
-    transition?: Transition,
-    currentEvent?: Event,
-  ): Promise<Event | undefined> {
-    const { id, pattern, thredContext } = thredStore;
-    // get the next reaction (if any)
-    thredStore.transitionTo(pattern.nextReaction(thredStore.currentReaction, transition));
-    thredStore.updateMeta({
-      label: currentEvent?.data?.title || pattern.name,
-      description: currentEvent?.data?.description || currentEvent?.type,
-      displayUri: currentEvent?.data?.display?.uri,
+    L.debug({
+      message: L.h2(`Thred:expireReaction Expiring Reaction ${currentReaction.name} for thredId: ${thredStore.id}`),
+      thredId: thredStore.id,
     });
-    // get the next input event if any
-    return thredStore.isActive ? transition?.nextInputEvent(thredContext, currentEvent) : undefined;
-  }
 
-  private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
-    // check for an expired reaction
-    if (thredStore.reactionTimedOut) await Thred.expireReaction(thredStore, threds);
+    await Thred.transition(thredStore, threds, currentReaction.expiry.transition);
   }
 
   private static async logNoTransition(thredStore: ThredStore, event: Event, fromReaction?: string) {
@@ -156,5 +168,30 @@ export class Thred {
       toReaction,
       timestamp: Date.now(),
     });
+  }
+
+  // log the transition if any - thredStore may be updated with a new reaction
+  private static async logTransitionResult(
+    thredStore: ThredStore,
+    event: Event,
+    fromReaction: string | undefined,
+    toReaction: string | undefined,
+    transitioned: boolean,
+  ): Promise<void> {
+    if (transitioned) {
+      await Thred.logTransition(thredStore, event, fromReaction, toReaction);
+      L.debug({
+        message: L.h2(
+          `Thred ${thredStore.id} event ${event.id} fired transition from ${fromReaction} to ${toReaction}`,
+        ),
+        thredId: thredStore.id,
+      });
+    } else {
+      await Thred.logNoTransition(thredStore, event, fromReaction);
+      L.debug({
+        message: L.h2(`Thred ${thredStore.id} event ${event.id} did not fire transition from ${fromReaction}`),
+        thredId: thredStore.id,
+      });
+    }
   }
 }

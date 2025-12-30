@@ -67,9 +67,8 @@ export class Threds {
     const timestamp = Date.now();
     await this.persistEvent(event, thredId);
 
-    const { thredStatus, patternId } = await this.thredsStore.withThredStore(
-      thredId,
-      async (thredStore?: ThredStore) => this.processBoundEvent(event, thredStore, timestamp),
+    const { thredStatus, patternId } = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) =>
+      this.processBoundEvent(event, thredStore, timestamp),
     );
 
     await this.decrementIfTerminated(thredStatus, patternId);
@@ -90,7 +89,6 @@ export class Threds {
     if (matches === 0) {
       await this.handleOrphanEvent(event);
     }
-
   }
 
   private async processBoundEvent(
@@ -129,9 +127,8 @@ export class Threds {
     });
     // Note: this is a thred lock (startThred) within a pattern lock (withLockForNewThread)
     // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
-    const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(
-      pattern.id,
-      async () => this.startThred(pattern, event),
+    const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(pattern.id, async () =>
+      this.startThred(pattern, event),
     );
     await this.decrementIfTerminated(thredStatus, pattern.id);
     return true;
@@ -160,7 +157,12 @@ export class Threds {
     }
   }
 
-  private async handleMissingThred(thredId: string, eventId: string, eventType: string, timestamp: number): Promise<never> {
+  private async handleMissingThred(
+    thredId: string,
+    eventId: string,
+    eventType: string,
+    timestamp: number,
+  ): Promise<never> {
     await Sc.get().saveThredLogRecord({
       thredId,
       eventId,
@@ -199,5 +201,4 @@ export class Threds {
       thredId: event.thredId,
     });
   }
-
 }

@@ -19,7 +19,6 @@ export class RedisPub implements Pub {
   }
 
   private newClient() {
-
     const client = createClient(redisConfig());
 
     client.on('error', function (error) {
