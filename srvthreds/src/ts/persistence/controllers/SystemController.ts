@@ -1,14 +1,28 @@
 import { ConfigLoader } from '../../config/ConfigLoader.js';
-import { EventRecord, Logger, PatternModel, ThredLogRecord, ThredRecord } from '../../thredlib/index.js';
+import { EventRecord, PatternModel, ThredLogRecord, ThredRecord } from '../../thredlib/index.js';
 import { Types } from '../../thredlib/persistence/types.js';
 import { Persistence, Query } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
+import { EventController } from './EventController.js';
+import { PatternController } from './PatternController.js';
+import { ThredController } from './ThredController.js';
 
+/**
+ * Facade for system persistence operations
+ * Delegates to specialized controller classes
+ */
 export class SystemController {
   private static instance: SystemController;
   private persistence: Persistence;
+  private eventController: EventController;
+  private patternController: PatternController;
+  private thredController: ThredController;
+
   private constructor() {
     this.persistence = PersistenceFactory.getPersistence();
+    this.eventController = new EventController(this.persistence);
+    this.patternController = new PatternController(this.persistence);
+    this.thredController = new ThredController(this.persistence);
   }
 
   static get(): SystemController {
@@ -27,102 +41,59 @@ export class SystemController {
   }
 
   /*****************************************************
-   * Logging Operations
-   * These should fail quietly
+   * Event Operations
+   * Delegated to EventController
    ***************************************************** */
   async replaceEvent(record: EventRecord): Promise<void> {
-    try {
-      record.id = record.event.id;
-      record.thredId = record.event.thredId;
-      await this.persistence.replace({ type: Types.EventRecord, values: record, matcher: { id: record.id } });
-    } catch (err) {
-      Logger.error(Logger.crit(`Error saving event record: ${record.id} for thred: ${record.thredId}`), err);
-    }
+    return this.eventController.replaceEvent(record);
   }
 
   async upsertEventWithError(record: EventRecord): Promise<void> {
-    try {
-      record.id = record.event.id;
-      const exists = await this.persistence.count({ type: Types.EventRecord, matcher: { id: record.id } });
-      if (exists) {
-        await this.persistence.update({
-          type: Types.EventRecord,
-          values: { error: record.error },
-          matcher: { id: record.id },
-        });
-      } else {
-        await this.persistence.put({ type: Types.EventRecord, values: record });
-      }
-    } catch (err) {
-      Logger.error(Logger.crit(`Error updating event record: ${record.id} for thred: ${record.thredId}`), err);
-    }
+    return this.eventController.upsertEventWithError(record);
   }
 
   async addErrorToEvent(id: string, error: any): Promise<void> {
-    try {
-      await this.persistence.update({ type: Types.EventRecord, values: { error }, matcher: { id } });
-    } catch (err) {
-      Logger.error(Logger.crit(`Error updating error field for event: ${error.id}`), err);
-    }
+    return this.eventController.addErrorToEvent(id, error);
   }
 
   async saveThredLogRecord(record: ThredLogRecord): Promise<void> {
-    try {
-      await this.persistence.put({ type: Types.ThredLogRecord, values: record });
-    } catch (err) {
-      Logger.error(Logger.crit(`Error saving thred log record: ${record.type} for thred: ${record.thredId}`), err);
-    }
-  }
-
-  async saveThredRecord(record: ThredRecord): Promise<void> {
-    try {
-      await this.persistence.put({ type: Types.ThredRecord, values: record });
-    } catch (err) {
-      Logger.error(
-        Logger.crit(`Error saving thred record for thred: ${record.id} pattern: ${record.thred.patternName}`),
-        err,
-      );
-    }
+    return this.eventController.saveThredLogRecord(record);
   }
 
   /*****************************************************
-   * System Operations
+   * Pattern Operations
+   * Delegated to PatternController
    ***************************************************** */
   async getAllActivePatterns(): Promise<PatternModel[] | null> {
-    return this.persistence.get({ type: Types.PatternModel, matcher: { meta: { active: true } } });
+    return this.patternController.getAllActivePatterns();
   }
 
   async replacePattern(pattern: PatternModel): Promise<string | string[] | void> {
-    return this.persistence.replace({ type: Types.PatternModel, matcher: { id: pattern.id }, values: pattern });
+    return this.patternController.replacePattern(pattern);
   }
 
   async getActivePattern(patternId: string): Promise<PatternModel | null> {
-    return this.persistence.getOne({ type: Types.PatternModel, matcher: { id: patternId, meta: { active: true } } });
+    return this.patternController.getActivePattern(patternId);
   }
 
+  /*****************************************************
+   * Event Query Operations
+   * Delegated to EventController
+   ***************************************************** */
   async getEventsForThred(thredId: string): Promise<EventRecord[] | null> {
-    return this.persistence.get({ type: Types.EventRecord, matcher: { thredId } });
+    return this.eventController.getEventsForThred(thredId);
   }
 
   async getEventsForThredAfter(thredId: string, timestamp: number): Promise<EventRecord[] | null> {
-    return this.persistence.get({ type: Types.EventRecord, matcher: { thredId, timestamp: { $gt: timestamp } } });
+    return this.eventController.getEventsForThredAfter(thredId, timestamp);
   }
 
   async getEventsForParticipant(participantId: string, thredId: string): Promise<EventRecord[] | null> {
-    return this.persistence.get({
-      type: Types.EventRecord,
-      matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
-      collector: { sort: [{ field: 'timestamp' }] },
-    });
+    return this.eventController.getEventsForParticipant(participantId, thredId);
   }
 
   async getLastEventForParticipant(participantId: string, thredId: string): Promise<EventRecord | null> {
-    const events = await this.persistence.get<EventRecord>({
-      type: Types.EventRecord,
-      matcher: { thredId, $or: [{ to: { $in: [participantId] } }, { 'event.source.id': participantId }] },
-      collector: { sort: [{ field: 'timestamp', desc: true }], limit: 1 },
-    });
-    return events?.[0] || null;
+    return this.eventController.getLastEventForParticipant(participantId, thredId);
   }
 
   /**
@@ -136,26 +107,34 @@ export class SystemController {
     threadIds: string[],
     participantId: string,
   ): Promise<Map<string, EventRecord | undefined>> {
- 
+
     @TODO: Implement after adding aggregation support to persistence layer
   }*/
 
   async getThredLogRecords(thredId: string): Promise<ThredLogRecord[] | null> {
-    return this.persistence.get({
-      type: Types.ThredLogRecord,
-      matcher: { thredId },
-      collector: { sort: [{ field: 'timestamp' }] },
-    });
+    return this.eventController.getThredLogRecords(thredId);
+  }
+
+  /*****************************************************
+   * Thred Operations
+   * Delegated to ThredController
+   ***************************************************** */
+  async saveThredRecord(record: ThredRecord): Promise<void> {
+    return this.thredController.saveThredRecord(record);
   }
 
   async getThreds(matcher: Query['matcher']): Promise<ThredRecord[] | null> {
-    return this.persistence.get({ type: Types.ThredRecord, matcher });
+    return this.thredController.getThreds(matcher);
   }
 
   async getThred(thredId: string): Promise<ThredRecord | null> {
-    return this.persistence.getOne({ type: Types.ThredRecord, matcher: { id: thredId } });
+    return this.thredController.getThred(thredId);
   }
 
+  /*****************************************************
+   * Config Operations
+   * Remain in SystemController
+   ***************************************************** */
   async upsertConfig(configName: string, config: any): Promise<void> {
     await this.persistence.upsert({ type: Types.Config, matcher: { id: configName }, values: { config } });
   }
