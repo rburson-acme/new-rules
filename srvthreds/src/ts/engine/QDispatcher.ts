@@ -1,11 +1,10 @@
 import { MessageQ } from '../queue/MessageQ.js';
-import { Message, Parallel, StringMap } from '../thredlib/index.js';
 import { Dispatcher } from './Dispatcher.js';
 import { MessageTemplate } from './MessageTemplate.js';
-import { System } from './System.js';
-
-import { Session } from '../sessions/Session.js';
 import { Logger as L } from '../thredlib/index.js';
+import { AddressPartitioner } from './routing/AddressPartitioner.js';
+import { ParticipantGrouper } from './routing/ParticipantGrouper.js';
+import { MessageRouter } from './routing/MessageRouter.js';
 
 /**
  * The QDispatcher is responsible for dispatching messages to the appropriate recipients.
@@ -18,7 +17,15 @@ import { Logger as L } from '../thredlib/index.js';
 export class QDispatcher implements Dispatcher {
   public static ANY_NODE = 'ANY_NODE';
 
-  constructor(private outboundQ: MessageQ) {}
+  private partitioner: AddressPartitioner;
+  private grouper: ParticipantGrouper;
+  private router: MessageRouter;
+
+  constructor(private outboundQ: MessageQ) {
+    this.partitioner = new AddressPartitioner();
+    this.grouper = new ParticipantGrouper();
+    this.router = new MessageRouter(outboundQ);
+  }
 
   /*
      Note - the tell method currently waits for message queing to be complete before resolving.
@@ -26,24 +33,21 @@ export class QDispatcher implements Dispatcher {
   */
   // outbound
   tell = async (messageTemplate: MessageTemplate) => {
-    const sessions = System.getSessions();
     const { to, event } = messageTemplate;
     const thredId = event.thredId;
-    // don't propagate failures here as this is called in the event loop
+
+    // Don't propagate failures here as this is called in the event loop
     try {
-      // -------------------------------------------------------------------
-      // ----- Address any messages to Agents
-      const addressResolver = sessions.getAddressResolver();
-      // seperate service addresses from participant addresses
-      const { serviceAddresses, remoteServiceAddresses, participantAddresses } =
-        addressResolver.filterServiceAddresses(to);
-      // add the remoteService addresses to the participantAddresses array
-      participantAddresses.push(...remoteServiceAddresses);
-      // -------------------------------------------------------------------
-      // get a map of participantId to Sessions[] for all addressees
-      const sessionsByParticipant: StringMap<Session[]> =
-        await sessions.getSessionsForParticipantIds(participantAddresses);
-      // warn if there are not services or participants to receive the message
+      // Convert to to array if needed
+      const addresses = Array.isArray(to) ? to : [to];
+
+      // Partition addresses into service and participant addresses
+      const { serviceAddresses, participantAddresses } = this.partitioner.partition(addresses);
+
+      // Get sessions for participants
+      const sessionsByParticipant = await this.grouper.getSessionsForParticipants(participantAddresses);
+
+      // Warn if there are no services or participants to receive the message
       if (!Object.keys(sessionsByParticipant).length && !serviceAddresses.length) {
         L.warn({
           message: L.crit(`No participants or services found for address ${to} - dispatchers not called`),
@@ -52,59 +56,12 @@ export class QDispatcher implements Dispatcher {
         return;
       }
 
-      // send messages to local agents
-      await Parallel.forEach(serviceAddresses, async (address, index) => {
-        try {
-          const id = `${event.id}_agent_${index}`;
-          const newMessage: Message = { id, event, to: [address] };
-          L.info({ message: L.h2(`QDispatcher.tell(): Message ${id} to Agent ${address}`), thredId });
-          if (address) await this.outboundQ.queue(newMessage, [address]);
-        } catch (e) {
-          L.error({
-            message: L.crit(`QDispatcher.tell(): Error sending message to Agent service address ${address}`),
-            thredId,
-            err: e as Error,
-          });
-        }
-      });
+      // Route to service addresses (agents)
+      await this.router.routeToServices(event, serviceAddresses);
 
-      // send messages to participants
-      // coallate participants by nodeId
-      // map of nodeId to Set of participantIds
-      // we'll publish 1 message to each node with the corresponding participants
-      const participantsByNodeId: StringMap<Set<string>> = {};
-      Object.keys(sessionsByParticipant).forEach((participantId) => {
-        const sessions: Session[] = sessionsByParticipant[participantId];
-        sessions.forEach((session) => {
-          const nodeId = session.nodeId || QDispatcher.ANY_NODE;
-          const participants: Set<string> = participantsByNodeId[nodeId] || new Set();
-          participants.add(participantId);
-          participantsByNodeId[nodeId] = participants;
-        });
-      });
-
-      // publish messages, grouped by nodeId (topic)
-      await Parallel.forEach(Object.keys(participantsByNodeId), async (nodeId, index) => {
-        try {
-          const id = `${event.id}_${index}`;
-          const participants = participantsByNodeId[nodeId];
-          const newMessage: Message = { id, event, to: [...participants] };
-          // route to specific node id if present (websocket sessions require this)
-          // if there's no nodeId, assume any session service can retrieve it
-          const topicString = nodeId ? nodeId : 'org.wt.session';
-          L.info({
-            message: L.h2(`QDispatcher.tell(): Message ${id} to ${[...participants]} via ${topicString}`),
-            thredId,
-          });
-          await this.outboundQ.queue(newMessage, [topicString]);
-        } catch (e) {
-          L.error({
-            message: L.crit(`QDispatcher.tell(): Error sending message to participants with nodeId ${nodeId}`),
-            thredId,
-            err: e as Error,
-          });
-        }
-      });
+      // Group participants by nodeId and route
+      const participantsByNodeId = this.grouper.groupByNodeId(sessionsByParticipant);
+      await this.router.routeToParticipants(event, participantsByNodeId);
     } catch (e) {
       L.error({ message: L.crit('QDispatcher.tell(): Error'), thredId, err: e as Error });
     }
