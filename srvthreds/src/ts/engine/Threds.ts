@@ -69,11 +69,9 @@ export class Threds {
   private async handleBound(thredId: string, event: Event): Promise<void> {
     const timestamp = Date.now();
     await this.persistEvent(event, thredId);
-
     const { thredStatus, patternId } = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) =>
       this.processBoundEvent(event, thredStore, timestamp),
     );
-
     await this.decrementIfTerminated(thredStatus, patternId);
   }
 
@@ -101,13 +99,15 @@ export class Threds {
   private async matchPatterns(event: Event): Promise<number> {
     const { patterns } = this.thredsStore.patternsStore;
     let matches = 0;
+    let errors: EventThrowable[] = [];
     await Series.forEach<Pattern>(patterns, async (pattern) => {
       try {
         if (await this.tryPatternMatch(pattern, event)) matches++;
       } catch (e) {
-        this.handlePatternMatchError(pattern, event, e);
+        errors.push(this.getPatternMatchError(pattern, event, e));
       }
     });
+    this.throwIfAnyErrors(`Multiple errors applying patterns to event ${event.id} of type ${event.type}`, errors);
     return matches;
   }
 
@@ -116,18 +116,27 @@ export class Threds {
   */
   private async matchRunningThreds(event: Event): Promise<number> {
     let matches = 0;
+    let errors: EventThrowable[] = [];
     await Series.forEach<string>(await this.thredsStore.getAllThredIds(), async (thredId) => {
-      const result = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
-        if (thredStore && thredStore.pattern.allowUnbound) {
-          if (await Thred.test(event, thredStore)) {
-            matches++;
-            return this.processBoundEvent(event, thredStore, Date.now());
+      try {
+        const result = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
+          if (thredStore && thredStore.pattern.allowUnbound) {
+            if (await Thred.test(event, thredStore)) {
+              matches++;
+              return this.processBoundEvent(event, thredStore, Date.now());
+            }
           }
-        }
-      });
-      const { thredStatus, patternId } = result || {};
-      if (thredStatus && patternId) await this.decrementIfTerminated(thredStatus, patternId);
+        });
+        const { thredStatus, patternId } = result || {};
+        if (thredStatus && patternId) await this.decrementIfTerminated(thredStatus, patternId);
+      } catch (e) {
+        errors.push(this.getUnboundMatchError(thredId, event, e));
+      }
     });
+    this.throwIfAnyErrors(
+      `Multiple errors matching unbound event ${event.id} of type ${event.type} to running threds`,
+      errors,
+    );
     return matches;
   }
 
@@ -213,13 +222,28 @@ export class Threds {
     });
   }
 
-  private handlePatternMatchError(pattern: Pattern, event: Event, error: unknown): never {
+  private getUnboundMatchError(thredId: string, event: Event, error: unknown): EventThrowable {
+    L.error({
+      message: L.crit(
+        `Error when matching unbound event to ${thredId} to event ${event.id} of type ${event.type}: ${error}`,
+      ),
+      thredId: event.thredId,
+      err: error as Error,
+    });
+    return EventThrowable.get({
+      message: `Error when matching unbound event to ${thredId} to event ${event.id} of type ${event.type}`,
+      code: errorCodes[errorKeys.SERVER_ERROR].code,
+      cause: error,
+    });
+  }
+
+  private getPatternMatchError(pattern: Pattern, event: Event, error: unknown): EventThrowable {
     L.error({
       message: L.crit(`Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}: ${error}`),
       thredId: event.thredId,
       err: error as Error,
     });
-    throw EventThrowable.get({
+    return EventThrowable.get({
       message: `Error applying pattern ${pattern.id} to event ${event.id} of type ${event.type}`,
       code: errorCodes[errorKeys.SERVER_ERROR].code,
       cause: error,
@@ -238,5 +262,17 @@ export class Threds {
       message: L.h2(`Unbound event ${event.id} of type ${event.type} matched no patterns`),
       thredId: event.thredId,
     });
+  }
+
+  private throwIfAnyErrors(message: string, errors: EventThrowable[]): void {
+    if (errors.length === 1) {
+      throw errors[0];
+    } else if (errors.length > 1) {
+      throw EventThrowable.get({
+        message,
+        code: errorCodes[errorKeys.SERVER_ERROR].code,
+        cause: errors,
+      });
+    }
   }
 }
