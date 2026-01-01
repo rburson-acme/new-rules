@@ -45,6 +45,11 @@ export interface PatternModel extends Persistent {
   echoResponses?: boolean;
 
   /**
+   * Whether or not unbound events are matched against an already running thred
+   */
+  allowUnbound?: boolean;
+
+  /**
    * Reactions represent thred states
    * @property {ReactionModel[]} reactions
    */

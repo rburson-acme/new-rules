@@ -53,6 +53,10 @@ export class Thred {
     } while (inputEvent);
   }
 
+  static async test(event: Event, thredStore: ThredStore): Promise<boolean> {
+    return thredStore.currentReaction?.test(event, thredStore.thredContext) || false;
+  }
+
   private static async synchronizeThredState(thredStore: ThredStore, threds: Threds) {
     // check for an expired reaction
     if (thredStore.reactionTimedOut) await Thred.expireReaction(thredStore, threds);
