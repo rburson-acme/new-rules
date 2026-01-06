@@ -100,8 +100,8 @@ export const adminTestPatternModels: PatternModel[] = [
 export const userTestPatternModels: PatternModel[] = [
   {
     meta: { active: true },
-    name: 'System Test',
-    id: 'systemTest',
+    name: 'User Test',
+    id: 'userTest',
     instanceInterval: 0,
     maxInstances: 0,
     reactions: [

@@ -4,12 +4,15 @@ import { MessageHandler } from '../engine/MessageHandler.js';
 import { ThredsStore } from '../engine/store/ThredsStore.js';
 import { Threds } from '../engine/Threds.js';
 import { EventThrowable } from '../thredlib/core/Errors.js';
-import { errorCodes, errorKeys, Event, eventTypes, EventValues, Message, ThredId } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Event, eventTypes, EventValues, Message, Series, ThredId } from '../thredlib/index.js';
 import { AdminService } from './AdminService.js';
 import { SystemService } from './SystemService.js';
 import { UserService } from './UserService.js';
 import { SystemController as Sc } from '../persistence/controllers/SystemController.js';
 import { MessageTemplate } from '../engine/MessageTemplate.js';
+import { System } from '../engine/System.js';
+import { hasRole } from '../sessions/Session.js';
+import { Authorization } from '../auth/Authorization.js';
 
 export class SystemThreds extends Threds {
   private adminService: AdminService;
@@ -34,6 +37,8 @@ export class SystemThreds extends Threds {
    *  If the event is not a system event, it calls the base implementation
    */
   async consider(event: Event): Promise<void> {
+    // check for appropriate roles here
+
     if (SystemService.isSystemEvent(event)) {
       // record the event before consideration
       await Sc.get().replaceEvent({ event: { ...event }, timestamp: Date.now() });
@@ -45,7 +50,8 @@ export class SystemThreds extends Threds {
       }
       let values: EventValues['values'] | undefined;
       if (SystemService.isAdminEvent(event)) {
-        //@TODO verify admin permissions of the source
+        //verify admin permissions of the source
+        await Authorization.verifyRole(event.source.id, 'admin');
         if (event.type === eventTypes.control.dataControl.type) {
           // persistence operation has a top level result key
           values = { result: await this.persistenceAdapter.execute(event) };

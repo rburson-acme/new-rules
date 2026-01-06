@@ -1,23 +1,14 @@
-import {
-  Logger,
-  LoggerLevel,
-  systemEventTypes,
-  PatternModel,
-  Message,
-  Events,
-  SystemEvents,
-  SMap,
-} from '../../ts/thredlib/index.js';
+import { Logger, LoggerLevel, systemEventTypes, Message, Events, SystemEvents } from '../../ts/thredlib/index.js';
 import { delay, EngineConnectionManager, events, withDispatcherPromise, withReject } from '../testUtils.js';
-import { PersistenceFactory } from '../../ts/persistence/PersistenceFactory.js';
 import { adminTestPatternModels, adminTestSource } from './adminTestUtils.js';
 
 Logger.setLevel(LoggerLevel.ERROR);
 
 describe('admin pattern management test', function () {
   beforeAll(async () => {
-    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
-    await engineConnMan.purgeAll();
+    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
+    await engineConnMan.initBootstrapped();
+    await engineConnMan.createSessionFor(adminTestSource.id);
   });
   test('should have loaded test pattern', async function () {
     const pattern = engineConnMan.engine.thredsStore.patternsStore.getPattern('systemTest');

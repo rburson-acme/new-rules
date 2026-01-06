@@ -5,7 +5,7 @@ import { Express } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { EventPublisher } from '../AgentService.js';
-import { Auth } from '../../auth/Auth.js';
+import { Authentication } from '../../auth/Authentication.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
 import { Logger } from '../../thredlib/index.js';
 
@@ -14,7 +14,7 @@ const DEFAULT_PORT = 3000;
 export interface HttpServiceParams {
   publisher: EventPublisher;
   agentConfig: AgentConfig;
-  auth: Auth;
+  auth: Authentication;
   port?: number;
   routes?: { handler: HttpHandlerFactory; method: 'get' | 'post' | 'put' | 'delete'; path: string }[];
 }
@@ -25,7 +25,7 @@ export class HttpService {
   private agentConfig: AgentConfig;
   private port?: number;
   private routes?: { handler: HttpHandlerFactory; method: 'get' | 'post' | 'put' | 'delete'; path: string }[];
-  private auth: Auth;
+  private auth: Authentication;
 
   constructor(serviceParams: HttpServiceParams) {
     this.publisher = serviceParams.publisher;
@@ -83,7 +83,7 @@ export type HttpHandlerFactory = ({
   publisher,
   agentConfig,
 }: {
-  auth: Auth;
+  auth: Authentication;
   publisher: EventPublisher;
   agentConfig: AgentConfig;
 }) => (req: Request<any, any>, res: Response<any, any>) => Promise<any>;

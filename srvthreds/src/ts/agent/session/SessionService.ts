@@ -5,6 +5,7 @@ import { SessionStorage } from '../../sessions/storage/SessionStorage.js';
 import { StorageFactory } from '../../storage/StorageFactory.js';
 import { ResolverConfig } from '../../config/ResolverConfig.js';
 import { SessionsConfig } from '../../config/SessionsConfig.js';
+import { UserController } from '../../persistence/controllers/UserController.js';
 
 export interface Channel {
   id: string;
@@ -25,6 +26,10 @@ export class SessionService {
     // if this session already exists, just map it to the new channel
     // this likely means the client has disconnected and reconnected
     if (!(await sessions.exists(sessionId, participantId))) {
+      // add the User's roles to the session data
+      const user = await UserController.get().getUser(participantId);
+      session.data = session.data || {};
+      session.data.roles = user?.roles || [];
       await sessions.addSession(session, participantId);
     }
     sessionChannels[sessionId] = { id: channelId, isProxy: session.data?.isProxy || false };

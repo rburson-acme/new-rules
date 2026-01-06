@@ -1,14 +1,6 @@
 import { Persistence, Query } from '../Persistence.js';
 import { PersistenceFactory } from '../PersistenceFactory.js';
-import {
-  PatternModel,
-  Logger,
-  ThredLogRecord,
-  EventRecord,
-  ThredRecord,
-  Persistent,
-  Parallel,
-} from '../../thredlib/index.js';
+import { Parallel } from '../../thredlib/index.js';
 import { User } from '../../thredlib/persistence/User.js';
 import { Types } from '../../thredlib/persistence/types.js';
 

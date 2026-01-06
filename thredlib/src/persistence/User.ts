@@ -1,4 +1,5 @@
 import { Persistent } from "./Persistent.js";
+import { Role } from "./Role.js";
 
 export interface User extends Persistent {
     id: string;
@@ -14,4 +15,5 @@ export interface User extends Persistent {
     threds?: {
         archived: string[]; 
     }
+    roles?: Role[];
 }

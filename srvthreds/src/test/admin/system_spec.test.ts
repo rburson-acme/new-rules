@@ -7,7 +7,7 @@ Logger.setLevel(LoggerLevel.ERROR);
 describe('system spec retrieval tests', function () {
   beforeAll(async () => {
     engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
-    engineConnMan.initBootstrapped();
+    await engineConnMan.initBootstrapped();
   });
   test('get system spec', async function () {
     const getSystemSpecEvent = SystemEvents.getGetSystemSpecEvent(userTestSource);

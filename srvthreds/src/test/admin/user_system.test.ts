@@ -6,9 +6,9 @@ Logger.setLevel(LoggerLevel.ERROR);
 
 describe('user functions system test', function () {
   beforeAll(async () => {
-    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
-    await engineConnMan.purgeAll();
-    await createUserDbFixtures();
+    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
+    await engineConnMan.initBootstrapped();
+    await engineConnMan.createSessionFor(adminTestSource.id);
   });
   test('should start a new thred', function () {
     const pr = withDispatcherPromise(engineConnMan.engine.dispatchers, async (message: Message) => {

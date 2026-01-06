@@ -22,6 +22,7 @@ export class Handler implements BootstrapHandler {
     await uc.replaceUser({ id: 'participant1', password: 'password1' });
     await uc.replaceUser({ id: 'participant2', password: 'password2' });
     await uc.replaceUser({ id: 'participant3', password: 'password3' });
+    await uc.replaceUser({ id: 'admin', password: 'adminpass', roles: [{ name: 'admin' }] });
   }
 }
 

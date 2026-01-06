@@ -25,6 +25,7 @@ import { ConfigLoader } from '../ts/config/ConfigLoader.js';
 import { SystemController } from '../ts/persistence/controllers/SystemController.js';
 import { run as runBootstrap } from '../ts/tools/bootstrap/Bootstrapper.js';
 import { ConfigManager } from '../ts/config/ConfigManager.js';
+import { Session } from '../ts/sessions/Session.js';
 const sessionAgentConfigDef = {
   name: 'Session Agent',
   nodeType: 'org.wt.session',
@@ -253,6 +254,13 @@ export class EngineConnectionManager {
     await this.eventQ.queue(SystemEvents.getTerminateAllThredsEvent({ id: 'admin1', name: 'Admin User' }));
     await pr.catch(Logger.error); 
     */
+  }
+
+  async createSessionFor(participantId: string): Promise<void> {
+    const sessionId = `session-for-${participantId}`;
+    const user = await UserController.get().getUser(participantId);
+    const session: Session = { id: sessionId, nodeId: 'test-node-id', data: { roles: user?.roles || [] } };
+    await System.getSessions().addSession(session, participantId);
   }
 
   private static async loadBootstrappedConfig() {

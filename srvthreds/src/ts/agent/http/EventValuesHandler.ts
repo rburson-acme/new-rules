@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Event, Events, EventValues, Id } from '../../thredlib/index.js';
 import { EventPublisher } from '../AgentService.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
-import { Auth } from '../../auth/Auth.js';
+import { Authentication } from '../../auth/Authentication.js';
 
 /**
  * Allows for POSTING of the 'values' payload for an event
@@ -14,7 +14,7 @@ export const getHandleEventValues = ({
 }: {
   publisher: EventPublisher;
   agentConfig: AgentConfig;
-  auth: Auth;
+  auth: Authentication;
 }) => {
   return async (req: Request<{ thredId: string; re?: string }, any>, res: Response<any, any>) => {
     const { thredId, re } = req.params;

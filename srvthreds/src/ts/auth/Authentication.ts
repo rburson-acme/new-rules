@@ -8,7 +8,7 @@ export interface TokenPayload {
   jti?: string;
 }
 
-export interface Auth {
+export interface Authentication {
   login(participantId: string, password: string): Promise<AuthResult>;
   refresh(refreshToken: string): Promise<{ accessToken: string; expires: number }>;
   validateAccessToken(token: string): Promise<TokenPayload>;

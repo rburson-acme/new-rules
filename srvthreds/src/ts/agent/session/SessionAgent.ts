@@ -1,4 +1,4 @@
-import { BasicAuth } from '../../auth/BasicAuth.js';
+import { BasicAuthentication } from '../../auth/BasicAuthentication.js';
 import { Event, Logger, Message } from '../../thredlib/index.js';
 import { EventPublisher, MessageHandler, MessageHandlerParams } from '../AgentService.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
@@ -103,13 +103,13 @@ export class SessionAgent implements MessageHandler {
         `Failed to load resolver config from configName: ${resolverConfigName} or configPath: ${resolverConfigPath}`,
       );
 
-    BasicAuth.initialize(new AuthStorage(StorageFactory.getStorage()));
+    BasicAuthentication.initialize(new AuthStorage(StorageFactory.getStorage()));
     this.sessionService = new SessionService();
     const serviceListener = new SessionServiceListener(this.sessionService);
 
     this.httpService = new HttpService({
       publisher: this.eventPublisher,
-      auth: BasicAuth.getInstance(),
+      auth: BasicAuthentication.getInstance(),
       agentConfig: this.agentConfig,
       port: (this.agentConfig.customConfig as SessionAgentConfig)?.port,
       routes: [
@@ -141,7 +141,7 @@ export class SessionAgent implements MessageHandler {
       publisher: this.eventPublisher,
       nodeId: this.agentConfig.nodeId,
       httpServer: this.httpService.httpServer,
-      auth: BasicAuth.getInstance(),
+      auth: BasicAuthentication.getInstance(),
     });
     this.dispatchers.push(this.socketService.send);
     this.httpService.start();

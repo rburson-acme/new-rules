@@ -60,5 +60,6 @@ export * from './persistence/Persistent.js';
 export * from './persistence/EventRecord.js';
 export * from './persistence/ThredRecord.js';
 export * from './persistence/ThredLogRecord.js';
+export * from './persistence/Role.js';
 export * from './task/Operations.js';
 export * from './task/Tasks.js';

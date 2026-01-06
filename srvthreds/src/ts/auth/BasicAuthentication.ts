@@ -1,5 +1,5 @@
 import { UserController } from '../persistence/controllers/UserController.js';
-import { Auth, AuthResult, TokenPayload } from './Auth.js';
+import { Authentication, AuthResult, TokenPayload } from './Authentication.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Id } from '../thredlib/index.js';
@@ -13,18 +13,18 @@ const REFRESH_TOKEN_EXPIRE_TIME = process.env.REFRESH_TOKEN_EXPIRE_TIME
   ? parseInt(process.env.REFRESH_TOKEN_EXPIRE_TIME)
   : DEFAULT_REFRESH_EXPIRE_TIME;
 
-export class BasicAuth implements Auth {
-  private static instance: BasicAuth;
+export class BasicAuthentication implements Authentication {
+  private static instance: BasicAuthentication;
 
   private constructor(private authStorageOps: AuthStorageOps) {}
 
   public static initialize(authStorage: AuthStorageOps) {
-    if (!BasicAuth.instance) BasicAuth.instance = new BasicAuth(authStorage);
+    if (!BasicAuthentication.instance) BasicAuthentication.instance = new BasicAuthentication(authStorage);
   }
 
-  public static getInstance(): BasicAuth {
-    if (!BasicAuth.instance) throw new Error('BasicAuth not initialized');
-    return BasicAuth.instance;
+  public static getInstance(): BasicAuthentication {
+    if (!BasicAuthentication.instance) throw new Error('BasicAuth not initialized');
+    return BasicAuthentication.instance;
   }
 
   async login(participantId: string, password: string): Promise<AuthResult> {

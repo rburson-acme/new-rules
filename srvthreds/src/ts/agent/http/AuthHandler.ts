@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { EventPublisher } from '../AgentService.js';
-import { Auth } from '../../auth/Auth.js';
+import { Authentication } from '../../auth/Authentication.js';
 import { AgentConfig } from '../../config/AgentConfig.js';
 
 export const getHandleLogin = ({
@@ -8,7 +8,7 @@ export const getHandleLogin = ({
   publisher,
   agentConfig,
 }: {
-  auth: Auth;
+  auth: Authentication;
   publisher: EventPublisher;
   agentConfig: AgentConfig;
 }) => {
@@ -33,7 +33,7 @@ export const getHandleRefresh = ({
   publisher,
   agentConfig,
 }: {
-  auth: Auth;
+  auth: Authentication;
   publisher: EventPublisher;
   agentConfig: AgentConfig;
 }) => {
@@ -58,7 +58,7 @@ export const getHandleLogout = ({
   publisher,
   agentConfig,
 }: {
-  auth: Auth;
+  auth: Authentication;
   publisher: EventPublisher;
   agentConfig: AgentConfig;
 }) => {

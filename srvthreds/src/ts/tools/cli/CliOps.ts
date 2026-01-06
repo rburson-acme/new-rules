@@ -1,5 +1,5 @@
 import { Logger, Id } from '../../thredlib/index.js';
-import { TokenPayload } from '../../auth/Auth.js';
+import { TokenPayload } from '../../auth/Authentication.js';
 import jwt from 'jsonwebtoken';
 
 /**

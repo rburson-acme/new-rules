@@ -8,6 +8,7 @@ import { Session } from './Session.js';
 import { ThredContext } from '../engine/ThredContext.js';
 import { ResolverConfig } from '../config/ResolverConfig.js';
 import { SessionsConfig } from '../config/SessionsConfig.js';
+import { UserController } from '../persistence/controllers/UserController.js';
 
 export class Sessions {
   private addressResolver: AddressResolver;

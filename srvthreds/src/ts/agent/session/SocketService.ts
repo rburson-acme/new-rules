@@ -2,8 +2,8 @@ import { Server } from 'socket.io';
 import express, { Express } from 'express';
 import http from 'http';
 import { Event, Logger, Message, StringMap } from '../../thredlib/index.js';
-import { Auth } from '../../auth/Auth.js';
-import { BasicAuth } from '../../auth/BasicAuth.js';
+import { Authentication } from '../../auth/Authentication.js';
+import { BasicAuthentication } from '../../auth/BasicAuthentication.js';
 import { Socket } from 'socket.io';
 import { EventPublisher } from '../AgentService.js';
 import { ServiceListener } from './ServiceListener.js';
@@ -13,7 +13,7 @@ export interface SocketServiceParams {
   publisher: EventPublisher;
   nodeId: string;
   httpServer: http.Server;
-  auth: Auth;
+  auth: Authentication;
 }
 
 export interface SocketData {
@@ -32,7 +32,7 @@ export class SocketService {
   private nodeId: string;
   private channels: StringMap<(messageOrEvent: any, channelId: string) => void> = {};
   private io: Server;
-  private auth: Auth;
+  private auth: Authentication;
 
   constructor(params: SocketServiceParams) {
     this.serviceListener = params.serviceListener;
@@ -82,8 +82,8 @@ export class SocketService {
     const isProxy = !!socket.handshake.headers['x-proxy-message'];
     const sessionId = `${participantId}_${Date.now()}`;
     const channelId = socket.id;
-    Logger.info(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     this.channels[channelId] = this.sendSocket;
+    Logger.info(`session: a client connected on channel ${channelId} as ${participantId} session ${sessionId}`);
     // for websockets, session must include a node id (so that we can route message back here)
     this.serviceListener
       .newSession({ sessionId, nodeId: this.nodeId, data: { isProxy } }, participantId, channelId)

@@ -29,7 +29,6 @@ import {
   GroupSpec,
   SystemSpec,
 } from '../thredlib/index.js';
-import { User } from '../thredlib/persistence/User.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 
 /***

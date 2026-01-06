@@ -15,8 +15,9 @@ Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('watch threds admin test', function () {
   beforeAll(async () => {
-    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
-    await engineConnMan.purgeAll();
+    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
+    await engineConnMan.initBootstrapped();
+    await engineConnMan.createSessionFor(adminTestSource.id);
   });
 
   test('should successfully register for thred notifications using watchThreds', async function () {

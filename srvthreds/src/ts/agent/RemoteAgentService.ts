@@ -15,7 +15,7 @@ import { Id } from '../thredlib/core/Id.js';
 import { Adapter } from './adapter/Adapter.js';
 import { RemoteConnectionManager } from './remote/RemoteConnectionManager.js';
 import { HttpService } from './http/HttpService.js';
-import { BasicAuth } from '../auth/BasicAuth.js';
+import { BasicAuthentication } from '../auth/BasicAuthentication.js';
 import { getHandleEventValues } from './http/EventValuesHandler.js';
 import { getHandleEvent } from './http/EventHandler.js';
 import { getHandleLogin, getHandleRefresh } from './http/AuthHandler.js';
@@ -84,7 +84,7 @@ export class RemoteAgentService {
     // Get the authorizedTokens from the config to validate incoming requests
     const authorizedTokens = this.agentConfig.authorizedTokens ? this.agentConfig.authorizedTokens.split(',') : [];
 
-    BasicAuth.initialize(new LocalAuthStorage(authorizedTokens));
+    BasicAuthentication.initialize(new LocalAuthStorage(authorizedTokens));
     // start local http service for login, event posting, etc.
     this.startHttpService();
     try {
@@ -115,7 +115,7 @@ export class RemoteAgentService {
   async startHttpService() {
     this.httpService = new HttpService({
       publisher: this.eventPublisher,
-      auth: BasicAuth.getInstance(),
+      auth: BasicAuthentication.getInstance(),
       agentConfig: this.agentConfig!,
       port: (this.agentConfig!.customConfig as StringMap<any>)?.port || RemoteAgentService.LOCAL_HTTP_PORT,
       routes: [

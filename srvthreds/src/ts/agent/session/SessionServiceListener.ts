@@ -1,5 +1,6 @@
 import { SessionService } from './SessionService.js';
 import { ServiceListener } from './ServiceListener.js';
+import { UserController } from '../../persistence/controllers/UserController.js';
 
 export class SessionServiceListener implements ServiceListener {
   constructor(private sessionService: SessionService) {}

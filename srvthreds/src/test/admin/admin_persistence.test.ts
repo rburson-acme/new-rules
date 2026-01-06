@@ -7,8 +7,9 @@ Logger.setLevel(LoggerLevel.ERROR);
 
 describe('admin persistence test', function () {
   beforeAll(async () => {
-    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels);
-    await engineConnMan.purgeAll();
+    engineConnMan = await EngineConnectionManager.newEngineInstance(adminTestPatternModels, true);
+    await engineConnMan.initBootstrapped();
+    await engineConnMan.createSessionFor(adminTestSource.id);
   });
   test('should save a pattern', function () {
     const savePatternEvent = SystemEvents.getSavePatternEvent(adminTestPatternModels[0], adminTestSource);
