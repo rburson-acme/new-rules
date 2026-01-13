@@ -155,7 +155,7 @@ export class PatternsStore {
     const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY);
     const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
     if (patternModel) this.patternStores[patternId] = PatternStore.fromState({ patternModel, timestamp });
-    Logger.info(`Loaded Pattern: ${patternModel.id} : ${patternModel.name}`);
+    Logger.info(`Loaded Pattern: ${patternModel.id} : ${patternModel.name} at ${new Date(timestamp).toISOString()}`);
     return this.patternStore(patternId);
   }
 

@@ -46,7 +46,7 @@ async function persistPatterns(patterns: any[]): Promise<void> {
 }
 
 async function loadPatternsIntoStorage() {
-  await ConfigLoader.loadStorageFromPersistence(SystemController.get(), StorageFactory.getStorage());
+  await ConfigLoader.loadAllActivePatternsFromPersistence(SystemController.get(), StorageFactory.getStorage());
 }
 
 //@TODO add optional run argument w/ that allows for hot reload of pattern (and doesn't clear/reset storeage)

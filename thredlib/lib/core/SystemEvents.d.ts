@@ -29,6 +29,8 @@ export interface WatchThredsArgs extends SystemEventInputValues {
 export interface ReloadPatternArgs extends SystemEventInputValues {
     readonly patternId: string;
 }
+export interface ReloadAllPatternsArgs extends SystemEventInputValues {
+}
 export interface TerminateAllThredsArgs extends SystemEventInputValues {
 }
 export interface ShutdownArgs extends SystemEventInputValues {
@@ -119,6 +121,7 @@ export declare class SystemEvents {
     static getGetThredsEvent(source: Event['source'], status?: GetThredsArgs['status'], terminatedMatcher?: EventTaskParams['matcher']): Event;
     static getWatchThredsEvent(source: Event['source'], directive?: WatchThredsArgs['directive']): Event;
     static getReloadPatternEvent(patternId: string, source: Event['source']): Event;
+    static getReloadAllPatternsEvent(source: Event['source']): Event;
     static getShutdownEvent(delay: number, source: Event['source']): Event;
     static getTerminateAllThredsEvent(source: Event['source']): Event;
     /***

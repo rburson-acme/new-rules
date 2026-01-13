@@ -76,6 +76,17 @@ export class SystemEvents {
             .mergeData({ title: 'Run Reload Pattern' })
             .build();
     }
+    static getReloadAllPatternsEvent(source) {
+        const values = { op: systemEventTypes.operations.reloadAllPatterns };
+        return EventBuilder.create({
+            type: eventTypes.control.sysControl.type,
+            thredId: ThredId.SYSTEM,
+            source,
+        })
+            .mergeValues(values)
+            .mergeData({ title: 'Run Reload All Patterns' })
+            .build();
+    }
     // request to shutdown
     static getShutdownEvent(delay, source) {
         const values = { op: systemEventTypes.operations.shutdown, delay };

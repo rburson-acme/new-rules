@@ -68,7 +68,7 @@
             "inputContentType": "tasks",
             "inputContentSpec": {
                 "description": "Allows for robot parameters to be retrieved or updated.",
-                "targetTypeName": "Param",
+                "entityTypeName": "Param",
                 "allowedOps": [ "get", "update" ]
             }
         }
@@ -80,7 +80,7 @@
             "eventContentType": "values",
             "eventContentSpecs": [
                 {
-                    "targetTypeName": "DeployResponse"
+                    "entityTypeName": "DeployResponse"
                 }
             ]
         }

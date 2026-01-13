@@ -46,6 +46,7 @@ export const systemEventTypes = {
     transitionThred: 'transitionThred',
     terminateThred: 'terminateThred',
     reloadPattern: 'reloadPattern',
+    reloadAllPatterns: 'reloadAllPatterns',
     getThreds: 'getThreds',
     watchThreds: 'watchThreds',
     terminateAllThreds: 'terminateAllThreds',

@@ -10,7 +10,11 @@ import { Logger, Series } from '../thredlib/index.js';
   */
 
 export class ConfigLoader {
-  static async loadStorageFromPersistence(persistenceManager: SystemController, storage: Storage): Promise<void> {
+  static async loadAllActivePatternsFromPersistence(
+    persistenceManager: SystemController,
+    storage: Storage,
+  ): Promise<void> {
+    Logger.info('Reloading all active patterns from persistence');
     const patternModels = await persistenceManager.getAllActivePatterns();
     const patternsStore = new PatternsStore(storage);
     if (patternModels) await patternsStore.addPatterns(patternModels);

@@ -17,6 +17,7 @@ import { SystemController as Sc } from '../persistence/controllers/SystemControl
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
+import { ConfigLoader } from '../config/ConfigLoader.js';
 
 const { debug, error, info, crit, h1, h2, logObject } = Logger;
 
@@ -47,7 +48,11 @@ export class Engine implements MessageHandler {
     await this.threds.initialize();
     // subscribe to pattern changes in storage
     await PubSubFactory.getSub().subscribe([Topics.PatternChanged], async (topic, message) => {
-      await this.thredsStore.patternsStore.staleCheck(message.id);
+      if (message.all) {
+        await ConfigLoader.loadAllActivePatternsFromPersistence(Sc.get(), this.thredsStore.storage);
+      } else {
+        await this.thredsStore.patternsStore.staleCheck(message.id);
+      }
     });
     this.run();
   }

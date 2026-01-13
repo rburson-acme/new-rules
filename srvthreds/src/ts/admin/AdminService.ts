@@ -10,6 +10,7 @@ import {
   errorKeys,
   EventValues,
   GetThredsArgs,
+  ReloadAllPatternsArgs,
   ReloadPatternArgs,
   ShutdownArgs,
   StringMap,
@@ -21,6 +22,7 @@ import {
 } from '../thredlib/index.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 import { NotificationHandler } from './NotificationHandler.js';
+import { ConfigLoader } from '../config/ConfigLoader.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -174,6 +176,15 @@ export class AdminService {
     return { status: systemEventTypes.successfulStatus, op, patternId };
   };
 
+  reloadAllPatterns = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
+    const {
+      event,
+      args: { op },
+    } = SystemService.getArgs<ReloadAllPatternsArgs>(args);
+    await PubSubFactory.getPub().publish(Topics.PatternChanged, { all: true });
+    return { status: systemEventTypes.successfulStatus, op };
+  };
+
   terminateAllThreds = async (args: SystemServiceArgs): Promise<EventValues['values']> => {
     const {
       event,
@@ -198,6 +209,7 @@ export class AdminService {
     [systemEventTypes.operations.watchThreds]: this.watchThreds,
     [systemEventTypes.operations.terminateThred]: this.terminateThred,
     [systemEventTypes.operations.reloadPattern]: this.reloadPattern,
+    [systemEventTypes.operations.reloadAllPatterns]: this.reloadAllPatterns,
     [systemEventTypes.operations.terminateAllThreds]: this.terminateAllThreds,
     [systemEventTypes.operations.shutdown]: this.shutdown,
   };

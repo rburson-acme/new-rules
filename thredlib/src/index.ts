@@ -34,7 +34,7 @@ export * from './meta/ServiceSpec.js';
 export * from './meta/PropertySpec.js';
 export * from './meta/InputSpec.js';
 export * from './meta/OutputSpec.js'
-export * from './meta/TargetTypeSpec.js'
+export * from './meta/EntityTypeSpec.js'
 export * from './model/ConditionModel.js';
 export * from './model/ConsequentModel.js';
 export * from './model/FilterModel.js';

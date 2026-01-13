@@ -44,6 +44,7 @@ export declare const systemEventTypes: {
         transitionThred: string;
         terminateThred: string;
         reloadPattern: string;
+        reloadAllPatterns: string;
         getThreds: string;
         watchThreds: string;
         terminateAllThreds: string;

@@ -38,6 +38,9 @@ export interface ReloadPatternArgs extends SystemEventInputValues {
   readonly patternId: string;
 }
 
+export interface ReloadAllPatternsArgs extends SystemEventInputValues {
+}
+
 export interface TerminateAllThredsArgs extends SystemEventInputValues {}
 
 export interface ShutdownArgs extends SystemEventInputValues {
@@ -200,6 +203,18 @@ export class SystemEvents {
     })
       .mergeValues(values)
       .mergeData({ title: 'Run Reload Pattern' })
+      .build();
+  }
+
+  static getReloadAllPatternsEvent(source: Event['source']) {
+    const values: ReloadAllPatternsArgs = { op: systemEventTypes.operations.reloadAllPatterns };
+    return EventBuilder.create({
+      type: eventTypes.control.sysControl.type,
+      thredId: ThredId.SYSTEM,
+      source,
+    })
+      .mergeValues(values)
+      .mergeData({ title: 'Run Reload All Patterns' })
       .build();
   }
 

@@ -102,7 +102,7 @@ const spec: SystemSpec = {
           inputContentType: 'tasks',
           inputContentSpec: {
             description: 'Allows for robot parameters to be retrieved or updated.',
-            targetTypeName: 'Param',
+            entityTypeName: 'Param',
             allowedOps: ['get', 'update'],
           },
         },
@@ -114,7 +114,7 @@ const spec: SystemSpec = {
           eventContentType: 'values',
           eventContentSpecs: [
             {
-              targetTypeName: 'DeployResponse',
+              entityTypeName: 'DeployResponse',
             },
           ],
         },
@@ -156,7 +156,7 @@ const spec: SystemSpec = {
           eventContentType: 'values',
           eventContentSpecs: [
             {
-              targetTypeName: 'DetectedEntity',
+              entityTypeName: 'DetectedEntity',
             },
           ],
         },
@@ -232,7 +232,7 @@ const spec: SystemSpec = {
           inputContentType: 'tasks',
           inputContentSpec: {
             description: 'A set of test data that associates participants with locations.',
-            targetTypeName: 'TestObject',
+            entityTypeName: 'TestObject',
             allowedOps: ['put', 'get', 'getOne', 'update', 'upsert', 'replace', 'delete', 'count'],
             options: [
               {
@@ -251,7 +251,7 @@ const spec: SystemSpec = {
           eventContentType: 'values',
           eventContentSpecs: [
             {
-              targetTypeName: 'TestObject',
+              entityTypeName: 'TestObject',
             },
           ],
         },
