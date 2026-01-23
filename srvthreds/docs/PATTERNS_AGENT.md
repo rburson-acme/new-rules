@@ -3,6 +3,252 @@
 ## Quick Reference
 Pattern = JSON workflow definition. Thred = running pattern instance. Reaction = state. Event = trigger. State persists in Redis with per-thredId locking.
 
+## SystemSpec - Context for Pattern Creation
+
+The **SystemSpec** provides essential context for creating patterns. It defines:
+1. **Available services** - their addresses, input formats (for tasks), and output formats (for handling responses)
+2. **Participant addresses** - individual participants and groups for the `publish.to` field
+
+When creating patterns, reference the SystemSpec to:
+- Know which service addresses to use in `publish.to`
+- Understand required task structures for service inputs
+- Know what event types and data structures services return
+- Identify available participant IDs and groups
+
+### SystemSpec Structure
+```json
+{
+  "serviceSpecs": [],   // Available services with I/O definitions
+  "addressSpec": {
+    "participants": [], // Individual addressable participants
+    "groups": []        // Named groups of participants
+  }
+}
+```
+
+### AddressSpec - Participants and Groups
+Defines who can receive events via `publish.to`:
+
+```json
+{
+  "addressSpec": {
+    "participants": [
+      {"id": "participant0", "name": "Participant 0", "uri": "..."},
+      {"id": "participant1", "name": "Participant 1"}
+    ],
+    "groups": [
+      {
+        "name": "approvers",
+        "participants": [
+          {"participantId": "participant0"},
+          {"participantId": "participant1"}
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Usage in patterns:**
+- Direct: `"publish": {"to": "participant0"}`
+- Group: `"publish": {"to": "$approvers"}` (expands to all members)
+- Multiple: `"publish": {"to": ["participant0", "participant1"]}`
+
+### ServiceSpec - Service Definitions
+Each service defines its address, accepted inputs, and output event formats:
+
+```json
+{
+  "name": "Persistent Storage",
+  "nodeType": "org.wt.persistence",
+  "address": "org.wt.persistence",
+  "description": "CRUD operations for data storage",
+  "entitySpecs": [...],   // Data structure definitions
+  "inputSpecs": [...],    // What the service accepts (tasks)
+  "outputSpecs": [...]    // What the service returns (events)
+}
+```
+
+**Service address usage:** `"publish": {"to": "org.wt.persistence"}`
+
+### EntityTypeSpec - Data Structures
+Defines the structure of data entities used in inputs and outputs:
+
+```json
+{
+  "type": "TestObject",
+  "description": "A test record",
+  "propertySpecs": [
+    {"name": "id", "type": "string", "description": "Unique ID", "readonly": true},
+    {"name": "status", "type": "string", "description": "Current status"},
+    {"name": "count", "type": "number", "description": "Item count"},
+    {"name": "metadata", "type": "object", "description": "Additional data",
+      "propertySpec": [
+        {"name": "created", "type": "Date", "description": "Creation timestamp"}
+      ]
+    }
+  ]
+}
+```
+
+**Property types:** `string`, `number`, `boolean`, `Date`, `object`, `array`
+
+### InputSpec - Service Input Format (Tasks)
+Defines what task operations a service accepts and which entity types:
+
+```json
+{
+  "inputSpecs": [{
+    "inputContentType": "tasks",
+    "inputContentSpec": {
+      "description": "CRUD operations on TestObject",
+      "entityTypeName": "TestObject",
+      "allowedOps": ["put", "get", "getOne", "update", "delete"],
+      "options": [
+        {"name": "dbname", "type": "string", "description": "Database name"}
+      ]
+    }
+  }]
+}
+```
+
+**Building tasks from InputSpec:**
+```json
+{
+  "transform": {
+    "eventDataTemplate": {
+      "content": {
+        "tasks": [{
+          "op": "put",
+          "params": {
+            "type": "TestObject",
+            "values": {
+              "id": "$xpr($valueNamed('id'))",
+              "status": "active"
+            }
+          }
+        }]
+      }
+    }
+  },
+  "publish": {"to": "org.wt.persistence"}
+}
+```
+
+### OutputSpec - Service Output Format
+Defines event types and data structures returned by services:
+
+```json
+{
+  "outputSpecs": [{
+    "eventType": "org.wt.persistence",
+    "description": "Query results or operation confirmations",
+    "eventContentType": "values",
+    "eventContentSpecs": [
+      {"entityTypeName": "TestObject"}
+    ]
+  }]
+}
+```
+
+**Handling service responses:**
+- Filter on event type: `"xpr": "$event.type = 'org.wt.persistence'"`
+- Access returned values: `$valueNamed('id')`, `$valueNamed('status')`
+- Access full values object: `$values` or `$content.values`
+
+### Complete Example: Using SystemSpec in Pattern
+
+Given this SystemSpec excerpt:
+```json
+{
+  "addressSpec": {
+    "participants": [{"id": "requester"}, {"id": "admin"}],
+    "groups": [{"name": "admins", "participants": [{"participantId": "admin"}]}]
+  },
+  "serviceSpecs": [{
+    "name": "Storage",
+    "address": "org.wt.persistence",
+    "entitySpecs": [{
+      "type": "Record",
+      "propertySpecs": [
+        {"name": "id", "type": "string"},
+        {"name": "data", "type": "string"}
+      ]
+    }],
+    "inputSpecs": [{
+      "inputContentType": "tasks",
+      "inputContentSpec": {"entityTypeName": "Record", "allowedOps": ["put", "get"]}
+    }],
+    "outputSpecs": [{
+      "eventType": "org.wt.persistence",
+      "eventContentSpecs": [{"entityTypeName": "Record"}]
+    }]
+  }]
+}
+```
+
+Pattern using this context:
+```json
+{
+  "name": "StoreAndNotify",
+  "reactions": [
+    {
+      "name": "store",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'store.request'",
+        "onTrue": {"xpr": "$setLocal('requester', $event.source.id)"},
+        "transform": {
+          "eventDataTemplate": {
+            "content": {
+              "tasks": [{
+                "op": "put",
+                "params": {
+                  "type": "Record",
+                  "values": {
+                    "id": "$xpr($valueNamed('id'))",
+                    "data": "$xpr($valueNamed('data'))"
+                  }
+                }
+              }]
+            }
+          }
+        },
+        "publish": {"to": "org.wt.persistence"}
+      }
+    },
+    {
+      "name": "notify",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.persistence'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Record stored",
+            "content": {"values": {"recordId": "$xpr($valueNamed('id'))"}}
+          }
+        },
+        "publish": {"to": "$admins"},
+        "transition": {"name": "$terminate"}
+      }
+    }
+  ]
+}
+```
+
+### SystemSpec Usage Summary
+
+| Pattern Element | SystemSpec Source | Example |
+|-----------------|-------------------|---------|
+| `publish.to` (service) | `serviceSpec.address` | `"org.wt.persistence"` |
+| `publish.to` (participant) | `addressSpec.participants[].id` | `"participant0"` |
+| `publish.to` (group) | `addressSpec.groups[].name` | `"$approvers"` |
+| `task.op` | `inputSpec.allowedOps` | `"put"`, `"get"`, `"update"` |
+| `task.params.type` | `entitySpec.type` | `"TestObject"` |
+| `task.params.values` | `entitySpec.propertySpecs` | Field names and types |
+| Filter `$event.type` | `outputSpec.eventType` | `"org.wt.persistence"` |
+| Response values | `outputSpec.entityTypeName` → `entitySpec` | `$valueNamed('field')` |
+
 ## Pattern Root
 ```json
 {
@@ -297,6 +543,12 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 - [ ] Workflow has termination conditions
 - [ ] JSONata syntax valid
 - [ ] $xpr() properly formatted
+- [ ] Service addresses match SystemSpec serviceSpecs[].address
+- [ ] Participant/group addresses match SystemSpec addressSpec
+- [ ] Task operations match InputSpec allowedOps
+- [ ] Task params.type matches EntityTypeSpec type
+- [ ] Task params.values fields match EntityTypeSpec propertySpecs
+- [ ] Filter event types match OutputSpec eventType for service responses
 
 ## Common Errors
 1. Trying to create multiple different events in one reaction (use sequential reactions with transitions instead)
@@ -308,6 +560,11 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 7. input:local without localName
 8. No termination path
 9. Circular transitions without exit
+10. Invalid service address (must match SystemSpec serviceSpec.address)
+11. Task operation not in service's allowedOps
+12. Task params.type not matching service's entityTypeName
+13. Filtering on wrong event type for service responses
+14. Missing or misnamed fields in task values (must match EntityTypeSpec propertySpecs)
 
 ## Complete Minimal Examples
 
@@ -524,6 +781,7 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 
 ## Key Rules
 - **ONE EVENT PER REACTION** - A reaction can only create ONE outbound event. You cannot publish different event types to multiple recipients with different transforms in a single reaction. To send multiple different events, chain reactions sequentially using transitions.
+- **SystemSpec is your context** - Always reference SystemSpec for service addresses, participant IDs, groups, task structures, and response formats
 - **Unbound event** (no thredId) → pattern matching → creates Thred
 - **Bound event** (has thredId) → routes to existing Thred
 - **First reaction** = entry point, avoid onTrue side effects
@@ -547,3 +805,10 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 
 ## Schema Compliance
 Pattern must validate against ../thredlib/src/schemas/patternModel.json. Critical fields: name (string), reactions (array of ReactionModel), each reaction has condition (ConditionModel) with type (filter|and|or) and type-specific requirements.
+
+**Related Schemas:**
+- **Pattern schema:** ../thredlib/src/schemas/patternModel.json
+- **Event schema:** ../thredlib/src/schemas/event.json
+- **SystemSpec schema:** ../thredlib/src/schemas/systemSpec.json
+
+**SystemSpec TypeScript interfaces:** ../thredlib/meta/SystemSpec.ts, ServiceSpec.ts, EntityTypeSpec.ts, InputSpec.ts, OutputSpec.ts, PropertySpec.ts

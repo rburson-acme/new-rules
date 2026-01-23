@@ -6,11 +6,11 @@ import { ConsequentModel } from './ConsequentModel.js';
 export type AddressModel = string[] | string;
 export interface PublishModel {
   /**
-   * The address(es) to send the outbound Event to. These may be participants or groups.
+   * The address(es) to send the outbound Event to. These may be participants or groups ($groupName).
    */
   readonly to: AddressModel;
   /**
-   * A human-readable description of the publish spec
+   * A human-readable description
    */
   readonly description?: string;
   /**

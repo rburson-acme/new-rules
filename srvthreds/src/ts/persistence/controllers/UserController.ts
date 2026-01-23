@@ -3,6 +3,7 @@ import { PersistenceFactory } from '../PersistenceFactory.js';
 import { Parallel } from '../../thredlib/index.js';
 import { User } from '../../thredlib/persistence/User.js';
 import { Types } from '../../thredlib/persistence/types.js';
+import { BasicAuthentication } from '../../auth/BasicAuthentication.js';
 
 export class UserController {
   private static instance: UserController;
@@ -27,7 +28,13 @@ export class UserController {
   }
 
   async replaceUser(user: User): Promise<void> {
-    await this.persistence.replace({ type: Types.User, matcher: { id: user.id }, values: user });
+    // encrypt password here
+    const hashed = await BasicAuthentication.hashPassword(user.password);
+    await this.persistence.replace({
+      type: Types.User,
+      matcher: { id: user.id },
+      values: { ...user, password: hashed },
+    });
   }
 
   async addArchivedThredIdToUsers(userIds: string[], thredId: string): Promise<void> {

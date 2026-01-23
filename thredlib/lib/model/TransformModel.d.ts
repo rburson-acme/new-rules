@@ -1,4 +1,7 @@
 import { EventData } from '../core/Event.js';
+/**
+ * Describes how a new, outbound Event should be constructed.
+ */
 export interface TransformModel {
     /**
      * Meta data for the transform.
@@ -18,11 +21,12 @@ export interface TransformModel {
     readonly description?: string;
     /**
      *  Allows for defining The Event Data portion of the outbound event.
+     *  This is a template that will be supplied to the outbound event and use the EventData structure defined in Event.ts
      *  @property {EventData} [eventDataTemplate]
      */
     readonly eventDataTemplate?: EventData;
     /**
-     * A jsonata expression to be run to generate the entire Event Data portion of the outbound event.
+     * An optional jsonata expression to be run to generate the entire Event Data portion of the outbound event.
      */
     readonly templateXpr?: string;
 }

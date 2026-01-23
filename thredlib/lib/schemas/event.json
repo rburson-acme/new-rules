@@ -4,6 +4,7 @@
     "definitions": {
         "BooleanInput": {
             "additionalProperties": false,
+            "description": "Represents a boolean input model",
             "properties": {
                 "display": {
                     "type": "string"
@@ -45,50 +46,65 @@
         },
         "ElementModel": {
             "additionalProperties": false,
+            "description": "An element defines a type of UI Component",
             "properties": {
                 "group": {
-                    "$ref": "#/definitions/GroupModel"
+                    "$ref": "#/definitions/GroupModel",
+                    "description": "Represents a group of (sub) elements"
                 },
                 "image": {
-                    "$ref": "#/definitions/ImageModel"
+                    "$ref": "#/definitions/ImageModel",
+                    "description": "Represents an image"
                 },
                 "input": {
-                    "$ref": "#/definitions/InputModel"
+                    "$ref": "#/definitions/InputModel",
+                    "description": "Represents an input value to be supplied by the (UI) user"
                 },
                 "map": {
-                    "$ref": "#/definitions/MapModel"
+                    "$ref": "#/definitions/MapModel",
+                    "description": "Represents a map"
                 },
                 "text": {
-                    "$ref": "#/definitions/TextModel"
+                    "$ref": "#/definitions/TextModel",
+                    "description": "Represents text content"
                 },
                 "video": {
-                    "$ref": "#/definitions/VideoModel"
+                    "$ref": "#/definitions/VideoModel",
+                    "description": "Represents a video"
                 }
             },
             "type": "object"
         },
         "Event": {
             "additionalProperties": false,
+            "description": "Defines the structure of an event",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/EventData"
+                    "$ref": "#/definitions/EventData",
+                    "description": "the data envelope for the event"
                 },
                 "id": {
+                    "description": "unique identifier for the event",
                     "type": "string"
                 },
                 "re": {
+                    "description": "optional reference to another event",
                     "type": "string"
                 },
                 "source": {
                     "additionalProperties": false,
+                    "description": "the source of the event",
                     "properties": {
                         "id": {
+                            "description": "the unique identifier of the source",
                             "type": "string"
                         },
                         "name": {
+                            "description": "A human readable name for the source",
                             "type": "string"
                         },
                         "uri": {
+                            "description": "an optional uri representation of the source",
                             "type": "string"
                         }
                     },
@@ -98,12 +114,15 @@
                     "type": "object"
                 },
                 "thredId": {
+                    "description": "the thred to which the event belongs if already assigned",
                     "type": "string"
                 },
                 "time": {
+                    "description": "time of event inception",
                     "type": "number"
                 },
                 "type": {
+                    "description": "the fully qualified event type (this should be a 'class' of event) e.g. 'org.wt.tell' this should not be used for application level designations use content specific types like 'valuesType' for application level context",
                     "type": "string"
                 }
             },
@@ -146,6 +165,7 @@
                     "type": "array"
                 },
                 "tasks": {
+                    "description": "tasks is an array containing tasks and/or arrays of tasks A nested task array represents tasks to be executed in a single transaction",
                     "items": {
                         "anyOf": [
                             {
@@ -172,9 +192,11 @@
                             },
                             "type": "array"
                         }
-                    ]
+                    ],
+                    "description": "the actual values being transferred"
                 },
                 "valuesType": {
+                    "description": "optional application level type of the values. This may be useful to the recipient",
                     "type": "string"
                 }
             },
@@ -185,14 +207,18 @@
             "properties": {
                 "advice": {
                     "additionalProperties": false,
+                    "description": "optionally define what is expected in return",
                     "properties": {
                         "eventType": {
+                            "description": "the type of event that is expected",
                             "type": "string"
                         },
                         "template": {
-                            "$ref": "#/definitions/TemplateModel"
+                            "$ref": "#/definitions/TemplateModel",
+                            "description": "an interaction template that describes what data to collect"
                         },
                         "title": {
+                            "description": "the suggested title of the expected event",
                             "type": "string"
                         }
                     },
@@ -202,13 +228,16 @@
                     "type": "object"
                 },
                 "content": {
-                    "$ref": "#/definitions/EventContent"
+                    "$ref": "#/definitions/EventContent",
+                    "description": "the actual content of the data envelope"
                 },
                 "description": {
+                    "description": "human readable description of the event",
                     "type": "string"
                 },
                 "display": {
                     "additionalProperties": false,
+                    "description": "an optional representation of the event for display",
                     "properties": {
                         "uri": {
                             "type": "string"
@@ -220,6 +249,7 @@
                     "type": "object"
                 },
                 "title": {
+                    "description": "human readable title of the event",
                     "type": "string"
                 }
             },
@@ -227,18 +257,23 @@
         },
         "EventTask": {
             "additionalProperties": false,
+            "description": "Defines an operation to be performed on an entity (object) or a function call",
             "properties": {
                 "name": {
+                    "description": "The optional name of the task",
                     "type": "string"
                 },
                 "op": {
-                    "$ref": "#/definitions/Operation"
+                    "$ref": "#/definitions/Operation",
+                    "description": "The type of operation to be performed"
                 },
                 "options": {
+                    "description": "additional options for the task",
                     "type": "object"
                 },
                 "params": {
-                    "$ref": "#/definitions/EventTaskParams"
+                    "$ref": "#/definitions/EventTaskParams",
+                    "description": "The parameters for the task"
                 }
             },
             "required": [
@@ -248,14 +283,18 @@
         },
         "EventTaskCollectorParams": {
             "additionalProperties": false,
+            "description": "Allows for sorting, limiting, and skipping results",
             "properties": {
                 "limit": {
+                    "description": "maximum number of results to return",
                     "type": "number"
                 },
                 "skip": {
+                    "description": "number of results to skip",
                     "type": "number"
                 },
                 "sort": {
+                    "description": "sorting criteria as field name and direction",
                     "items": {
                         "additionalProperties": false,
                         "properties": {
@@ -280,13 +319,16 @@
             "additionalProperties": false,
             "properties": {
                 "collector": {
-                    "$ref": "#/definitions/EventTaskCollectorParams"
+                    "$ref": "#/definitions/EventTaskCollectorParams",
+                    "description": "allows for sorting, limiting, skipping"
                 },
                 "matcher": {
+                    "description": "filter for a query",
                     "type": "object"
                 },
                 "selector": {
                     "additionalProperties": false,
+                    "description": "allows for specifying a subset of the return values",
                     "properties": {
                         "exclude": {
                             "items": {
@@ -304,6 +346,7 @@
                     "type": "object"
                 },
                 "type": {
+                    "description": "type of target entity or name of the function",
                     "type": "string"
                 },
                 "values": {
@@ -315,7 +358,8 @@
                             "items": {},
                             "type": "array"
                         }
-                    ]
+                    ],
+                    "description": "The values to be used in the operation or the function arguments"
                 }
             },
             "required": [
@@ -325,8 +369,10 @@
         },
         "GroupModel": {
             "additionalProperties": false,
+            "description": "Allows for grouping multiple elements",
             "properties": {
                 "items": {
+                    "description": "The elements in the group",
                     "items": {
                         "$ref": "#/definitions/ElementModel"
                     },
@@ -340,6 +386,7 @@
         },
         "ImageModel": {
             "additionalProperties": false,
+            "description": "Represents an image",
             "properties": {
                 "height": {
                     "type": "number"
@@ -360,14 +407,18 @@
         },
         "InlineItem": {
             "additionalProperties": false,
+            "description": "interface for describing an inline item",
             "properties": {
                 "content": {
+                    "description": "The actual content",
                     "type": "string"
                 },
                 "contentType": {
+                    "description": "The type of the content",
                     "type": "string"
                 },
                 "encoding": {
+                    "description": "The encoding of the content",
                     "type": "string"
                 }
             },
@@ -400,6 +451,7 @@
             "properties": {
                 "interaction": {
                     "additionalProperties": false,
+                    "description": "Describes an interaction",
                     "properties": {
                         "content": {
                             "items": {
@@ -421,6 +473,7 @@
         },
         "MapLocation": {
             "additionalProperties": false,
+            "description": "Represents a geographical location on a map.",
             "properties": {
                 "display": {
                     "type": "string"
@@ -444,6 +497,7 @@
         },
         "MapModel": {
             "additionalProperties": false,
+            "description": "Represents a map",
             "properties": {
                 "locations": {
                     "items": {
@@ -459,6 +513,7 @@
         },
         "NominalInput": {
             "additionalProperties": false,
+            "description": "Represents a nominal input model",
             "properties": {
                 "display": {
                     "type": "string"
@@ -503,6 +558,7 @@
         },
         "NumericInput": {
             "additionalProperties": false,
+            "description": "Represents a numeric input model",
             "properties": {
                 "display": {
                     "type": "string"
@@ -540,9 +596,11 @@
             "additionalProperties": false,
             "properties": {
                 "contentType": {
+                    "description": "mimetype/mediatype of the content field",
                     "type": "string"
                 },
                 "uri": {
+                    "description": "Where to find the resource",
                     "type": "string"
                 }
             },
@@ -554,6 +612,7 @@
         },
         "TemplateModel": {
             "additionalProperties": false,
+            "description": "A TemplateModel describes a user interaction in a UI agnostic way. It is made up of one or more InteractionModels that specify what data should be collected or displayed.",
             "properties": {
                 "description": {
                     "description": "A description of the template",
@@ -579,6 +638,7 @@
         },
         "TextInput": {
             "additionalProperties": false,
+            "description": "Represents a text input model",
             "properties": {
                 "display": {
                     "type": "string"
@@ -600,6 +660,7 @@
         },
         "TextModel": {
             "additionalProperties": false,
+            "description": "Represents text",
             "properties": {
                 "value": {
                     "type": "string"
@@ -612,6 +673,7 @@
         },
         "VideoModel": {
             "additionalProperties": false,
+            "description": "Represents a video",
             "properties": {
                 "uri": {
                     "type": "string"

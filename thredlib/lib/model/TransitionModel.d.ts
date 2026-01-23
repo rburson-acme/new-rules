@@ -1,4 +1,7 @@
 export type TransitionInput = 'forward' | 'default' | 'local';
+/**
+ * A model for defining state (Reaction) transitions
+ */
 export interface TransitionModel {
     name: string;
     /**
@@ -7,9 +10,9 @@ export interface TransitionModel {
     description?: string;
     /**
      * Specifies how the transition should supply the input to the next state (Reaction).
-     * - 'default' - wait for input from the next matching Event
-     * - 'forward' - use the Event that triggered the current (this) Reaction
-     * - 'local' - use a locally stored value
+     * - 'default' - wait for input from the next matching inbound Event
+     * - 'forward' - use the Event that triggered the current (this) Reaction and apply immediately
+     * - 'local' - use a locally stored value and apply immediately
      */
     input?: TransitionInput;
     /**

@@ -1,0 +1,357 @@
+{
+  "$ref": "#/definitions/SystemSpec",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AddressSpec": {
+      "additionalProperties": false,
+      "description": "Specification for participant addresses and groups within the distributed system.",
+      "properties": {
+        "groups": {
+          "description": "Specifications for groups of participants in the distributed system.",
+          "items": {
+            "$ref": "#/definitions/GroupSpec"
+          },
+          "type": "array"
+        },
+        "participants": {
+          "description": "Specifications for individual participants in the distributed system.",
+          "items": {
+            "$ref": "#/definitions/ParticipantSpec"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "participants"
+      ],
+      "type": "object"
+    },
+    "ContentSpec": {
+      "$ref": "#/definitions/ValuesSpec"
+    },
+    "EntityTypeSpec": {
+      "additionalProperties": false,
+      "description": "Specification for a entity type used in services. The entity spec represents the structure of a service input or output.",
+      "properties": {
+        "description": {
+          "description": "Optional description of the entity type or function.",
+          "type": "string"
+        },
+        "propertySpecs": {
+          "description": "A list of the properties that define the structure of the entity type or the parameters of the function.",
+          "items": {
+            "$ref": "#/definitions/PropertySpec"
+          },
+          "type": "array"
+        },
+        "type": {
+          "description": "Represents the name of the entity type or the name of a function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "propertySpecs"
+      ],
+      "type": "object"
+    },
+    "GroupSpec": {
+      "additionalProperties": false,
+      "description": "Specification for a addressing group of participants within the distributed system.",
+      "properties": {
+        "name": {
+          "description": "Name of the participant group to be used in addressing (i.e. $groupName)",
+          "type": "string"
+        },
+        "participants": {
+          "description": "List of participants included in the group.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "participantId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participantId"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "participants"
+      ],
+      "type": "object"
+    },
+    "InputSpec": {
+      "additionalProperties": false,
+      "description": "Specifies a services input format by referencing an entity type and defining allowed operations.",
+      "properties": {
+        "inputContentSpec": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/InputTaskSpec"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/InputTaskSpec"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "inputContentType": {
+          "const": "tasks",
+          "description": "Currently only 'tasks' input format is supported This corresponds to the EventData payload defined by the EventTasks interface",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "InputTaskSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedOps": {
+          "description": "e.g. 'put', 'get', 'update', etc. These may correspond to db operations or REST calls or simply modifying system parameters",
+          "items": {
+            "$ref": "#/definitions/Operation"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "What does this task do?",
+          "type": "string"
+        },
+        "entityTypeName": {
+          "description": "Type refers to an entity or function defined in EntityTypeSpec e.g. an Entity for a db or REST API, or a function name if applicable",
+          "type": "string"
+        },
+        "options": {
+          "description": "supported options",
+          "items": {
+            "$ref": "#/definitions/PropertySpec"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "entityTypeName",
+        "allowedOps"
+      ],
+      "type": "object"
+    },
+    "Operation": {
+      "enum": [
+        "put",
+        "getOne",
+        "get",
+        "update",
+        "upsert",
+        "replace",
+        "delete",
+        "count",
+        "run"
+      ],
+      "type": "string"
+    },
+    "OutputSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "description": "What does this output represent?",
+          "type": "string"
+        },
+        "eventContentSpecs": {
+          "items": {
+            "$ref": "#/definitions/ContentSpec"
+          },
+          "type": "array"
+        },
+        "eventContentType": {
+          "const": "values",
+          "description": "Currently only 'values' output format is supported This corresponds to the EventData payload defined by the EventValues interface",
+          "type": "string"
+        },
+        "eventType": {
+          "description": "The type of event output by the service.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "eventType"
+      ],
+      "type": "object"
+    },
+    "ParticipantSpec": {
+      "additionalProperties": false,
+      "description": "Specification for a participant's address within the distributed system.",
+      "properties": {
+        "id": {
+          "description": "Unique identifier for the participant.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Optional human-readable name for the participant.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "Optional URI representation of the participant.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "PropertySpec": {
+      "additionalProperties": false,
+      "description": "PropertySpec.ts Specification for properties used in tasks. Each property can have a name, type, and a set of possible values (if constrained). The property may also be know as a 'key', 'field', or a 'column'",
+      "properties": {
+        "description": {
+          "description": "What does this property represent? How might it be used or interpreted?",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the property",
+          "type": "string"
+        },
+        "propertySpec": {
+          "description": "For complex types, define the structure of the object or array elements.",
+          "items": {
+            "$ref": "#/definitions/PropertySpec"
+          },
+          "type": "array"
+        },
+        "readonly": {
+          "description": "Is this property read-only?",
+          "type": "boolean"
+        },
+        "set": {
+          "description": "A set of possible values for this property, if the property is not constrained.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "display": {
+                "type": "string"
+              },
+              "value": {}
+            },
+            "required": [
+              "display",
+              "value"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "type": {
+          "description": "The type of the property, which can be a primitive type or a complex type. Complex type is represented by 'object' or 'array'.",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "Date",
+            "object",
+            "array"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ServiceSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "description": "The address of the service (dafaults to the address of the node type in the resolver config) ServiceSpec can override address here.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Optional description of the service.",
+          "type": "string"
+        },
+        "entitySpecs": {
+          "description": "Specifications for the input and output entities used by the service.",
+          "items": {
+            "$ref": "#/definitions/EntityTypeSpec"
+          },
+          "type": "array"
+        },
+        "inputSpecs": {
+          "description": "Maps service input to entity specs",
+          "items": {
+            "$ref": "#/definitions/InputSpec"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "The name of the service.",
+          "type": "string"
+        },
+        "nodeType": {
+          "description": "The node type of the service. Node type and address are pulled from the resolver config. Node type is used for address unless it's defined in the service spec itself as an override.",
+          "type": "string"
+        },
+        "outputSpecs": {
+          "description": "Maps service output to entity specs",
+          "items": {
+            "$ref": "#/definitions/OutputSpec"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "nodeType",
+        "address",
+        "entitySpecs",
+        "outputSpecs"
+      ],
+      "type": "object"
+    },
+    "SystemSpec": {
+      "additionalProperties": false,
+      "description": "Specification for a distributed system, including services and participant addresses. The system spec provides service input and output information for use in creating Patterns. It defines all available services, their input event formats, and their output event formats.",
+      "properties": {
+        "addressSpec": {
+          "$ref": "#/definitions/AddressSpec",
+          "description": "Specifications for participant addresses and groups within the distributed system."
+        },
+        "serviceSpecs": {
+          "description": "Specifications for services available in the distributed system.",
+          "items": {
+            "$ref": "#/definitions/ServiceSpec"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "serviceSpecs",
+        "addressSpec"
+      ],
+      "type": "object"
+    },
+    "ValuesSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "entityTypeName": {
+          "description": "Defines an output structure that corresponds to an EntiyTypeSpec name.   For specifying the values portion of the event payload as defined by the EventValues interface.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entityTypeName"
+      ],
+      "type": "object"
+    }
+  }
+}

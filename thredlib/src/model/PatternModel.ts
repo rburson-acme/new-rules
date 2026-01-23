@@ -22,6 +22,7 @@ export interface PatternModel extends Persistent {
 
   /**
    * The time required between creation of new threads 0 for none required
+   * This is a way to throttle new instance creation
    * @property {number} instanceInterval
    */
   instanceInterval?: number;
@@ -34,18 +35,22 @@ export interface PatternModel extends Persistent {
 
   /**
    * Whether or not broadcasting from participants is allowed
+   * Broadcasting allows for sending a message to all other participants in the thred
    * @property {boolean} broadcastAllowed
    */
   broadcastAllowed?: boolean;
   
   /**
-   * Whether or not participants responses are echoed to the Thred
+   * Whether or not participants responses are echoed to the Thred,
+   * meaning they are seen by other participants
    * @property {boolean} echoResponses
    */
   echoResponses?: boolean;
 
   /**
    * Whether or not unbound events are matched against an already running thred
+   * The allows for event to be sent that do not have a thredId but signifcantly
+   * increases processing requirements.
    */
   allowUnbound?: boolean;
 

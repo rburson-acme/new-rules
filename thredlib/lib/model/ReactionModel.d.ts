@@ -20,6 +20,8 @@ export interface ReactionModel {
     readonly condition: ConditionModel | FilterModel;
     /**
      * The optional list of sources that are allowed to activate the reaction.
+     * These can be particpantIds, $groups, or /regex/ patterns.
+     * ex:  'source.participant1', '$admins', '/^source\\.trusted.\*$/'
      *  @property {string[] | string} [allowedSources]
      */
     readonly allowedSources?: string[] | string;
@@ -34,7 +36,7 @@ export interface ReactionModel {
      */
     readonly expiry?: {
         /**
-         * The interval after which the reaction expires in millis.
+         * The interval after which the reaction expires in milliseconds.
          * Upon expiration the Reaction will use the default transition or the one specified in the expiry object.
          *  @property {number} interval
          */

@@ -18,6 +18,7 @@
     },
     "BooleanInput": {
       "additionalProperties": false,
+      "description": "Represents a boolean input model",
       "properties": {
         "display": {
           "type": "string"
@@ -59,6 +60,7 @@
     },
     "ConditionModel": {
       "additionalProperties": false,
+      "description": "Defines a condition (true or false) that can be composed of other conditions or filters",
       "properties": {
         "description": {
           "description": "A description of the condition.",
@@ -66,7 +68,7 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A expression to be run if the condition is true."
+          "description": "A expression to be run as a side-effect if the condition is true."
         },
         "operands": {
           "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
@@ -84,11 +86,11 @@
         },
         "publish": {
           "$ref": "#/definitions/PublishModel",
-          "description": "Specifies which participants should receive the the new Event if the condition is true. Describes 'who' should receive the new Event."
+          "description": "Specifies which participants should receive the the new, outbound Event if the condition is true. Describes 'who' should receive the new, outbound Event."
         },
         "transform": {
           "$ref": "#/definitions/TransformModel",
-          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new Event."
+          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new, outbound Event."
         },
         "transition": {
           "$ref": "#/definitions/TransitionModel",
@@ -124,24 +126,31 @@
     },
     "ElementModel": {
       "additionalProperties": false,
+      "description": "An element defines a type of UI Component",
       "properties": {
         "group": {
-          "$ref": "#/definitions/GroupModel"
+          "$ref": "#/definitions/GroupModel",
+          "description": "Represents a group of (sub) elements"
         },
         "image": {
-          "$ref": "#/definitions/ImageModel"
+          "$ref": "#/definitions/ImageModel",
+          "description": "Represents an image"
         },
         "input": {
-          "$ref": "#/definitions/InputModel"
+          "$ref": "#/definitions/InputModel",
+          "description": "Represents an input value to be supplied by the (UI) user"
         },
         "map": {
-          "$ref": "#/definitions/MapModel"
+          "$ref": "#/definitions/MapModel",
+          "description": "Represents a map"
         },
         "text": {
-          "$ref": "#/definitions/TextModel"
+          "$ref": "#/definitions/TextModel",
+          "description": "Represents text content"
         },
         "video": {
-          "$ref": "#/definitions/VideoModel"
+          "$ref": "#/definitions/VideoModel",
+          "description": "Represents a video"
         }
       },
       "type": "object"
@@ -178,6 +187,7 @@
           "type": "array"
         },
         "tasks": {
+          "description": "tasks is an array containing tasks and/or arrays of tasks A nested task array represents tasks to be executed in a single transaction",
           "items": {
             "anyOf": [
               {
@@ -204,9 +214,11 @@
               },
               "type": "array"
             }
-          ]
+          ],
+          "description": "the actual values being transferred"
         },
         "valuesType": {
+          "description": "optional application level type of the values. This may be useful to the recipient",
           "type": "string"
         }
       },
@@ -217,14 +229,18 @@
       "properties": {
         "advice": {
           "additionalProperties": false,
+          "description": "optionally define what is expected in return",
           "properties": {
             "eventType": {
+              "description": "the type of event that is expected",
               "type": "string"
             },
             "template": {
-              "$ref": "#/definitions/TemplateModel"
+              "$ref": "#/definitions/TemplateModel",
+              "description": "an interaction template that describes what data to collect"
             },
             "title": {
+              "description": "the suggested title of the expected event",
               "type": "string"
             }
           },
@@ -234,13 +250,16 @@
           "type": "object"
         },
         "content": {
-          "$ref": "#/definitions/EventContent"
+          "$ref": "#/definitions/EventContent",
+          "description": "the actual content of the data envelope"
         },
         "description": {
+          "description": "human readable description of the event",
           "type": "string"
         },
         "display": {
           "additionalProperties": false,
+          "description": "an optional representation of the event for display",
           "properties": {
             "uri": {
               "type": "string"
@@ -252,6 +271,7 @@
           "type": "object"
         },
         "title": {
+          "description": "human readable title of the event",
           "type": "string"
         }
       },
@@ -259,18 +279,23 @@
     },
     "EventTask": {
       "additionalProperties": false,
+      "description": "Defines an operation to be performed on an entity (object) or a function call",
       "properties": {
         "name": {
+          "description": "The optional name of the task",
           "type": "string"
         },
         "op": {
-          "$ref": "#/definitions/Operation"
+          "$ref": "#/definitions/Operation",
+          "description": "The type of operation to be performed"
         },
         "options": {
+          "description": "additional options for the task",
           "type": "object"
         },
         "params": {
-          "$ref": "#/definitions/EventTaskParams"
+          "$ref": "#/definitions/EventTaskParams",
+          "description": "The parameters for the task"
         }
       },
       "required": [
@@ -280,14 +305,18 @@
     },
     "EventTaskCollectorParams": {
       "additionalProperties": false,
+      "description": "Allows for sorting, limiting, and skipping results",
       "properties": {
         "limit": {
+          "description": "maximum number of results to return",
           "type": "number"
         },
         "skip": {
+          "description": "number of results to skip",
           "type": "number"
         },
         "sort": {
+          "description": "sorting criteria as field name and direction",
           "items": {
             "additionalProperties": false,
             "properties": {
@@ -312,13 +341,16 @@
       "additionalProperties": false,
       "properties": {
         "collector": {
-          "$ref": "#/definitions/EventTaskCollectorParams"
+          "$ref": "#/definitions/EventTaskCollectorParams",
+          "description": "allows for sorting, limiting, skipping"
         },
         "matcher": {
+          "description": "filter for a query",
           "type": "object"
         },
         "selector": {
           "additionalProperties": false,
+          "description": "allows for specifying a subset of the return values",
           "properties": {
             "exclude": {
               "items": {
@@ -336,6 +368,7 @@
           "type": "object"
         },
         "type": {
+          "description": "type of target entity or name of the function",
           "type": "string"
         },
         "values": {
@@ -347,7 +380,8 @@
               "items": {},
               "type": "array"
             }
-          ]
+          ],
+          "description": "The values to be used in the operation or the function arguments"
         }
       },
       "required": [
@@ -364,7 +398,7 @@
         },
         "onTrue": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "A expression to be run if the condition is true."
+          "description": "A expression to be run as a side-effect if the condition is true."
         },
         "operands": {
           "description": "The composite conditions to be used for And/Or conditions if type is 'and' or 'or'.",
@@ -382,11 +416,11 @@
         },
         "publish": {
           "$ref": "#/definitions/PublishModel",
-          "description": "Specifies which participants should receive the the new Event if the condition is true. Describes 'who' should receive the new Event."
+          "description": "Specifies which participants should receive the the new, outbound Event if the condition is true. Describes 'who' should receive the new, outbound Event."
         },
         "transform": {
           "$ref": "#/definitions/TransformModel",
-          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new Event."
+          "description": "The transform to be applied if the condition is true. Describes 'what' should be sent in the new, outbound Event."
         },
         "transition": {
           "$ref": "#/definitions/TransitionModel",
@@ -402,7 +436,7 @@
           "type": "string"
         },
         "xpr": {
-          "description": "A jsonata expression that will be evaluated to determine if the filter is true. Describes 'when' and event should be created and sent.  {@link  https://jsonata.org/ }",
+          "description": "A jsonata expression that will be evaluated to determine if the filter is true, the evaluation of which determines 'when' an event should be created and sent.  {@link  https://jsonata.org/ }",
           "type": "string"
         }
       },
@@ -414,8 +448,10 @@
     },
     "GroupModel": {
       "additionalProperties": false,
+      "description": "Allows for grouping multiple elements",
       "properties": {
         "items": {
+          "description": "The elements in the group",
           "items": {
             "$ref": "#/definitions/ElementModel"
           },
@@ -429,6 +465,7 @@
     },
     "ImageModel": {
       "additionalProperties": false,
+      "description": "Represents an image",
       "properties": {
         "height": {
           "type": "number"
@@ -449,14 +486,18 @@
     },
     "InlineItem": {
       "additionalProperties": false,
+      "description": "interface for describing an inline item",
       "properties": {
         "content": {
+          "description": "The actual content",
           "type": "string"
         },
         "contentType": {
+          "description": "The type of the content",
           "type": "string"
         },
         "encoding": {
+          "description": "The encoding of the content",
           "type": "string"
         }
       },
@@ -489,6 +530,7 @@
       "properties": {
         "interaction": {
           "additionalProperties": false,
+          "description": "Describes an interaction",
           "properties": {
             "content": {
               "items": {
@@ -510,6 +552,7 @@
     },
     "MapLocation": {
       "additionalProperties": false,
+      "description": "Represents a geographical location on a map.",
       "properties": {
         "display": {
           "type": "string"
@@ -533,6 +576,7 @@
     },
     "MapModel": {
       "additionalProperties": false,
+      "description": "Represents a map",
       "properties": {
         "locations": {
           "items": {
@@ -548,6 +592,7 @@
     },
     "NominalInput": {
       "additionalProperties": false,
+      "description": "Represents a nominal input model",
       "properties": {
         "display": {
           "type": "string"
@@ -592,6 +637,7 @@
     },
     "NumericInput": {
       "additionalProperties": false,
+      "description": "Represents a numeric input model",
       "properties": {
         "display": {
           "type": "string"
@@ -627,8 +673,12 @@
     },
     "PatternModel": {
       "properties": {
+        "allowUnbound": {
+          "description": "Whether or not unbound events are matched against an already running thred The allows for event to be sent that do not have a thredId but signifcantly increases processing requirements.",
+          "type": "boolean"
+        },
         "broadcastAllowed": {
-          "description": "Whether or not broadcasting from participants is allowed",
+          "description": "Whether or not broadcasting from participants is allowed Broadcasting allows for sending a message to all other participants in the thred",
           "type": "boolean"
         },
         "created": {
@@ -640,7 +690,7 @@
           "type": "string"
         },
         "echoResponses": {
-          "description": "Whether or not participants responses are echoed to the Thred",
+          "description": "Whether or not participants responses are echoed to the Thred, meaning they are seen by other participants",
           "type": "boolean"
         },
         "id": {
@@ -648,7 +698,7 @@
           "type": "string"
         },
         "instanceInterval": {
-          "description": "The time required between creation of new threads 0 for none required",
+          "description": "The time required between creation of new threads 0 for none required This is a way to throttle new instance creation",
           "type": "number"
         },
         "maxInstances": {
@@ -702,7 +752,7 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "description": "A human-readable description of the publish spec",
+          "description": "A human-readable description",
           "type": "string"
         },
         "onPublish": {
@@ -711,7 +761,7 @@
         },
         "to": {
           "$ref": "#/definitions/AddressModel",
-          "description": "The address(es) to send the outbound Event to. These may be participants or groups."
+          "description": "The address(es) to send the outbound Event to. These may be participants or groups ($groupName)."
         }
       },
       "required": [
@@ -734,7 +784,7 @@
               "type": "string"
             }
           ],
-          "description": "The optional list of sources that are allowed to activate the reaction."
+          "description": "The optional list of sources that are allowed to activate the reaction. These can be particpantIds, $groups, or /regex/ patterns. ex:  'source.participant1', '$admins', '/^source\\\\.trusted.\\*$/'"
         },
         "condition": {
           "anyOf": [
@@ -756,7 +806,7 @@
           "description": "The optional expiration policy of the reaction.",
           "properties": {
             "interval": {
-              "description": "The interval after which the reaction expires in millis. Upon expiration the Reaction will use the default transition or the one specified in the expiry object.",
+              "description": "The interval after which the reaction expires in milliseconds. Upon expiration the Reaction will use the default transition or the one specified in the expiry object.",
               "type": "number"
             },
             "transition": {
@@ -787,9 +837,11 @@
       "additionalProperties": false,
       "properties": {
         "contentType": {
+          "description": "mimetype/mediatype of the content field",
           "type": "string"
         },
         "uri": {
+          "description": "Where to find the resource",
           "type": "string"
         }
       },
@@ -801,6 +853,7 @@
     },
     "TemplateModel": {
       "additionalProperties": false,
+      "description": "A TemplateModel describes a user interaction in a UI agnostic way. It is made up of one or more InteractionModels that specify what data should be collected or displayed.",
       "properties": {
         "description": {
           "description": "A description of the template",
@@ -826,6 +879,7 @@
     },
     "TextInput": {
       "additionalProperties": false,
+      "description": "Represents a text input model",
       "properties": {
         "display": {
           "type": "string"
@@ -847,6 +901,7 @@
     },
     "TextModel": {
       "additionalProperties": false,
+      "description": "Represents text",
       "properties": {
         "value": {
           "type": "string"
@@ -859,6 +914,7 @@
     },
     "TransformModel": {
       "additionalProperties": false,
+      "description": "Describes how a new, outbound Event should be constructed.",
       "properties": {
         "description": {
           "description": "An optional description of the transform.",
@@ -866,7 +922,7 @@
         },
         "eventDataTemplate": {
           "$ref": "#/definitions/EventData",
-          "description": "Allows for defining The Event Data portion of the outbound event."
+          "description": "Allows for defining The Event Data portion of the outbound event. This is a template that will be supplied to the outbound event and use the EventData structure defined in Event.ts"
         },
         "meta": {
           "additionalProperties": false,
@@ -880,7 +936,7 @@
           "type": "object"
         },
         "templateXpr": {
-          "description": "A jsonata expression to be run to generate the entire Event Data portion of the outbound event.",
+          "description": "An optional jsonata expression to be run to generate the entire Event Data portion of the outbound event.",
           "type": "string"
         }
       },
@@ -896,6 +952,7 @@
     },
     "TransitionModel": {
       "additionalProperties": false,
+      "description": "A model for defining state (Reaction) transitions",
       "properties": {
         "description": {
           "description": "A description of the transition.",
@@ -903,7 +960,7 @@
         },
         "input": {
           "$ref": "#/definitions/TransitionInput",
-          "description": "Specifies how the transition should supply the input to the next state (Reaction).\n- 'default' - wait for input from the next matching Event\n- 'forward' - use the Event that triggered the current (this) Reaction\n- 'local' - use a locally stored value"
+          "description": "Specifies how the transition should supply the input to the next state (Reaction).\n- 'default' - wait for input from the next matching inbound Event\n- 'forward' - use the Event that triggered the current (this) Reaction and apply immediately\n- 'local' - use a locally stored value and apply immediately"
         },
         "localName": {
           "description": "The name of the locally stored value to be used as input to the next state (Reaction) if input is 'local'.",
@@ -920,6 +977,7 @@
     },
     "VideoModel": {
       "additionalProperties": false,
+      "description": "Represents a video",
       "properties": {
         "uri": {
           "type": "string"

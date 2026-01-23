@@ -27,6 +27,12 @@ export class BasicAuthentication implements Authentication {
     return BasicAuthentication.instance;
   }
 
+  public static async hashPassword(password: string): Promise<string> {
+    const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10);
+    const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    return hash;
+  }
+
   async login(participantId: string, password: string): Promise<AuthResult> {
     const user = await UserController.get().getUserByHandle(participantId);
     if (!user) {

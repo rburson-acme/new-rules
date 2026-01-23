@@ -22,7 +22,7 @@
     "clean": "rimraf dist-server",
     "test": "npx vitest --run --bail=1 --no-file-parallelism",
     "test-changed": "npm test -- --changed",
-    "generate-schemas": "cd ../thredlib ; npm run generate-event ; npm run generate-pattern",
+    "generate-schemas": "cd ../thredlib ; npm run generate-event-schema ; npm run generate-pattern-schema ; npm run generate-system-spec-schema",
     "build-lib": "cd ../thredlib ; npm run build-all",
     "bootstrap": "tsx src/ts/tools/bootstrap/bootstrap.ts",
     "cli": "tsx src/ts/tools/cli/cli.ts",

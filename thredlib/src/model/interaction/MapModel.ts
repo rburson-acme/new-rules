@@ -1,3 +1,7 @@
+
+/**
+ * Represents a geographical location on a map.
+ */
 export interface MapLocation {
   name: string;
   latitude: string;
@@ -5,6 +9,9 @@ export interface MapLocation {
   display?: string;
 }
 
+/**
+ * Represents a map
+ */
 export interface MapModel {
   locations: MapLocation[];
 }
