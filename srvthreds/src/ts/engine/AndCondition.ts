@@ -10,7 +10,6 @@ import { ThredStore } from './store/ThredStore.js';
     This is part of the 'stateless' tree that gets shared across processes
 */
 export class AndCondition extends Condition {
-  // private operandResults: (ConditionResult | undefined)[];
   private operands: Condition[];
 
   constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory, id: string) {
@@ -22,8 +21,9 @@ export class AndCondition extends Condition {
 
   /*
         All operands must match once.
-        Any transform/publish/transition directives on the operands will be carried up and will override any at 'this' level
-        i.e. 'deepest one wins'
+        The transform/publish/transition directives should be defined only at 'this' (the AndCondition) level
+        Any transform/publish/transition directives on the operands WILL NOT BE CARRIED UP.
+        i.e. 'highest one wins'
     */
   async applyCondition(event: Event, thredStore: ThredStore): Promise<ConditionResult | undefined> {
     const { reactionStore } = thredStore;

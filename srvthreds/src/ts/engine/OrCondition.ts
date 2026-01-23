@@ -21,6 +21,7 @@ export class OrCondition extends Condition {
 
   /*
         First matching condition is selected.
+        Transforms/publishes/transitions may be defined at any level (on the OrCondition or on each matching operand).
         Any transform/publish/transition directives on the matching operand will be carried up and will override any at 'this' level
         i.e. 'deepest one wins'
     */

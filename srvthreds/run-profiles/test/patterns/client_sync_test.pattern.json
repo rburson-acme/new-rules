@@ -19,6 +19,7 @@
                             "xpr": "$setLocal('req_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
                         },
                         "transform": {
+                            "name": "save_sync",
                             "eventDataTemplate": {
                                 "title": "Sync Event Detected",
                                 "content": {
@@ -49,16 +50,14 @@
                             "name": "notify_participant"
                         },
                         "publish": {
-                            "to": "org.wt.persistence",
-                            "onPublish": {
-                                "xpr": "$setLocal('saveSeqOutId', $event.id)"
-                            }
+                            "to": "org.wt.persistence"
                         }
                     },
                     {
                         "type": "filter",
                         "xpr": "$event.type = 'org.sync.event' and $valueNamed('action') = 'finish'",
                         "transform": {
+                            "name": "finish_sync",
                             "eventDataTemplate": {
                                 "title": "Getting Sync Data",
                                 "content": {
@@ -81,10 +80,7 @@
                             }
                         },
                         "publish": {
-                            "to": "org.wt.persistence",
-                            "onPublish": {
-                                "xpr": "$setLocal('finishOutId', $event.id)"
-                            }
+                            "to": "org.wt.persistence"
                         },
                         "transition": {
                             "name": "send_results"
@@ -98,7 +94,7 @@
             "description": "Notifies the requesting participant that a sequence ID was stored successfully",
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence' and $event.re = $local('saveSeqOutId')",
+                "xpr": "$event.type = 'org.wt.persistence' and $isResponseFor('save_sync')",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Sequence Stored",
@@ -125,7 +121,7 @@
             "description": "Returns the collected sequence IDs to the requesting participant and forwards to cleanup",
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence' and $event.re = $local('finishOutId')",
+                "xpr": "$event.type = 'org.wt.persistence' and $isResponseFor('finish_sync')",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Final Test Results",

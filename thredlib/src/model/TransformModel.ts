@@ -4,6 +4,15 @@ import { EventData } from '../core/Event.js';
  * Describes how a new, outbound Event should be constructed.
  */
 export interface TransformModel {
+
+  /**
+   * The optional name of the transform. May be used to reference this transform elsewhere.
+   * The transform name may be used with the $isResponseFor() function in jsonata expressions to test whether 
+   * an inbound event is a response to an outbound event generated using this transform (by checking the 're' property under the hood).
+   * @property {string} [name]
+   */
+  readonly name?: string;
+
   /**
    * Meta data for the transform.
    *  @property {object} [meta]

@@ -935,6 +935,10 @@
           },
           "type": "object"
         },
+        "name": {
+          "description": "The optional name of the transform. May be used to reference this transform elsewhere. The transform name may be used with the $isResponseFor() function in jsonata expressions to test whether  an inbound event is a response to an outbound event generated using this transform (by checking the 're' property under the hood).",
+          "type": "string"
+        },
         "templateXpr": {
           "description": "An optional jsonata expression to be run to generate the entire Event Data portion of the outbound event.",
           "type": "string"
