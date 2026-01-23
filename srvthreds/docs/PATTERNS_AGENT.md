@@ -434,7 +434,7 @@ The optional `name` parameter allows you to identify which outbound event a subs
 - `$valueNamed(name)` - get value from event
 - `$local(name)` - get from local storage
 - `$setLocal(name, value)` - store in local storage (persisted to Redis)
-- `$isResponseFor(transformName)` - returns true if inbound event is a response to the named transform's outbound event
+- `$isResponseFor(transformName)` - returns true if inbound event is a response to the named transform's outbound event (only needed when multiple requests to the same service are in flight)
 
 **Important**
 - When targeting specific values (key names) in the event payload values object, using the $valueNamed(name) operator is often the best approach.  It will search all arrays and objects in a depth-first search until it encounters the key/value you've specificed in $valueNamed(name). It will return the first occurance that it encounters.  This is often a better approach than trying to accurately predict the returned object and array structure.
@@ -843,7 +843,7 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 - **Broadcast** requires broadcastAllowed:true in pattern
 - **Per-instance isolation** - Use `$event.thredId` as document ID when each thred needs its own data (e.g., `"matcher": {"id": "$xpr($event.thredId)"}`)
 - **Cleanup confirmation** - When performing critical operations (delete, cleanup), wait for persistence response before terminating to ensure completion
-- **Response correlation** - Use transform `name` with `$isResponseFor('transformName')` to match responses to specific outbound requests when multiple requests are in flight
+- **Response correlation** - Use transform `name` with `$isResponseFor('transformName')` only when multiple outbound requests to the same service may be in flight simultaneously and responses need to be distinguished; otherwise simple event type filtering suffices
 
 ## Schema Compliance
 Pattern must validate against ../thredlib/src/schemas/patternModel.json. Critical fields: name (string), reactions (array of ReactionModel), each reaction has condition (ConditionModel) with type (filter|and|or) and type-specific requirements.
