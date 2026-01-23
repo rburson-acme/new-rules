@@ -4,9 +4,11 @@
     },
     "name": "Sync Test Pattern",
     "id": "sync_test",
+    "description": "Test pattern for validating client synchronization by storing and retrieving sequence IDs",
     "reactions": [
         {
             "name": "save_seqId",
+            "description": "Handles sync events - either saves a sequence ID to persistence or initiates data retrieval on finish",
             "condition": {
                 "type": "or",
                 "operands": [
@@ -47,7 +49,10 @@
                             "name": "notify_participant"
                         },
                         "publish": {
-                            "to": "org.wt.persistence"
+                            "to": "org.wt.persistence",
+                            "onPublish": {
+                                "xpr": "$setLocal('saveSeqOutId', $event.id)"
+                            }
                         }
                     },
                     {
@@ -76,7 +81,10 @@
                             }
                         },
                         "publish": {
-                            "to": "org.wt.persistence"
+                            "to": "org.wt.persistence",
+                            "onPublish": {
+                                "xpr": "$setLocal('finishOutId', $event.id)"
+                            }
                         },
                         "transition": {
                             "name": "send_results"
@@ -87,9 +95,10 @@
         },
         {
             "name": "notify_participant",
+            "description": "Notifies the requesting participant that a sequence ID was stored successfully",
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence'",
+                "xpr": "$event.type = 'org.wt.persistence' and $event.re = $local('saveSeqOutId')",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Sequence Stored",
@@ -113,9 +122,10 @@
         },
         {
             "name": "send_results",
+            "description": "Returns the collected sequence IDs to the requesting participant and forwards to cleanup",
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence'",
+                "xpr": "$event.type = 'org.wt.persistence' and $event.re = $local('finishOutId')",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Final Test Results",
@@ -139,6 +149,7 @@
         },
         {
             "name": "cleanup",
+            "description": "Deletes the test sync data from persistence to clean up after the test",
             "condition": {
                 "type": "filter",
                 "xpr": "true",
@@ -174,6 +185,7 @@
         },
         {
             "name": "wait_cleanup_response",
+            "description": "Waits for persistence confirmation that cleanup completed before terminating the thred",
             "condition": {
                 "type": "filter",
                 "xpr": "$event.type = 'org.wt.persistence'",

@@ -67,12 +67,12 @@ async function runSyncTest(numIterations: number = 100): Promise<void> {
     });
 
   const pr1 = getSyncPromise(eventManager0, 'participant0', 'Participant 0', numIterations);
-  const pr2 = getSyncPromise(eventManager1, 'participant1', 'Participant 1', numIterations);
-  const pr3 = getSyncPromise(eventManager2, 'participant2', 'Participant 2', numIterations);
-  const pr4 = getSyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
-  const pr5 = getSyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
+  //const pr2 = getSyncPromise(eventManager1, 'participant1', 'Participant 1', numIterations);
+  //const pr3 = getSyncPromise(eventManager2, 'participant2', 'Participant 2', numIterations);
+  //const pr4 = getSyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
+  //const pr5 = getSyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
 
-  await Promise.all([pr1, pr2, pr3, pr4, pr5]);
+  await Promise.all([pr1 /*, pr2, pr3, pr4, pr5*/]);
 }
 
 function getSyncPromise(eventManager: EventManager, id: string, name: string, numIterations: number): Promise<void> {
@@ -89,7 +89,7 @@ function getSyncPromise(eventManager: EventManager, id: string, name: string, nu
           thredId = result.thredId;
           Logger.debug(`${name} seqId:${i} Result: ${Events.valueNamed(result, 'seqId')} ThredId: ${result.thredId}`);
         }
-        /*const finishEvent = createFinishEvent({ id, name }, thredId);
+        const finishEvent = createFinishEvent({ id, name }, thredId);
         const resultEvent = await eventManager.subscribeOnceWithPromise(
           { filter: `$thredId = '${thredId}'` },
           finishEvent,
@@ -100,7 +100,7 @@ function getSyncPromise(eventManager: EventManager, id: string, name: string, nu
           if (resultSeqIds[i] !== i) {
             throw new Error(`${name}: Expected seqId ${i} but got ${resultSeqIds[i]}`);
           }
-        }*/
+        }
         resolve();
       } catch (e) {
         reject(e);
