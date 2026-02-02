@@ -44,8 +44,8 @@ export class RemoteQService<T> implements QService<T> {
 
   /*
     Return the next message in the Q if available
-    If no meessages are in the Q, return a promise that will resolve when a message is available
-    This uses the 'notifyQ' hold callback functions that will resolve the promise when a message arrives
+    If no messages are in the Q, return a promise that will resolve when a message is available
+    This uses the 'notifyQ' to hold callback functions that will resolve the promise when a message arrives
   */
   async pop(): Promise<QMessage<T>> {
     const { q } = this;

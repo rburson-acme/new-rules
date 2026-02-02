@@ -70,7 +70,7 @@ export class Threds {
     const timestamp = Date.now();
     await this.persistEvent(event, thredId);
     const { thredStatus, patternId } = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) =>
-      this.processBoundEvent(event, thredStore, timestamp),
+      this.lock_processBoundEvent(event, thredStore, timestamp),
     );
     await this.decrementIfTerminated(thredStatus, patternId);
   }
@@ -86,6 +86,7 @@ export class Threds {
 
     // @TODO re-enable matching against running threds allowing unbound events
     // consider keeping a list of threds allowing unbound events to avoid scanning all threds
+    // also consider allowing event.thredId to specify a wildcard or list of thredIds to match against
     //matches += await this.matchRunningThreds(event);
 
     if (matches === 0) {
@@ -123,7 +124,7 @@ export class Threds {
           if (thredStore && thredStore.pattern.allowUnbound) {
             if (await Thred.test(event, thredStore)) {
               matches++;
-              return this.processBoundEvent(event, thredStore, Date.now());
+              return this.lock_processBoundEvent(event, thredStore, Date.now());
             }
           }
         });
@@ -140,29 +141,7 @@ export class Threds {
     return matches;
   }
 
-  private async processBoundEvent(
-    event: Event,
-    thredStore: ThredStore | undefined,
-    timestamp: number,
-  ): Promise<{ thredStatus: ThredStatus; patternId: string }> {
-    if (!thredStore) throw await this.getMissingThredError(event.thredId!, event.id, event.type, timestamp);
-    // check to see if this an error event sent by an agent
-    this.checkForErrorEvent(event, thredStore);
-    await Thred.consider(event, thredStore, this);
-    return { thredStatus: thredStore.status, patternId: thredStore.pattern.id };
-  }
-
-  // top-level lock here - 'withNewThredStore' will lock on a per-thredId basis
-  // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
-  private async startThred(pattern: Pattern, event: Event): Promise<ThredStatus> {
-    return this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
-      const boundEvent = { ...event, thredId: thredStore.id };
-      await this.persistEvent(boundEvent);
-      await Thred.consider(boundEvent, thredStore, this);
-      return thredStore.status;
-    });
-  }
-
+  // creates a top-level lock on patternsStore
   private async tryPatternMatch(pattern: Pattern, event: Event): Promise<boolean> {
     if (!(await pattern.consider(event, new ThredContext()))) {
       return false;
@@ -174,10 +153,36 @@ export class Threds {
     // Note: this is a thred lock (startThred) within a pattern lock (withLockForNewThread)
     // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
     const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(pattern.id, async () =>
-      this.startThred(pattern, event),
+      this.lock_startThred(pattern, event),
     );
     await this.decrementIfTerminated(thredStatus, pattern.id);
     return true;
+  }
+
+  // requires lock on thredStore
+  private async lock_processBoundEvent(
+    event: Event,
+    thredStore: ThredStore | undefined,
+    timestamp: number,
+  ): Promise<{ thredStatus: ThredStatus; patternId: string }> {
+    if (!thredStore) throw await this.getMissingThredError(event.thredId!, event.id, event.type, timestamp);
+    // check to see if this an error event sent by an agent
+    this.checkForErrorEvent(event, thredStore);
+    await Thred.consider(event, thredStore, this);
+    return { thredStatus: thredStore.status, patternId: thredStore.pattern.id };
+  }
+
+
+  // requires lock on patternsStore
+  // also create a top-level lock here on thredStore - 'withNewThredStore' will lock on a per-thredId basis
+  // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation
+  private async lock_startThred(pattern: Pattern, event: Event): Promise<ThredStatus> {
+    return this.thredsStore.withNewThredStore(pattern, async (thredStore: ThredStore) => {
+      const boundEvent = { ...event, thredId: thredStore.id };
+      await this.persistEvent(boundEvent);
+      await Thred.consider(boundEvent, thredStore, this);
+      return thredStore.status;
+    });
   }
 
   // check to see if this an error event sent by an agent

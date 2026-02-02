@@ -1,6 +1,10 @@
 import '../../ts/init.js';
 import { EventBuilder, EventManager, Events, Logger, LoggerLevel } from '../../ts/thredlib/index.js';
 
+/**
+ * This is intended to run against the client_async_test.pattern.js pattern
+ */
+
 const eventManager0 = new EventManager();
 const eventManager1 = new EventManager();
 const eventManager2 = new EventManager();
@@ -16,7 +20,7 @@ function createSyncEvent(
   thredId: string | undefined,
 ): any {
   return EventBuilder.create({
-    type: 'org.sync.event',
+    type: 'org.async.event',
     source,
     thredId,
   })
@@ -28,7 +32,7 @@ function createSyncEvent(
 
 function createFinishEvent(source: { id: string; name: string }, thredId: string | undefined): any {
   return EventBuilder.create({
-    type: 'org.sync.event',
+    type: 'org.async.event',
     source,
     thredId,
   })
@@ -37,8 +41,8 @@ function createFinishEvent(source: { id: string; name: string }, thredId: string
     .build();
 }
 
-async function runSyncTest(numIterations: number = 100): Promise<void> {
-  Logger.info('Starting Sync Test');
+async function runAsyncTest(numIterations: number = 100): Promise<void> {
+  Logger.info('Starting Async Test');
   await eventManager0
     .connect('http://localhost:3000', { transports: ['websocket'], jsonp: false, auth: { token: 'participant0' } })
     .catch((e) => {
@@ -66,39 +70,52 @@ async function runSyncTest(numIterations: number = 100): Promise<void> {
       Logger.error(e);
     });
 
-  const pr1 = getSyncPromise(eventManager0, 'participant0', 'Participant 0', numIterations);
-  //const pr2 = getSyncPromise(eventManager1, 'participant1', 'Participant 1', numIterations);
-  //const pr3 = getSyncPromise(eventManager2, 'participant2', 'Participant 2', numIterations);
-  //const pr4 = getSyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
-  //const pr5 = getSyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
-
-  await Promise.all([pr1 /*, pr2, pr3, pr4, pr5*/]);
+  const pr1 = getAsyncPromise(eventManager0, 'participant0', 'Participant 0', numIterations);
+  const pr2 = getAsyncPromise(eventManager1, 'participant1', 'Participant 1', numIterations);
+  const pr3 = getAsyncPromise(eventManager2, 'participant2', 'Participant 2', numIterations);
+  const pr4 = getAsyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
+  const pr5 = getAsyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
+  await Promise.all([pr1, pr2, pr3, pr4, pr5 ]);
 }
 
-function getSyncPromise(eventManager: EventManager, id: string, name: string, numIterations: number): Promise<void> {
+
+function getAsyncPromise(eventManager: EventManager, id: string, name: string, numIterations: number): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     (async () => {
       try {
         let thredId: string | undefined = undefined;
-        for (let i = 0; i < numIterations; i++) {
-          const syncEvent = createSyncEvent(i, 'seq', { id, name }, thredId);
-          const result = await eventManager.subscribeOnceWithPromise(
-            { filter: `$valueNamed('seqId') = ${i}` },
-            syncEvent,
-          );
-          thredId = result.thredId;
-          Logger.debug(`${name} seqId:${i} Result: ${Events.valueNamed(result, 'seqId')} ThredId: ${result.thredId}`);
-        }
+        const firstSyncEvent = createSyncEvent(0, 'seq', { id, name }, undefined);
+        const firstReponseEvent = await eventManager.subscribeOnceWithPromise(
+          { filter: `$valueNamed('seqId') = 0` },
+          firstSyncEvent,
+        );
+        thredId = firstReponseEvent.thredId;
+        Logger.debug(
+          `${name} seqId:0 Result: ${Events.valueNamed(firstReponseEvent, 'seqId')} ThredId: ${firstReponseEvent.thredId}`,
+        );
+        const prArray = Array.from({ length: numIterations - 1 }, (_, i) => {
+          const it = i + 1;
+          const syncEvent = createSyncEvent(it, 'seq', { id, name }, thredId);
+          const pr = eventManager.subscribeOnceWithPromise({ filter: `$valueNamed('seqId') = ${it}` }, syncEvent);
+          return pr
+            .then((event) => {
+              Logger.debug(`${name} seqId:${it} Result: ${Events.valueNamed(event, 'seqId')} ThredId: ${event.thredId}`);
+            })
+            .catch((e) => {
+              throw e;
+            });
+        });
+        await Promise.all(prArray);
         const finishEvent = createFinishEvent({ id, name }, thredId);
         const resultEvent = await eventManager.subscribeOnceWithPromise(
           { filter: `$thredId = '${thredId}'` },
           finishEvent,
         );
         Logger.debug(`${name} received finish event with seqIds ${Events.valueNamed(resultEvent, 'seqIds')}`);
-        const resultSeqIds = Events.valueNamed(resultEvent, 'seqIds');
+        const resultSeqIds: number[] = Events.valueNamed(resultEvent, 'seqIds');
         for (let i = 0; i < numIterations; i++) {
-          if (resultSeqIds[i] !== i) {
-            throw new Error(`${name}: Expected seqId ${i} but got ${resultSeqIds[i]}`);
+          if (!resultSeqIds.includes(i)) {
+            throw new Error(`${name}: Missing seqId ${i} in result seqIds ${resultSeqIds}`);
           }
         }
         resolve();
@@ -110,7 +127,7 @@ function getSyncPromise(eventManager: EventManager, id: string, name: string, nu
 }
 
 const startTime = Date.now();
-await runSyncTest()
+await runAsyncTest()
   .catch((e) => {
     Logger.error('Test Failed', e);
     process.exit(1);

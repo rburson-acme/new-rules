@@ -7,8 +7,8 @@ export type ExpressionParams = {
 export declare class Expression {
     private readonly expression;
     constructor(expr: string);
-    apply(params: ExpressionParams, bindings?: Record<string, string>): Promise<any>;
-    bindingSetup(bindings: Record<string, string>, params: ExpressionParams): {
+    apply(params: ExpressionParams, bindings?: Record<string, any>): Promise<any>;
+    bindingSetup(bindings: Record<string, any>, params: ExpressionParams): {
         event: Event;
         thredId: string | undefined;
         advice: {
@@ -22,5 +22,7 @@ export declare class Expression {
         valueNamed: (name: string, _event?: Event) => any;
         local: (name: string) => any;
         setLocal: (name: string, value: any) => void;
+        isResponseFor: (transformName: string) => boolean;
+        log: (msg: string) => void;
     };
 }

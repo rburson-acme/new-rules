@@ -755,9 +755,13 @@
           "description": "A human-readable description",
           "type": "string"
         },
+        "name": {
+          "description": "The optional name of the transform. May be used to reference this transform elsewhere. The transform name may be used with the $isResponseFor() function in jsonata expressions to test whether  an inbound event is a response to an outbound event generated using this transform (by checking the 're' property under the hood).",
+          "type": "string"
+        },
         "onPublish": {
           "$ref": "#/definitions/ConsequentModel",
-          "description": "An expression to be run at publish time with the new, outbound Event as the event paramater."
+          "description": "An expression to be run at publish time with the new, outbound Event available in the expression as $outboundEvent The inbound Event is available as $event as are the rest of the accessor and function bindings."
         },
         "to": {
           "$ref": "#/definitions/AddressModel",
@@ -934,10 +938,6 @@
             }
           },
           "type": "object"
-        },
-        "name": {
-          "description": "The optional name of the transform. May be used to reference this transform elsewhere. The transform name may be used with the $isResponseFor() function in jsonata expressions to test whether  an inbound event is a response to an outbound event generated using this transform (by checking the 're' property under the hood).",
-          "type": "string"
         },
         "templateXpr": {
           "description": "An optional jsonata expression to be run to generate the entire Event Data portion of the outbound event.",

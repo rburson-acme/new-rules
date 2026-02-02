@@ -8,7 +8,7 @@ import { ThredStore } from './store/ThredStore.js';
 import { ConditionFactory } from './ConditionFactory.js';
 import { Consequent } from './Consequent.js';
 
-const { debug, logObject, error, h2 } = Logger;
+const { debug, h2 } = Logger;
 
 export type ConditionResult = {
   transform?: Transform | undefined;

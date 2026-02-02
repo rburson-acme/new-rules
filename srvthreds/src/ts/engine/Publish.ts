@@ -13,10 +13,12 @@ import { Consequent } from './Consequent.js';
 export class Publish {
   to: Address;
   onPublish?: Consequent;
+  name?: string;
 
   constructor(publish: PublishModel) {
     this.to = publish.to;
     this.onPublish = publish.onPublish && new Consequent(publish.onPublish);
+    this.name = publish.name;
   }
 
   async apply(inboundEvent: Event, thredStore: ThredStore, outboundEvent?: Event): Promise<Address> {
@@ -35,7 +37,7 @@ export class Publish {
           ? [transformedTo]
           : transformedTo;
       // run the onPublish handler on the new, outboundEvent if any
-      this.onPublish && outboundEvent && (await this.onPublish.apply(outboundEvent, thredStore));
+      this.onPublish && outboundEvent && (await this.onPublish.apply(inboundEvent, thredStore, outboundEvent));
       return result as Address;
     } catch (e) {
       throw Error(`publish.apply(): Failed to transform expr ${to}`);

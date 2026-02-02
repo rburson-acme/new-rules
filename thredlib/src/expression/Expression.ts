@@ -19,7 +19,7 @@ export class Expression {
     }
   }
 
-  async apply(params: ExpressionParams, bindings: Record<string, string> = {}): Promise<any> {
+  async apply(params: ExpressionParams, bindings: Record<string, any> = {}): Promise<any> {
     try {
       // await and catch any errors before returning
       return await this.expression.evaluate(params, this.bindingSetup(bindings, params));
@@ -30,7 +30,7 @@ export class Expression {
     }
   }
 
-  bindingSetup(bindings: Record<string, string>, params: ExpressionParams) {
+  bindingSetup(bindings: Record<string, any>, params: ExpressionParams) {
     return {
       ...defaultBindings(params),
       ...bindings,

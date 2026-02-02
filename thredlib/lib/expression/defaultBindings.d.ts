@@ -1,5 +1,6 @@
 import { Event } from '../core/Event.js';
 import { ExpressionParams } from './Expression.js';
+export declare const OUTPUT_EVENT_ID_PREFIX = "out_id_";
 export declare const defaultBindings: (params: ExpressionParams) => {
     event: Event;
     thredId: string | undefined;
@@ -14,4 +15,6 @@ export declare const defaultBindings: (params: ExpressionParams) => {
     valueNamed: (name: string, _event?: Event) => any;
     local: (name: string) => any;
     setLocal: (name: string, value: any) => void;
+    isResponseFor: (transformName: string) => boolean;
+    log: (msg: string) => void;
 };

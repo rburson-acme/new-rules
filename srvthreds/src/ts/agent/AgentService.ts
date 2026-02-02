@@ -137,6 +137,7 @@ export class AgentService {
     //const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
     const qMessage: QMessage<Message> = await messageQ.pop();
     try {
+      // process messages synchronously.  Throughput may be improved by processing messages asynchronously
       await this.processMessage(qMessage.payload);
       await messageQ.delete(qMessage);
     } catch (e: any) {

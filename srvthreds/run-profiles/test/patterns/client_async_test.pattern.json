@@ -2,22 +2,21 @@
     "meta": {
         "active": true
     },
-    "name": "Sync Test Pattern",
-    "id": "sync_test",
-    "description": "Test pattern for validating client synchronization by storing and retrieving sequence IDs",
+    "name": "Async Test Pattern",
+    "id": "async_test",
+    "description": "Test pattern for validating client synchronization by storing and retrieving sequence IDs asynchronously",
     "reactions": [
         {
             "name": "save_seqId",
-            "description": "Handles sync events - either saves a sequence ID to persistence or initiates data retrieval on finish",
+            "description": "Handles incoming sequence events, persistence responses, and finish requests in a loop until finish is requested",
             "condition": {
                 "type": "or",
+                "description": "Routes events based on type: new sequence IDs to save, persistence confirmations to acknowledge, or finish requests to retrieve results",
                 "operands": [
                     {
                         "type": "filter",
-                        "xpr": "$event.type = 'org.sync.event' and $valueNamed('action') = 'seq'",
-                        "onTrue": {
-                            "xpr": "$setLocal('req_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
-                        },
+                        "description": "Handles new sequence ID events by saving them to persistence and storing correlation data",
+                        "xpr": "$event.type = 'org.async.event' and $valueNamed('action') = 'seq'",
                         "transform": {
                             "eventDataTemplate": {
                                 "title": "Sync Event Detected",
@@ -46,16 +45,47 @@
                             }
                         },
                         "transition": {
-                            "name": "notify_participant"
+                            "name": "save_seqId"
                         },
                         "publish": {
                             "name": "save_sync",
-                            "to": "org.wt.persistence"
+                            "to": "org.wt.persistence",
+                            "onPublish": {
+                                "xpr": "$setLocal($outboundEvent.id & '_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
+                            }
                         }
                     },
                     {
                         "type": "filter",
-                        "xpr": "$event.type = 'org.sync.event' and $valueNamed('action') = 'finish'",
+                        "description": "Handles persistence confirmations by notifying the original requester that their sequence ID was saved",
+                        "xpr": "$event.type = 'org.wt.persistence'",
+                        "transform": {
+                            "eventDataTemplate": {
+                                "title": "Sequence Stored",
+                                "description": "Sequence ID stored successfully",
+                                "content": {
+                                    "values": {
+                                        "seqId": "$xpr( $local($event.re & '_data').seqId )"
+                                    }
+                                }
+                            }
+                        },
+                        "transition": {
+                            "name": "save_seqId"
+                        },
+                        "publish": {
+                            "to": [
+                                "$xpr( $local($event.re & '_data').sourceId )"
+                            ]
+                        }
+                    },
+                    {
+                        "type": "filter",
+                        "description": "Handles finish requests by retrieving all stored sequence IDs from persistence",
+                        "xpr": "$event.type = 'org.async.event' and $valueNamed('action') = 'finish'",
+                        "onTrue": {
+                            "xpr": "$setLocal('fin_req_data', { 'sourceId': $event.source.id })"
+                        },
                         "transform": {
                             "eventDataTemplate": {
                                 "title": "Getting Sync Data",
@@ -90,38 +120,11 @@
             }
         },
         {
-            "name": "notify_participant",
-            "description": "Notifies the requesting participant that a sequence ID was stored successfully",
-            "condition": {
-                "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence' and $isResponseFor('save_sync')",
-                "transform": {
-                    "eventDataTemplate": {
-                        "title": "Sequence Stored",
-                        "description": "Sequence ID stored successfully",
-                        "content": {
-                            "values": {
-                                "seqId": "$xpr( $local('req_data').seqId )"
-                            }
-                        }
-                    }
-                },
-                "transition": {
-                    "name": "save_seqId"
-                },
-                "publish": {
-                    "to": [
-                        "$xpr( $local('req_data').sourceId )"
-                    ]
-                }
-            }
-        },
-        {
             "name": "send_results",
             "description": "Returns the collected sequence IDs to the requesting participant and forwards to cleanup",
             "condition": {
                 "type": "filter",
-                "xpr": "$event.type = 'org.wt.persistence' and $isResponseFor('finish_sync')",
+                "xpr": "$event.type = 'org.wt.persistence'",
                 "transform": {
                     "eventDataTemplate": {
                         "title": "Final Test Results",
@@ -134,7 +137,7 @@
                 },
                 "publish": {
                     "to": [
-                        "$xpr( $local('req_data').sourceId )"
+                        "$xpr( $local('fin_req_data').sourceId )"
                     ]
                 },
                 "transition": {

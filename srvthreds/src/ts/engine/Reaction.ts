@@ -44,9 +44,9 @@ export class Reaction {
     if (result) {
       const { transform, publish, transition } = result;
       const newEvent = await transform?.apply(event, thredStore);
-      // if the tranform has a name, store the new event id in the thred context locals
-      transform?.name && thredStore.thredContext.setLocal(`${OUTPUT_EVENT_ID_PREFIX}${transform.name}`, newEvent?.id);
       const to = await publish?.apply(event, thredStore, newEvent);
+      // if the publish object has a name, store the new event id in the thred context locals
+      publish?.name && thredStore.thredContext.setLocal(`${OUTPUT_EVENT_ID_PREFIX}${publish.name}`, newEvent?.id);
       const messageTemplate = to && newEvent ? { event: newEvent, to } : undefined;
       return { messageTemplate, transition };
     }

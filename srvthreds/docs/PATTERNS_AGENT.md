@@ -326,7 +326,6 @@ Pattern using this context:
 ## Transforms
 ```json
 {
-  "name": "string (optional)",  // for $isResponseFor() matching
   "description": "string (optional)",
   "eventDataTemplate": {  // option 1
     "title": "string|$xpr(...)",
@@ -353,12 +352,40 @@ Pattern using this context:
 }
 ```
 
-**Transform `name` and Response Matching:**
-The optional `name` parameter allows you to identify which outbound event a subsequent inbound event is responding to. When a named transform creates an outbound event, the system stores the event ID. Use `$isResponseFor('transformName')` in subsequent reactions to check if an incoming event is a response to that specific outbound event.
+## Publish
+```json
+{
+  "name": "string (optional)",  // for $isResponseFor() matching
+  "description": "string (optional)",
+  "to": "string|array",  // participant IDs, $groups, agents, or $xpr(...)
+  "onPublish": {"xpr": "expression"}  // optional, runs with outbound event
+}
+```
+
+**Address Resolution:** Direct IDs → pass through, $groups → expand to members, expressions → evaluate, arrays → flatten.
+
+**`onPublish` Handler:**
+The optional `onPublish` expression runs after the outbound event is created but before it's sent. Within this expression, the `$outboundEvent` binding provides access to the newly created outbound event (including its `id`), while `$event` still refers to the original inbound event. All other standard bindings (`$valueNamed()`, `$local()`, `$setLocal()`, etc.) remain available.
+
+**Example: Storing outbound event ID for later correlation**
+```json
+{
+  "publish": {
+    "to": "org.wt.persistence",
+    "onPublish": {
+      "xpr": "$setLocal($outboundEvent.id & '_data', { 'sourceId': $event.source.id, 'seqId': $valueNamed('seqId') })"
+    }
+  }
+}
+```
+This stores metadata keyed by the outbound event ID, which can later be retrieved when the response arrives using `$local($event.re & '_data')`.
+
+**Publish `name` and Response Matching:**
+The optional `name` parameter allows you to identify which outbound event a subsequent inbound event is responding to. When a named publish sends an outbound event, the system stores the event ID. Use `$isResponseFor('publishName')` in subsequent reactions to check if an incoming event is a response to that specific outbound event.
 
 **When to use:** This feature is only necessary when multiple outbound events may be in flight simultaneously and responses from the same source need to be distinguished. For example, if a pattern sends requests to the same service (e.g., persistence) from different reactions, and multiple responses could arrive, `$isResponseFor()` ensures each response is routed to the correct handler. If your pattern only has one outstanding request at a time, simple event type filtering (e.g., `$event.type = 'org.wt.persistence'`) is sufficient.
 
-**Example: Named Transforms with Response Matching**
+**Example: Named Publish with Response Matching**
 ```json
 {
   "reactions": [
@@ -368,12 +395,11 @@ The optional `name` parameter allows you to identify which outbound event a subs
         "type": "filter",
         "xpr": "$event.type = 'start'",
         "transform": {
-          "name": "save_data",  // Name the transform
           "eventDataTemplate": {
             "content": {"tasks": [{"op": "put", "params": {"type": "Record", "values": {}}}]}
           }
         },
-        "publish": {"to": "org.wt.persistence"}
+        "publish": {"name": "save_data", "to": "org.wt.persistence"}
       }
     },
     {
@@ -388,18 +414,6 @@ The optional `name` parameter allows you to identify which outbound event a subs
     }
   ]
 }
-```
-
-## Publish
-```json
-{
-  "description": "string (optional)",
-  "to": "string|array",  // participant IDs, $groups, agents, or $xpr(...)
-  "onPublish": {"xpr": "expression"}  // optional, runs with outbound event
-}
-```
-
-**Address Resolution:** Direct IDs → pass through, $groups → expand to members, expressions → evaluate, arrays → flatten.
 
 ## Transitions
 ```json
@@ -434,7 +448,8 @@ The optional `name` parameter allows you to identify which outbound event a subs
 - `$valueNamed(name)` - get value from event
 - `$local(name)` - get from local storage
 - `$setLocal(name, value)` - store in local storage (persisted to Redis)
-- `$isResponseFor(transformName)` - returns true if inbound event is a response to the named transform's outbound event (only needed when multiple requests to the same service are in flight)
+- `$isResponseFor(publishName)` - returns true if inbound event is a response to the named publish's outbound event (only needed when multiple requests to the same service are in flight)
+- `$outboundEvent` - the newly created outbound event (only available in `onPublish` expressions)
 
 **Important**
 - When targeting specific values (key names) in the event payload values object, using the $valueNamed(name) operator is often the best approach.  It will search all arrays and objects in a depth-first search until it encounters the key/value you've specificed in $valueNamed(name). It will return the first occurance that it encounters.  This is often a better approach than trying to accurately predict the returned object and array structure.
@@ -605,7 +620,7 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 12. Task params.type not matching service's entityTypeName
 13. Filtering on wrong event type for service responses
 14. Missing or misnamed fields in task values (must match EntityTypeSpec propertySpecs)
-15. Using `$isResponseFor('name')` without naming the transform (transform must have `"name": "name"` property)
+15. Using `$isResponseFor('name')` without naming the publish (publish must have `"name": "name"` property)
 
 ## Complete Minimal Examples
 
@@ -843,7 +858,7 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 - **Broadcast** requires broadcastAllowed:true in pattern
 - **Per-instance isolation** - Use `$event.thredId` as document ID when each thred needs its own data (e.g., `"matcher": {"id": "$xpr($event.thredId)"}`)
 - **Cleanup confirmation** - When performing critical operations (delete, cleanup), wait for persistence response before terminating to ensure completion
-- **Response correlation** - Use transform `name` with `$isResponseFor('transformName')` only when multiple outbound requests to the same service may be in flight simultaneously and responses need to be distinguished; otherwise simple event type filtering suffices
+- **Response correlation** - Use publish `name` with `$isResponseFor('publishName')` only when multiple outbound requests to the same service may be in flight simultaneously and responses need to be distinguished; otherwise simple event type filtering suffices
 
 ## Schema Compliance
 Pattern must validate against ../thredlib/src/schemas/patternModel.json. Critical fields: name (string), reactions (array of ReactionModel), each reaction has condition (ConditionModel) with type (filter|and|or) and type-specific requirements.

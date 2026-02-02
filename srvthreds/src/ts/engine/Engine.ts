@@ -89,16 +89,18 @@ export class Engine implements MessageHandler {
 
   /*
         Begin pulling events from the Q
-        Currently rascal is configured to only deliver 1 message at a time
-        To process multiple events in parallel rascal setting will need to be configured
-        Also the 'await' needs to be removed from the 'processEvent' method
+        Configure the prefetch value in the Rascal settings to throttle message delivery
+        To process events synchronously add an await before the processEvent call
   */
   private async run() {
-    while (true) await this.processEvent();
+    while (true) {
+      const message: QMessage<Event> = await this.inboundQ.pop();
+      //await this.processEvent(message);
+      this.processEvent(message);
+    }
   }
 
-  private async processEvent() {
-    const message: QMessage<Event> = await this.inboundQ.pop();
+  private async processEvent(message: QMessage<Event>): Promise<void> {
     const timestamp = Date.now();
     try {
       // handle the event
@@ -111,12 +113,20 @@ export class Engine implements MessageHandler {
         thredId: message.payload?.thredId,
         err: e as Error,
       });
-      await this.inboundQ.reject(message, e as Error).catch(error);
-      // update the event with the error
-      await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
-      await this.handleErrorNotification(e, message.payload);
-      // @TODO figure out on what types of Errors it makes sense to requeue
-      // await this.inboundQ.requeue(message, e).catch(Logger.error);
+      try {
+        await this.inboundQ.reject(message, e as Error).catch(error);
+        // update the event with the error
+        await Sc.get().upsertEventWithError({ event: message.payload, error: e, timestamp });
+        await this.handleErrorNotification(e, message.payload);
+        // @TODO figure out on what types of Errors it makes sense to requeue
+        // await this.inboundQ.requeue(message, e).catch(Logger.error);
+      } catch (err) {
+        error({
+          message: crit(`Failed to handle error in processEvent ${message.payload?.id}`),
+          thredId: message.payload?.thredId,
+          err: err as Error,
+        });
+      }
     }
   }
 

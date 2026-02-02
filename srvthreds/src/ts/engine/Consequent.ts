@@ -14,8 +14,10 @@ export class Consequent {
     this.expression = new Expression(consequentModel.xpr);
   }
 
-  async apply(event: Event, thredStore: ThredStore): Promise<any> {
+  async apply(inboundEvent: Event, thredStore: ThredStore, outboundEvent?: Event): Promise<any> {
     const context = thredStore.thredContext;
-    return this.expression.apply({ event, context });
+    // add a binding to make outboundEvent available in the expression
+    const bindings = { outboundEvent };
+    return this.expression.apply({ event: inboundEvent, context }, bindings);
   }
 }

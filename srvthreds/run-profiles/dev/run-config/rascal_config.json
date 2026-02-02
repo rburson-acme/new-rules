@@ -77,23 +77,23 @@
       "subscriptions": {
         "sub_event": {
           "queue": "event-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_session1_message": {
           "queue": "session1-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_session_message": {
           "queue": "session-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_persistence_message": {
           "queue": "persistence-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_robot_message": {
           "queue": "robot-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         }
       }
     }

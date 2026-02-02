@@ -15,11 +15,9 @@ export class Transform {
   private readonly eventDataTemplate?: EventData;
   private readonly templateXpr?: Expression;
   private readonly reXpr?: Expression;
-  readonly name?: string;
 
   constructor(transformModel: TransformModel) {
     this.eventDataTemplate = transformModel.eventDataTemplate;
-    this.name = transformModel.name;
     // note: we could defer compilation here until first use
     // it'll be a pattern startup time vs. application time decision
     if (transformModel.templateXpr) {

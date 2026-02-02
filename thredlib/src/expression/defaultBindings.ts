@@ -1,6 +1,7 @@
 import { Events } from '../core/Events.js';
 import { Event } from '../core/Event.js';
 import { ExpressionParams } from './Expression.js';
+import { Logger } from '../lib/Logger.js';
 
 export const OUTPUT_EVENT_ID_PREFIX = 'out_id_';
 
@@ -21,11 +22,11 @@ export const defaultBindings = (params: ExpressionParams) => {
     const getContent = () => Events.getContent(event);
     const getValues = () => Events.getValues(event);
     const valueNamed = (name: string, _event?: Event) => Events.valueNamed(_event || event, name);
+    const log = (msg: string) => Logger.debug(`Pattern Log: ${msg}`);
     const isResponseFor = (transformName: string): boolean => {
         const outputEventId = context.getLocal(`${OUTPUT_EVENT_ID_PREFIX}${transformName}`);
         return outputEventId !== undefined && event.re === outputEventId;
     }
-
 
     // to use these in an expression:
     // $event, $thredId, $data, $advice, $content, $values, $valueNamed('name'), $local('name'), $setLocal('name', value)
@@ -39,6 +40,7 @@ export const defaultBindings = (params: ExpressionParams) => {
         valueNamed,
         local,
         setLocal,
-        isResponseFor
+        isResponseFor,
+        log,
     };
 };
