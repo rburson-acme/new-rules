@@ -45,7 +45,7 @@
                             }
                         },
                         "transition": {
-                            "name": "save_seqId"
+                            "name": "save_seqIdE"
                         },
                         "publish": {
                             "name": "save_sync",

@@ -104,7 +104,7 @@
         "publish": {
           "to": "org.wt.robot",
           "onPublish": {
-            "xpr": "$setLocal('deploy_robot_id', $event.id)"
+            "xpr": "$setLocal('deploy_robot_id', $outboundEvent.id)"
           }
         }
       }

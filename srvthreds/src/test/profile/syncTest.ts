@@ -76,7 +76,7 @@ async function runSyncTest(numIterations: number = 100): Promise<void> {
   const pr4 = getSyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
   const pr5 = getSyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
 
-  await Promise.all([pr1, pr2, pr3, pr4, pr5 ]);
+  await Promise.all([pr1, pr2, pr3, pr4, pr5]);
 }
 
 function getSyncPromise(eventManager: EventManager, id: string, name: string, numIterations: number): Promise<void> {

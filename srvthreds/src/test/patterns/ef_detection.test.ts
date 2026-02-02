@@ -52,7 +52,6 @@ describe('Enemy forces detection test', function () {
     connMan.eventQ.queue({ ...participantDeployResponseEvent, thredId });
     return pr;
   });
-  // should match pattern's first reaction
   it('test inbound robot event and notify participants', function () {
     const pr = withDispatcherPromise(connMan.engine.dispatchers, async (message) => {
       const event = message.event;

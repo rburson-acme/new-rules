@@ -172,7 +172,6 @@ export class Threds {
     return { thredStatus: thredStore.status, patternId: thredStore.pattern.id };
   }
 
-
   // requires lock on patternsStore
   // also create a top-level lock here on thredStore - 'withNewThredStore' will lock on a per-thredId basis
   // locks are not reentrant so care should be taken not attempt to acquire a lock inside this operation

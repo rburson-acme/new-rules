@@ -75,9 +75,8 @@ async function runAsyncTest(numIterations: number = 100): Promise<void> {
   const pr3 = getAsyncPromise(eventManager2, 'participant2', 'Participant 2', numIterations);
   const pr4 = getAsyncPromise(eventManager3, 'participant3', 'Participant 3', numIterations);
   const pr5 = getAsyncPromise(eventManager4, 'participant4', 'Participant 4', numIterations);
-  await Promise.all([pr1, pr2, pr3, pr4, pr5 ]);
+  await Promise.all([pr1, pr2, pr3, pr4, pr5]);
 }
-
 
 function getAsyncPromise(eventManager: EventManager, id: string, name: string, numIterations: number): Promise<void> {
   return new Promise<void>((resolve, reject) => {
@@ -99,7 +98,9 @@ function getAsyncPromise(eventManager: EventManager, id: string, name: string, n
           const pr = eventManager.subscribeOnceWithPromise({ filter: `$valueNamed('seqId') = ${it}` }, syncEvent);
           return pr
             .then((event) => {
-              Logger.debug(`${name} seqId:${it} Result: ${Events.valueNamed(event, 'seqId')} ThredId: ${event.thredId}`);
+              Logger.debug(
+                `${name} seqId:${it} Result: ${Events.valueNamed(event, 'seqId')} ThredId: ${event.thredId}`,
+              );
             })
             .catch((e) => {
               throw e;

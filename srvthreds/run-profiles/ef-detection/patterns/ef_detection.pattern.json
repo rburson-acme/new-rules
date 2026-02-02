@@ -106,7 +106,7 @@
         "publish": {
           "to": "robot0",
           "onPublish": {
-            "xpr": "$setLocal('deploy_robot_id', $event.id)"
+            "xpr": "$setLocal('deploy_robot_id', $outboundEvent.id)"
           }
         }
       }

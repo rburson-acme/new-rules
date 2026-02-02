@@ -65,7 +65,7 @@ const patternModels: PatternModel[] = [
           publish: {
             to: ['outbound.event0.recipient'],
             onPublish: {
-              xpr: "$setLocal('outbound_event_id', $event.id)",
+              xpr: "$setLocal('outbound_event_id', $outboundEvent.id)",
             },
           },
         },
