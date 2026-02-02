@@ -7,7 +7,9 @@
 
 import 'dotenv/config';
 import { Logger, LoggerLevel } from '../ts/thredlib/index.js';
+import { PinoLogger } from '../ts/logger/PinoLogger.js';
 
+Logger.loggerDelegate = new PinoLogger();
 // Configure logger for test environment
 Logger.setLevel(LoggerLevel.INFO);
 
