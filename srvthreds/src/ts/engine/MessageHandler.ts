@@ -5,5 +5,4 @@ import { ThredContext } from './ThredContext.js';
 
 export interface MessageHandler {
   handleMessage(messageTemplate: MessageTemplate): Promise<void>;
-  shutdown(delay?: number): Promise<void>;
 }

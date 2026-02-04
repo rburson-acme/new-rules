@@ -53,10 +53,6 @@ export class Threds {
     return this.messageHandler.handleMessage(messageTemplate); // outbound messages with 'addressees'
   }
 
-  shutdown(delay = 0): Promise<void> {
-    return this.messageHandler.shutdown(delay);
-  }
-
   addThredToParticipants(thredId: string, participants: string[]): Promise<void> {
     return this.thredsStore.addThredToParticipantsStore(thredId, participants);
   }

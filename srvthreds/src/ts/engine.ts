@@ -30,9 +30,9 @@ import { RascalConfig } from './config/RascalConfig.js';
 export class EngineServiceManager {
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
+  engineServer?: Server;
 
   private static DEFAULT_SHUTDOWN_DELAY = 0;
-  private static DEFAULT_EVENT_PROCESSING_WAIT = 3000;
 
   constructor() {}
 
@@ -117,8 +117,8 @@ export class EngineServiceManager {
     });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
     //  setup the engine server
-    const engineServer = new Server(engineEventQ, engineMessageQ);
-    await engineServer.start();
+    this.engineServer = new Server(engineEventQ, engineMessageQ);
+    await this.engineServer.start();
   }
 
   /***
@@ -131,7 +131,6 @@ export class EngineServiceManager {
    */
 
   //
-  // quit on ctrl-c when running docker in terminal
   // shut down server
   async shutdown({ exitCode = 0, delay }: { exitCode?: number; delay?: number }): Promise<void> {
     const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
@@ -169,9 +168,8 @@ export class EngineServiceManager {
     Logger.info(`Stopping event consumption...`);
     await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     // wait for processing to complete
-    const eventProcessingWait = engineConfig?.eventProcessingWait ?? EngineServiceManager.DEFAULT_EVENT_PROCESSING_WAIT;
-    Logger.info(`Waiting ${eventProcessingWait}ms for event processing to complete...`);
-    await Timers.wait(eventProcessingWait);
+    Logger.info(`Waiting for event processing to complete...`);
+    await this.engineServer?.shutdown(engineConfig?.eventProcessingWait ?? 0);
     // Disconnect the q broker
     Logger.info(`Disconnecting RemoteQ...`);
     await this.engineMessageService?.disconnect().catch(Logger.error);

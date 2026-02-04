@@ -1,9 +1,8 @@
 import { Engine } from './Engine.js';
 import { EventQ } from '../queue/EventQ.js';
 import { MessageQ } from '../queue/MessageQ.js';
-import { Logger, StringMap, Parallel, Message } from '../thredlib/index.js';
+import { Logger, StringMap, Parallel, Message, PatternModel } from '../thredlib/index.js';
 import { Session } from '../sessions/Session.js';
-import { RunConfig } from './Config.js';
 import { System } from './System.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { QDispatcher } from './QDispatcher.js';
@@ -28,7 +27,11 @@ export class Server {
     this.engine.dispatchers.push(dispatcher.tell);
   }
 
-  async start(config?: RunConfig): Promise<void> {
-    return this.engine.start(config);
+  async start(configOverrides?: { patternModels: PatternModel[] }): Promise<void> {
+    return this.engine.start(configOverrides);
+  }
+
+  async shutdown(delay: number = 0): Promise<void> {
+    return this.engine.shutdown(delay);
   }
 }

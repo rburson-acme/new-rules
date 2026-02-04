@@ -103,6 +103,7 @@ class ServiceManager {
   robotAgent?: RemoteAgentService;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
+  engineServer?: Server;
 
   constructor() {}
 
@@ -155,10 +156,10 @@ class ServiceManager {
 
     // @TODO separate service
     //  setup the engine server
-    const engineServer = new Server(engineEventQ, engineMessageQ);
+    this.engineServer = new Server(engineEventQ, engineMessageQ);
 
     // uncomment for manual testing
-    await engineServer.start({ patternModels: patternModelsOverride });
+    await this.engineServer.start({ patternModels: patternModelsOverride });
 
     // comment this out for manual testing
     //await engineServer.start();
@@ -280,8 +281,7 @@ class ServiceManager {
     await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     Logger.info(`RemoteQ Broker disconnected successfully.`);
     // wait for processing to complete
-    Logger.info(`Waiting ${engineConfig?.eventProcessingWait ?? 1000}ms for event processing to complete...`);
-    await Timers.wait(engineConfig?.eventProcessingWait ?? 1000);
+    await this.engineServer?.shutdown(engineConfig?.eventProcessingWait ?? 0);
     // stop publishing messages
     Logger.info(`Disconnecting RemoteQ...`);
     await this.engineMessageService?.disconnect().catch(Logger.error);

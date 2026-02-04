@@ -1,11 +1,10 @@
-import { errorCodes, errorKeys, Logger, Parallel } from '../thredlib/index.js';
+import { errorCodes, errorKeys, Logger, Parallel, PatternModel } from '../thredlib/index.js';
 import { Event } from '../thredlib/index.js';
 import { Threds } from './Threds.js';
 import { ThredsStore } from './store/ThredsStore.js';
 import { PatternsStore } from './store/PatternsStore.js';
 import { EventQ } from '../queue/EventQ.js';
 import { StorageFactory } from '../storage/StorageFactory.js';
-import { RunConfig } from './Config.js';
 import { QMessage } from '../queue/QService.js';
 import { serializableError } from '../thredlib/core/Errors.js';
 import { Events } from './Events.js';
@@ -18,6 +17,7 @@ import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
 import { ConfigLoader } from '../config/ConfigLoader.js';
+import { PromiseTracker } from '../lib/PromiseTracker.js';
 
 const { debug, error, info, crit, h1, h2, logObject } = Logger;
 
@@ -29,8 +29,10 @@ export class Engine implements MessageHandler {
   dispatchers: ((messageTemplate: MessageTemplate) => Promise<void> | void)[] = [];
   readonly threds: Threds;
   readonly thredsStore: ThredsStore;
+  private readonly promiseTracker: PromiseTracker;
 
   constructor(readonly inboundQ: EventQ) {
+    this.promiseTracker = new PromiseTracker({ logPrefix: 'Engine' });
     if (!System.isInitialized())
       throw new Error('System not initialized - call System.initialize() before creating Engine');
     const storage = StorageFactory.getStorage();
@@ -40,11 +42,11 @@ export class Engine implements MessageHandler {
     this.threds = new SystemThreds(this.thredsStore, this);
   }
 
-  public async start(config?: RunConfig) {
+  public async start(configOverrides?: { patternModels?: PatternModel[] }): Promise<void> {
     // load existing patterns from storage
     await this.thredsStore.patternsStore.loadPatterns();
     // add any new patterns from config (runtime)
-    if (config?.patternModels) await this.thredsStore.patternsStore.addPatterns(config.patternModels);
+    if (configOverrides?.patternModels) await this.thredsStore.patternsStore.addPatterns(configOverrides.patternModels);
     await this.threds.initialize();
     // subscribe to pattern changes in storage
     await PubSubFactory.getSub().subscribe([Topics.PatternChanged], async (topic, message) => {
@@ -58,10 +60,8 @@ export class Engine implements MessageHandler {
   }
 
   public async shutdown(delay: number = 0): Promise<void> {
-    return System.getPROC().shutdown({ delay });
+    await this.promiseTracker.startAndDrain(delay || undefined);
   }
-
-  // @TODO Messages should also be routed to archival service here for failover and latent delivery
 
   /**
    * These are outbound 'messages', addressed to specific participants(i.e. an event with an address)
@@ -93,10 +93,13 @@ export class Engine implements MessageHandler {
         To process events synchronously add an await before the processEvent call
   */
   private async run() {
-    while (true) {
+    while (!this.promiseTracker.isDraining) {
       const message: QMessage<Event> = await this.inboundQ.pop();
-      //await this.processEvent(message);
-      this.processEvent(message);
+      if (this.promiseTracker.isDraining) {
+        await this.inboundQ.requeue(message);
+        break;
+      }
+      this.promiseTracker.track(this.processEvent(message));
     }
   }
 

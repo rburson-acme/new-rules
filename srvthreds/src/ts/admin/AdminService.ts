@@ -23,6 +23,7 @@ import {
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 import { NotificationHandler } from './NotificationHandler.js';
 import { ConfigLoader } from '../config/ConfigLoader.js';
+import { System } from '../engine/System.js';
 
 /***
  *       _       _           _           ___                      _   _
@@ -199,7 +200,7 @@ export class AdminService {
       event,
       args: { op, delay },
     } = SystemService.getArgs<ShutdownArgs>(args);
-    await this.threds.shutdown(delay);
+    await System.getPROC().shutdown({ delay });
     return { status: systemEventTypes.successfulStatus, op };
   };
 

@@ -88,7 +88,7 @@ try {
  *    \__/_|\__, |_| |_|\__,_|_| \/ /_/ \__,_|_| |_|\__,_|_|_|_| |_|\__, |
  *          |___/                                                   |___/
  */
-
+// quit on ctrl-c when running docker in terminal
 let shuttingDown = false;
 process.on('SIGINT', async function onSigint() {
   if (shuttingDown) {
