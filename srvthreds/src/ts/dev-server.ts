@@ -156,7 +156,7 @@ class ServiceManager {
 
     // @TODO separate service
     //  setup the engine server
-    this.engineServer = new Server(engineEventQ, engineMessageQ);
+    this.engineServer = new Server(engineConfig, engineEventQ, engineMessageQ);
 
     // uncomment for manual testing
     await this.engineServer.start({ patternModels: patternModelsOverride });

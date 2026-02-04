@@ -18,6 +18,7 @@ import { System } from './System.js';
 import { ParticipantsStore } from './store/ParticipantsStore.js';
 import { ConfigLoader } from '../config/ConfigLoader.js';
 import { PromiseTracker } from '../lib/PromiseTracker.js';
+import { EngineConfig } from '../config/EngineConfig.js';
 
 const { debug, error, info, crit, h1, h2, logObject } = Logger;
 
@@ -31,7 +32,10 @@ export class Engine implements MessageHandler {
   readonly thredsStore: ThredsStore;
   private readonly promiseTracker: PromiseTracker;
 
-  constructor(readonly inboundQ: EventQ) {
+  constructor(
+    private readonly engineConfig: EngineConfig,
+    readonly inboundQ: EventQ,
+  ) {
     this.promiseTracker = new PromiseTracker({ logPrefix: 'Engine' });
     if (!System.isInitialized())
       throw new Error('System not initialized - call System.initialize() before creating Engine');
@@ -90,7 +94,7 @@ export class Engine implements MessageHandler {
   /*
         Begin pulling events from the Q
         Configure the prefetch value in the Rascal settings to throttle message delivery
-        To process events synchronously add an await before the processEvent call
+        Set synchronousMode in engine config to process events sequentially
   */
   private async run() {
     while (!this.promiseTracker.isDraining) {
@@ -99,7 +103,11 @@ export class Engine implements MessageHandler {
         await this.inboundQ.requeue(message);
         break;
       }
-      this.promiseTracker.track(this.processEvent(message));
+      if (this.engineConfig.synchronousMode) {
+        await this.promiseTracker.track(this.processEvent(message));
+      } else {
+        this.promiseTracker.track(this.processEvent(message));
+      }
     }
   }
 

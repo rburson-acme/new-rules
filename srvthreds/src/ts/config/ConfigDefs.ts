@@ -5,6 +5,7 @@ export interface ConfigDef {}
 export interface EngineConfigDef {
   eventProcessingWait?: number;
   shutdownDelay?: number;
+  synchronousMode?: boolean;
 }
 export interface ResolverConfigDef {
   agents: ServiceConfigDef[];

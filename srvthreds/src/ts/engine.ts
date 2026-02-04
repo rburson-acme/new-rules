@@ -117,7 +117,7 @@ export class EngineServiceManager {
     });
     const engineMessageQ: MessageQ = new MessageQ(this.engineMessageService);
     //  setup the engine server
-    this.engineServer = new Server(engineEventQ, engineMessageQ);
+    this.engineServer = new Server(engineConfig, engineEventQ, engineMessageQ);
     await this.engineServer.start();
   }
 

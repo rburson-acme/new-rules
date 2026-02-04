@@ -6,6 +6,7 @@ import { Session } from '../sessions/Session.js';
 import { System } from './System.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { QDispatcher } from './QDispatcher.js';
+import { EngineConfig } from '../config/EngineConfig.js';
 
 const { debug, error, warn, crit, h1, h2 } = Logger;
 
@@ -21,8 +22,8 @@ export class Server {
   // @TODO seperate service
   private engine: Engine;
 
-  constructor(inboundQ: EventQ, outboundQ: MessageQ) {
-    this.engine = new Engine(inboundQ);
+  constructor(engineConfig: EngineConfig, inboundQ: EventQ, outboundQ: MessageQ) {
+    this.engine = new Engine(engineConfig, inboundQ);
     const dispatcher = new QDispatcher(outboundQ);
     this.engine.dispatchers.push(dispatcher.tell);
   }

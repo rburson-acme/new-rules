@@ -9,7 +9,7 @@ import { Sessions } from '../ts/sessions/Sessions.js';
 import { Server } from '../ts/engine/Server.js';
 import { SessionStorage } from '../ts/sessions/storage/SessionStorage.js';
 import { AgentService } from '../ts/agent/AgentService.js';
-import { RascalConfigDef, ResolverConfigDef, SessionsConfigDef } from '../ts/config/ConfigDefs.js';
+import { EngineConfigDef, RascalConfigDef, ResolverConfigDef, SessionsConfigDef } from '../ts/config/ConfigDefs.js';
 import { AgentConfig } from '../ts/config/AgentConfig.js';
 import { Timers } from '../ts/thredlib/index.js';
 import SessionAgent from '../ts/agent/session/SessionAgent.js';
@@ -26,6 +26,7 @@ import { SystemController } from '../ts/persistence/controllers/SystemController
 import { run as runBootstrap } from '../ts/tools/bootstrap/Bootstrapper.js';
 import { ConfigManager } from '../ts/config/ConfigManager.js';
 import { Session } from '../ts/sessions/Session.js';
+import { EngineConfig } from '../ts/config/EngineConfig.js';
 const sessionAgentConfigDef = {
   name: 'Session Agent',
   nodeType: 'org.wt.session',
@@ -40,6 +41,8 @@ const sessionAgentConfigDef = {
   },
 } as AgentConfig;
 
+const engineConfigDef: EngineConfigDef = {};
+const engineConfig = new EngineConfig(engineConfigDef);
 const sessionAgentConfig = new AgentConfig('session-agent1', sessionAgentConfigDef);
 
 export const getEvent = (id: string, type: string, sourceId: string): Event => {
@@ -219,7 +222,7 @@ export class EngineConnectionManager {
     const eventQ = new EventQ(eventService);
     const sessions = new Sessions(new SessionStorage(StorageFactory.getStorage()));
     if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
-    const engine = new Engine(eventQ);
+    const engine = new Engine(engineConfig, eventQ);
     await engine.start({ patternModels });
     const instance = new EngineConnectionManager(eventService, eventQ, engine);
     return instance;
@@ -329,7 +332,7 @@ export class ServerConnectionManager {
     );
     if (!System.isInitialized()) System.initialize(sessions, { shutdown: async () => {} });
     // engine start engine
-    const engineServer = new Server(engineEventQ, engineMessageQ);
+    const engineServer = new Server(engineConfig, engineEventQ, engineMessageQ);
     await engineServer.start({ patternModels });
 
     // setup the q's for the sessionService
