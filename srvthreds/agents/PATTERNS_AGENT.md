@@ -269,6 +269,7 @@ Pattern using this context:
   "name": "string (optional, auto-generated)",
   "description": "string (optional)",
   "allowedSources": "string|array (optional)",  // authorization
+  "allowUnboundEvents": false,  // optional, allow events without thredId
   "permissions": {},  // optional, not fully implemented
   "expiry": {
     "interval": 60000,  // ms
@@ -283,6 +284,26 @@ Pattern using this context:
 - Group: `"$groupName"` (from sessions_model.json)
 - Regex: `"/pattern.*/"`  (case-insensitive, gi flags)
 - If not specified, all sources allowed
+
+**allowUnboundEvents:**
+When set to `true` on a reaction, unbound events (events without a `thredId`) will be matched against running threds whose current reaction has this flag set. This enables patterns that receive continuous events from sources that cannot attach a thred ID, such as sensor devices or external systems.
+
+Without this flag, unbound events are only used for pattern matching to create new threds. With it, a running thred can continue to receive events from sources that don't know the thred ID. This is evaluated per-reaction, so only threds currently at a reaction with this flag are candidates, improving performance.
+
+**Example: Sensor loop receiving unbound events**
+```json
+{
+  "name": "sensor_monitor",
+  "allowUnboundEvents": true,
+  "condition": {
+    "type": "filter",
+    "xpr": "$event.type = 'org.sensor.reading'",
+    "transform": {"eventDataTemplate": {"title": "Reading received"}},
+    "publish": {"to": "monitor"},
+    "transition": {"name": "sensor_monitor"}
+  }
+}
+```
 
 ## Conditions
 
@@ -838,7 +859,7 @@ Store Data → Notify Participant → Wait for Finish Signal → Retrieve Data �
 ## Key Rules
 - **ONE EVENT PER REACTION** - A reaction can only create ONE outbound event. You cannot publish different event types to multiple recipients with different transforms in a single reaction. To send multiple different events, chain reactions sequentially using transitions.
 - **SystemSpec is your context** - Always reference SystemSpec for service addresses, participant IDs, groups, task structures, and response formats
-- **Unbound event** (no thredId) → pattern matching → creates Thred
+- **Unbound event** (no thredId) → pattern matching → creates Thred, or matches running threds with `allowUnboundEvents` on their current reaction
 - **Bound event** (has thredId) → routes to existing Thred
 - **First reaction** = entry point, avoid onTrue side effects
 - **State persists** in Redis with per-thredId locking

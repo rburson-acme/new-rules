@@ -71,6 +71,10 @@ export class ThredStore {
     return this._currentReaction;
   }
 
+  get allowUnboundEvents(): boolean {
+    return !!this.currentReaction?.allowUnboundEvents;
+  }
+
   // This is the proper way to complete a thred
   // IMPORTANT: This method must be called from within a lock - ThredsStore.withThredStore()
   // this will ensure that it actually gets cleaned up

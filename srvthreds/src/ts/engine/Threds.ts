@@ -66,7 +66,7 @@ export class Threds {
     const timestamp = Date.now();
     await this.persistEvent(event, thredId);
     const { thredStatus, patternId } = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) =>
-      this.lock_processBoundEvent(event, thredStore, timestamp),
+      this.lock_processEvent(event, thredStore, timestamp),
     );
     await this.decrementIfTerminated(thredStatus, patternId);
   }
@@ -74,17 +74,13 @@ export class Threds {
   /*
       Process an 'unbound' event (meaning the event does not have a thredId)
       An unbound event can match a pattern to start a new thred or a running thred
-      if the pattern has the allowUnbound flag set
+      if the current Reaction has the allowUnboundEvents flag set
   */
   private async handleUnbound(event: Event): Promise<void> {
     let matches = 0;
     matches += await this.matchPatterns(event);
-
-    // @TODO re-enable matching against running threds allowing unbound events
-    // consider keeping a list of threds allowing unbound events to avoid scanning all threds
-    // also consider allowing event.thredId to specify a wildcard to further signal intent to match against running threds
-    //matches += await this.matchRunningThreds(event);
-
+    // try matching running thres that allow unbound events
+    matches += await this.matchRunningThreds(event);
     if (matches === 0) {
       await this.handleOrphanEvent(event);
     }
@@ -114,13 +110,13 @@ export class Threds {
   private async matchRunningThreds(event: Event): Promise<number> {
     let matches = 0;
     let errors: EventThrowable[] = [];
-    await Series.forEach<string>(await this.thredsStore.getAllThredIds(), async (thredId) => {
+    await Series.forEach<string>(await this.thredsStore.getAllowUnboundEventsThredIds(), async (thredId) => {
       try {
         const result = await this.thredsStore.withThredStore(thredId, async (thredStore?: ThredStore) => {
-          if (thredStore && thredStore.pattern.allowUnbound) {
+          if (thredStore) {
             if (await Thred.test(event, thredStore)) {
               matches++;
-              return this.lock_processBoundEvent(event, thredStore, Date.now());
+              return this.lock_processEvent(event, thredStore, Date.now());
             }
           }
         });
@@ -156,7 +152,7 @@ export class Threds {
   }
 
   // requires lock on thredStore
-  private async lock_processBoundEvent(
+  private async lock_processEvent(
     event: Event,
     thredStore: ThredStore | undefined,
     timestamp: number,

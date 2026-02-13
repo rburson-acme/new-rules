@@ -58,9 +58,10 @@ export class ThredsStore {
       thredId,
       async () => {
         const thredStore = await this.getThreadStore(thredId);
+        const prevAllowUnboundEvents = thredStore?.allowUnboundEvents;
         try {
           const result = await op(thredStore);
-          if (thredStore) await this.saveThredStore(thredStore);
+          if (thredStore) await this.saveThredStore(thredStore, prevAllowUnboundEvents);
           return result;
         } finally {
           delete this.thredStores[thredId];
@@ -114,6 +115,10 @@ export class ThredsStore {
     });
   }
 
+  getAllowUnboundEventsThredIds(): Promise<string[]> {
+    return this.storage.retrieveSet(Types.Utility, UtilityKeys.UnboundReaction);
+  }
+
   getAllThredIds(): Promise<string[]> {
     return this.storage.retrieveTypeIds(Types.Thred);
   }
@@ -152,11 +157,19 @@ export class ThredsStore {
   }
 
   // requires lock
-  private async saveThredStore(thredStore: ThredStore): Promise<void> {
+  private async saveThredStore(thredStore: ThredStore, prevAllowUnboundEvents?: boolean): Promise<void> {
     if (thredStore.isTerminated) {
       await this.deleteAndTerminateThred(thredStore.id);
     } else {
       await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
+      // if the most recent reaction allows unbound events but the previous one didn't, add the thred to the set
+      if(!prevAllowUnboundEvents && thredStore.allowUnboundEvents) {
+        await this.storage.addToSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
+      }
+      // if the most recent reaction doesn't allow unbound events but the previous one did, remove the thred from the set
+      if(prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
+        await this.storage.removeFromSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
+      }
     }
   }
 
@@ -170,6 +183,14 @@ export class ThredsStore {
     } catch (e) {
       Logger.warn({
         message: Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId} from storage`),
+        thredId,
+      });
+    }
+    try{
+      await this.storage.removeFromSet(Types.Utility, thredId, UtilityKeys.UnboundReaction);
+    } catch(e){
+      Logger.warn({
+        message: Logger.crit(`deleteAndTerminate::Failed to remove Thred ${thredId} from unbound reactions set in storage`),
         thredId,
       });
     }

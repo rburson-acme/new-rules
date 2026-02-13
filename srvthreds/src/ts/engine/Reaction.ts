@@ -20,6 +20,7 @@ export class Reaction {
   readonly condition: Condition;
   readonly allowedSources?: string[] | string;
   readonly permissions?: Permissions;
+  readonly allowUnboundEvents?: boolean;
   readonly expiry?: {
     interval: number;
     transition?: Transition;
@@ -34,6 +35,7 @@ export class Reaction {
       this.expiry = { interval, transition };
     }
     this.allowedSources = reactionModel.allowedSources;
+    this.allowUnboundEvents = reactionModel.allowUnboundEvents;
     if (reactionModel.permissions) this.permissions = new Permissions(reactionModel.permissions);
   }
 
