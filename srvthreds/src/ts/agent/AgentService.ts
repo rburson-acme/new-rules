@@ -16,6 +16,7 @@ import { QMessage } from '../queue/QService.js';
 import { AgentConfig } from '../config/AgentConfig.js';
 import { Id } from '../thredlib/core/Id.js';
 import { Adapter } from './adapter/Adapter.js';
+import { PromiseTracker } from '../lib/PromiseTracker.js';
 
 export interface MessageHandler {
   initialize(): Promise<void>;
@@ -56,6 +57,7 @@ export class AgentService {
   private handler?: MessageHandler;
   private agentConfig?: AgentConfig;
   readonly eventPublisher: EventPublisher;
+  private readonly promiseTracker: PromiseTracker;
 
   constructor(
     private params: {
@@ -65,6 +67,7 @@ export class AgentService {
       additionalArgs?: {};
     },
   ) {
+    this.promiseTracker = new PromiseTracker({ logPrefix: `Agent:${params.agentConfig.nodeId}` });
     this.eventPublisher = { publishEvent: this.publishEvent, createOutboundEvent: this.createOutboundEvent };
   }
 
@@ -107,7 +110,8 @@ export class AgentService {
     return this.handler?.processMessage(message);
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(eventShutdownTimout: number = 0): Promise<void> {
+    await this.promiseTracker.startAndDrain(eventShutdownTimout || undefined);
     return this.handler?.shutdown();
   }
 
@@ -124,20 +128,33 @@ export class AgentService {
 
   /*
         Begin pulling Messages from the Q (from the Engine)
+        Set asynchronousMode in agent config to process messages concurrently
+        The number of inflight messages can be controlled via the rascal prefetch config
+        @TODO: the line below is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
+        const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
     */
   private async run() {
-    while (true) await this.nextMessage();
+    const { messageQ } = this.params;
+    while (!this.promiseTracker.isDraining) {
+      // accept anything directed to this agents nodeId or nodeType
+      const qMessage: QMessage<Message> = await messageQ.pop();
+      if (this.promiseTracker.isDraining) {
+        await messageQ.requeue(qMessage);
+        break;
+      }
+      if (this.agentConfig?.asynchronousMode) {
+        // asynchronous mode
+        this.promiseTracker.track(this.nextMessage(qMessage));
+      } else {
+        // synchronous mode
+        await this.promiseTracker.track(this.nextMessage(qMessage));
+      }
+    }
   }
 
-  private async nextMessage(): Promise<void> {
+  private async nextMessage(qMessage: QMessage<Message>): Promise<void> {
     const { messageQ } = this.params;
-    // accept anything directed to this agents nodeId or nodeType
-    // @TODO - implement topics
-    // NOTE: this is how we would like it to work, but currently all topics and bindings must be pre-defined in rascal config
-    //const topics = [this.agentConfig!.nodeId, this.agentConfig!.nodeType];
-    const qMessage: QMessage<Message> = await messageQ.pop();
     try {
-      // process messages synchronously.  Throughput may be improved by processing messages asynchronously
       await this.processMessage(qMessage.payload);
       await messageQ.delete(qMessage);
     } catch (e: any) {

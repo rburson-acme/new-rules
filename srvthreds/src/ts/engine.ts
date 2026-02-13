@@ -169,7 +169,7 @@ export class EngineServiceManager {
     await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     // wait for processing to complete
     Logger.info(`Waiting for event processing to complete...`);
-    await this.engineServer?.shutdown(engineConfig?.eventProcessingWait ?? 0);
+    await this.engineServer?.shutdown(engineConfig?.eventShutdownTimeout ?? 0);
     // Disconnect the q broker
     Logger.info(`Disconnecting RemoteQ...`);
     await this.engineMessageService?.disconnect().catch(Logger.error);

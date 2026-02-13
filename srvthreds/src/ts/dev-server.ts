@@ -263,6 +263,7 @@ class ServiceManager {
 
   async disconnectAll() {
     const engineConfig = ConfigManager.get().getConfig<EngineConfig>('engine-config');
+    const agentConfig = ConfigManager.get().getConfig<AgentConfig>('agent-config');
     // these disconnect the underlying broker,
     // so we don't have to also disconnect this.messageService
     /*
@@ -281,18 +282,18 @@ class ServiceManager {
     await this.engineEventService?.unsubscribeAll().catch(Logger.error);
     Logger.info(`RemoteQ Broker disconnected successfully.`);
     // wait for processing to complete
-    await this.engineServer?.shutdown(engineConfig?.eventProcessingWait ?? 0);
+    await this.engineServer?.shutdown(engineConfig?.eventShutdownTimeout ?? 0);
     // stop publishing messages
     Logger.info(`Disconnecting RemoteQ...`);
     await this.engineMessageService?.disconnect().catch(Logger.error);
     Logger.info(`Shutting down session agent...`);
-    await this.sessionAgent?.shutdown();
+    await this.sessionAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down robot agent...`);
     await this.robotAgent?.shutdown();
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down persistence agent...`);
-    await this.persistenceAgent?.shutdown();
+    await this.persistenceAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
     Logger.info(`Agent shutdown successfully.`);
 
     Logger.info(`Disconnecting PersistenceManager..`);

@@ -174,6 +174,17 @@ export class RedisStorage implements Storage {
   }
 
   /*
+        Does the type with id exist?
+    */
+  exists(type: string, id: string): Promise<boolean> {
+    try {
+      return this.client.exists($key(type, id)).then((resp) => !!resp);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  /*
         Get a set (atomic, safe operation)
     */
   retrieveSet(type: string, setId: string): Promise<string[]> {
@@ -185,17 +196,6 @@ export class RedisStorage implements Storage {
     */
   deleteSet(type: string, setId: string): Promise<void> {
     return this.delete(type, setId);
-  }
-
-  /*
-        Does the type with id exist?
-    */
-  exists(type: string, id: string): Promise<boolean> {
-    try {
-      return this.client.exists($key(type, id)).then((resp) => !!resp);
-    } catch (e) {
-      return Promise.reject(e);
-    }
   }
 
   /*

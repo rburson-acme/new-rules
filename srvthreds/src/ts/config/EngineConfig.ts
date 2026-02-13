@@ -14,8 +14,8 @@ export class EngineConfig implements Config<EngineConfigDef> {
     this.configDef = configDef;
   }
 
-  get eventProcessingWait(): number | undefined {
-    return this.configDef?.eventProcessingWait;
+  get eventShutdownTimeout(): number | undefined {
+    return this.configDef?.eventShutdownTimeout;
   }
 
   get shutdownDelay(): number | undefined {

@@ -82,7 +82,7 @@ export class Threds {
 
     // @TODO re-enable matching against running threds allowing unbound events
     // consider keeping a list of threds allowing unbound events to avoid scanning all threds
-    // also consider allowing event.thredId to specify a wildcard or list of thredIds to match against
+    // also consider allowing event.thredId to specify a wildcard to further signal intent to match against running threds
     //matches += await this.matchRunningThreds(event);
 
     if (matches === 0) {

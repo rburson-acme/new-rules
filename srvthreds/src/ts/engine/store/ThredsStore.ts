@@ -1,7 +1,7 @@
 import { Pattern } from '../Pattern.js';
 import { ThredStore, ThredStoreState } from './ThredStore.js';
 import { PatternsStore } from './PatternsStore.js';
-import { Storage, Types } from '../../storage/Storage.js';
+import { Storage, Types, UtilityKeys } from '../../storage/Storage.js';
 import { Logger, Parallel } from '../../thredlib/index.js';
 import { SystemController as Pm } from '../../persistence/controllers/SystemController.js';
 import { ParticipantsStore } from './ParticipantsStore.js';

@@ -32,7 +32,7 @@ export class Server {
     return this.engine.start(configOverrides);
   }
 
-  async shutdown(delay: number = 0): Promise<void> {
-    return this.engine.shutdown(delay);
+  async shutdown(eventShutdownTimeout: number = 0): Promise<void> {
+    return this.engine.shutdown(eventShutdownTimeout);
   }
 }

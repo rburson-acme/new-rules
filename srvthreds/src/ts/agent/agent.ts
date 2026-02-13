@@ -89,14 +89,11 @@ class Server {
       await Timers.wait(delay);
       Logger.info(`Stopping message consumption...`);
       await this.eventService?.unsubscribeAll().catch(Logger.error);
-      const eventProcessingWait = agentConfig?.eventProcessingWait ?? 2000;
-      Logger.info(`Waiting ${eventProcessingWait}ms for message processing to complete...`);
-      await Timers.wait(eventProcessingWait);
       Logger.info(`Disconnecting RemoteQ...`);
       await this.eventService?.disconnect().catch(Logger.error);
       Logger.info(`RemoteQ Broker disconnected successfully.`);
       Logger.info(`Shutting down session agent...`);
-      await this.agent?.shutdown().catch(Logger.error);
+      await this.agent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0).catch(Logger.error);
       Logger.info(`Agent shutdown successfully.`);
     } catch (e) {
       Logger.error('Agent.shutdown(): failed to shutdown the agent', e);

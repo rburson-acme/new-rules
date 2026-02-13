@@ -154,7 +154,7 @@ export class SessionAgent implements MessageHandler {
     channels?.forEach((channel) => {
       this.dispatchers.forEach((dispatcher) => {
         try {
-          // if the channel is a proxy, send the full message so that it can be further routed, otherwise just the event
+          // if the channel is a proxy (like a remote agent), send the full message so that it can be further routed, otherwise just the event
           channel.isProxy ? dispatcher(message, channel.id) : dispatcher(message.event, channel.id);
         } catch (e) {
           const addresses = message.to.join(',');

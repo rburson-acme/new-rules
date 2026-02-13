@@ -66,4 +66,9 @@ export const Types = {
   ParticipantSessions: 'ParticipantSession',
   ParticipantThreds: 'ParticipantThreds',
   RefreshTokens: 'RefreshTokens',
+  Utility: 'U',
+};
+
+export const UtilityKeys = {
+  UnboundReaction: 'UnboundReaction',
 };

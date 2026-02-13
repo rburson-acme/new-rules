@@ -63,8 +63,8 @@ export class Engine implements MessageHandler {
     this.run();
   }
 
-  public async shutdown(delay: number = 0): Promise<void> {
-    await this.promiseTracker.startAndDrain(delay || undefined);
+  public async shutdown(eventShutdownTimeout: number = 0): Promise<void> {
+    await this.promiseTracker.startAndDrain(eventShutdownTimeout || undefined);
   }
 
   /**
@@ -104,8 +104,10 @@ export class Engine implements MessageHandler {
         break;
       }
       if (this.engineConfig.synchronousMode) {
+        // synchronous mode
         await this.promiseTracker.track(this.processEvent(message));
       } else {
+        // asynchronous mode
         this.promiseTracker.track(this.processEvent(message));
       }
     }
