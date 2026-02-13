@@ -673,10 +673,6 @@
     },
     "PatternModel": {
       "properties": {
-        "allowUnbound": {
-          "description": "Whether or not unbound events are matched against an already running thred The allows for event to be sent that do not have a thredId but signifcantly increases processing requirements.",
-          "type": "boolean"
-        },
         "broadcastAllowed": {
           "description": "Whether or not broadcasting from participants is allowed Broadcasting allows for sending a message to all other participants in the thred",
           "type": "boolean"
@@ -776,6 +772,10 @@
     "ReactionModel": {
       "additionalProperties": false,
       "properties": {
+        "allowUnboundEvents": {
+          "description": "Whether the reaction can be activated by events that are not bound to a thred (i.e. unbound events). If true, the reaction can be activated by events that do not have a thredId If false or undefined, the reaction can only be activated by events that are bound to an existing thred.",
+          "type": "boolean"
+        },
         "allowedSources": {
           "anyOf": [
             {

@@ -163,11 +163,11 @@ export class ThredsStore {
     } else {
       await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
       // if the most recent reaction allows unbound events but the previous one didn't, add the thred to the set
-      if(!prevAllowUnboundEvents && thredStore.allowUnboundEvents) {
+      if (!prevAllowUnboundEvents && thredStore.allowUnboundEvents) {
         await this.storage.addToSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
       }
       // if the most recent reaction doesn't allow unbound events but the previous one did, remove the thred from the set
-      if(prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
+      if (prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
         await this.storage.removeFromSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
       }
     }
@@ -186,11 +186,13 @@ export class ThredsStore {
         thredId,
       });
     }
-    try{
+    try {
       await this.storage.removeFromSet(Types.Utility, thredId, UtilityKeys.UnboundReaction);
-    } catch(e){
+    } catch (e) {
       Logger.warn({
-        message: Logger.crit(`deleteAndTerminate::Failed to remove Thred ${thredId} from unbound reactions set in storage`),
+        message: Logger.crit(
+          `deleteAndTerminate::Failed to remove Thred ${thredId} from unbound reactions set in storage`,
+        ),
         thredId,
       });
     }

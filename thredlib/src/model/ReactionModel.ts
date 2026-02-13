@@ -31,6 +31,14 @@ export interface ReactionModel {
   readonly allowedSources?: string[] | string;
 
   /**
+   * Whether the reaction can be activated by events that are not bound to a thred (i.e. unbound events).
+   * If true, the reaction can be activated by events that do not have a thredId
+   * If false or undefined, the reaction can only be activated by events that are bound to an existing thred.
+   *  @property {boolean} [allowUnboundEvents]
+   */
+  readonly allowUnboundEvents?: boolean;
+
+  /**
    * The set of permissions required to activate the reaction.
    *  @property {PermissionModel} [permissions]
    */
