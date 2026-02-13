@@ -9,21 +9,21 @@ export class AuthStorage implements AuthStorageOps {
     Store the refresh token with an expiration time
   */
   async saveRefreshToken(jti: string, participantId: string, expSecs: number): Promise<void> {
-    await this.storage.setKey(Types.RefreshTokens, jti, participantId, expSecs);
+    await this.storage.setKey({ type: Types.RefreshTokens, key: jti, value: participantId, expSecs });
   }
 
   /*
     Remove the refresh token from storage
   */
   async revokeRefreshToken(jti: string): Promise<void> {
-    await this.storage.deleteKey(Types.RefreshTokens, jti);
+    await this.storage.deleteKey({ type: Types.RefreshTokens, key: jti });
   }
 
   /*
     Check if the refresh token is revoked and if not, verify it belongs to the participant
   */
   async verifyRefreshToken(jti: string, participantId: string): Promise<boolean> {
-    const _participantId = await this.storage.getKey(Types.RefreshTokens, jti);
+    const _participantId = await this.storage.getKey({ type: Types.RefreshTokens, key: jti });
     return _participantId === participantId;
   }
 

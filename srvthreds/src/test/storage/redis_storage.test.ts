@@ -11,14 +11,14 @@ describe('redis storage', function () {
   });
   // objects
   test('save', function () {
-    return storage.save(testObjType, testObj1, testObjId, testMeta1);
+    return storage.save({ type: testObjType, item: testObj1, id: testObjId, meta: testMeta1 });
   });
   test('exists', async function () {
-    const result = await storage.exists(testObjType, testObjId);
+    const result = await storage.exists({ type: testObjType, id: testObjId });
     expect(result).toBe(true);
   });
   test('retrieve entry', async function () {
-    const result = await storage.retrieve(testObjType, testObjId);
+    const result = await storage.retrieve({ type: testObjType, id: testObjId });
     expect((<any>result).testkey).toBe('testvalue');
   });
   test('should have also created index for type', async function () {
@@ -26,10 +26,10 @@ describe('redis storage', function () {
     expect(result).toContain(testObjId);
   });
   test('save another object of type', function () {
-    return storage.save(testObjType, testObj2, testObjId2);
+    return storage.save({ type: testObjType, item: testObj2, id: testObjId2 });
   });
   test('retrieve entry', async function () {
-    const result = await storage.retrieve(testObjType, testObjId2);
+    const result = await storage.retrieve({ type: testObjType, id: testObjId2 });
     expect((<any>result).testkey2).toBe('testvalue2');
   });
   test('should have also updated index for type', async function () {
@@ -39,7 +39,7 @@ describe('redis storage', function () {
     expect(result).toContain(testObjId2);
   });
   test('retrieve all', async function () {
-    const result = await storage.retrieveAll(testObjType, [testObjId, testObjId2]);
+    const result = await storage.retrieveAll({ type: testObjType, ids: [testObjId, testObjId2] });
     expect(result.length).toBe(2);
     expect(result[0].testkey).toBe('testvalue');
     expect(result[1].testkey2).toBe('testvalue2');
@@ -47,29 +47,29 @@ describe('redis storage', function () {
 
   //Sets
   test('add to set', function () {
-    return storage.addToSet(setType, setItems[0], setId);
+    return storage.addToSet({ type: setType, item: setItems[0], setId });
   });
   test('should be in set', async function () {
-    const result = await storage.setContains(setType, setItems[0], setId);
+    const result = await storage.setContains({ type: setType, item: setItems[0], setId });
     expect(result).toBe(true);
   });
   test('should not be in set', async function () {
-    const result = await storage.setContains(setType, setItems[1], setId);
+    const result = await storage.setContains({ type: setType, item: setItems[1], setId });
     expect(result).toBe(false);
   });
   test('add more to set', function () {
-    return storage.addToSet(setType, setItems[1], setId);
+    return storage.addToSet({ type: setType, item: setItems[1], setId });
   });
   test('should be in set', async function () {
-    const result = await storage.setContains(setType, setItems[1], setId);
+    const result = await storage.setContains({ type: setType, item: setItems[1], setId });
     expect(result).toBe(true);
   });
   test('count set', async function () {
-    const result = await storage.setCount(setType, setId);
+    const result = await storage.setCount({ type: setType, setId });
     expect(result).toBe(2);
   });
   test('retrieve set', async function () {
-    const result = await storage.retrieveSet(setType, setId);
+    const result = await storage.retrieveSet({ type: setType, setId });
     expect(result).toContain(setItems[0]);
     expect(result).toContain(setItems[1]);
     expect(result?.length).toBe(2);
@@ -79,14 +79,14 @@ describe('redis storage', function () {
     expect(result).toContain(setId);
   });
   test('remove item from set', function () {
-    return storage.removeFromSet(setType, setItems[1], setId);
+    return storage.removeFromSet({ type: setType, item: setItems[1], setId });
   });
   test('should not be in set', async function () {
-    const result = await storage.setContains(setType, setItems[1], setId);
+    const result = await storage.setContains({ type: setType, item: setItems[1], setId });
     expect(result).toBe(false);
   });
   test('count set', async function () {
-    const result = await storage.setCount(setType, setId);
+    const result = await storage.setCount({ type: setType, setId });
     expect(result).toBe(1);
   });
   test('set type index should still exist', async function () {
@@ -94,10 +94,10 @@ describe('redis storage', function () {
     expect(result).toBeGreaterThan(0);
   });
   test('remove last item from set', function () {
-    return storage.removeFromSet(setType, setItems[0], setId);
+    return storage.removeFromSet({ type: setType, item: setItems[0], setId });
   });
   test('set should not still exist', async function () {
-    const result = await storage.exists(setType, setId);
+    const result = await storage.exists({ type: setType, id: setId });
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {
@@ -105,29 +105,29 @@ describe('redis storage', function () {
     expect(result).toBe(0);
   });
   test('set should return empty string[]', async function () {
-    const result = await storage.retrieveSet(setType, setId);
+    const result = await storage.retrieveSet({ type: setType, setId });
     expect(result.length).toBe(0);
   });
   test('recreateSet', async function () {
-    await storage.addToSet(setType, setItems[0], setId);
-    await storage.addToSet(setType, setItems[1], setId);
+    await storage.addToSet({ type: setType, item: setItems[0], setId });
+    await storage.addToSet({ type: setType, item: setItems[1], setId });
   });
   test('delete object 1', async function () {
-    await storage.delete(testObjType, testObjId);
+    await storage.delete({ type: testObjType, id: testObjId });
   });
   test('object type index should still exist', async function () {
     const result = await storage.typeCount(testObjType);
     expect(result).toBeGreaterThan(0);
   });
   test('retrieve no entry', async function () {
-    const result = await storage.retrieve(testObjType, testObjId);
+    const result = await storage.retrieve({ type: testObjType, id: testObjId });
     expect(result).toBeUndefined;
   });
   test('delete object 2', async function () {
-    await storage.delete(testObjType, testObjId2);
+    await storage.delete({ type: testObjType, id: testObjId2 });
   });
   test('object type 2 should not still exist', async function () {
-    const result = await storage.exists(testObjType, testObjId2);
+    const result = await storage.exists({ type: testObjType, id: testObjId2 });
     expect(result).toBe(false);
   });
   test('object type index should not still exist', async function () {
@@ -135,10 +135,10 @@ describe('redis storage', function () {
     expect(result).toBe(0);
   });
   test('delete set', async function () {
-    await storage.deleteSet(setType, setId);
+    await storage.deleteSet({ type: setType, setId });
   });
   test('set should not still exist', async function () {
-    const result = await storage.exists(setType, setId);
+    const result = await storage.exists({ type: setType, id: setId });
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {

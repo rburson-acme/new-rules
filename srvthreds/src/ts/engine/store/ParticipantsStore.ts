@@ -6,25 +6,25 @@ export class ParticipantsStore {
 
   addThredToParticipants(participantIds: string[], thredId: string): Promise<void> {
     return Parallel.forEach(participantIds, (participantId) => {
-      return this.storage.addToSet(Types.ParticipantThreds, thredId, participantId);
+      return this.storage.addToSet({ type: Types.ParticipantThreds, item: thredId, setId: participantId });
     });
   }
 
   getParticipantThreds(participantId: string): Promise<string[]> {
-    return this.storage.retrieveSet(Types.ParticipantThreds, participantId);
+    return this.storage.retrieveSet({ type: Types.ParticipantThreds, setId: participantId });
   }
 
   removeThredFromParticipants(participantIds: string[], thredId: string): Promise<void> {
     return Parallel.forEach(participantIds, (participantId) => {
-      return this.storage.removeFromSet(Types.ParticipantThreds, thredId, participantId);
+      return this.storage.removeFromSet({ type: Types.ParticipantThreds, item: thredId, setId: participantId });
     });
   }
 
   removeThredFromParticipant(participantId: string, thredId: string): Promise<void> {
-    return this.storage.removeFromSet(Types.ParticipantThreds, thredId, participantId);
+    return this.storage.removeFromSet({ type: Types.ParticipantThreds, item: thredId, setId: participantId });
   }
 
   removeParticipant(participantId: string): Promise<void> {
-    return this.storage.deleteSet(Types.ParticipantThreds, participantId);
+    return this.storage.deleteSet({ type: Types.ParticipantThreds, setId: participantId });
   }
 }

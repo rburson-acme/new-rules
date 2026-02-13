@@ -22,7 +22,7 @@ export class LockManager {
     operation: () => Promise<T>,
     ttl?: number,
   ): Promise<T> {
-    const result = await storage.acquire([{ type, id }], [async () => await operation()], ttl);
+    const result = await storage.acquire({ resources: [{ type, id }], ops: [async () => await operation()], ttl });
     return result[0];
   }
 
@@ -42,7 +42,7 @@ export class LockManager {
     operation: () => Promise<T>,
     ttl?: number,
   ): Promise<T> {
-    const result = await storage.acquire(resources, [async () => await operation()], ttl);
+    const result = await storage.acquire({ resources, ops: [async () => await operation()], ttl });
     return result[0];
   }
 
@@ -64,6 +64,6 @@ export class LockManager {
     operations: Array<() => Promise<T>>,
     ttl?: number,
   ): Promise<T[]> {
-    return storage.acquire([{ type, id }], operations, ttl);
+    return storage.acquire({ resources: [{ type, id }], ops: operations, ttl });
   }
 }

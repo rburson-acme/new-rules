@@ -19,8 +19,8 @@ export class SessionStorage {
   async addSession(session: Session, participantId: string): Promise<void> {
     const { id: sessionId, nodeId, data } = session;
     // @TODO this needs to be a transaction.  add this featre to storage interface
-    await this.storage.save(Types.SessionParticipant, { participantId, nodeId, data }, sessionId);
-    await this.storage.addToSet(Types.ParticipantSessions, sessionId, participantId);
+    await this.storage.save({ type: Types.SessionParticipant, item: { participantId, nodeId, data }, id: sessionId });
+    await this.storage.addToSet({ type: Types.ParticipantSessions, item: sessionId, setId: participantId });
   }
 
   async exists(sessionId: string, participantId: string): Promise<boolean> {
@@ -31,7 +31,10 @@ export class SessionStorage {
 
   async getSessionsFor(participantId: string): Promise<Session[]> {
     try {
-      const sessionIds: string[] = await this.storage.retrieveSet(Types.ParticipantSessions, participantId);
+      const sessionIds: string[] = await this.storage.retrieveSet({
+        type: Types.ParticipantSessions,
+        setId: participantId,
+      });
       if (!sessionIds?.length) {
         Logger.warn(`No Session found for participant ${participantId}`);
         return [];
@@ -40,7 +43,10 @@ export class SessionStorage {
         sessionIds,
         async (result, sessionId) => {
           if (sessionId) {
-            const sp: SessionParticipant = await this.storage.retrieve(Types.SessionParticipant, sessionId);
+            const sp: SessionParticipant = await this.storage.retrieve({
+              type: Types.SessionParticipant,
+              id: sessionId,
+            });
             if (sp) result.push({ id: sessionId, nodeId: sp.nodeId, data: sp.data });
             return result;
           }
@@ -56,7 +62,7 @@ export class SessionStorage {
 
   async getSessionIdsFor(participantId: string): Promise<string[]> {
     try {
-      return this.storage.retrieveSet(Types.ParticipantSessions, participantId);
+      return this.storage.retrieveSet({ type: Types.ParticipantSessions, setId: participantId });
     } catch (e) {
       Logger.error(`Failed to get Session for participant ${participantId}`, e);
       return [];
@@ -87,7 +93,10 @@ export class SessionStorage {
 
   async getSessionParticipant(sessionId: string): Promise<SessionParticipant | undefined> {
     try {
-      const participant: SessionParticipant = await this.storage.retrieve(Types.SessionParticipant, sessionId);
+      const participant: SessionParticipant = await this.storage.retrieve({
+        type: Types.SessionParticipant,
+        id: sessionId,
+      });
       return participant;
     } catch (e) {
       Logger.error(`Failed to get participant for ${sessionId}`, e);
@@ -98,8 +107,12 @@ export class SessionStorage {
   async removeSession(sessionId: string): Promise<void> {
     const sessionParticipant = await this.getSessionParticipant(sessionId);
     if (sessionParticipant?.participantId) {
-      await this.storage.delete(Types.SessionParticipant, sessionId);
-      return this.storage.removeFromSet(Types.ParticipantSessions, sessionId, sessionParticipant.participantId);
+      await this.storage.delete({ type: Types.SessionParticipant, id: sessionId });
+      return this.storage.removeFromSet({
+        type: Types.ParticipantSessions,
+        item: sessionId,
+        setId: sessionParticipant.participantId,
+      });
     }
   }
 
@@ -118,9 +131,11 @@ export class SessionStorage {
     const sessionIds = await this.getSessionIdsFor(participantId);
     if (sessionIds) {
       if (sessionIds.length) {
-        await forEach(sessionIds, async (sessionId) => this.storage.delete(Types.SessionParticipant, sessionId));
+        await forEach(sessionIds, async (sessionId) =>
+          this.storage.delete({ type: Types.SessionParticipant, id: sessionId }),
+        );
       }
-      await this.storage.deleteSet(Types.ParticipantSessions, participantId);
+      await this.storage.deleteSet({ type: Types.ParticipantSessions, setId: participantId });
     }
   }
 

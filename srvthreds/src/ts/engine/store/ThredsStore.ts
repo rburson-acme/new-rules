@@ -32,7 +32,7 @@ export class ThredsStore {
       Types.Thred,
       thredStore.id,
       async () => {
-        await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
+        await this.storage.save({ type: Types.Thred, item: thredStore.getState(), id: thredStore.id });
         await this.addThredStore(thredStore);
         try {
           const result = await op(thredStore);
@@ -83,13 +83,13 @@ export class ThredsStore {
   // no need to lock - read only
   async getThredStoresReadOnly(thredIds: string[]): Promise<ThredStore[]> {
     if (thredIds.length === 0) return [];
-    const states = await this.storage.retrieveAll(Types.Thred, thredIds);
+    const states = await this.storage.retrieveAll({ type: Types.Thred, ids: thredIds });
     return states.map((state) => this.fromThredState(state));
   }
 
   // no need to lock - read only
   async getThredStoreReadOnly(thredId: string): Promise<ThredStore> {
-    const state = await this.storage.retrieve(Types.Thred, thredId);
+    const state = await this.storage.retrieve({ type: Types.Thred, id: thredId });
     return this.fromThredState(state);
   }
 
@@ -116,7 +116,7 @@ export class ThredsStore {
   }
 
   getAllowUnboundEventsThredIds(): Promise<string[]> {
-    return this.storage.retrieveSet(Types.Utility, UtilityKeys.UnboundReaction);
+    return this.storage.retrieveSet({ type: Types.Utility, setId: UtilityKeys.UnboundReaction });
   }
 
   getAllThredIds(): Promise<string[]> {
@@ -139,7 +139,7 @@ export class ThredsStore {
 
   // requires lock
   private async getThreadStore(thredId: string): Promise<ThredStore | undefined> {
-    const state = await this.storage.retrieve(Types.Thred, thredId);
+    const state = await this.storage.retrieve({ type: Types.Thred, id: thredId });
     if (!state) return undefined;
     return this.fromThredState(state);
   }
@@ -161,14 +161,18 @@ export class ThredsStore {
     if (thredStore.isTerminated) {
       await this.deleteAndTerminateThred(thredStore.id);
     } else {
-      await this.storage.save(Types.Thred, thredStore.getState(), thredStore.id);
+      await this.storage.save({ type: Types.Thred, item: thredStore.getState(), id: thredStore.id });
       // if the most recent reaction allows unbound events but the previous one didn't, add the thred to the set
       if (!prevAllowUnboundEvents && thredStore.allowUnboundEvents) {
-        await this.storage.addToSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
+        await this.storage.addToSet({ type: Types.Utility, item: thredStore.id, setId: UtilityKeys.UnboundReaction });
       }
       // if the most recent reaction doesn't allow unbound events but the previous one did, remove the thred from the set
       if (prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
-        await this.storage.removeFromSet(Types.Utility, thredStore.id, UtilityKeys.UnboundReaction);
+        await this.storage.removeFromSet({
+          type: Types.Utility,
+          item: thredStore.id,
+          setId: UtilityKeys.UnboundReaction,
+        });
       }
     }
   }
@@ -179,7 +183,7 @@ export class ThredsStore {
     const thredStore = this.thredStores[thredId];
     try {
       //If locked, the lock will simply expire
-      await this.storage.delete(Types.Thred, thredId);
+      await this.storage.delete({ type: Types.Thred, id: thredId });
     } catch (e) {
       Logger.warn({
         message: Logger.crit(`deleteAndTerminate::Failed to delete Thred ${thredId} from storage`),
@@ -187,7 +191,7 @@ export class ThredsStore {
       });
     }
     try {
-      await this.storage.removeFromSet(Types.Utility, thredId, UtilityKeys.UnboundReaction);
+      await this.storage.removeFromSet({ type: Types.Utility, item: thredId, setId: UtilityKeys.UnboundReaction });
     } catch (e) {
       Logger.warn({
         message: Logger.crit(

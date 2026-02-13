@@ -39,7 +39,11 @@ export class PatternsStore {
     */
   async staleCheck(patternId: string): Promise<void> {
     const patternStore = this.patternStore(patternId);
-    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY);
+    const tsValue = await this.storage.getMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.TIMESTAMP_KEY,
+    });
     const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
     if (patternStore.isStale(timestamp)) {
       await this.loadPattern(patternId);
@@ -144,15 +148,19 @@ export class PatternsStore {
   private async lock_unloadPatternStore(patternId: string): Promise<void> {
     const patternStore = this.patternStore(patternId);
     if (patternStore) {
-      await this.storage.delete(Types.Pattern, patternId);
+      await this.storage.delete({ type: Types.Pattern, id: patternId });
     }
     delete this.patternStores[patternId];
   }
 
   // requires lock
   private async lock_loadPatternStore(patternId: string): Promise<PatternStore> {
-    const patternModel = await this.storage.retrieve(Types.Pattern, patternId);
-    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY);
+    const patternModel = await this.storage.retrieve({ type: Types.Pattern, id: patternId });
+    const tsValue = await this.storage.getMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.TIMESTAMP_KEY,
+    });
     const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
     if (patternModel) this.patternStores[patternId] = PatternStore.fromState({ patternModel, timestamp });
     Logger.info(`Loaded Pattern: ${patternModel.id} : ${patternModel.name} at ${new Date(timestamp).toISOString()}`);
@@ -163,28 +171,51 @@ export class PatternsStore {
   private async lock_storePatternStore(patternStore: PatternStore, storage: Storage): Promise<void> {
     const patternId = patternStore.pattern.id;
     const { patternModel, timestamp } = patternStore.getState();
-    await storage.save(Types.Pattern, patternModel, patternId);
-    await storage.setMetaValue(Types.Pattern, patternId, PatternStore.TIMESTAMP_KEY, timestamp);
+    await storage.save({ type: Types.Pattern, item: patternModel, id: patternId });
+    await storage.setMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.TIMESTAMP_KEY,
+      value: timestamp,
+    });
   }
   // requires lock
   private async lock_retrievePatternInstanceCount(patternId: string): Promise<number | null> {
-    const numInstances = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.NUM_INSTANCE_KEY);
+    const numInstances = await this.storage.getMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.NUM_INSTANCE_KEY,
+    });
     return numInstances ? parseInt(numInstances) : null;
   }
   // requires lock
   private async lock_storePatternInstanceCount(patternId: string, numInstances: number): Promise<void> {
-    await this.storage.setMetaValue(Types.Pattern, patternId, PatternStore.NUM_INSTANCE_KEY, numInstances);
+    await this.storage.setMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.NUM_INSTANCE_KEY,
+      value: numInstances,
+    });
   }
 
   // requires lock
   private async lock_retrievePatternLastInstanceTimestamp(patternId: string): Promise<number | null> {
-    const tsValue = await this.storage.getMetaValue(Types.Pattern, patternId, PatternStore.LAST_INSTANCE_TIMESTAMP_KEY);
+    const tsValue = await this.storage.getMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.LAST_INSTANCE_TIMESTAMP_KEY,
+    });
     return tsValue ? parseInt(tsValue) : null;
   }
 
   // requires lock
   private async lock_storePatternLastInstanceTimestamp(patternId: string, timestamp: number): Promise<void> {
-    await this.storage.setMetaValue(Types.Pattern, patternId, PatternStore.LAST_INSTANCE_TIMESTAMP_KEY, timestamp);
+    await this.storage.setMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.LAST_INSTANCE_TIMESTAMP_KEY,
+      value: timestamp,
+    });
   }
 
   // requires lock

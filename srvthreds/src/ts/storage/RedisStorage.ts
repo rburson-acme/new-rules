@@ -3,9 +3,19 @@ import Redlock, { Lock as RLock } from './Redlock.js';
 import { Logger, Series } from '../thredlib/index.js';
 import { Lock, Storage } from './Storage.js';
 import { redisConfig } from '../config/RedisConfig.js';
+import { Transaction } from './Transaction.js';
 
 interface LockWrapper extends Lock {
   lock: RLock;
+}
+
+class RedisTransaction implements Transaction {
+  constructor(private multi: ReturnType<RedisClientType['multi']>) {}
+  async execute(): Promise<void> {
+    const result = await this.multi.exec()
+    if (!result) return Promise.reject(new Error('Redis Transaction failed'));
+    return Promise.resolve(result);
+  }
 }
 
 export class RedisStorage implements Storage {
@@ -71,7 +81,15 @@ export class RedisStorage implements Storage {
         Acquire locks on multiple resources, execute the operations, and release the locksa
         This method is preferred over manual lock management
   */
-  async acquire(resources: { type: string; id: string }[], ops: (() => Promise<any>)[], ttl?: number): Promise<any[]> {
+  async acquire({
+    resources,
+    ops,
+    ttl,
+  }: {
+    resources: { type: string; id: string }[];
+    ops: (() => Promise<any>)[];
+    ttl?: number;
+  }): Promise<any[]> {
     return this.redlock.using(
       resources.map(({ type, id }) => $toLockKey(type, id)),
       ttl || RedisStorage.defaultLockTTL,
@@ -88,10 +106,25 @@ export class RedisStorage implements Storage {
     );
   }
 
+  // NOTE: Redis transactions are not atomic - some but not all writes might succeed.
+  newTransaction(): Transaction {
+    return new RedisTransaction(this.client.multi());
+  }
+
   /*
         Save and add the id to the type index
     */
-  async save(type: string, item: any, id: string, meta?: Record<string, string>): Promise<void> {
+  async save({
+    type,
+    item,
+    id,
+    meta,
+  }: {
+    type: string;
+    item: any;
+    id: string;
+    meta?: Record<string, string>;
+  }): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     try {
       const multi = this.client.multi();
@@ -109,7 +142,7 @@ export class RedisStorage implements Storage {
   /*
         Get all objects of type for given ids
     */
-  retrieveAll(type: string, ids: string[]): Promise<any[]> {
+  retrieveAll({ type, ids }: { type: string; ids: string[] }): Promise<any[]> {
     //const targets = ids.map((id) => $key(type, id));
     try {
       /*return this.client
@@ -126,7 +159,7 @@ export class RedisStorage implements Storage {
   /*
         Get a type by id
     */
-  retrieve(type: string, id: string): Promise<any> {
+  retrieve({ type, id }: { type: string; id: string }): Promise<any> {
     // Logger.info(`Retrieving ${type}:${id}`);
     try {
       //return this.client.get($key(type, id)).then((resp) => (resp ? JSON.parse(resp) : undefined));
@@ -139,7 +172,7 @@ export class RedisStorage implements Storage {
   /*
         Get a single meta value associated with the object
     */
-  getMetaValue(type: string, id: string, key: string): Promise<string | null> {
+  getMetaValue({ type, id, key }: { type: string; id: string; key: string }): Promise<string | null> {
     try {
       return this.client.hGet($key(type, id), key);
     } catch (e) {
@@ -150,7 +183,17 @@ export class RedisStorage implements Storage {
   /*
         Set a single meta value and associate with the object
     */
-  async setMetaValue(type: string, id: string, key: string, value: string | number | Buffer): Promise<void> {
+  async setMetaValue({
+    type,
+    id,
+    key,
+    value,
+  }: {
+    type: string;
+    id: string;
+    key: string;
+    value: string | number | Buffer;
+  }): Promise<void> {
     try {
       await this.client.hSet($key(type, id), key, value);
     } catch (e) {
@@ -165,7 +208,7 @@ export class RedisStorage implements Storage {
         i.e. use this if don't care if another process may be using this object
         and could 'write it back' after you delete it
     */
-  async delete(type: string, id: string): Promise<void> {
+  async delete({ type, id }: { type: string; id: string }): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     const multi = this.client.multi();
     multi.del($key(type, id));
@@ -176,7 +219,7 @@ export class RedisStorage implements Storage {
   /*
         Does the type with id exist?
     */
-  exists(type: string, id: string): Promise<boolean> {
+  exists({ type, id }: { type: string; id: string }): Promise<boolean> {
     try {
       return this.client.exists($key(type, id)).then((resp) => !!resp);
     } catch (e) {
@@ -187,21 +230,21 @@ export class RedisStorage implements Storage {
   /*
         Get a set (atomic, safe operation)
     */
-  retrieveSet(type: string, setId: string): Promise<string[]> {
+  retrieveSet({ type, setId }: { type: string; setId: string }): Promise<string[]> {
     return this.client.sMembers($key(type, setId));
   }
 
   /*
         Delete a set (atomic safe, operation)
     */
-  deleteSet(type: string, setId: string): Promise<void> {
-    return this.delete(type, setId);
+  deleteSet({ type, setId }: { type: string; setId: string }): Promise<void> {
+    return this.delete({ type, id: setId });
   }
 
   /*
         Is the string already in the set?
     */
-  setContains(type: string, item: string, setId: string): Promise<boolean> {
+  setContains({ type, item, setId }: { type: string; item: string; setId: string }): Promise<boolean> {
     try {
       return this.client.sIsMember($key(type, setId), item).then((resp) => !!resp);
     } catch (e) {
@@ -212,7 +255,7 @@ export class RedisStorage implements Storage {
   /*
         How many elements are in the set?
     */
-  setCount(type: string, setId: string): Promise<number> {
+  setCount({ type, setId }: { type: string; setId: string }): Promise<number> {
     try {
       return this.client.sCard($key(type, setId));
     } catch (e) {
@@ -223,7 +266,7 @@ export class RedisStorage implements Storage {
   /*
         Add a string to a set.  Update the type set (atomic, safe operation)
     */
-  async addToSet(type: string, item: string, setId: string): Promise<void> {
+  async addToSet({ type, item, setId }: { type: string; item: string; setId: string }): Promise<void> {
     try {
       const multi = this.client.multi();
       multi.sAdd($key(type, setId), item);
@@ -237,7 +280,17 @@ export class RedisStorage implements Storage {
   /*
         Remove an item from the set if found.  If it's the last item, remove the set from the type index
     */
-  async removeFromSet(type: string, item: string, setId: string, ttl?: number): Promise<void> {
+  async removeFromSet({
+    type,
+    item,
+    setId,
+    ttl,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    ttl?: number;
+  }): Promise<void> {
     try {
       const key = $key(type, setId);
       const multi = this.client.multi();
@@ -281,11 +334,11 @@ export class RedisStorage implements Storage {
   /*
         retrieve() with a lock
     */
-  async claim(type: string, id: string, ttl?: number): Promise<{ result: any; lock: Lock }> {
+  async claim({ type, id, ttl }: { type: string; id: string; ttl?: number }): Promise<{ result: any; lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      const result = await this.retrieve(type, id);
+      const result = await this.retrieve({ type, id });
       return { result, lock: { lock } };
     } catch (e) {
       await this._release(lock);
@@ -296,15 +349,21 @@ export class RedisStorage implements Storage {
   /*
         save() with unlock
     */
-  async saveAndRelease(
-    lock: LockWrapper,
-    type: string,
-    item: any,
-    id: string,
-    meta?: Record<string, string>,
-  ): Promise<void> {
-    await this.save(type, item, id, meta);
-    await this._release(lock.lock);
+  async saveAndRelease({
+    lock,
+    type,
+    item,
+    id,
+    meta,
+  }: {
+    lock: Lock;
+    type: string;
+    item: any;
+    id: string;
+    meta?: Record<string, string>;
+  }): Promise<void> {
+    await this.save({ type, item, id, meta });
+    await this._release((lock as LockWrapper).lock);
   }
 
   async release(lock: Lock): Promise<void> {
@@ -318,17 +377,23 @@ export class RedisStorage implements Storage {
   /*
         save() with lock
     */
-  async saveAndClaim(
-    type: string,
-    item: any,
-    id: string,
-    ttl?: number,
-    meta?: Record<string, string>,
-  ): Promise<{ lock: Lock }> {
+  async saveAndClaim({
+    type,
+    item,
+    id,
+    ttl,
+    meta,
+  }: {
+    type: string;
+    item: any;
+    id: string;
+    ttl?: number;
+    meta?: Record<string, string>;
+  }): Promise<{ lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      await this.save(type, item, id, meta);
+      await this.save({ type, item, id, meta });
       return { lock: { lock } };
     } catch (e) {
       await this._release(lock);
@@ -339,16 +404,16 @@ export class RedisStorage implements Storage {
   /* 
      extend the lock
     */
-  async renewClaim(lock: LockWrapper, ttl?: number): Promise<void> {
+  async renewClaim({ lock, ttl }: { lock: Lock; ttl?: number }): Promise<void> {
     const lockTTL = ttl ? ttl : RedisStorage.defaultLockTTL;
-    await lock.lock.extend(lockTTL);
+    await (lock as LockWrapper).lock.extend(lockTTL);
   }
 
   /*
         obtain a lock (or use an existing one), delete, then release the lock
         use this if you want any other process using this object to release it before you delete it
     */
-  async claimAndDelete(type: string, id: string, ttl?: number): Promise<void> {
+  async claimAndDelete({ type, id, ttl }: { type: string; id: string; ttl?: number }): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
@@ -368,7 +433,17 @@ export class RedisStorage implements Storage {
   /*
         Remove an item from the set if found.  If it's the last item, remove the set from the type index
     */
-  async removeFromSetWithLock(type: string, item: string, setId: string, ttl?: number): Promise<void> {
+  async removeFromSetWithLock({
+    type,
+    item,
+    setId,
+    ttl,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    ttl?: number;
+  }): Promise<void> {
     try {
       const key = $key(type, setId);
       const lock = await this.getLock(key, ttl);
@@ -387,7 +462,17 @@ export class RedisStorage implements Storage {
   /*
     Simple key with optional expiration
   */
-  async setKey(type: string, key: string, value: string, expSecs?: number): Promise<void> {
+  async setKey({
+    type,
+    key,
+    value,
+    expSecs,
+  }: {
+    type: string;
+    key: string;
+    value: string;
+    expSecs: number;
+  }): Promise<void> {
     if (!expSecs) {
       await this.client.set($key(type, key), JSON.stringify(value));
     } else {
@@ -408,11 +493,11 @@ export class RedisStorage implements Storage {
     }
   }
 
-  async getKey(type: string, key: string): Promise<any> {
+  async getKey({ type, key }: { type: string; key: string }): Promise<any> {
     return await this.client.get($key(type, key)).then((resp) => (resp ? JSON.parse(resp) : undefined));
   }
 
-  async deleteKey(type: string, key: string): Promise<number> {
+  async deleteKey({ type, key }: { type: string; key: string }): Promise<number> {
     return await this.client.del($key(type, key));
   }
 

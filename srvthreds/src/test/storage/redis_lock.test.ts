@@ -9,7 +9,7 @@ describe('redis locks', function () {
     storage.purgeAll();
   });
   test('should save object', function () {
-    return storage.save(testObjType, testObj1, testObjId);
+    return storage.save({ type: testObjType, item: testObj1, id: testObjId });
   });
   // run set of promises simulteneously that modify an array
   test('should claim and release in sequence without race condition', async function () {
@@ -20,7 +20,7 @@ describe('redis locks', function () {
   });
   // all items should be present
   test('should retrieve updated entry', async function () {
-    const result = await storage.retrieve(testObjType, testObjId);
+    const result = await storage.retrieve({ type: testObjType, id: testObjId });
     expect((<any>result).visitors.length).toBe(100);
     for (let j = 0; j < 100; j++) {
       expect((<any>result).visitors[j]).toBe(j);
@@ -29,74 +29,90 @@ describe('redis locks', function () {
   //this one's tricky - the second 'saveAndClaim' call here should 'wait' until the first
   // lock aquisition has been released (at the end of this function)
   test('should save and claim and release in sequence without race condition', async function () {
-    const { lock } = await storage.saveAndClaim(testObjType, testObj2, testObjId2);
+    const { lock } = await storage.saveAndClaim({ type: testObjType, item: testObj2, id: testObjId2 });
     const pr = [
-      storage.saveAndClaim(testObjType, testObj2, testObjId2).then(({ lock }) => {
-        return storage.saveAndRelease(lock, testObjType, { ...testObj2, visitors: ['should be last'] }, testObjId2);
+      storage.saveAndClaim({ type: testObjType, item: testObj2, id: testObjId2 }).then(({ lock }) => {
+        return storage.saveAndRelease({
+          lock,
+          type: testObjType,
+          item: { ...testObj2, visitors: ['should be last'] },
+          id: testObjId2,
+        });
       }),
     ];
     await delay(500);
-    pr.push(storage.saveAndRelease(lock, testObjType, { ...testObj2, visitors: ['should be first'] }, testObjId2));
+    pr.push(
+      storage.saveAndRelease({
+        lock,
+        type: testObjType,
+        item: { ...testObj2, visitors: ['should be first'] },
+        id: testObjId2,
+      }),
+    );
     return Promise.all(pr);
   });
   // expect a synchronized result
   test('should retrieve updated entry', async function () {
-    const result = await storage.retrieve(testObjType, testObjId2);
+    const result = await storage.retrieve({ type: testObjType, id: testObjId2 });
     expect((<any>result).visitors[0]).toBe('should be last');
   });
   test('release should throw if lock has already timed out', async function () {
-    const { result, lock } = await storage.claim(testObjType, testObjId2, 100);
+    const { result, lock } = await storage.claim({ type: testObjType, id: testObjId2, ttl: 100 });
     await delay(200);
-    return expect(storage.saveAndRelease(lock, testObjType, result, testObjId2)).rejects.toThrow();
+    return expect(storage.saveAndRelease({ lock, type: testObjType, item: result, id: testObjId2 })).rejects.toThrow();
   });
   test('lock should renew successfully', async function () {
-    const { result, lock } = await storage.claim(testObjType, testObjId2, 100);
+    const { result, lock } = await storage.claim({ type: testObjType, id: testObjId2, ttl: 100 });
     await delay(50);
-    await storage.renewClaim(lock, 200);
+    await storage.renewClaim({ lock, ttl: 200 });
     await delay(100);
-    return await expect(storage.saveAndRelease(lock, testObjType, result, testObjId2)).resolves.toBeUndefined();
+    return await expect(
+      storage.saveAndRelease({ lock, type: testObjType, item: result, id: testObjId2 }),
+    ).resolves.toBeUndefined();
   });
   test('lock, release, and delete in sequence without race condition', async function () {
-    const { lock } = await storage.saveAndClaim(testObjType, testObj2, testObjId2);
-    const pr = [delay(100).then(() => storage.saveAndRelease(lock, testObjType, testObj2, testObjId2))];
-    pr.push(storage.claimAndDelete(testObjType, testObjId2));
+    const { lock } = await storage.saveAndClaim({ type: testObjType, item: testObj2, id: testObjId2 });
+    const pr = [
+      delay(100).then(() => storage.saveAndRelease({ lock, type: testObjType, item: testObj2, id: testObjId2 })),
+    ];
+    pr.push(storage.claimAndDelete({ type: testObjType, id: testObjId2 }));
     return Promise.all(pr);
   });
   test('should have deleted entry', async function () {
-    const result = await storage.exists(testObjType, testObjId2);
+    const result = await storage.exists({ type: testObjType, id: testObjId2 });
     expect(result).toBe(false);
   });
   test('lock, delete, release in sequence WITH race condition', async function () {
-    const { lock } = await storage.saveAndClaim(testObjType, testObj2, testObjId2);
+    const { lock } = await storage.saveAndClaim({ type: testObjType, item: testObj2, id: testObjId2 });
     return Promise.all([
-      delay(100).then(() => storage.saveAndRelease(lock, testObjType, testObj2, testObjId2)),
-      storage.delete(testObjType, testObjId2),
+      delay(100).then(() => storage.saveAndRelease({ lock, type: testObjType, item: testObj2, id: testObjId2 })),
+      storage.delete({ type: testObjType, id: testObjId2 }),
     ]);
   });
   test('should not have deleted entry', async function () {
-    const result = await storage.exists(testObjType, testObjId2);
+    const result = await storage.exists({ type: testObjType, id: testObjId2 });
     expect(result).toBe(true);
   });
   test('should add to set', function () {
     const ops = new Array<Promise<void>>();
     for (let j = 0; j < 100; j++) {
-      ops.push(storage.addToSet(setType, 'item_' + j, setId));
+      ops.push(storage.addToSet({ type: setType, item: 'item_' + j, setId }));
     }
     return Promise.all(ops);
   });
   test('count set', async function () {
-    const result = await storage.setCount(setType, setId);
+    const result = await storage.setCount({ type: setType, setId });
     expect(result).toBe(100);
   });
   test('should remove from set w/ lock', function () {
     const ops = new Array<Promise<void>>();
     for (let j = 0; j < 100; j++) {
-      ops.push(storage.removeFromSetWithLock(setType, 'item_' + j, setId));
+      ops.push(storage.removeFromSetWithLock({ type: setType, item: 'item_' + j, setId }));
     }
     return Promise.all(ops);
   });
   test('set should not still exist', async function () {
-    const result = await storage.exists(setType, setId);
+    const result = await storage.exists({ type: setType, id: setId });
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {
@@ -106,13 +122,13 @@ describe('redis locks', function () {
   test('should add and remove from set', function () {
     const ops = new Array<Promise<void>>();
     for (let j = 0; j < 100; j++) {
-      ops.push(storage.addToSet(setType, 'item_' + j, setId));
-      ops.push(storage.removeFromSetWithLock(setType, 'item_' + j, setId));
+      ops.push(storage.addToSet({ type: setType, item: 'item_' + j, setId }));
+      ops.push(storage.removeFromSetWithLock({ type: setType, item: 'item_' + j, setId }));
     }
     return Promise.all(ops);
   });
   test('set should not still exist', async function () {
-    const result = await storage.exists(setType, setId);
+    const result = await storage.exists({ type: setType, id: setId });
     expect(result).toBe(false);
   });
   test('set type index should not still exist', async function () {
@@ -128,9 +144,9 @@ describe('redis locks', function () {
 });
 
 const lockAndRelease = (iteration: number, type: string, id: string): Promise<void> => {
-  return storage.claim(type, id).then(({ result, lock }) => {
+  return storage.claim({ type, id }).then(({ result, lock }) => {
     result.visitors.push(iteration);
-    return storage.saveAndRelease(lock, type, result, id);
+    return storage.saveAndRelease({ lock, type, item: result, id });
   });
 };
 
