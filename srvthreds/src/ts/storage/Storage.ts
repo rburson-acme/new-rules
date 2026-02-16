@@ -11,7 +11,7 @@ export interface Storage {
   }): Promise<any[]>;
   newTransaction(): Transaction;
 
-  save(args: { type: string; item: any; id: string; meta?: Record<string, string> }): Promise<void>;
+  save(args: { type: string; item: any; id: string; meta?: Record<string, string>; transaction?: Transaction }): Promise<void>;
   retrieveAll(args: { type: string; ids: string[] }): Promise<any[]>;
   retrieve(args: { type: string; id: string }): Promise<any>;
   getMetaValue(args: { type: string; id: string; key: string }): Promise<string | null>;

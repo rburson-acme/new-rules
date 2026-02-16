@@ -159,11 +159,13 @@ export class LocalStorage implements Storage {
     item,
     id,
     meta,
+    transaction,
   }: {
     type: string;
     item: any;
     id: string;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     if (meta) throw new Error('Meta not yet implemented');

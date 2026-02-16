@@ -10,7 +10,7 @@ interface LockWrapper extends Lock {
 }
 
 class RedisTransaction implements Transaction {
-  constructor(private multi: ReturnType<RedisClientType['multi']>) {}
+  constructor(readonly multi: ReturnType<RedisClientType['multi']>) {}
   async execute(): Promise<void> {
     const result = await this.multi.exec()
     if (!result) return Promise.reject(new Error('Redis Transaction failed'));
@@ -119,21 +119,24 @@ export class RedisStorage implements Storage {
     item,
     id,
     meta,
+    transaction
   }: {
     type: string;
     item: any;
     id: string;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<void> {
     // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
     try {
-      const multi = this.client.multi();
+      const multi = (transaction as RedisTransaction)?.multi || this.client.multi();
       const data = JSON.stringify(item);
       //multi.set($key(type, id), data);
       const fields = { [this.DATAKEY]: data, ...meta };
       multi.hSet($key(type, id), fields);
       this.addToIndex(type, id, multi);
-      await multi.exec().then(this.checkMultiResult);
+      // Only execute if this is not part of an existing transaction
+      if(!transaction) await multi.exec().then(this.checkMultiResult);
     } catch (e) {
       return Promise.reject(e);
     }
