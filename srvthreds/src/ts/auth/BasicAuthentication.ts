@@ -34,7 +34,7 @@ export class BasicAuthentication implements Authentication {
   }
 
   async login(participantId: string, password: string): Promise<AuthResult> {
-    const user = await UserController.get().getUserByHandle(participantId);
+    const user = await UserController.get().getUserById(participantId);
     if (!user) {
       throw new Error('Invalid username');
     }

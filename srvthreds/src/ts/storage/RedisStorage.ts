@@ -4,18 +4,10 @@ import { Logger, Series } from '../thredlib/index.js';
 import { Lock, Storage } from './Storage.js';
 import { redisConfig } from '../config/RedisConfig.js';
 import { Transaction } from './Transaction.js';
+import { RedisTransaction } from './RedisTransaction.js';
 
 interface LockWrapper extends Lock {
   lock: RLock;
-}
-
-class RedisTransaction implements Transaction {
-  constructor(readonly multi: ReturnType<RedisClientType['multi']>) {}
-  async execute(): Promise<void> {
-    const result = await this.multi.exec()
-    if (!result) return Promise.reject(new Error('Redis Transaction failed'));
-    return Promise.resolve(result);
-  }
 }
 
 export class RedisStorage implements Storage {
@@ -119,7 +111,7 @@ export class RedisStorage implements Storage {
     item,
     id,
     meta,
-    transaction
+    transaction,
   }: {
     type: string;
     item: any;
@@ -136,7 +128,7 @@ export class RedisStorage implements Storage {
       multi.hSet($key(type, id), fields);
       this.addToIndex(type, id, multi);
       // Only execute if this is not part of an existing transaction
-      if(!transaction) await multi.exec().then(this.checkMultiResult);
+      if (!transaction) await multi.exec().then(this.checkMultiResult);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -145,15 +137,13 @@ export class RedisStorage implements Storage {
   /*
         Get all objects of type for given ids
     */
-  retrieveAll({ type, ids }: { type: string; ids: string[] }): Promise<any[]> {
-    //const targets = ids.map((id) => $key(type, id));
+  retrieveAll({ type, ids, transaction }: { type: string; ids: string[]; transaction?: Transaction }): Promise<any[]> {
     try {
-      /*return this.client
-        .mget(...targets)
-        .then((resp) => resp.map((jsonStr) => (jsonStr ? JSON.parse(jsonStr) : undefined)));*/
-      return Series.map(ids, (id) =>
-        this.client.hGet($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined)),
-      );
+      const multi = (transaction as RedisTransaction)?.multi || this.client.multi();
+      ids.forEach((id) => multi.hGet($key(type, id), this.DATAKEY));
+      if (!transaction)
+        return multi.exec().then((resp: any[]) => resp.map((item: any) => (item ? JSON.parse(item) : undefined)));
+      return Promise.resolve([]);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -162,10 +152,12 @@ export class RedisStorage implements Storage {
   /*
         Get a type by id
     */
-  retrieve({ type, id }: { type: string; id: string }): Promise<any> {
-    // Logger.info(`Retrieving ${type}:${id}`);
+  retrieve({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<any> {
     try {
-      //return this.client.get($key(type, id)).then((resp) => (resp ? JSON.parse(resp) : undefined));
+      if (transaction) {
+        (transaction as RedisTransaction).multi.hGet($key(type, id), this.DATAKEY);
+        return Promise.resolve(undefined);
+      }
       return this.client.hGet($key(type, id), this.DATAKEY).then((resp) => (resp ? JSON.parse(resp) : undefined));
     } catch (e) {
       return Promise.reject(e);
@@ -175,8 +167,22 @@ export class RedisStorage implements Storage {
   /*
         Get a single meta value associated with the object
     */
-  getMetaValue({ type, id, key }: { type: string; id: string; key: string }): Promise<string | null> {
+  getMetaValue({
+    type,
+    id,
+    key,
+    transaction,
+  }: {
+    type: string;
+    id: string;
+    key: string;
+    transaction?: Transaction;
+  }): Promise<string | null> {
     try {
+      if (transaction) {
+        (transaction as RedisTransaction).multi.hGet($key(type, id), key);
+        return Promise.resolve(null);
+      }
       return this.client.hGet($key(type, id), key);
     } catch (e) {
       return Promise.reject(e);
@@ -191,13 +197,19 @@ export class RedisStorage implements Storage {
     id,
     key,
     value,
+    transaction,
   }: {
     type: string;
     id: string;
     key: string;
     value: string | number | Buffer;
+    transaction?: Transaction;
   }): Promise<void> {
     try {
+      if (transaction) {
+        (transaction as RedisTransaction).multi.hSet($key(type, id), key, value);
+        return;
+      }
       await this.client.hSet($key(type, id), key, value);
     } catch (e) {
       return Promise.reject(e);
@@ -211,19 +223,22 @@ export class RedisStorage implements Storage {
         i.e. use this if don't care if another process may be using this object
         and could 'write it back' after you delete it
     */
-  async delete({ type, id }: { type: string; id: string }): Promise<void> {
-    // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
-    const multi = this.client.multi();
+  async delete({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<void> {
+    const multi = (transaction as RedisTransaction)?.multi || this.client.multi();
     multi.del($key(type, id));
     this.removeFromIndex(type, id, multi);
-    await multi.exec().then(this.checkMultiResult);
+    if (!transaction) await multi.exec().then(this.checkMultiResult);
   }
 
   /*
         Does the type with id exist?
     */
-  exists({ type, id }: { type: string; id: string }): Promise<boolean> {
+  exists({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<boolean> {
     try {
+      if (transaction) {
+        (transaction as RedisTransaction).multi.exists($key(type, id));
+        return Promise.resolve(false);
+      }
       return this.client.exists($key(type, id)).then((resp) => !!resp);
     } catch (e) {
       return Promise.reject(e);
@@ -233,22 +248,48 @@ export class RedisStorage implements Storage {
   /*
         Get a set (atomic, safe operation)
     */
-  retrieveSet({ type, setId }: { type: string; setId: string }): Promise<string[]> {
+  retrieveSet({
+    type,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<string[]> {
+    if (transaction) {
+      (transaction as RedisTransaction).multi.sMembers($key(type, setId));
+      return Promise.resolve([]);
+    }
     return this.client.sMembers($key(type, setId));
   }
 
   /*
         Delete a set (atomic safe, operation)
     */
-  deleteSet({ type, setId }: { type: string; setId: string }): Promise<void> {
-    return this.delete({ type, id: setId });
+  deleteSet({ type, setId, transaction }: { type: string; setId: string; transaction?: Transaction }): Promise<void> {
+    return this.delete({ type, id: setId, transaction });
   }
 
   /*
         Is the string already in the set?
     */
-  setContains({ type, item, setId }: { type: string; item: string; setId: string }): Promise<boolean> {
+  setContains({
+    type,
+    item,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<boolean> {
     try {
+      if (transaction) {
+        (transaction as RedisTransaction).multi.sIsMember($key(type, setId), item);
+        return Promise.resolve(false);
+      }
       return this.client.sIsMember($key(type, setId), item).then((resp) => !!resp);
     } catch (e) {
       return Promise.reject(e);
@@ -258,8 +299,12 @@ export class RedisStorage implements Storage {
   /*
         How many elements are in the set?
     */
-  setCount({ type, setId }: { type: string; setId: string }): Promise<number> {
+  setCount({ type, setId, transaction }: { type: string; setId: string; transaction?: Transaction }): Promise<number> {
     try {
+      if (transaction) {
+        (transaction as RedisTransaction).multi.sCard($key(type, setId));
+        return Promise.resolve(0);
+      }
       return this.client.sCard($key(type, setId));
     } catch (e) {
       return Promise.reject(e);
@@ -269,12 +314,22 @@ export class RedisStorage implements Storage {
   /*
         Add a string to a set.  Update the type set (atomic, safe operation)
     */
-  async addToSet({ type, item, setId }: { type: string; item: string; setId: string }): Promise<void> {
+  async addToSet({
+    type,
+    item,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<void> {
     try {
-      const multi = this.client.multi();
+      const multi = (transaction as RedisTransaction)?.multi || this.client.multi();
       multi.sAdd($key(type, setId), item);
       this.addToIndex(type, setId, multi);
-      await multi.exec().then(this.checkMultiResult);
+      if (!transaction) await multi.exec().then(this.checkMultiResult);
     } catch (e) {
       throw e;
     }
@@ -288,13 +343,20 @@ export class RedisStorage implements Storage {
     item,
     setId,
     ttl,
+    transaction,
   }: {
     type: string;
     item: string;
     setId: string;
     ttl?: number;
+    transaction?: Transaction;
   }): Promise<void> {
     try {
+      if (transaction) {
+        const multi = (transaction as RedisTransaction).multi;
+        multi.sRem($key(type, setId), item);
+        return;
+      }
       const key = $key(type, setId);
       const multi = this.client.multi();
       multi.sRem(key, item);
@@ -313,14 +375,22 @@ export class RedisStorage implements Storage {
   /*
     Retrieve all ids of a type
   */
-  retrieveTypeIds(type: string): Promise<string[]> {
+  retrieveTypeIds(type: string, transaction?: Transaction): Promise<string[]> {
+    if (transaction) {
+      (transaction as RedisTransaction).multi.sMembers($indexKey(type));
+      return Promise.resolve([]);
+    }
     return this.client.sMembers($indexKey(type));
   }
 
   /*
     Count the number of items of a type
   */
-  typeCount(type: string): Promise<number> {
+  typeCount(type: string, transaction?: Transaction): Promise<number> {
+    if (transaction) {
+      (transaction as RedisTransaction).multi.sCard($indexKey(type));
+      return Promise.resolve(0);
+    }
     return this.client.sCard($indexKey(type));
   }
 
@@ -337,11 +407,21 @@ export class RedisStorage implements Storage {
   /*
         retrieve() with a lock
     */
-  async claim({ type, id, ttl }: { type: string; id: string; ttl?: number }): Promise<{ result: any; lock: Lock }> {
+  async claim({
+    type,
+    id,
+    ttl,
+    transaction,
+  }: {
+    type: string;
+    id: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<{ result: any; lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      const result = await this.retrieve({ type, id });
+      const result = await this.retrieve({ type, id, transaction });
       return { result, lock: { lock } };
     } catch (e) {
       await this._release(lock);
@@ -358,14 +438,16 @@ export class RedisStorage implements Storage {
     item,
     id,
     meta,
+    transaction,
   }: {
     lock: Lock;
     type: string;
     item: any;
     id: string;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<void> {
-    await this.save({ type, item, id, meta });
+    await this.save({ type, item, id, meta, transaction });
     await this._release((lock as LockWrapper).lock);
   }
 
@@ -386,17 +468,19 @@ export class RedisStorage implements Storage {
     id,
     ttl,
     meta,
+    transaction,
   }: {
     type: string;
     item: any;
     id: string;
     ttl?: number;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<{ lock: Lock }> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      await this.save({ type, item, id, meta });
+      await this.save({ type, item, id, meta, transaction });
       return { lock: { lock } };
     } catch (e) {
       await this._release(lock);
@@ -416,17 +500,25 @@ export class RedisStorage implements Storage {
         obtain a lock (or use an existing one), delete, then release the lock
         use this if you want any other process using this object to release it before you delete it
     */
-  async claimAndDelete({ type, id, ttl }: { type: string; id: string; ttl?: number }): Promise<void> {
-    // Logger.info(`Saving ${type} as ${JSON.stringify(item)}`);
+  async claimAndDelete({
+    type,
+    id,
+    ttl,
+    transaction,
+  }: {
+    type: string;
+    id: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<void> {
     const key = $key(type, id);
     const lock = await this.getLock(key, ttl);
     try {
-      const multi = this.client.multi();
+      const multi = (transaction as RedisTransaction)?.multi || this.client.multi();
       multi.del($key(type, id));
       this.removeFromIndex(type, id, multi);
-      await multi.exec().then(this.checkMultiResult);
+      if (!transaction) await multi.exec().then(this.checkMultiResult);
     } catch (e) {
-      //unlock if failure
       throw e;
     } finally {
       await lock.release();
@@ -441,15 +533,23 @@ export class RedisStorage implements Storage {
     item,
     setId,
     ttl,
+    transaction,
   }: {
     type: string;
     item: string;
     setId: string;
     ttl?: number;
+    transaction?: Transaction;
   }): Promise<void> {
     try {
       const key = $key(type, setId);
       const lock = await this.getLock(key, ttl);
+      if (transaction) {
+        const multi = (transaction as RedisTransaction).multi;
+        multi.sRem(key, item);
+        await lock.release();
+        return;
+      }
       const multi = this.client.multi();
       multi.sRem(key, item);
       multi.sCard(key);
@@ -470,12 +570,23 @@ export class RedisStorage implements Storage {
     key,
     value,
     expSecs,
+    transaction,
   }: {
     type: string;
     key: string;
     value: string;
     expSecs: number;
+    transaction?: Transaction;
   }): Promise<void> {
+    if (transaction) {
+      const multi = (transaction as RedisTransaction).multi;
+      if (!expSecs) {
+        multi.set($key(type, key), JSON.stringify(value));
+      } else {
+        multi.setEx($key(type, key), expSecs, JSON.stringify(value));
+      }
+      return;
+    }
     if (!expSecs) {
       await this.client.set($key(type, key), JSON.stringify(value));
     } else {
@@ -496,11 +607,27 @@ export class RedisStorage implements Storage {
     }
   }
 
-  async getKey({ type, key }: { type: string; key: string }): Promise<any> {
+  async getKey({ type, key, transaction }: { type: string; key: string; transaction?: Transaction }): Promise<any> {
+    if (transaction) {
+      (transaction as RedisTransaction).multi.get($key(type, key));
+      return Promise.resolve(undefined);
+    }
     return await this.client.get($key(type, key)).then((resp) => (resp ? JSON.parse(resp) : undefined));
   }
 
-  async deleteKey({ type, key }: { type: string; key: string }): Promise<number> {
+  async deleteKey({
+    type,
+    key,
+    transaction,
+  }: {
+    type: string;
+    key: string;
+    transaction?: Transaction;
+  }): Promise<number> {
+    if (transaction) {
+      (transaction as RedisTransaction).multi.del($key(type, key));
+      return 0;
+    }
     return await this.client.del($key(type, key));
   }
 

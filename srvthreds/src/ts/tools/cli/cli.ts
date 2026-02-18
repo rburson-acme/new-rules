@@ -5,6 +5,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Logger, LoggerLevel } from '../../thredlib/index.js';
 import { CliOps } from './CliOps.js';
+import { aw } from 'vitest/dist/chunks/reporters.nr4dxCkA.js';
 
 Logger.setLevel(LoggerLevel.DEBUG);
 
@@ -58,6 +59,32 @@ async function main(): Promise<void> {
       },
       async (argv) => {
         await generateAccessToken(argv.participantId, argv.expireMins);
+      },
+    )
+    .command(
+      'dump-system-spec <participantId> <password> [serverAddress]',
+      'Dump the system spec for the supplied server. Requires auth',
+      (yargs) => {
+        return yargs
+          .positional('participantId', {
+            describe: 'The participant ID',
+            type: 'string',
+            demandOption: true,
+          })
+          .positional('password', {
+            describe: 'The password',
+            type: 'string',
+            demandOption: true,
+          })
+          .positional('serverAddress', {
+            describe: 'The server address',
+            type: 'string',
+            demandOption: false,
+            default: 'http://localhost:3000',
+          });
+      },
+      async (argv) => {
+        await CliOps.dumpSystemSpec(argv.participantId, argv.password, argv.serverAddress);
       },
     )
     .wrap(null)

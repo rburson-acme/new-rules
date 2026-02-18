@@ -1,3 +1,6 @@
 export interface Transaction {
-    execute(): Promise<void>;
+  readonly isComplete: boolean;
+  execute(): Promise<any[]>;
+  getResultAt<T = any>(index: number): T;
+  getResultAsJsonAt<T = any>(index: number): T | undefined;
 }

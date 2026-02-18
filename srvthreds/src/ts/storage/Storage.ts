@@ -11,28 +11,51 @@ export interface Storage {
   }): Promise<any[]>;
   newTransaction(): Transaction;
 
-  save(args: { type: string; item: any; id: string; meta?: Record<string, string>; transaction?: Transaction }): Promise<void>;
-  retrieveAll(args: { type: string; ids: string[] }): Promise<any[]>;
-  retrieve(args: { type: string; id: string }): Promise<any>;
-  getMetaValue(args: { type: string; id: string; key: string }): Promise<string | null>;
-  setMetaValue(args: { type: string; id: string; key: string; value: string | number | Buffer }): Promise<void>;
-  delete(args: { type: string; id: string }): Promise<void>;
-  retrieveSet(args: { type: string; setId: string }): Promise<string[]>;
-  deleteSet(args: { type: string; setId: string }): Promise<void>;
-  exists(args: { type: string; id: string }): Promise<boolean>;
-  setContains(args: { type: string; item: string; setId: string }): Promise<boolean>;
-  setCount(args: { type: string; setId: string }): Promise<number>;
-  addToSet(args: { type: string; item: string; setId: string }): Promise<void>;
-  removeFromSet(args: { type: string; item: string; setId: string; ttl?: number }): Promise<void>;
-  retrieveTypeIds(type: string): Promise<string[]>;
-  typeCount(type: string): Promise<number>;
+  save(args: {
+    type: string;
+    item: any;
+    id: string;
+    meta?: Record<string, string>;
+    transaction?: Transaction;
+  }): Promise<void>;
+  retrieveAll(args: { type: string; ids: string[]; transaction?: Transaction }): Promise<any[]>;
+  retrieve(args: { type: string; id: string; transaction?: Transaction }): Promise<any>;
+  getMetaValue(args: { type: string; id: string; key: string; transaction?: Transaction }): Promise<string | null>;
+  setMetaValue(args: {
+    type: string;
+    id: string;
+    key: string;
+    value: string | number | Buffer;
+    transaction?: Transaction;
+  }): Promise<void>;
+  delete(args: { type: string; id: string; transaction?: Transaction }): Promise<void>;
+  retrieveSet(args: { type: string; setId: string; transaction?: Transaction }): Promise<string[]>;
+  deleteSet(args: { type: string; setId: string; transaction?: Transaction }): Promise<void>;
+  exists(args: { type: string; id: string; transaction?: Transaction }): Promise<boolean>;
+  setContains(args: { type: string; item: string; setId: string; transaction?: Transaction }): Promise<boolean>;
+  setCount(args: { type: string; setId: string; transaction?: Transaction }): Promise<number>;
+  addToSet(args: { type: string; item: string; setId: string; transaction?: Transaction }): Promise<void>;
+  removeFromSet(args: {
+    type: string;
+    item: string;
+    setId: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<void>;
+  retrieveTypeIds(type: string, transaction?: Transaction): Promise<string[]>;
+  typeCount(type: string, transaction?: Transaction): Promise<number>;
   disconnect(): Promise<void>;
   purgeAll(): Promise<void>;
 
   /*
      retrieve() with a lock
     */
-  claim(args: { type: string; id: string; ttl?: number }): Promise<{ result: any; lock: Lock }>;
+  claim(args: {
+    type: string;
+    id: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<{ result: any; lock: Lock }>;
   renewClaim(args: { lock: Lock; ttl?: number }): Promise<void>;
   /*
      save() with unlock
@@ -43,6 +66,7 @@ export interface Storage {
     item: any;
     id: string;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<void>;
 
   release(lock: Lock): Promise<void>;
@@ -55,16 +79,23 @@ export interface Storage {
     id: string;
     ttl?: number;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<{ lock: Lock }>;
-  claimAndDelete(args: { type: string; id: string; ttl?: number }): Promise<void>;
+  claimAndDelete(args: { type: string; id: string; ttl?: number; transaction?: Transaction }): Promise<void>;
   /*
      extend the lock
     */
-  removeFromSetWithLock(args: { type: string; item: string; setId: string; ttl?: number }): Promise<void>;
+  removeFromSetWithLock(args: {
+    type: string;
+    item: string;
+    setId: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<void>;
 
-  setKey(args: { type: string; key: string; value: string; expSecs: number }): Promise<void>;
-  getKey(args: { type: string; key: string }): Promise<any>;
-  deleteKey(args: { type: string; key: string }): Promise<number>;
+  setKey(args: { type: string; key: string; value: string; expSecs: number; transaction?: Transaction }): Promise<void>;
+  getKey(args: { type: string; key: string; transaction?: Transaction }): Promise<any>;
+  deleteKey(args: { type: string; key: string; transaction?: Transaction }): Promise<number>;
 }
 
 export interface Lock {

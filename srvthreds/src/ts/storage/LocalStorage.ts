@@ -34,7 +34,17 @@ export class LocalStorage implements Storage {
     throw new Error('Method not implemented');
   }
 
-  getMetaValue({ type, id, key }: { type: string; id: string; key: string }): Promise<string | null> {
+  getMetaValue({
+    type,
+    id,
+    key,
+    transaction,
+  }: {
+    type: string;
+    id: string;
+    key: string;
+    transaction?: Transaction;
+  }): Promise<string | null> {
     throw new Error('Method not implemented');
   }
 
@@ -43,11 +53,13 @@ export class LocalStorage implements Storage {
     id,
     key,
     value,
+    transaction,
   }: {
     type: string;
     id: string;
     key: string;
     value: string | number | Buffer;
+    transaction?: Transaction;
   }): Promise<void> {
     throw new Error('Method not implemented');
   }
@@ -61,7 +73,7 @@ export class LocalStorage implements Storage {
      this is a local mock implementation that does not lock objects
      With a RemoteStorage implementation, objects could be locked and we'd be notified when they are released
     */
-  claim({ type, id }: { type: string; id: string; ttl?: number }): Promise<any> {
+  claim({ type, id }: { type: string; id: string; ttl?: number; transaction?: Transaction }): Promise<any> {
     try {
       const data = fs.readFileSync(`tmp/${type}_${id}.json`);
       const item = JSON.parse(data.toString());
@@ -93,12 +105,14 @@ export class LocalStorage implements Storage {
     item,
     id,
     meta,
+    transaction,
   }: {
     lock: Lock;
     type: string;
     item: any;
     id: string;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<void> {
     if (meta) throw new Error('Meta not yet implemented');
     try {
@@ -125,12 +139,14 @@ export class LocalStorage implements Storage {
     id,
     ttl,
     meta,
+    transaction,
   }: {
     type: string;
     item: any;
     id: string;
     ttl?: number;
     meta?: Record<string, string>;
+    transaction?: Transaction;
   }): Promise<{ lock: Lock }> {
     if (meta) throw new Error('Meta not yet implemented');
     try {
@@ -185,11 +201,11 @@ export class LocalStorage implements Storage {
     });
   }
 
-  retrieveAll({ type, ids }: { type: string; ids: string[] }): Promise<any[]> {
+  retrieveAll({ type, ids, transaction }: { type: string; ids: string[]; transaction?: Transaction }): Promise<any[]> {
     return Parallel.map(ids, (id) => this.retrieve({ type, id }));
   }
 
-  retrieve({ type, id }: { type: string; id: string }): Promise<any> {
+  retrieve({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<any> {
     // Logger.info(`Retrieving ${type}:${id}`);
     return new Promise((resolve, reject) => {
       fs.readFile(`tmp/${type}_${id}.json`, (error, data) => {
@@ -207,7 +223,7 @@ export class LocalStorage implements Storage {
     });
   }
 
-  delete({ type, id }: { type: string; id: string }): Promise<void> {
+  delete({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<void> {
     try {
       const path = `tmp/${type}_${id}.json`;
       if (fs.existsSync(path)) {
@@ -219,11 +235,21 @@ export class LocalStorage implements Storage {
     }
   }
 
-  claimAndDelete({ type, id, ttl }: { type: string; id: string; ttl?: number }): Promise<void> {
+  claimAndDelete({
+    type,
+    id,
+    ttl,
+    transaction,
+  }: {
+    type: string;
+    id: string;
+    ttl?: number;
+    transaction?: Transaction;
+  }): Promise<void> {
     return this.delete({ type, id });
   }
 
-  exists({ type, id }: { type: string; id: string }): Promise<boolean> {
+  exists({ type, id, transaction }: { type: string; id: string; transaction?: Transaction }): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         this.retrieve({ type, id })
@@ -235,7 +261,17 @@ export class LocalStorage implements Storage {
     });
   }
 
-  setContains({ type, item, setId }: { type: string; item: string; setId: string }): Promise<boolean> {
+  setContains({
+    type,
+    item,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         this.retrieveSet({ type, setId })
@@ -249,7 +285,7 @@ export class LocalStorage implements Storage {
     });
   }
 
-  setCount({ type, setId }: { type: string; setId: string }): Promise<number> {
+  setCount({ type, setId, transaction }: { type: string; setId: string; transaction?: Transaction }): Promise<number> {
     return new Promise((resolve, reject) => {
       try {
         this.retrieveSet({ type, setId })
@@ -263,15 +299,33 @@ export class LocalStorage implements Storage {
     });
   }
 
-  retrieveSet({ type, setId }: { type: string; setId: string }): Promise<string[]> {
+  retrieveSet({
+    type,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<string[]> {
     return this.retrieve({ type, id: setId });
   }
 
-  deleteSet({ type, setId }: { type: string; setId: string }): Promise<void> {
+  deleteSet({ type, setId, transaction }: { type: string; setId: string; transaction?: Transaction }): Promise<void> {
     return this.delete({ type, id: setId });
   }
 
-  async addToSet({ type, item, setId }: { type: string; item: string; setId: string }): Promise<void> {
+  async addToSet({
+    type,
+    item,
+    setId,
+    transaction,
+  }: {
+    type: string;
+    item: string;
+    setId: string;
+    transaction?: Transaction;
+  }): Promise<void> {
     let set: any[] = await this.claim({ type, id: setId });
     if (!set) {
       set = [];
@@ -285,11 +339,13 @@ export class LocalStorage implements Storage {
     type,
     item,
     setId,
+    transaction,
   }: {
     type: string;
     item: string;
     setId: string;
     ttl?: number;
+    transaction?: Transaction;
   }): Promise<void> {
     let set: any[] = await this.claim({ type, id: setId });
     if (!set) {
@@ -308,11 +364,13 @@ export class LocalStorage implements Storage {
     item,
     setId,
     ttl,
+    transaction,
   }: {
     type: string;
     item: string;
     setId: string;
     ttl?: number;
+    transaction?: Transaction;
   }): Promise<void> {
     throw new Error('Method not implemented');
   }
@@ -320,14 +378,14 @@ export class LocalStorage implements Storage {
   /*
     Retrieve all ids of a type
   */
-  async retrieveTypeIds(type: string): Promise<string[]> {
+  async retrieveTypeIds(type: string, transaction?: Transaction): Promise<string[]> {
     return this.retrieveSet({ type, setId: indexId });
   }
 
   /*
     Count the number of items of a type
   */
-  async typeCount(type: string): Promise<number> {
+  async typeCount(type: string, transaction?: Transaction): Promise<number> {
     return this.setCount({ type, setId: indexId });
   }
 
@@ -336,20 +394,30 @@ export class LocalStorage implements Storage {
     key,
     value,
     expSecs,
+    transaction,
   }: {
     type: string;
     key: string;
     value: string;
     expSecs: number;
+    transaction?: Transaction;
   }): Promise<void> {
     throw new Error('Method not implemented');
   }
 
-  async getKey({ type, key }: { type: string; key: string }): Promise<any> {
+  async getKey({ type, key, transaction }: { type: string; key: string; transaction?: Transaction }): Promise<any> {
     throw new Error('Method not implemented');
   }
 
-  async deleteKey({ type, key }: { type: string; key: string }): Promise<number> {
+  async deleteKey({
+    type,
+    key,
+    transaction,
+  }: {
+    type: string;
+    key: string;
+    transaction?: Transaction;
+  }): Promise<number> {
     throw new Error('Method not implemented');
   }
 

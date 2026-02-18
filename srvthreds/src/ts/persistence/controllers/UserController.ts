@@ -76,8 +76,8 @@ export class UserController {
     });
   }
 
-  async getUserByHandle(handle: string): Promise<User | null> {
-    return this.persistence.getOne({ type: Types.User, matcher: { handle } });
+  async getUserById(id: string): Promise<User | null> {
+    return this.persistence.getOne({ type: Types.User, matcher: { id } });
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

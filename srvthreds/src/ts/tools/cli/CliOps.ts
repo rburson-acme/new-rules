@@ -1,4 +1,4 @@
-import { Logger, Id } from '../../thredlib/index.js';
+import { Logger, Id, SystemEvents, EventManager, Events } from '../../thredlib/index.js';
 import { TokenPayload } from '../../auth/Authentication.js';
 import jwt from 'jsonwebtoken';
 
@@ -89,4 +89,22 @@ export class CliOps {
       throw error;
     }
   }
+
+  // must be run against a running server
+  static dumpSystemSpec = async (participantId: string, password: string, serverAddress?: string): Promise<void> => {
+    //login - get a token for the participant
+    const token = participantId; // replace with actual token when auth is turned on
+    // send a user event to get the system spec
+    const eventManager = new EventManager();
+    await eventManager.connect(serverAddress || 'http://localhost:3000', {
+      transports: ['websocket'],
+      jsonp: false,
+      auth: { token },
+    });
+    const getSystemSpecEvent = SystemEvents.getGetSystemSpecEvent({ id: participantId });
+    const event = await eventManager.exchangeWithPromise(getSystemSpecEvent);
+    const systemSpec = Events.valueNamed(event, 'systemSpec');
+    console.log('\n\n' + JSON.stringify(systemSpec, null, 2));
+    eventManager.disconnect();
+  };
 }

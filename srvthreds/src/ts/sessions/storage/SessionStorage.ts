@@ -18,9 +18,15 @@ export class SessionStorage {
 
   async addSession(session: Session, participantId: string): Promise<void> {
     const { id: sessionId, nodeId, data } = session;
-    // @TODO this needs to be a transaction.  add this featre to storage interface
-    await this.storage.save({ type: Types.SessionParticipant, item: { participantId, nodeId, data }, id: sessionId });
-    await this.storage.addToSet({ type: Types.ParticipantSessions, item: sessionId, setId: participantId });
+    const transaction = this.storage.newTransaction();
+    this.storage.save({
+      type: Types.SessionParticipant,
+      item: { participantId, nodeId, data },
+      id: sessionId,
+      transaction,
+    });
+    this.storage.addToSet({ type: Types.ParticipantSessions, item: sessionId, setId: participantId, transaction });
+    await transaction.execute();
   }
 
   async exists(sessionId: string, participantId: string): Promise<boolean> {
@@ -107,12 +113,15 @@ export class SessionStorage {
   async removeSession(sessionId: string): Promise<void> {
     const sessionParticipant = await this.getSessionParticipant(sessionId);
     if (sessionParticipant?.participantId) {
-      await this.storage.delete({ type: Types.SessionParticipant, id: sessionId });
-      return this.storage.removeFromSet({
+      const transaction = this.storage.newTransaction();
+      this.storage.delete({ type: Types.SessionParticipant, id: sessionId, transaction });
+      this.storage.removeFromSet({
         type: Types.ParticipantSessions,
         item: sessionId,
         setId: sessionParticipant.participantId,
+        transaction,
       });
+      await transaction.execute();
     }
   }
 
@@ -130,12 +139,12 @@ export class SessionStorage {
   async removeParticipant(participantId: string): Promise<void> {
     const sessionIds = await this.getSessionIdsFor(participantId);
     if (sessionIds) {
-      if (sessionIds.length) {
-        await forEach(sessionIds, async (sessionId) =>
-          this.storage.delete({ type: Types.SessionParticipant, id: sessionId }),
-        );
-      }
-      await this.storage.deleteSet({ type: Types.ParticipantSessions, setId: participantId });
+      const transaction = this.storage.newTransaction();
+      sessionIds.forEach((sessionId) =>
+        this.storage.delete({ type: Types.SessionParticipant, id: sessionId, transaction }),
+      );
+      this.storage.deleteSet({ type: Types.ParticipantSessions, setId: participantId, transaction });
+      await transaction.execute();
     }
   }
 

@@ -145,6 +145,56 @@ describe('redis storage', function () {
     const result = await storage.typeCount(setType);
     expect(result).toBe(0);
   });
+  // Transactions
+  test('transaction: batch writes', async function () {
+    const transaction = storage.newTransaction();
+    storage.save({ type: testObjType, item: testObj1, id: testObjId, meta: testMeta1, transaction });
+    storage.save({ type: testObjType, item: testObj2, id: testObjId2, transaction });
+    storage.addToSet({ type: setType, item: setItems[0], setId, transaction });
+    storage.addToSet({ type: setType, item: setItems[1], setId, transaction });
+    expect(transaction.isComplete).toBe(false);
+    await transaction.execute();
+    expect(transaction.isComplete).toBe(true);
+  });
+  test('transaction: verify batch writes persisted', async function () {
+    const obj1 = await storage.retrieve({ type: testObjType, id: testObjId });
+    expect(obj1.testkey).toBe('testvalue');
+    const obj2 = await storage.retrieve({ type: testObjType, id: testObjId2 });
+    expect(obj2.testkey2).toBe('testvalue2');
+    const ids = await storage.retrieveTypeIds(testObjType);
+    expect(ids).toContain(testObjId);
+    expect(ids).toContain(testObjId2);
+    const setMembers = await storage.retrieveSet({ type: setType, setId });
+    expect(setMembers).toContain(setItems[0]);
+    expect(setMembers).toContain(setItems[1]);
+  });
+  test('transaction: batch reads with result accessors', async function () {
+    const transaction = storage.newTransaction();
+    storage.retrieve({ type: testObjType, id: testObjId, transaction });
+    storage.retrieve({ type: testObjType, id: testObjId2, transaction });
+    storage.getMetaValue({ type: testObjType, id: testObjId, key: 'timestamp', transaction });
+    await transaction.execute();
+    const obj1 = transaction.getResultAsJsonAt(0);
+    const obj2 = transaction.getResultAsJsonAt(1);
+    const metaValue = transaction.getResultAt<string | null>(2);
+    expect(obj1.testkey).toBe('testvalue');
+    expect(obj2.testkey2).toBe('testvalue2');
+    expect(metaValue).toBe('now');
+  });
+  test('transaction: batch deletes', async function () {
+    const transaction = storage.newTransaction();
+    storage.delete({ type: testObjType, id: testObjId, transaction });
+    storage.delete({ type: testObjType, id: testObjId2, transaction });
+    storage.deleteSet({ type: setType, setId, transaction });
+    await transaction.execute();
+    const exists1 = await storage.exists({ type: testObjType, id: testObjId });
+    expect(exists1).toBe(false);
+    const exists2 = await storage.exists({ type: testObjType, id: testObjId2 });
+    expect(exists2).toBe(false);
+    const setMembers = await storage.retrieveSet({ type: setType, setId });
+    expect(setMembers.length).toBe(0);
+  });
+
   // cleanup in case of failure
   afterAll(async () => {
     await storage.purgeAll();

@@ -7,19 +7,19 @@ export class ResolverConfig implements Config<ResolverConfigDef> {
   private _configNameMap: StringMap<ServiceConfigDef> = {};
   private _services: ServiceConfigDef[] = [];
 
-  constructor(resolverConfig?: ResolverConfigDef) {
-    if (resolverConfig) {
-      this._services = resolverConfig.agents || [];
-      this.setServiceAddressMap(resolverConfig.agents);
-      this.setConfigNameMap(resolverConfig.agents);
+  constructor(resolverConfigDef?: ResolverConfigDef) {
+    if (resolverConfigDef) {
+      this._services = resolverConfigDef.agents || [];
+      this.setServiceAddressMap(resolverConfigDef.agents);
+      this.setConfigNameMap(resolverConfigDef.agents);
     }
   }
 
   // call this to rebuild with updated config
-  async updateConfig(resolverConfig: ResolverConfigDef) {
-    this._services = resolverConfig.agents || [];
-    this.setServiceAddressMap(resolverConfig.agents);
-    this.setConfigNameMap(resolverConfig.agents);
+  async updateConfig(resolverConfigDef: ResolverConfigDef) {
+    this._services = resolverConfigDef.agents || [];
+    this.setServiceAddressMap(resolverConfigDef.agents);
+    this.setConfigNameMap(resolverConfigDef.agents);
   }
 
   // map both nodeId and nodeType to the service address

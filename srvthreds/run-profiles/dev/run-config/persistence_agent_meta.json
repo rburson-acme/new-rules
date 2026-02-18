@@ -3,8 +3,8 @@
     "description": "Service providing simple CRUD operations for data storage and retrieval.",
     "entitySpecs": [
         {
-            "type": "TestObject",
-            "description": "A test object representing a participant at a specific location.",
+            "type": "ParticipantLocation",
+            "description": "An object representing a participant at a specific location.",
             "propertySpecs": [
                 {
                     "name": "id",
@@ -23,8 +23,13 @@
                     "type": "string"
                 },
                 {
+                    "name": "startDate",
+                    "description": "Start date for the participant at the associated location.",
+                    "type": "Date"
+                },
+                {
                     "name": "locationCategory",
-                    "description": "Category of the location",
+                    "description": "Category or type of the location",
                     "type": "string",
                     "set": [
                         {
@@ -65,8 +70,8 @@
         {
             "inputContentType": "tasks",
             "inputContentSpec": {
-                "description": "A set of test data that associates participants with locations.",
-                "targetTypeName": "TestObject",
+                "description": "Perform data operations on ParticipantLocation records.",
+                "targetTypeName": "ParticipantLocation",
                 "allowedOps": [
                     "put",
                     "get",
@@ -94,7 +99,7 @@
             "eventContentType": "values",
             "eventContentSpecs": [
                 {
-                    "targetTypeName": "TestObject"
+                    "targetTypeName": "ParticipantLocation"
                 }
             ]
         }

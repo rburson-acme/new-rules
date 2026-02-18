@@ -14,12 +14,12 @@ export const getHandleLogin = ({
 }) => {
   // @TODO need to create error codes for better error reporting back the client
   return async (req: Request<{}, any>, res: Response<any, any>) => {
-    const { username: handle, password } = req.body;
-    if (!handle || !password) {
+    const { participantId, password } = req.body;
+    if (!participantId || !password) {
       return res.status(400).send('Username and password are required.');
     }
     try {
-      const authResult = await auth.login(handle, password);
+      const authResult = await auth.login(participantId, password);
       res.status(200).json(authResult);
     } catch (error) {
       console.error('Login Failed', error);

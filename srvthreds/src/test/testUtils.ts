@@ -207,6 +207,43 @@ export const createUserDbFixtures = async () => {
   ]);
 };
 
+export const loadBootstrappedConfig = async () => {
+  await runBootstrap('test');
+  await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
+    type: 'rascal-config',
+    config: new RascalConfig(),
+    configName: 'rascal_config',
+  });
+  await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
+    type: 'resolver-config',
+    config: new ResolverConfig(),
+    configName: 'resolver_config',
+  });
+  await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
+    type: 'sessions-model',
+    config: new SessionsConfig(),
+    configName: 'sessions_model',
+  });
+};
+
+export const loadDefaultConfig = async () => {
+  await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
+    type: 'rascal-config',
+    config: new RascalConfig(),
+    configPath: './src/test/queue/rascal_test_config.json',
+  });
+  await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
+    type: 'resolver-config',
+    config: new ResolverConfig(),
+    configPath: './src/test/config/simple_test_resolver_config.json',
+  });
+  await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
+    type: 'sessions-model',
+    config: new SessionsConfig(),
+    configPath: './src/test/config/sessions/simple_test_sessions_model.json',
+  });
+};
+
 // initializes an engine instance with the given patternModels
 // if bootstrap is true, runs the bootstrap process first
 export class EngineConnectionManager {
@@ -233,11 +270,6 @@ export class EngineConnectionManager {
     readonly eventQ: EventQ,
     readonly engine: Engine,
   ) {}
-
-  // this should be run after creating and instance with bootstrap = true
-  async initBootstrapped() {
-    this.eventService.deleteAll().catch(Logger.error);
-  }
 
   async purgeAll() {
     await this.eventService.deleteAll().catch(Logger.error);
@@ -266,41 +298,17 @@ export class EngineConnectionManager {
     await System.getSessions().addSession(session, participantId);
   }
 
+  // this should be run after creating an instance with bootstrap = true
+  async initBootstrapped() {
+    this.eventService.deleteAll().catch(Logger.error);
+  }
+
   private static async loadBootstrappedConfig() {
-    await runBootstrap('test');
-    await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
-      type: 'rascal-config',
-      config: new RascalConfig(),
-      configName: 'rascal_config',
-    });
-    await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
-      type: 'resolver-config',
-      config: new ResolverConfig(),
-      configName: 'resolver_config',
-    });
-    await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
-      type: 'sessions-model',
-      config: new SessionsConfig(),
-      configName: 'sessions_model',
-    });
+    await loadBootstrappedConfig();
   }
 
   private static async loadDefaultConfig() {
-    await ConfigManager.get().loadConfig<RascalConfigDef, RascalConfig>({
-      type: 'rascal-config',
-      config: new RascalConfig(),
-      configPath: './src/test/queue/rascal_test_config.json',
-    });
-    await ConfigManager.get().loadConfig<ResolverConfigDef, ResolverConfig>({
-      type: 'resolver-config',
-      config: new ResolverConfig(),
-      configPath: './src/test/config/simple_test_resolver_config.json',
-    });
-    await ConfigManager.get().loadConfig<SessionsConfigDef, SessionsConfig>({
-      type: 'sessions-model',
-      config: new SessionsConfig(),
-      configPath: './src/test/config/sessions/simple_test_sessions_model.json',
-    });
+    await loadDefaultConfig();
   }
 }
 
@@ -452,6 +460,19 @@ export class AgentConnectionManager {
     await this.agentEventService.disconnect().catch(Logger.error);
     await this.agent.shutdown();
   }
+
+  // this should be run after creating and instance with bootstrap = true
+  async initBootstrapped() {
+    this.agentEventService.deleteAll().catch(Logger.error);
+  }
+
+  private static async loadBootstrappedConfig() {
+    await loadBootstrappedConfig();
+  }
+
+  private static async loadDefaultConfig() {
+    await loadDefaultConfig();
+  }
 }
 
 // Allows for testing Agents WITH both Queue connections
@@ -531,5 +552,18 @@ export class AgentQueueConnectionManager {
     // this will disconnect the underlying broker,
     await this.engineEventService.disconnect().catch(Logger.error);
     await this.agent.shutdown();
+  }
+
+  // this should be run after creating and instance with bootstrap = true
+  async initBootstrapped() {
+    this.agentEventService.deleteAll().catch(Logger.error);
+  }
+
+  private static async loadBootstrappedConfig() {
+    await loadBootstrappedConfig();
+  }
+
+  private static async loadDefaultConfig() {
+    await loadDefaultConfig();
   }
 }

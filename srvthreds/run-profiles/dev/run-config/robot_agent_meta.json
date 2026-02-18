@@ -3,8 +3,8 @@
     "description": "Automated mobile robot platform",
     "entitySpecs": [
         {
-            "type": "Param",
-            "description": "Configurable parameters for the robot",
+            "type": "RobotParam",
+            "description": "Parameters for the robot, some of which are configurable.",
             "propertySpecs": [
                 {
                     "name": "id",
@@ -68,7 +68,7 @@
             "inputContentType": "tasks",
             "inputContentSpec": {
                 "description": "Allows for robot parameters to be retrieved or updated.",
-                "entityTypeName": "Param",
+                "entityTypeName": "RobotParam",
                 "allowedOps": [ "get", "update" ]
             }
         }

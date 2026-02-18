@@ -135,9 +135,14 @@ export class UserService {
     await Parallel.forEach(resolverConfig.configNames, async (configName) => {
       // use to build service specs
       const serviceConfig = resolverConfig.getServiceConfigDefForName(configName);
-      const serviceSpec: ServiceSpec = await ConfigLoader.loadFromNameOrPath(`${configName}_meta`);
-      // servicespec can override nodeType and address but they default to the resolver config nodeType
-      serviceSpecs.push({ ...{ nodeType: serviceConfig!.nodeType, address: serviceConfig!.nodeType }, ...serviceSpec });
+      if (!serviceConfig?.hidden) {
+        const serviceSpec: ServiceSpec = await ConfigLoader.loadFromNameOrPath(`${configName}_meta`);
+        // servicespec can override nodeType and address but they default to the resolver config nodeType
+        serviceSpecs.push({
+          ...{ nodeType: serviceConfig!.nodeType, address: serviceConfig!.nodeType },
+          ...serviceSpec,
+        });
+      }
     });
 
     const users = await UserController.get().getUsers();

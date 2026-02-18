@@ -161,19 +161,27 @@ export class ThredsStore {
     if (thredStore.isTerminated) {
       await this.deleteAndTerminateThred(thredStore.id);
     } else {
-      await this.storage.save({ type: Types.Thred, item: thredStore.getState(), id: thredStore.id });
+      const transaction = this.storage.newTransaction();
+      this.storage.save({ type: Types.Thred, item: thredStore.getState(), id: thredStore.id, transaction });
       // if the most recent reaction allows unbound events but the previous one didn't, add the thred to the set
       if (!prevAllowUnboundEvents && thredStore.allowUnboundEvents) {
-        await this.storage.addToSet({ type: Types.Utility, item: thredStore.id, setId: UtilityKeys.UnboundReaction });
-      }
-      // if the most recent reaction doesn't allow unbound events but the previous one did, remove the thred from the set
-      if (prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
-        await this.storage.removeFromSet({
+        this.storage.addToSet({
           type: Types.Utility,
           item: thredStore.id,
           setId: UtilityKeys.UnboundReaction,
+          transaction,
         });
       }
+      // if the most recent reaction doesn't allow unbound events but the previous one did, remove the thred from the set
+      if (prevAllowUnboundEvents && !thredStore.allowUnboundEvents) {
+        this.storage.removeFromSet({
+          type: Types.Utility,
+          item: thredStore.id,
+          setId: UtilityKeys.UnboundReaction,
+          transaction,
+        });
+      }
+      await transaction.execute();
     }
   }
 

@@ -3,7 +3,7 @@ import { EngineConnectionManager, withDispatcherPromise, withReject } from '../t
 import patternModel from '../config/patterns/downtime.pattern.json' with { type: 'json' };
 const patternModels: PatternModel[] = [patternModel as PatternModel];
 
-Logger.setLevel(LoggerLevel.INFO);
+Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('engine', function () {
   beforeAll(async () => {

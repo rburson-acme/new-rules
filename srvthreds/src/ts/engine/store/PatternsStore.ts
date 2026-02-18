@@ -1,6 +1,7 @@
 import { Pattern } from '../Pattern.js';
 import { PatternStore } from './PatternStore.js';
 import { Storage, Types } from '../../storage/Storage.js';
+import { Transaction } from '../../storage/Transaction.js';
 import { Logger, PatternModel, Series } from '../../thredlib/index.js';
 import { LockManager } from '../../lib/lock/LockManager.js';
 
@@ -117,8 +118,22 @@ export class PatternsStore {
         if (!patternStore) throw new Error(`PatternStore not found for patternId ${patternId}`);
         const { instanceCount, lastInstanceTs } = await this.lock_checkPatternInstanceCountAndTimestamp(patternId);
         const result = await op();
-        await this.lock_storePatternInstanceCount(patternId, instanceCount + 1);
-        await this.lock_storePatternLastInstanceTimestamp(patternId, Date.now());
+        const transaction = this.storage.newTransaction();
+        this.storage.setMetaValue({
+          type: Types.Pattern,
+          id: patternId,
+          key: PatternStore.NUM_INSTANCE_KEY,
+          value: instanceCount + 1,
+          transaction,
+        });
+        this.storage.setMetaValue({
+          type: Types.Pattern,
+          id: patternId,
+          key: PatternStore.LAST_INSTANCE_TIMESTAMP_KEY,
+          value: Date.now(),
+          transaction,
+        });
+        await transaction.execute();
         return result;
       },
       ttl,
@@ -155,12 +170,12 @@ export class PatternsStore {
 
   // requires lock
   private async lock_loadPatternStore(patternId: string): Promise<PatternStore> {
-    const patternModel = await this.storage.retrieve({ type: Types.Pattern, id: patternId });
-    const tsValue = await this.storage.getMetaValue({
-      type: Types.Pattern,
-      id: patternId,
-      key: PatternStore.TIMESTAMP_KEY,
-    });
+    const transaction = this.storage.newTransaction();
+    this.storage.retrieve({ type: Types.Pattern, id: patternId, transaction });
+    this.storage.getMetaValue({ type: Types.Pattern, id: patternId, key: PatternStore.TIMESTAMP_KEY, transaction });
+    await transaction.execute();
+    const patternModel = transaction.getResultAsJsonAt(0);
+    const tsValue = transaction.getResultAt<string | null>(1);
     const timestamp = tsValue ? parseInt(tsValue) : new Date().getTime();
     if (patternModel) this.patternStores[patternId] = PatternStore.fromState({ patternModel, timestamp });
     Logger.info(`Loaded Pattern: ${patternModel.id} : ${patternModel.name} at ${new Date(timestamp).toISOString()}`);
@@ -171,20 +186,27 @@ export class PatternsStore {
   private async lock_storePatternStore(patternStore: PatternStore, storage: Storage): Promise<void> {
     const patternId = patternStore.pattern.id;
     const { patternModel, timestamp } = patternStore.getState();
-    await storage.save({ type: Types.Pattern, item: patternModel, id: patternId });
-    await storage.setMetaValue({
+    const transaction = storage.newTransaction();
+    storage.save({ type: Types.Pattern, item: patternModel, id: patternId, transaction });
+    storage.setMetaValue({
       type: Types.Pattern,
       id: patternId,
       key: PatternStore.TIMESTAMP_KEY,
       value: timestamp,
+      transaction,
     });
+    await transaction.execute();
   }
   // requires lock
-  private async lock_retrievePatternInstanceCount(patternId: string): Promise<number | null> {
+  private async lock_retrievePatternInstanceCount(
+    patternId: string,
+    transaction?: Transaction,
+  ): Promise<number | null> {
     const numInstances = await this.storage.getMetaValue({
       type: Types.Pattern,
       id: patternId,
       key: PatternStore.NUM_INSTANCE_KEY,
+      transaction,
     });
     return numInstances ? parseInt(numInstances) : null;
   }
@@ -225,8 +247,19 @@ export class PatternsStore {
     const patternStore = this.patternStore(patternId);
     const pattern = patternStore.pattern;
     const maxInstances = pattern.patternModel.maxInstances || Infinity;
-    const instanceCount = (await this.lock_retrievePatternInstanceCount(patternId)) || 0;
-    const lastInstanceTs = (await this.lock_retrievePatternLastInstanceTimestamp(patternId)) || 0;
+    const transaction = this.storage.newTransaction();
+    this.storage.getMetaValue({ type: Types.Pattern, id: patternId, key: PatternStore.NUM_INSTANCE_KEY, transaction });
+    this.storage.getMetaValue({
+      type: Types.Pattern,
+      id: patternId,
+      key: PatternStore.LAST_INSTANCE_TIMESTAMP_KEY,
+      transaction,
+    });
+    await transaction.execute();
+    const numInstancesValue = transaction.getResultAt<string | null>(0);
+    const lastInstanceTsValue = transaction.getResultAt<string | null>(1);
+    const instanceCount = numInstancesValue ? parseInt(numInstancesValue) : 0;
+    const lastInstanceTs = lastInstanceTsValue ? parseInt(lastInstanceTsValue) : 0;
     const now = Date.now();
     if (instanceCount >= maxInstances) {
       throw new Error(`Pattern ${patternId} has reached its maximum number of instances: ${maxInstances}`);
