@@ -3,7 +3,7 @@
     {
       "name": "Session Server",
       "nodeType": "org.wt.session",
-      "nodeId": "ort.wt.session1",
+      "nodeId": "org.wt.session1",
       "configName": "session_agent",
       "hidden": true
     },
@@ -19,6 +19,19 @@
       "nodeId": "org.wt.robot1",
       "configName": "robot_agent",
       "remote": true
+    },
+    {
+      "name": "Sensor Agent",
+      "nodeType": "org.wt.sensor",
+      "nodeId": "org.wt.sensor1",
+      "configName": "sensor_agent"
+    },
+    {
+      "name": "Pattern Agent",
+      "nodeType": "org.wt.pattern",
+      "nodeId": "org.wt.pattern1",
+      "configName": "pattern_agent",
+      "hidden": true
     }
   ]
 }

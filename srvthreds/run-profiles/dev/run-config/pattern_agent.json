@@ -1,0 +1,17 @@
+{
+    "name": "Pattern Agent",
+    "nodeType": "org.wt.pattern",
+    "agentImpl": "./pattern/PatternAgent.js",
+    "subscriptionNames": ["sub_pattern_message"],
+    "customConfig": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514",
+        "patternReferencePath": "agents/pattern_author_reference.json",
+        "patternSchemaPath": "src/ts/thredlib/src/schemas/patternModel.json",
+        "eventSchemaPath": "src/ts/thredlib/src/schemas/patternEvent.json",
+        "systemSpecSchemaPath": "src/ts/thredlib/src/schemas/systemSpec.json",
+        "jsonataLibPath": "agents/jsonata_reference.json",
+        "systemSpecPath": "samples/sample.system.json"
+
+    }
+}

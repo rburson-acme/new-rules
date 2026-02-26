@@ -38,7 +38,7 @@ export class Pattern {
   }
 
   static idFromName(name: string): string {
-    return name.replace(' ', '_').toLowerCase();
+    return name.replaceAll(' ', '_').toLowerCase();
   }
 
   async consider(event: Event, thredContext: ThredContext): Promise<boolean> {

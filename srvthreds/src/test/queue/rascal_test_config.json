@@ -3,7 +3,7 @@
   "vhosts": {
     "/": {
       "connection": {
-        "url": "amqp://guest:guest@localhost"
+        "url": "amqp://guest:guest@${RABBITMQ_HOST||localhost}"
       },
       "exchanges": {
         "event-exchange": {
@@ -48,6 +48,9 @@
         "robot-message-queue": {
           "assert": true
         },
+        "pattern-message-queue": {
+          "assert": true
+        },
         "x-dead-letter-event-queue": {
           "assert": true
         },
@@ -61,6 +64,7 @@
         "message-exchange[org.wt.session] -> session-message-queue",
         "message-exchange[org.wt.persistence] -> persistence-message-queue",
         "message-exchange[org.wt.robot] -> robot-message-queue",
+        "message-exchange[org.wt.pattern] -> pattern-message-queue",
         "x-event-dead-letter[#] -> x-dead-letter-event-queue",
         "x-message-dead-letter[#] -> x-dead-letter-message-queue"
       ],
@@ -77,23 +81,27 @@
       "subscriptions": {
         "sub_event": {
           "queue": "event-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_session1_message": {
           "queue": "session1-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_session_message": {
           "queue": "session-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_persistence_message": {
           "queue": "persistence-message-queue",
-          "prefetch": 1
+          "prefetch": 10
         },
         "sub_robot_message": {
           "queue": "robot-message-queue",
-          "prefetch": 1
+          "prefetch": 10
+        },
+        "sub_pattern_message": {
+          "queue": "pattern-message-queue",
+          "prefetch": 10
         }
       }
     }

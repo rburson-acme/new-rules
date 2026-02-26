@@ -1,0 +1,12 @@
+{
+    "name": "Pattern Agent",
+    "nodeType": "org.wt.pattern",
+    "agentImpl": "./pattern/PatternAgent.js",
+    "subscriptionNames": ["sub_pattern_message"],
+    "customConfig": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514",
+        "patternReferencePath": "agents/PATTERNS_AGENT.md",
+        "patternSchemaPath": "../thredlib/src/schemas/patternModel.json"
+    }
+}

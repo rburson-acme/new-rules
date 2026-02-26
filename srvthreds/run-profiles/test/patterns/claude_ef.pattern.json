@@ -1,0 +1,289 @@
+{
+  "name": "UAV Detection and Robot Deployment",
+  "id": "uav_detection_robot_deployment",
+  "meta": {
+    "active": true
+  },
+  "reactions": [
+    {
+      "name": "detect_uav",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.cmi2.sensor.detectionEvent'",
+        "onTrue": {
+          "xpr": "$setLocal('detection', {'sensorId': $valueNamed('sensorId'), 'confidence': $valueNamed('confidence'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude')})"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "UAV Detected",
+            "advice": {
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "uav_detection_form",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "text": {
+                            "value": "$xpr('Sensor ' & $valueNamed('sensorId') & ' detected a UAV with confidence level: ' & $string($valueNamed('confidence')))"
+                          }
+                        },
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "UAV Detection",
+                                "latitude": "$xpr($valueNamed('latitude'))",
+                                "longitude": "$xpr($valueNamed('longitude'))",
+                                "display": "detection-marker"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "input": {
+                            "type": "boolean",
+                            "name": "deploy_robot",
+                            "display": "Deploy robot to investigate?",
+                            "set": [
+                              {
+                                "display": "Yes",
+                                "value": true
+                              },
+                              {
+                                "display": "No",
+                                "value": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "participant0"
+        }
+      }
+    },
+    {
+      "name": "handle_deploy_decision",
+      "condition": {
+        "type": "or",
+        "operands": [
+          {
+            "type": "filter",
+            "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('deploy_robot') = true",
+            "transform": {
+              "eventDataTemplate": {
+                "content": {
+                  "tasks": [
+                    {
+                      "op": "update",
+                      "params": {
+                        "type": "RobotParam",
+                        "values": {
+                          "routine": "investigate",
+                          "location": {
+                            "latitude": "$xpr($local('detection').latitude)",
+                            "longitude": "$xpr($local('detection').longitude)"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "publish": {
+              "to": "org.wt.robot"
+            }
+          },
+          {
+            "type": "filter",
+            "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('deploy_robot') = false",
+            "transform": {
+              "eventDataTemplate": {
+                "title": "Robot deployment cancelled",
+                "advice": {
+                  "template": {
+                    "name": "cancelled_notification",
+                    "interactions": [
+                      {
+                        "interaction": {
+                          "content": [
+                            {
+                              "text": {
+                                "value": "Robot deployment to investigate UAV detection has been cancelled."
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "publish": {
+              "to": "participant0"
+            },
+            "transition": {
+              "name": "$terminate"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "robot_deployed",
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.robot'",
+        "onTrue": {
+          "xpr": "$setLocal('robotInfo', {'robotId': $valueNamed('robotId'), 'videoStreamUrl': $valueNamed('videoStreamUrl'), 'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude')})"
+        },
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Robot Deployed Successfully",
+            "advice": {
+              "eventType": "org.wt.client.tell",
+              "template": {
+                "name": "robot_deployed_form",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "text": {
+                            "value": "$xpr('Robot ' & $valueNamed('robotId') & ' has been deployed to investigate the UAV detection.')"
+                          }
+                        },
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "Robot Location",
+                                "latitude": "$xpr($valueNamed('latitude'))",
+                                "longitude": "$xpr($valueNamed('longitude'))",
+                                "display": "robot-marker"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "input": {
+                            "type": "boolean",
+                            "name": "view_video",
+                            "display": "Would you like to view the robot's video feed?",
+                            "set": [
+                              {
+                                "display": "Yes",
+                                "value": true
+                              },
+                              {
+                                "display": "No",
+                                "value": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": {
+          "to": "participant0"
+        }
+      }
+    },
+    {
+      "name": "handle_video_decision",
+      "condition": {
+        "type": "or",
+        "operands": [
+          {
+            "type": "filter",
+            "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('view_video') = true",
+            "transform": {
+              "eventDataTemplate": {
+                "title": "Robot Video Feed",
+                "advice": {
+                  "template": {
+                    "name": "video_feed",
+                    "interactions": [
+                      {
+                        "interaction": {
+                          "content": [
+                            {
+                              "text": {
+                                "value": "$xpr('Live video feed from robot ' & $local('robotInfo').robotId)"
+                              }
+                            },
+                            {
+                              "video": {
+                                "uri": "$xpr($local('robotInfo').videoStreamUrl)"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "publish": {
+              "to": "participant0"
+            },
+            "transition": {
+              "name": "$terminate"
+            }
+          },
+          {
+            "type": "filter",
+            "xpr": "$event.type = 'org.wt.client.tell' and $valueNamed('view_video') = false",
+            "transform": {
+              "eventDataTemplate": {
+                "title": "Video feed declined",
+                "advice": {
+                  "template": {
+                    "name": "video_declined",
+                    "interactions": [
+                      {
+                        "interaction": {
+                          "content": [
+                            {
+                              "text": {
+                                "value": "Robot video feed access declined. Robot continues investigation mission."
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "publish": {
+              "to": "participant0"
+            },
+            "transition": {
+              "name": "$terminate"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -71,7 +71,7 @@
             "inputContentType": "tasks",
             "inputContentSpec": {
                 "description": "Perform data operations on ParticipantLocation records.",
-                "targetTypeName": "ParticipantLocation",
+                "entityTypeName": "ParticipantLocation",
                 "allowedOps": [
                     "put",
                     "get",
@@ -99,7 +99,7 @@
             "eventContentType": "values",
             "eventContentSpecs": [
                 {
-                    "targetTypeName": "ParticipantLocation"
+                    "entityTypeName": "ParticipantLocation"
                 }
             ]
         }

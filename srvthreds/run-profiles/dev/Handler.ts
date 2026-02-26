@@ -44,7 +44,7 @@ export class Handler implements BootstrapHandler {
       values: { id: '3', contactId: 'participant3', sensorId: '3' },
       matcher: { sensorId: '3' },
     });
-    await UserController.get().replaceUser({ id: 'sensor_agent0', password: 'password0' });
+    await UserController.get().replaceUser({ id: 'sensor_agent0', firstName: 'Sensor Agent', password: 'password0' });
   }
 
   // test
@@ -74,11 +74,12 @@ export class Handler implements BootstrapHandler {
 
   private async createTestUsers() {
     const uc = UserController.get();
-    await uc.replaceUser({ id: 'participant0', password: 'password0' });
-    await uc.replaceUser({ id: 'participant1', password: 'password1' });
-    await uc.replaceUser({ id: 'participant2', password: 'password2' });
-    await uc.replaceUser({ id: 'participant3', password: 'password3' });
-    await uc.replaceUser({ id: 'admin', password: 'adminpass', roles: [{ name: 'admin' }] });
+    await uc.replaceUser({ id: 'participant0', password: 'password0', firstName: 'Freddie', lastName: 'Mercury' });
+    await uc.replaceUser({ id: 'participant1', password: 'password1', firstName: 'Rob', lastName: 'Burson' });
+    await uc.replaceUser({ id: 'participant2', password: 'password2', firstName: 'Patrick', lastName: 'Esposito' });
+    await uc.replaceUser({ id: 'participant3', password: 'password3', firstName: 'Jarred', lastName: 'Kalina' });
+    await uc.replaceUser({ id: 'participant4', password: 'password4', firstName: 'Alan', lastName: 'Resha' });
+    await uc.replaceUser({ id: 'admin', password: 'adminpass', firstName: "Administrator", roles: [{ name: 'admin' }]  });
   }
 
 }

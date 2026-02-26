@@ -66,7 +66,7 @@
       "inputContentType": "tasks",
       "inputContentSpec": {
         "description": "A set of test data that associates participants with locations.",
-        "targetTypeName": "TestObject",
+        "entityTypeName": "TestObject",
         "allowedOps": ["put", "get", "getOne", "update", "upsert", "replace", "delete", "count"],
         "options": [
           {
@@ -85,7 +85,7 @@
       "eventContentType": "values",
       "eventContentSpecs": [
         {
-          "targetTypeName": "TestObject"
+          "entityTypeName": "TestObject"
         }
       ]
     }

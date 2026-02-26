@@ -3,8 +3,8 @@
     "description": "Automated mobile robot platform",
     "entitySpecs": [
         {
-            "type": "Param",
-            "description": "Configurable parameters for the robot",
+            "type": "RobotParam",
+            "description": "Parameters for the robot, some of which are configurable.",
             "propertySpecs": [
                 {
                     "name": "id",
@@ -25,12 +25,12 @@
                         {
                             "name": "latitude",
                             "description": "Latitude of the target location.",
-                            "type": "string"
+                            "type": "number"
                         },
                         {
                             "name": "longitude",
                             "description": "Longitude of the target location.",
-                            "type": "string"
+                            "type": "number"
                         }
                     ]
                 }
@@ -53,12 +53,12 @@
                 {
                     "name": "latitude",
                     "description": "Latitude of the robot's current location.",
-                    "type": "string"
+                    "type": "number"
                 },
                 {
                     "name": "longitude",
                     "description": "Longitude of the robot's current location.",
-                    "type": "string"
+                    "type": "number"
                 }
             ]
         }
@@ -68,7 +68,7 @@
             "inputContentType": "tasks",
             "inputContentSpec": {
                 "description": "Allows for robot parameters to be retrieved or updated.",
-                "targetTypeName": "Param",
+                "entityTypeName": "RobotParam",
                 "allowedOps": [ "get", "update" ]
             }
         }
@@ -80,7 +80,7 @@
             "eventContentType": "values",
             "eventContentSpecs": [
                 {
-                    "targetTypeName": "DeployResponse"
+                    "entityTypeName": "DeployResponse"
                 }
             ]
         }

@@ -19,6 +19,13 @@
       "nodeId": "org.wt.robot1",
       "configName": "robot_agent",
       "remote": true
+    },
+    {
+      "name": "Pattern Agent",
+      "nodeType": "org.wt.pattern",
+      "nodeId": "org.wt.pattern1",
+      "configName": "pattern_agent",
+      "hidden": true
     }
   ]
 }

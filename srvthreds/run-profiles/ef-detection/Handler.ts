@@ -18,11 +18,11 @@ export class Handler implements BootstrapHandler {
 
   private async createTestUsers() {
     const uc = UserController.get();
-    await uc.replaceUser({ id: 'participant0', password: 'password0' });
-    await uc.replaceUser({ id: 'participant1', password: 'password1' });
-    await uc.replaceUser({ id: 'participant2', password: 'password2' });
-    await uc.replaceUser({ id: 'participant3', password: 'password3' });
-    await uc.replaceUser({ id: 'admin', password: 'adminpass', roles: [{ name: 'admin' }] });
+    await uc.replaceUser({ id: 'participant0', password: 'password0', firstName: 'Freddie', lastName: 'Mercury' });
+    await uc.replaceUser({ id: 'participant1', password: 'password1', firstName: 'Rob', lastName: 'Burson' });
+    await uc.replaceUser({ id: 'participant2', password: 'password2', firstName: 'Patrick', lastName: 'Esposito' });
+    await uc.replaceUser({ id: 'participant3', password: 'password3', firstName: 'Jarred', lastName: 'Kalina' });
+    await uc.replaceUser({ id: 'admin', password: 'adminpass', firstName: 'Administrator', lastName: '', roles: [{ name: 'admin' }] });
   }
 }
 

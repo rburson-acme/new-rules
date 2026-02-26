@@ -23,12 +23,14 @@ export class PinoLogger implements LoggerDelegate {
       });
     } else {
       // In development, use pino-pretty
+      const isTest = process.env.VITEST === 'true';
       const transport = pino.transport({
         target: 'pino-pretty',
         options: {
           colorize: true,
           translateTime: 'HH:MM:ss Z',
           ignore: 'pid,hostname',
+          sync: isTest, // In test environment, disable asynchronous logging
         },
       });
 

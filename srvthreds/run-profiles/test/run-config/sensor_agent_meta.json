@@ -12,14 +12,24 @@
                     "type": "string"
                 },
                 {
+                    "name": "timestamp",
+                    "description": "Date and time when the detection occurred.",
+                    "type": "Date"
+                },
+                {
                     "name": "latitude",
                     "description": "Latitude of the detected entity's current location.",
-                    "type": "string"
+                    "type": "number"
                 },
                 {
                     "name": "longitude",
                     "description": "Longitude of the detected entity's current location.",
-                    "type": "string"
+                    "type": "number"
+                },
+                {
+                    "name": "confidence",
+                    "description": "Confidence level of the detection (e.g., a value between 0 and 1).",
+                    "type": "number"
                 }
             ]
         }
@@ -32,7 +42,7 @@
             "eventContentType": "values",
             "eventContentSpecs": [
                 {
-                    "targetTypeName": "DetectedEntity"
+                    "entityTypeName": "DetectedEntity"
                 }
             ]
         }

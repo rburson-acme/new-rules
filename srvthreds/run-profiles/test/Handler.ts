@@ -45,18 +45,18 @@ export class Handler implements BootstrapHandler {
 
   private async createTestUsers() {
     const uc = UserController.get();
-    await uc.replaceUser({ id: 'participant0', password: 'password0' });
-    await uc.replaceUser({ id: 'participant1', password: 'password1' });
-    await uc.replaceUser({ id: 'participant2', password: 'password2' });
-    await uc.replaceUser({ id: 'participant3', password: 'password3' });
-    await uc.replaceUser({ id: 'participant4', password: 'password4' });
-    await uc.replaceUser({ id: 'participant5', password: 'password5' });
-    await uc.replaceUser({ id: 'participant6', password: 'password6' });
-    await uc.replaceUser({ id: 'participant7', password: 'password7' });
-    await uc.replaceUser({ id: 'participant8', password: 'password8' });
-    await uc.replaceUser({ id: 'participant9', password: 'password9' });
-    await uc.replaceUser({ id: 'admin', password: 'adminpass', roles: [{ name: 'admin' }] });
-    await uc.replaceUser({ id: 'admin1', password: 'adminpass', roles: [{ name: 'admin' }] });
+    await uc.replaceUser({ id: 'participant0', password: 'password0', firstName: 'Freddie', lastName: 'Mercury' });
+    await uc.replaceUser({ id: 'participant1', password: 'password1', firstName: 'Rob', lastName: 'Burson' });
+    await uc.replaceUser({ id: 'participant2', password: 'password2', firstName: 'Patrick', lastName: 'Esposito' });
+    await uc.replaceUser({ id: 'participant3', password: 'password3', firstName: 'Jarred', lastName: 'Kalina' });
+    await uc.replaceUser({ id: 'participant4', password: 'password4', firstName: 'Alan', lastName: 'Resha' });
+    await uc.replaceUser({ id: 'participant5', password: 'password5', firstName: 'John', lastName: 'Doe' });
+    await uc.replaceUser({ id: 'participant6', password: 'password6', firstName: 'Jane', lastName: 'Smith' });
+    await uc.replaceUser({ id: 'participant7', password: 'password7', firstName: 'Alice', lastName: 'Johnson' });
+    await uc.replaceUser({ id: 'participant8', password: 'password8', firstName: 'Bob', lastName: 'Brown' });
+    await uc.replaceUser({ id: 'participant9', password: 'password9', firstName: 'Charlie', lastName: 'Davis' });
+    await uc.replaceUser({ id: 'admin', password: 'adminpass', firstName: 'Administrator', lastName: '', roles: [{ name: 'admin' }] });
+    await uc.replaceUser({ id: 'admin1', password: 'adminpass', firstName: 'Administrator1', lastName: '', roles: [{ name: 'admin' }] });
   }
 }
 

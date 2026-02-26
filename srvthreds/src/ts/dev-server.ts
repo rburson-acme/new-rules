@@ -100,6 +100,7 @@ app.get('/rms', function (req: Request, res: Response) {
 class ServiceManager {
   sessionAgent?: AgentService;
   persistenceAgent?: AgentService;
+  patternAgent?: AgentService;
   robotAgent?: RemoteAgentService;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
@@ -218,6 +219,28 @@ class ServiceManager {
     });
     await this.persistenceAgent.start();
 
+    // ----------------------------------- Pattern Agent Setup -----------------------------------
+    // Note: this is running in process for convenience but will be an independent service
+    /*const patternEventService = await RemoteQService.newInstance<Event>({ qBroker: qBroker, pubName: 'pub_event' });
+    const patternEventQ: EventQ = new EventQ(patternEventService);
+    const patternMessageService = await RemoteQService.newInstance<Message>({
+      qBroker: qBroker,
+      subNames: ['sub_pattern_message'],
+    });
+    const patternMessageQ: MessageQ = new MessageQ(patternMessageService);
+    const patternAgentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      configName: 'pattern_agent',
+      config: new AgentConfig('org.wt.pattern'),
+    });
+    this.patternAgent = new AgentService({
+      agentConfig: patternAgentConfig,
+      eventQ: patternEventQ,
+      messageQ: patternMessageQ,
+    });
+    await this.patternAgent.start();
+    */
+
     // ----------------------------------- Robot Agent Setup -----------------------------------
     // Note: this is running in process for convenience but will be a remote service
     const robotConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
@@ -294,6 +317,9 @@ class ServiceManager {
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down persistence agent...`);
     await this.persistenceAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
+    Logger.info(`Agent shutdown successfully.`);
+    Logger.info(`Shutting down pattern agent...`);
+    await this.patternAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
     Logger.info(`Agent shutdown successfully.`);
 
     Logger.info(`Disconnecting PersistenceManager..`);

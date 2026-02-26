@@ -1,0 +1,804 @@
+{
+  "title": "Pattern Author Reference",
+  "purpose": "Complete reference for an AI agent to generate valid Pattern JSON definitions for the SrvThreds workflow automation system. This reference, combined with the PatternModel schema, Event schema, and SystemSpec schema (provided separately as context), contains everything needed to create working patterns. The per-request SystemSpec (provided in the event payload) defines the available services, participants, and groups for each generation request.",
+  "outputRules": "Output ONLY valid JSON conforming to the PatternModel schema. No markdown fences, no explanation, no commentary. The output must be a single JSON object with required fields: 'name' (string) and 'reactions' (array of ReactionModel objects). Always include an explicit 'id' field.",
+  "coreConcepts": "Pattern = JSON workflow definition template. Thred = running instance of a pattern (stateful). Reaction = a state in the workflow state machine. Event = a trigger that moves the workflow forward. Condition = determines whether a reaction fires (filter, and, or). Transform = defines the outbound event data. Publish = specifies who receives the outbound event. Transition = defines the next state.\n\nEvent Flow: Events enter the Engine → Pattern Matching (for unbound events) or Thred Routing (for bound events) → Condition Evaluation → Transform → Publish → Transition.\n\nBound Event: An event with a thredId. Routes directly to an existing Thred.\nUnbound Event: An event without a thredId. Triggers pattern matching to create new Threds, or matches running threds whose current reaction has allowUnboundEvents=true.\n\nState Persistence: All thred state persists in Redis with per-thredId locking. Local variables set via $setLocal() survive restarts and are accessible via $local().",
+  "patternRoot": "Required fields:\n- name (string): Unique name for the pattern.\n- reactions (array): Array of ReactionModel objects defining the workflow states.\n\nOptional fields:\n- id (string): Unique identifier. Prefer setting this explicitly. If omitted, auto-derived from name by lowercasing and replacing spaces with underscores (e.g., \"Enemy Forces Detection\" → \"enemy_forces_detection\").\n- description (string): Human-readable description.\n- instanceInterval (number): Milliseconds between thred creation (throttling). 0 = no throttle.\n- maxInstances (number): Maximum concurrent thred instances. 0 = unlimited.\n- broadcastAllowed (boolean): If true, enables broadcast events between participants.\n- echoResponses (boolean): If true, participant responses are echoed to other participants in the thred.\n- meta (object): Pattern metadata. Currently supports: active (boolean) — when true, the pattern is loaded and available for matching. When false or omitted from meta, the pattern is inactive and will not match events. Example: {\"meta\": {\"active\": true}}\n\nExample:\n{\"name\": \"MyPattern\", \"id\": \"my_pattern\", \"description\": \"A sample pattern\", \"reactions\": [...]}",
+  "reactions": "Each reaction represents a state in the workflow state machine.\n\nRequired fields:\n- condition: Must have a 'type' field (filter, and, or).\n\nOptional fields:\n- name (string): ALWAYS name reactions explicitly. Auto-generated names use {patternName}_{index} which is fragile and error-prone for transition targets.\n- description (string): Human-readable description.\n- allowedSources (string|array): Restricts which event sources can activate this reaction.\n  - Exact match: \"participant_id\" or [\"id1\", \"id2\"]\n  - Group: \"$groupName\" (resolved from session config)\n  - Regex: \"/pattern.*/\" (case-insensitive, gi flags)\n  - If omitted, all sources are allowed.\n- allowUnboundEvents (boolean): When true, unbound events (without thredId) are matched against running threds at this reaction. Useful for sensor data or external systems that cannot track thred IDs.\n- expiry: Auto-transition after interval.\n  - interval (number, required): Milliseconds before expiry.\n  - transition (TransitionModel, optional): Where to go on expiry. If omitted, uses default transition (next reaction or terminate).\n- permissions: Not fully implemented, omit.\n\nExample:\n{\"name\": \"wait_for_response\", \"expiry\": {\"interval\": 30000, \"transition\": {\"name\": \"timeout_handler\"}}, \"condition\": {\"type\": \"filter\", \"xpr\": \"$event.type = 'response'\"}}",
+  "conditions": {
+    "overview": "Three condition types: filter, and, or. Each must have a 'type' field.\n\nDirective priority (deepest wins): When conditions are nested, the innermost matching condition's transform/publish/transition takes effect. For Or conditions, operand-level directives override parent-level directives. For And conditions, operand directives are IGNORED — only the And condition's own directives are used.",
+    "filter": "A filter evaluates a JSONata expression to determine if it matches.\n\nRequired fields:\n- type: \"filter\"\n- xpr (string): JSONata boolean expression.\n\nOptional fields:\n- description (string): Human-readable description.\n- onTrue: {\"xpr\": \"side effect expression\"} — runs only when the condition matches during thred processing. Use for $setLocal() calls.\n- transform: Defines the outbound event data.\n- publish: Specifies the recipient(s) of the outbound event.\n- transition: Defines the next state.\n\nCRITICAL BEHAVIOR: The filter xpr expression runs in TWO contexts:\n1. During pattern matching (test phase): Runs against an empty context with no stored locals. Side effects are discarded. Return value used only as boolean to decide if a new thred should be created.\n2. During thred processing (apply phase): Runs against the real thred context with stored locals. If true, onTrue executes, then transform/publish/transition apply.\n\nIMPORTANT: Avoid onTrue in the first reaction of a pattern. The first reaction IS the pattern-matching entry point. While onTrue does not run during the test phase, it runs immediately after the thred is created, which can cause unexpected behavior.\n\nExample:\n{\"type\": \"filter\", \"xpr\": \"$event.type = 'request'\", \"onTrue\": {\"xpr\": \"$setLocal('requester', $event.source.id)\"}, \"transform\": {\"eventDataTemplate\": {\"title\": \"Processing\"}}, \"publish\": {\"to\": \"org.wt.persistence\"}}",
+    "and": "An And condition requires ALL operands to match. Matches accumulate across multiple events — the engine persists which operands have been satisfied.\n\nRequired fields:\n- type: \"and\"\n- operands (array): Array of condition/filter objects.\n\nOptional fields (on the And itself, NOT on operands):\n- description (string)\n- publish: Specifies recipient(s).\n- transition: Defines the next state.\n\nIMPORTANT: Transform, publish, and transition directives on And operands are NOT propagated. They are silently ignored. Always place transform/publish/transition on the And condition itself, or on the LAST operand if you want it to fire only when all conditions are met — but be aware only the And-level directives are guaranteed to work.\n\nExample:\n{\"type\": \"and\", \"operands\": [{\"type\": \"filter\", \"xpr\": \"$event.source.id = 'manager' and $valueNamed('approved') = true\"}, {\"type\": \"filter\", \"xpr\": \"$event.source.id = 'director' and $valueNamed('approved') = true\"}], \"publish\": {\"to\": \"requester\"}, \"transition\": {\"name\": \"$terminate\"}}",
+    "or": "An Or condition fires on the first matching operand.\n\nRequired fields:\n- type: \"or\"\n- operands (array): Array of condition/filter objects.\n\nDirective behavior: Operand-level directives (transform, publish, transition, onTrue) OVERRIDE parent Or-level directives for the same field. The first matching operand's directives execute.\n\nOverride is per-field: If an operand specifies transform but not publish, the operand's transform is used while the parent Or's publish still applies. Each directive (transform, publish, transition, onTrue) is independently overridden — only the directives explicitly present on the matching operand replace the parent's.\n\nFor divergent behaviors (each operand does something different): Place all directives within each operand.\nFor shared behavior (all operands do the same thing): Place directives at the parent Or level.\nFor mixed behavior (some shared, some divergent): Place shared directives on the parent Or and override specific directives on individual operands.\n\nExample (divergent):\n{\"type\": \"or\", \"operands\": [{\"type\": \"filter\", \"xpr\": \"$valueNamed('approved') = true\", \"transform\": {\"eventDataTemplate\": {\"title\": \"Approved\"}}, \"publish\": {\"to\": \"requester\"}, \"transition\": {\"name\": \"$terminate\"}}, {\"type\": \"filter\", \"xpr\": \"$valueNamed('approved') = false\", \"transform\": {\"eventDataTemplate\": {\"title\": \"Rejected\"}}, \"publish\": {\"to\": \"requester\"}, \"transition\": {\"name\": \"$terminate\"}}]}"
+  },
+  "transforms": "Transforms define how to construct the outbound event data. Use ONE of eventDataTemplate or templateXpr, not both.\n\nOption 1 — eventDataTemplate: A template object following the EventData schema structure. String values containing $xpr() are evaluated as JSONata expressions. Object values with a $xpr key have the expression result spread/merged into the parent object.\n\nEventData template structure:\n- title (string): Human-readable title. Supports $xpr().\n- description (string): Human-readable description. Supports $xpr().\n- display: {\"uri\": \"string\"} — optional display URI. Supports $xpr().\n- advice: Defines what response is expected (for interactive workflows).\n  - eventType (string, required if advice present): The expected response event type.\n  - title (string): Suggested title for the response.\n  - template: Interaction template (see Interaction Templates section).\n- content: The actual payload.\n  - values (object|array): Data values. Supports $xpr().\n  - valuesType (string): Optional application-level type discriminator.\n  - tasks (array): Task operations for services (see Event Tasks section).\n  - items (array): Inline items with content, contentType, encoding.\n  - resources (array): Resource references with contentType, uri.\n  - error: {\"message\": \"string\", \"code\": number} — error payload.\n\nOption 2 — templateXpr: A single JSONata expression that returns a complete EventData object. Use when the template is too dynamic for eventDataTemplate.\n\nAdditional field:\n- meta.reXpr (string): JSONata expression that sets the 're' (reply-to) field on the outbound event. Example: \"$event.id\" makes the outbound event reference the inbound event.\n\n$xpr() syntax in templates:\n- String form: \"$xpr( expression )\" — the entire string is replaced with the expression result. The result can be any type (string, number, boolean, object, array), not just a string. This means $xpr() can be used in object-valued fields to dynamically produce entire objects — for example, \"content\": \"$xpr($valueNamed('payload'))\" replaces the content field with a complete object from the event.\n- Object spread form: {\"$xpr\": \"expression\"} — the expression result (must be an object) is merged into the parent object.\n\nExample:\n{\"eventDataTemplate\": {\"title\": \"$xpr('Record ' & $valueNamed('id') & ' stored')\", \"content\": {\"values\": {\"recordId\": \"$xpr($valueNamed('id'))\", \"status\": \"complete\"}}}}",
+  "publish": "Publish specifies who receives the outbound event.\n\nRequired fields:\n- to (string|array): Target address(es). Can be:\n  - Participant ID: \"participant0\" (from SystemSpec addressSpec.participants[].id)\n  - Group: \"$groupName\" (from SystemSpec addressSpec.groups[].name, prefixed with $, expands to all members)\n  - Service/agent address: \"org.wt.persistence\" (from SystemSpec serviceSpecs[].address)\n  - Expression: \"$xpr($local('target'))\" (dynamic resolution)\n  - Array: [\"participant0\", \"participant1\"] (multiple recipients)\n\nOptional fields:\n- name (string): Enables response matching with $isResponseFor(). When set, the system stores the outbound event ID keyed by this name. Use $isResponseFor('name') in subsequent reactions to match responses. Only needed when multiple requests to the same service may be in flight simultaneously.\n- description (string): Human-readable description.\n- onPublish: {\"xpr\": \"expression\"} — runs after the outbound event is created but before sending. The $outboundEvent binding is available, providing access to the new event including its id. $event still refers to the inbound event. All other bindings remain available. Use for storing correlation data.\n\nAddress Resolution: Direct IDs pass through, $groups expand to all member participants, expressions are evaluated, arrays are flattened.\n\nExample with named publish:\n{\"name\": \"save_data\", \"to\": \"org.wt.persistence\"}\n\nExample with onPublish:\n{\"to\": \"org.wt.persistence\", \"onPublish\": {\"xpr\": \"$setLocal($outboundEvent.id & '_meta', {'sourceId': $event.source.id})\"}}",
+  "transitions": "Transitions define the next state after a condition matches.\n\nRequired fields:\n- name (string): Target. One of:\n  - \"reaction_name\": Go to the named reaction.\n  - \"$next\": Go to the next reaction in array order.\n  - \"$terminate\": End the thred.\n  - \"$noTransition\": Stay in the current reaction, wait for the next event.\n\nOptional fields:\n- input (string): How to supply input to the next reaction.\n  - \"default\" (or omitted): Wait for the next inbound event.\n  - \"forward\": Immediately process the current inbound event in the next reaction (no waiting).\n  - \"local\": Use a previously stored value from $local(localName) as the event.\n- localName (string): Required when input=\"local\". Name of the locally stored variable to use.\n- description (string): Human-readable description.\n\nLoop transitions: Setting the transition name to the current reaction's own name creates a self-loop — the reaction re-waits for the next matching event. This is the primary way to create event-processing loops. Backward transitions (to an earlier reaction's name) create retry or fallback loops, allowing the workflow to re-enter a previous state.\\n\\nDefault behavior: If no transition is specified, the workflow advances to the next reaction in the array. If the current reaction is the last one, the thred terminates.\n\nExample (forward):\n{\"name\": \"process_result\", \"input\": \"forward\"}\n\nExample (local):\n{\"name\": \"retry\", \"input\": \"local\", \"localName\": \"stored_event\"}",
+  "jsonataExpressions": "JSONata expressions are used throughout patterns for dynamic evaluation. A full JSONata language reference is provided separately as context — refer to it for standard operators, functions, and syntax. This section covers only the SrvThreds-specific expression syntax and custom bindings.\n\nSrvThreds Expression Syntax:\n- In filter xpr: \"expression\" (evaluated as boolean)\n- In template string values: \"$xpr( expression )\" (result replaces the entire string)\n- In template object values: {\"$xpr\": \"expression\"} (result merged into parent object)\n\nCustom Bindings (SrvThreds-specific):\n- $event: The complete inbound Event object (id, type, source, thredId, time, re, data).\n- $thredId: Current thred ID.\n- $data: event.data (the EventData envelope).\n- $content: event.data.content (the EventContent object).\n- $values: event.data.content.values (the payload values).\n- $advice: event.data.advice.\n- $valueNamed(name): Depth-first search of event.data.content.values for the first key matching 'name'. IMPORTANT: Only searches within content.values, not the entire event. Returns undefined if not found. This is often the best way to access specific values as it handles nested structures.\n- $local(name): Retrieve a value from thred-scoped local storage (persisted in Redis, survives restarts).\n- $setLocal(name, value): Store a value in thred-scoped local storage. MUST be used in onTrue or onPublish expressions only. Using $setLocal in filter xpr will silently fail during pattern matching.\n- $isResponseFor(publishName): Returns true if the inbound event's 're' field matches the stored outbound event ID for the named publish. Only needed when multiple requests to the same service are in flight simultaneously. Requires the corresponding publish to have a 'name' property set.\n- $outboundEvent: The newly created outbound event. ONLY available in onPublish expressions. Not available in filter xpr, onTrue, or templateXpr.\n- $log(msg): Debug logging utility.\n\nResponse Correlation — Two Approaches:\n1. Named publish (automatic): Set publish.name, then use $isResponseFor('name') in subsequent reactions. The system stores the outbound event ID automatically.\n2. Manual via onPublish: Store $outboundEvent.id with $setLocal in onPublish, then compare $event.re = $local('stored_id') in subsequent reactions.\nBoth approaches are equivalent. Use named publish for simplicity, manual for custom correlation data.\n\nImportant Behavioral Notes:\n- $valueNamed() searches ONLY event.data.content.values, not the entire event structure.\n- $setLocal() in filter xpr is silently discarded during pattern matching (the test phase runs without a real context).\n- $outboundEvent is ONLY available in onPublish expressions.\n- Filter xpr must be side-effect free — the same expression runs during both pattern matching and thred processing.\n- String concatenation uses & not + (e.g., 'prefix_' & $valueNamed('id')).",
+  "eventTasks": "Tasks define operations to be performed by services (typically persistence). Tasks are placed in the transform's eventDataTemplate.content.tasks array.\n\nTask structure:\n- name (string, optional): Name for the task.\n- op (string, required): Operation type — one of: put, getOne, get, update, upsert, replace, delete, count, run.\n- options (object, optional): Implementation-specific options.\n- params (object):\n  - type (string, required): Entity type name or function name. Must match an entitySpec.type or inputSpec.inputContentSpec.entityTypeName from the SystemSpec.\n  - matcher (object, optional): Query filter for get/update/delete operations.\n  - selector (object, optional): Field selection — {\"include\": [\"field1\"], \"exclude\": [\"field2\"]}.\n  - collector (object, optional): Result control — {\"limit\": 10, \"skip\": 0, \"sort\": [{\"field\": \"name\", \"desc\": false}]}.\n  - values (object|array, optional): Data for create/update operations.\n\nTransaction support: Tasks can be nested in arrays for transactional execution. A nested array within tasks represents operations executed as a single atomic transaction:\ntasks: [[{op: \"put\", ...}, {op: \"update\", ...}]]\n\nUpdate operators (used within values for update/upsert):\n- $add: Add to set (unique values only)\n- $push: Append to array\n- $remove: Remove from array\n- $now: Set to current timestamp\n- $inc: Increment numeric value\n- $min: Set to minimum of current and provided\n- $max: Set to maximum of current and provided\n- $mul: Multiply numeric value\nRegular fields in values are treated as direct set operations.\n\nMatch operators (used within matcher):\n- $gte, $gt, $lte, $lt, $ne: Comparison\n- $in, $nin: Array membership\n- $or, $not: Logical\n- $re: Regex match\n\nAll operators are platform-agnostic and automatically translated by the persistence layer.\\n\\nMultiple tasks in a single request: A tasks array can contain multiple task objects. All tasks are sent to the service in one request and executed in sequence. This is independent of transaction support (nested arrays) — here each task is a separate operation. Use this when a single reaction needs to perform multiple operations on the same service, such as updating one record and querying another.\n\nExample — put:\n{\"op\": \"put\", \"params\": {\"type\": \"Record\", \"values\": {\"id\": \"$xpr($valueNamed('id'))\", \"status\": \"active\"}}}\n\nExample — update with operators:\n{\"op\": \"update\", \"params\": {\"type\": \"Record\", \"matcher\": {\"id\": \"$xpr($valueNamed('id'))\"}, \"values\": {\"status\": \"processed\", \"$inc\": {\"count\": 1}, \"$push\": {\"history\": {\"timestamp\": \"$xpr($millis())\"}}}}}",
+  "interactionTemplates": "Two types of recipients require different event structures:\n- Services/agents (e.g., persistence, robot): Send operations via content.tasks. See Event Tasks section.\n- Human participants (e.g., participant0, $groupName): Send messages via advice with an interaction template.\n\nFor participants, ALWAYS include advice with at least a text element in the interaction template. A publish without advice (or with only title/description and no advice) is unlikely to produce any visible output for the participant.\n\nAdvice structure:\n- advice.eventType (string, OPTIONAL): The response event type. When collecting input from the participant, this MUST be 'org.wt.client.tell'. Omit for display-only messages (notifications, alerts, status updates, informational messages where no response is expected).\n- advice.title (string, optional): Suggested title for the response.\n- advice.template:\n  - name (string, required): Template name.\n  - interactions (array, required): Array of InteractionModel objects.\n    - interaction.content (array): Array of ElementModel objects.\n\nElement types — choose based on communication intent:\n- text: Display readable information to the participant. Use for all notifications, status updates, instructions, and informational messages.\n  {\"text\": {\"value\": \"message text or $xpr(...)\"}}\n- input: Collect a response value from the participant. Requires advice.eventType = 'org.wt.client.tell'.\n  {\"input\": {\"type\": \"boolean|numeric|text|nominal\", \"name\": \"field_name\", \"display\": \"Prompt text\", ...}}\n- map: Display a location map with labeled markers.\n  {\"map\": {\"locations\": [{\"name\": \"str\", \"latitude\": \"str\", \"longitude\": \"str\", \"display\": \"uri\"}]}}\n- image: Display an image.\n  {\"image\": {\"uri\": \"string\", \"width\": number, \"height\": number}}\n- video: Display a video stream or clip.\n  {\"video\": {\"uri\": \"string|$xpr(...)\"}}\n- group: Nest multiple elements together.\n  {\"group\": {\"items\": [...elements...]}}\n\nMultiple elements: A single interaction can contain any combination of elements (text + map, text + video, text + input, etc.).\n\nInput types (for input elements):\n- boolean: {\"type\": \"boolean\", \"name\": \"field_name\", \"display\": \"Prompt text\", \"set\": [{\"display\": \"Yes\", \"value\": true}, {\"display\": \"No\", \"value\": false}]}\n- numeric: {\"type\": \"numeric\", \"name\": \"field_name\", \"display\": \"Prompt text\"}\n- text: {\"type\": \"text\", \"name\": \"field_name\", \"display\": \"Prompt text\"}\n- nominal: {\"type\": \"nominal\", \"name\": \"field_name\", \"display\": \"Prompt text\", \"set\": [{\"display\": \"Option A\", \"value\": \"a\"}, {\"display\": \"Option B\", \"value\": \"b\"}], \"multiple\": false}\n\nAccessing responses: In the reaction that handles the participant's response, filter on $event.type = 'org.wt.client.tell'. The input values are in the event's values payload — use $valueNamed('field_name') where field_name matches the input's name property.\n\nExample 1 — Display-only notification (no response needed, omit eventType):\n{\"template\": {\"name\": \"notification\", \"interactions\": [{\"interaction\": {\"content\": [{\"text\": {\"value\": \"$xpr('Robot deployed at ' & $valueNamed('latitude') & ', ' & $valueNamed('longitude'))\"}}]}}]}}\n\nExample 2 — Approval with input (response needed, eventType must be org.wt.client.tell):\n{\"eventType\": \"org.wt.client.tell\", \"template\": {\"name\": \"approval_form\", \"interactions\": [{\"interaction\": {\"content\": [{\"text\": {\"value\": \"Please review this request\"}}, {\"input\": {\"type\": \"boolean\", \"name\": \"approved\", \"display\": \"Approve?\", \"set\": [{\"display\": \"Yes\", \"value\": true}, {\"display\": \"No\", \"value\": false}]}}]}}]}}\n\nExample 3 — Rich notification with text and map (display-only, no eventType):\n{\"template\": {\"name\": \"location_alert\", \"interactions\": [{\"interaction\": {\"content\": [{\"text\": {\"value\": \"$xpr('Detection at confidence ' & $string($valueNamed('confidence'))\"}}, {\"map\": {\"locations\": [{\"name\": \"Detected Location\", \"latitude\": \"$xpr($valueNamed('latitude'))\", \"longitude\": \"$xpr($valueNamed('longitude'))\", \"display\": \"detection\"}]}}]}}]}}",
+  "systemSpecGuide": "The SystemSpec is provided per-request and defines the available services, participants, and groups for the pattern being generated. The SystemSpec schema is provided separately as context.\n\nSystemSpec top-level structure:\n- serviceSpecs (array): Available services with their input/output definitions.\n- addressSpec: Participant addresses and groups.\n  - participants (array): Individual addressable participants with id, name, uri.\n  - groups (array): Named groups with name and participants array.\n\nServiceSpec structure (each entry in serviceSpecs):\n- name: Human-readable service name.\n- nodeType: Service type identifier.\n- address: The address to use in publish.to (e.g., \"org.wt.persistence\").\n- description: What the service does.\n- entitySpecs (array): Data structures used by the service.\n  - type: Entity type name (used in task params.type).\n  - description: What this entity represents.\n  - propertySpecs (array): Fields of the entity — each has name, type (string|number|boolean|Date|object|array), description, optional readonly flag, optional set array for constrained values, optional propertySpec array for nested object structure.\n- inputSpecs (array): What the service accepts.\n  - inputContentType: \"tasks\" (only supported type).\n  - inputContentSpec: Defines allowed operations and target entity type.\n    - entityTypeName: Which entity type this input operates on (match with entitySpecs[].type).\n    - allowedOps: Array of valid operations (put, get, getOne, update, upsert, replace, delete, count, run).\n    - description: What these operations do.\n    - options: Additional options as PropertySpec array.\n- outputSpecs (array): What the service returns.\n  - eventType: The event.type value in response events (use in filter xpr to match service responses).\n  - description: What the output represents.\n  - eventContentType: \"values\" (only supported type).\n  - eventContentSpecs: Array of {entityTypeName: \"...\"} indicating which entity types appear in the response.\n\nMapping SystemSpec to Pattern Elements:\n- publish.to (service): Use serviceSpec.address.\n- publish.to (participant): Use addressSpec.participants[].id.\n- publish.to (group): Use $groupName where groupName is from addressSpec.groups[].name.\n- task.op: Must be one of inputSpec.inputContentSpec.allowedOps.\n- task.params.type: Must match entitySpec.type or inputSpec.inputContentSpec.entityTypeName.\n- task.params.values: Field names should match entitySpec.propertySpecs[].name. Respect readonly fields (don't write to them).\n- Filter $event.type for service responses: Use outputSpec.eventType.\n- Access response values: Use $valueNamed('fieldName') where fieldName comes from the output entity's propertySpecs.\n\nServices without inputSpecs (like sensors) are event sources only — they produce events but don't accept task-based input. Pattern reactions filter on their outputSpec.eventType to handle their events.",
+  "workflowPatterns": "Common workflow patterns to use as building blocks:\n\nRequest/Response:\nEvent → Send Request to Service → Wait for Service Response → Process → Terminate\n\nApproval:\nRequest Event → Notify Approver (with interaction template) → Wait for Response → Branch on Approved/Rejected (Or condition) → Notify Requester → Terminate\n\nMulti-Approval (And):\nRequest Event → Notify All Approvers → Wait for All Responses (And condition) → Process → Terminate\n\nBranching (Or):\nEvent → Decision Point (Or condition with divergent operands) → [Path A | Path B | Path C] → Continue or Terminate\n\nTimeout:\nSend Request → Wait with Expiry → [Response arrives | Timeout fires] → Handle accordingly\n\nMulti-Step (Forward):\nStep1 → Step2 (transition with input:forward) → Step3 (transition with input:forward) → Terminate\nThe same event is processed by each reaction in sequence without waiting.\n\nCleanup with Confirmation:\nPerform Operation → Send Results to Participant → Forward to Cleanup Reaction → Wait for Persistence Confirmation → Terminate\n\nSensor Loop:\nA reaction with allowUnboundEvents=true that transitions back to itself, continuously processing sensor events without requiring thred IDs.\n\nSequential Service Calls:\nCall Service A → Wait for Response → Call Service B (using data from A) → Wait for Response → Notify Participant → Terminate\n\nEvent Dispatch Loop:\nA single reaction with an Or condition handles multiple event types (new requests, service responses, control signals) and transitions back to itself. Each Or operand processes a different event type with its own transform/publish/transition. The self-referencing transition keeps the reaction active for the next event. This enables complex stateful loops that handle interleaved events from multiple sources without requiring separate reactions for each event type.\n\nRetry/Fallback Loop:\nA reaction sends a request to a participant or service. If the response is negative, a backward transition returns to an earlier reaction to retry (e.g., query for a different resource and re-ask). The loop continues until a positive response is received or the workflow terminates.",
+  "patternGenerationSteps": "Follow these steps when generating a pattern from a user's description:\n1. Identify reactions from the workflow steps described. Each distinct step or waiting point becomes a reaction.\n2. Define conditions for each reaction — what event type triggers it, what data is required, and any authorization (allowedSources).\n3. Identify state storage needs — use $setLocal() in onTrue to save data that subsequent reactions will need (requester ID, intermediate values, etc.).\n4. Design transforms — build eventDataTemplate with $xpr() for dynamic values. Include interaction templates (advice) where participant input is needed.\n5. Specify recipients — set publish.to using participant IDs, $groups, service addresses, or $xpr() expressions from the SystemSpec.\n6. Define transitions — choose named targets, $next, $terminate, or $noTransition. Use input:forward for multi-step processing of the same event, input:local for stored events.",
+  "keyRules": "1. ONE EVENT PER REACTION: A reaction can only create ONE outbound event. To send multiple different events, chain reactions with transitions.\n2. First reaction is the pattern-matching entry point. Avoid onTrue side effects in the first reaction.\n3. Always name reactions explicitly. Auto-generated names ({patternName}_{index}) are fragile.\n4. Prefer setting pattern id explicitly. Auto-derivation from name works but explicit is clearer.\n5. SystemSpec is your context. Only use services, participants, and groups defined in the provided SystemSpec.\n6. $setLocal() must be in onTrue or onPublish only, never in filter xpr (silently discarded during pattern matching).\n7. $outboundEvent is only available in onPublish expressions.\n8. And condition operand directives (transform/publish/transition) are silently ignored. Place them on the And condition itself.\n9. Or condition operand directives override parent Or-level directives.\n10. Ensure every workflow has a termination path ($terminate or natural end of reactions array).\n11. Tasks use generic operators ($add, $push, $inc, etc.) that are translated by the persistence layer.\n12. Groups are referenced as $groupName (with $ prefix) in publish.to.\n13. Service agents are addressed by their address from the SystemSpec (e.g., \"org.wt.persistence\").\n14. Use $isResponseFor() only when multiple requests to the same service are in flight simultaneously. For single outstanding requests, simple event type filtering ($event.type = 'service.type') is sufficient.\n15. Use per-instance isolation ($event.thredId as document ID) when each thred needs its own data in persistence.\n16. For cleanup operations, wait for persistence response before terminating to ensure completion.\n17. $valueNamed() searches only event.data.content.values, not the entire event.\n18. Pattern matching runs filter xpr without a real context — side effects are discarded.\n19. String concatenation uses & not + (e.g., 'prefix_' & $local('id')).\n20. The 'type' field is required on every condition object.\n21. When an And condition is used, it accumulates matches across multiple events. Each event is tested against unsatisfied operands.\n22. $noTransition keeps the reaction in place waiting for the next event, useful for loops.\n23. When publishing to a participant, ALWAYS include advice with at least a text element in the interaction template. A publish with only a title/description produces no visible output for participants.\n24. advice.eventType is OPTIONAL. When advice contains input elements (collecting a response), it MUST be set to 'org.wt.client.tell'. Omit entirely for display-only messages.\n25. Services receive operations via content.tasks. Participants receive messages via advice + interaction template. Never send content.tasks to a human participant.",
+  "validationChecklist": "Before outputting a pattern, verify:\n- Pattern has name, id, and reactions array\n- First reaction matches the initial trigger event type\n- Each reaction has a condition with a 'type' field\n- All reactions are named explicitly\n- Filter conditions have xpr\n- And/Or conditions have operands array\n- Transforms use eventDataTemplate OR templateXpr (not both)\n- Every publish has a 'to' field\n- Transitions reference valid reaction names, $next, $terminate, or $noTransition\n- Local variables are set ($setLocal in onTrue/onPublish) before they are read ($local)\n- Workflow has at least one termination path\n- JSONata expressions use valid syntax\n- $xpr() is properly formatted in template strings\n- Service addresses match SystemSpec serviceSpecs[].address\n- Participant and group addresses match SystemSpec addressSpec\n- Task operations match the service's inputSpec allowedOps\n- Task params.type matches the service's entitySpec type or inputSpec entityTypeName\n- Task params.values fields match entitySpec propertySpecs (and don't write readonly fields)\n- Filter event types for service responses match outputSpec.eventType\n- $setLocal is only in onTrue or onPublish, not in filter xpr\n- And condition directives are on the And condition, not on its operands\n- Named publishes ($isResponseFor) have a matching publish with a 'name' property\n- input:local transitions have a localName specified\n- No circular transitions without an exit condition\n- When publishing to a participant, advice includes at least a text element\n- advice.eventType is 'org.wt.client.tell' when collecting a response (input elements present); omitted for display-only advice\n- Services receive content.tasks; participants receive advice with interaction templates",
+  "commonErrors": "1. Creating multiple different events in one reaction — use sequential reactions with transitions instead.\n2. Missing initial reaction for the trigger event.\n3. Undefined transition targets (referencing a reaction name that doesn't exist).\n4. Using $local() without a prior $setLocal() for that key.\n5. Putting onTrue with side effects in the first reaction.\n6. Missing required fields: condition.type, filter.xpr, publish.to.\n7. Using input:local without specifying localName.\n8. No termination path in the workflow.\n9. Circular transitions without an exit condition.\n10. Invalid service address (must match SystemSpec serviceSpecs[].address).\n11. Task operation not in the service's allowedOps.\n12. Task params.type not matching the service's entityTypeName.\n13. Filtering on the wrong event type for service responses (must match outputSpec.eventType).\n14. Missing or misnamed fields in task values (must match entitySpec propertySpecs).\n15. Using $isResponseFor('name') without a corresponding named publish.\n16. $setLocal in filter xpr (silently discarded during pattern matching).\n17. $outboundEvent used outside of onPublish.\n18. And condition transform/publish/transition placed on operands instead of the And condition itself.\n19. Not naming reactions explicitly (auto-names are fragile for transition targets).\n20. Not setting pattern id explicitly (auto-derivation works but explicit is preferred).\n21. Writing to readonly fields in task values.\n22. Omitting the $ prefix when referencing groups in publish.to (must be \"$groupName\" not \"groupName\").\n23. Sending content.tasks to a human participant — participants need advice with an interaction template, not tasks.\n24. Publishing to a participant without advice — title/description alone produces no visible output for the participant.\n25. Including advice.eventType when advice only contains display elements (text, map, image, video) and no response is needed — eventType should only be 'org.wt.client.tell' when collecting input.\n26. Using the wrong eventType when collecting participant input — it must always be 'org.wt.client.tell', not a custom type.",
+  "examples": [
+    {
+      "name": "Simple Notify",
+      "description": "A minimal pattern that sends a notification when triggered.",
+      "pattern": {
+        "name": "Notify",
+        "id": "notify",
+        "reactions": [
+          {
+            "name": "trigger",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'trigger'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Alert"
+                }
+              },
+              "publish": {
+                "to": "user1"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Approval Flow",
+      "description": "A request/approval workflow with an interaction template for collecting the approval decision, and an Or condition to branch on the response.",
+      "pattern": {
+        "name": "Approval",
+        "id": "approval",
+        "reactions": [
+          {
+            "name": "request",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'request'",
+              "onTrue": {
+                "xpr": "$setLocal('req', $event)"
+              },
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Approve?",
+                  "advice": {
+                    "eventType": "org.wt.client.tell",
+                    "template": {
+                      "name": "form",
+                      "interactions": [
+                        {
+                          "interaction": {
+                            "content": [
+                              {
+                                "input": {
+                                  "type": "boolean",
+                                  "name": "approved",
+                                  "display": "Approve?",
+                                  "set": [
+                                    {
+                                      "display": "Yes",
+                                      "value": true
+                                    },
+                                    {
+                                      "display": "No",
+                                      "value": false
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "approver"
+              }
+            }
+          },
+          {
+            "name": "handle",
+            "condition": {
+              "type": "or",
+              "operands": [
+                {
+                  "type": "filter",
+                  "xpr": "$valueNamed('approved') = true",
+                  "transform": {
+                    "eventDataTemplate": {
+                      "title": "Approved"
+                    }
+                  },
+                  "transition": {
+                    "name": "$terminate"
+                  }
+                },
+                {
+                  "type": "filter",
+                  "xpr": "$valueNamed('approved') = false",
+                  "transform": {
+                    "eventDataTemplate": {
+                      "title": "Rejected"
+                    }
+                  },
+                  "transition": {
+                    "name": "$terminate"
+                  }
+                }
+              ],
+              "publish": {
+                "to": "$xpr($local('req').source.id)"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Multi-Approval (And)",
+      "description": "A workflow requiring approval from two different people. Uses an And condition that accumulates matches across events.",
+      "pattern": {
+        "name": "DualApproval",
+        "id": "dual_approval",
+        "reactions": [
+          {
+            "name": "request",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'request'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Approval Needed",
+                  "advice": {
+                    "eventType": "org.wt.client.tell",
+                    "template": {
+                      "name": "form",
+                      "interactions": [
+                        {
+                          "interaction": {
+                            "content": [
+                              {
+                                "input": {
+                                  "type": "boolean",
+                                  "name": "approved",
+                                  "display": "Approve?",
+                                  "set": [
+                                    {
+                                      "display": "Yes",
+                                      "value": true
+                                    },
+                                    {
+                                      "display": "No",
+                                      "value": false
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": [
+                  "manager",
+                  "director"
+                ]
+              }
+            }
+          },
+          {
+            "name": "collect",
+            "condition": {
+              "type": "and",
+              "operands": [
+                {
+                  "type": "filter",
+                  "xpr": "$event.source.id = 'manager' and $valueNamed('approved') = true"
+                },
+                {
+                  "type": "filter",
+                  "xpr": "$event.source.id = 'director' and $valueNamed('approved') = true"
+                }
+              ],
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Both Approved"
+                }
+              },
+              "publish": {
+                "to": "processor"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Store and Notify",
+      "description": "A two-step workflow that stores data via the persistence service and then notifies a group when complete. Demonstrates SystemSpec-driven task construction and service response handling.",
+      "pattern": {
+        "name": "StoreAndNotify",
+        "id": "store_and_notify",
+        "reactions": [
+          {
+            "name": "store",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'store.request'",
+              "onTrue": {
+                "xpr": "$setLocal('requester', $event.source.id)"
+              },
+              "transform": {
+                "eventDataTemplate": {
+                  "content": {
+                    "tasks": [
+                      {
+                        "op": "put",
+                        "params": {
+                          "type": "Record",
+                          "values": {
+                            "id": "$xpr($valueNamed('id'))",
+                            "data": "$xpr($valueNamed('data'))"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "publish": {
+                "to": "org.wt.persistence"
+              }
+            }
+          },
+          {
+            "name": "notify",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.wt.persistence'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Record stored",
+                  "content": {
+                    "values": {
+                      "recordId": "$xpr($valueNamed('id'))"
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "$admins"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Record with Local Storage",
+      "description": "Demonstrates using $setLocal() in onTrue to capture event values, then referencing them via $local() in task params. Also shows $millis() for timestamps.",
+      "pattern": {
+        "name": "CreateRecord",
+        "id": "create_record",
+        "reactions": [
+          {
+            "name": "create",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'create'",
+              "onTrue": {
+                "xpr": "$setLocal('data', {'id': $valueNamed('id'), 'name': $valueNamed('name')})"
+              },
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Creating",
+                  "content": {
+                    "tasks": [
+                      {
+                        "name": "create",
+                        "op": "put",
+                        "params": {
+                          "type": "records",
+                          "values": {
+                            "id": "$xpr($local('data').id)",
+                            "name": "$xpr($local('data').name)",
+                            "created": "$xpr($millis())"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "publish": {
+                "to": "org.wt.persistence"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "With Update Operators",
+      "description": "Demonstrates the use of update operators ($push, $inc, $now, $add) in persistence tasks.",
+      "pattern": {
+        "name": "UpdateRecord",
+        "id": "update_record",
+        "reactions": [
+          {
+            "name": "update",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'update'",
+              "transform": {
+                "eventDataTemplate": {
+                  "content": {
+                    "tasks": [
+                      {
+                        "op": "update",
+                        "params": {
+                          "type": "records",
+                          "matcher": {
+                            "id": "$xpr($valueNamed('id'))"
+                          },
+                          "values": {
+                            "status": "active",
+                            "$push": {
+                              "history": {
+                                "timestamp": "$xpr($millis())",
+                                "action": "updated"
+                              }
+                            },
+                            "$inc": {
+                              "updateCount": 1
+                            },
+                            "$now": {
+                              "modified": true
+                            },
+                            "$add": {
+                              "tags": "$xpr($valueNamed('newTag'))"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "publish": {
+                "to": "org.wt.persistence"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "With Expiry (Timeout)",
+      "description": "A workflow with a timeout. If the participant doesn't respond within 30 seconds, the timeout handler fires.",
+      "pattern": {
+        "name": "Timeout",
+        "id": "timeout",
+        "reactions": [
+          {
+            "name": "send",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'request'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Please respond",
+                  "advice": {
+                    "eventType": "org.wt.client.tell",
+                    "template": {
+                      "name": "form",
+                      "interactions": [
+                        {
+                          "interaction": {
+                            "content": [
+                              {
+                                "input": {
+                                  "type": "text",
+                                  "name": "answer",
+                                  "display": "Your answer:"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "user1"
+              }
+            }
+          },
+          {
+            "name": "wait",
+            "expiry": {
+              "interval": 30000,
+              "transition": {
+                "name": "timeout"
+              }
+            },
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.wt.client.tell'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Response received",
+                  "content": {
+                    "values": {
+                      "answer": "$xpr($valueNamed('answer'))"
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "admin"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          },
+          {
+            "name": "timeout",
+            "condition": {
+              "type": "filter",
+              "xpr": "true",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Request timed out"
+                }
+              },
+              "publish": {
+                "to": "admin"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Named Publish with Response Matching",
+      "description": "Demonstrates using publish name and $isResponseFor() to correlate responses when multiple service requests may be in flight.",
+      "pattern": {
+        "name": "CorrelatedRequests",
+        "id": "correlated_requests",
+        "reactions": [
+          {
+            "name": "send_request",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'start'",
+              "transform": {
+                "eventDataTemplate": {
+                  "content": {
+                    "tasks": [
+                      {
+                        "op": "put",
+                        "params": {
+                          "type": "Record",
+                          "values": {
+                            "id": "$xpr($valueNamed('id'))",
+                            "data": "$xpr($valueNamed('data'))"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "publish": {
+                "name": "save_data",
+                "to": "org.wt.persistence"
+              }
+            }
+          },
+          {
+            "name": "handle_save_response",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.wt.persistence' and $isResponseFor('save_data')",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Save completed"
+                }
+              },
+              "publish": {
+                "to": "requester"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sensor Loop with Unbound Events",
+      "description": "A pattern that continuously receives sensor events (which don't carry thredIds) by using allowUnboundEvents. The reaction loops back to itself to keep monitoring.",
+      "pattern": {
+        "name": "SensorMonitor",
+        "id": "sensor_monitor",
+        "reactions": [
+          {
+            "name": "detect",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.sensor.detection'",
+              "onTrue": {
+                "xpr": "$setLocal('coords', {'latitude': $valueNamed('latitude'), 'longitude': $valueNamed('longitude')})"
+              },
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Detection received",
+                  "content": {
+                    "values": {
+                      "sensorId": "$xpr($valueNamed('sensorId'))",
+                      "confidence": "$xpr($valueNamed('confidence'))"
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "$monitors"
+              }
+            }
+          },
+          {
+            "name": "monitor_loop",
+            "allowUnboundEvents": true,
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.sensor.detection'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Continued detection",
+                  "content": {
+                    "values": {
+                      "sensorId": "$xpr($valueNamed('sensorId'))",
+                      "confidence": "$xpr($valueNamed('confidence'))"
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "$monitors"
+              },
+              "transition": {
+                "name": "monitor_loop"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Multi-Step with Forward Transitions",
+      "description": "Demonstrates using input:forward transitions to chain multiple reactions processing the same event sequentially without waiting for new events.",
+      "pattern": {
+        "name": "ProcessAndNotify",
+        "id": "process_and_notify",
+        "reactions": [
+          {
+            "name": "receive",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'incoming.data'",
+              "onTrue": {
+                "xpr": "$setLocal('sourceId', $event.source.id)"
+              },
+              "transform": {
+                "eventDataTemplate": {
+                  "content": {
+                    "tasks": [
+                      {
+                        "op": "put",
+                        "params": {
+                          "type": "Record",
+                          "values": {
+                            "id": "$xpr($event.thredId)",
+                            "data": "$xpr($valueNamed('payload'))"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "publish": {
+                "to": "org.wt.persistence"
+              }
+            }
+          },
+          {
+            "name": "wait_for_save",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.wt.persistence'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Data saved successfully",
+                  "content": {
+                    "values": {
+                      "recordId": "$xpr($valueNamed('id'))"
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "$xpr($local('sourceId'))"
+              },
+              "transition": {
+                "name": "cleanup",
+                "input": "forward"
+              }
+            }
+          },
+          {
+            "name": "cleanup",
+            "condition": {
+              "type": "filter",
+              "xpr": "true",
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Participant Notification (Display Only)",
+      "description": "Notifies a participant with text and a video stream URL when a robot deployment event arrives. No response is collected — advice.eventType is omitted.",
+      "pattern": {
+        "name": "RobotDeploymentNotify",
+        "id": "robot_deployment_notify",
+        "meta": {
+          "active": true
+        },
+        "reactions": [
+          {
+            "name": "notify_on_deploy",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.wt.robot'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Robot Deployed",
+                  "advice": {
+                    "template": {
+                      "name": "robot_status",
+                      "interactions": [
+                        {
+                          "interaction": {
+                            "content": [
+                              {
+                                "text": {
+                                  "value": "$xpr('Robot ' & $valueNamed('robotId') & ' deployed to ' & $valueNamed('latitude') & ', ' & $valueNamed('longitude'))"
+                                }
+                              },
+                              {
+                                "video": {
+                                  "uri": "$xpr($valueNamed('videoStreamUrl'))"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "participant0"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Location Alert with Map",
+      "description": "Receives a sensor detection event and sends a rich notification to a participant group with a text summary and a map showing the detection location. No response is needed — advice.eventType is omitted.",
+      "pattern": {
+        "name": "DetectionLocationAlert",
+        "id": "detection_location_alert",
+        "meta": {
+          "active": true
+        },
+        "reactions": [
+          {
+            "name": "alert_on_detection",
+            "condition": {
+              "type": "filter",
+              "xpr": "$event.type = 'org.cmi2.sensor.detectionEvent'",
+              "transform": {
+                "eventDataTemplate": {
+                  "title": "Detection Alert",
+                  "advice": {
+                    "template": {
+                      "name": "detection_alert",
+                      "interactions": [
+                        {
+                          "interaction": {
+                            "content": [
+                              {
+                                "text": {
+                                  "value": "$xpr('Detection by sensor ' & $valueNamed('sensorId') & ' — confidence: ' & $string($valueNamed('confidence')))"
+                                }
+                              },
+                              {
+                                "map": {
+                                  "locations": [
+                                    {
+                                      "name": "Detection",
+                                      "latitude": "$xpr($valueNamed('latitude'))",
+                                      "longitude": "$xpr($valueNamed('longitude'))",
+                                      "display": "detection-marker"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "publish": {
+                "to": "$group0"
+              },
+              "transition": {
+                "name": "$terminate"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,3 +1,11 @@
+
+> srvthreds@1.0.0 cli
+> tsx src/ts/tools/cli/cli.ts dump-system-spec participant0 
+
+client connected!
+EventManager::Received event: org.wt.tell (evtGhIOe0h5so5_PLfLhovSk)
+
+
 {
   "serviceSpecs": [
     {

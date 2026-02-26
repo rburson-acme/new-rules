@@ -29,6 +29,7 @@ import {
   GroupSpec,
   SystemSpec,
 } from '../thredlib/index.js';
+import { User } from '../thredlib/persistence/User.js';
 import { SystemService, SystemServiceArgs } from './SystemService.js';
 
 /***
@@ -146,8 +147,11 @@ export class UserService {
     });
 
     const users = await UserController.get().getUsers();
-    const participants: ParticipantSpec[] = users?.map((user) => ({ id: user.id })) || [];
-
+    const participants: ParticipantSpec[] = users?.map((user: User) => { 
+      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.id;
+      return { id: user.id, name: `${name}` }
+     }) || [];
+    
     const groups: GroupSpec[] = Object.values(sessionModel.groups).map((group) => ({
       name: group.name,
       // select the items we want to expose for participant

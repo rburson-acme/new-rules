@@ -1,0 +1,110 @@
+{
+  "language_reference": {
+    "name": "JSONata",
+    "description": "A lightweight query and transformation language for JSON data. It allows querying, filtering, and transforming JSON structures into new outputs.",
+    "core_concepts": {
+      "context": {
+        "symbol": "$",
+        "description": "Represents the current context or the root of the input JSON document. Useful when navigating up a hierarchy or starting an absolute path."
+      },
+      "path_navigation": {
+        "step_separator": ".",
+        "description": "Used to navigate through JSON objects. E.g., 'Address.City' accesses the City property inside the Address object."
+      },
+      "variables": {
+        "syntax": "$variable_name",
+        "assignment": ":=",
+        "description": "Variables start with a dollar sign. They can be bound to values using the ':=' operator. E.g., '$myVar := 5'."
+      }
+    },
+    "syntax_and_operators": {
+      "path_operators": [
+        { "operator": "[]", "name": "Predicate", "description": "Filters an array based on a condition. E.g., 'Phone[type=\"mobile\"]' returns only phone objects where type is mobile." },
+        { "operator": "^()", "name": "Order-by / Sort", "description": "Sorts an array. Use '>' for descending and '<' for ascending. E.g., 'Account.Order^(>Price)'." },
+        { "operator": "**", "name": "Descendant wildcard", "description": "Recursively searches all descendants for a property name. E.g., '**.*' finds all properties at any depth." },
+        { "operator": "*", "name": "Wildcard", "description": "Matches any property name at the current level." }
+      ],
+      "logical_operators": [
+        { "operator": "and", "description": "Logical AND" },
+        { "operator": "or", "description": "Logical OR" },
+        { "operator": "not()", "description": "Logical NOT (implemented as a function)" }
+      ],
+      "comparison_operators": [
+        { "operator": "=", "description": "Equals" },
+        { "operator": "!=", "description": "Not equals" },
+        { "operator": ">", "description": "Greater than" },
+        { "operator": "<", "description": "Less than" },
+        { "operator": ">=", "description": "Greater than or equal to" },
+        { "operator": "<=", "description": "Less than or equal to" },
+        { "operator": "in", "description": "Checks if a value exists in an array. E.g., 'status in [\"active\", \"pending\"]'" }
+      ],
+      "string_operators": [
+        { "operator": "&", "description": "String concatenation. E.g., 'FirstName & \" \" & LastName'" }
+      ],
+      "conditional_logic": {
+        "syntax": "condition ? true_expression : false_expression",
+        "description": "Ternary operator for conditional evaluation. The ': false_expression' part is optional."
+      },
+      "regular_expressions": {
+        "syntax": "/pattern/flags",
+        "description": "Regex literals are enclosed in forward slashes. Supported flags include 'i' (case-insensitive) and 'm' (multiline). E.g., '/hello/i'."
+      }
+    },
+    "constructors": {
+      "array": { "syntax": "[ ... ]", "description": "Creates a new array. E.g., '[1, 2, 3]'." },
+      "object": { "syntax": "{ ... }", "description": "Creates a new JSON object. Keys and values are separated by colons. E.g., '{ \"Name\": FullName, \"Age\": 30 }'." }
+    },
+    "advanced_features": {
+      "grouping": { "description": "Objects can be grouped using curly braces inside a step. E.g., 'Account.Order { ProductID: Price }'." },
+      "chaining": { "operator": "~>", "description": "Function chaining (pipe) operator. Passes the result of the left side as the first argument to the function on the right. E.g., 'Account.Email ~> $substringBefore(\"@\")'." },
+      "blocks": { "syntax": "( ... )", "description": "Groups multiple expressions separated by semicolons. Returns the result of the last evaluated expression. E.g., '($a := 1; $b := 2; $a + $b)'." },
+      "lambda_functions": {
+        "syntax": "function($param1, $param2) { expression }",
+        "description": "Anonymous functions (lambdas) can be assigned to variables and passed as arguments. E.g., '$square := function($n) { $n * $n }'."
+      }
+    },
+    "built_in_functions": {
+      "string_functions": [
+        { "signature": "$substring(str, start, [length])", "description": "Returns a substring." },
+        { "signature": "$substringBefore(str, chars)", "description": "Returns the substring before the first occurrence of 'chars'." },
+        { "signature": "$substringAfter(str, chars)", "description": "Returns the substring after the first occurrence of 'chars'." },
+        { "signature": "$uppercase(str)", "description": "Converts string to uppercase." },
+        { "signature": "$lowercase(str)", "description": "Converts string to lowercase." },
+        { "signature": "$join(array, [separator])", "description": "Joins an array of strings." }
+      ],
+      "numeric_functions": [
+        { "signature": "$sum(array)", "description": "Returns the sum of an array of numbers." },
+        { "signature": "$max(array)", "description": "Returns the maximum number in an array." },
+        { "signature": "$min(array)", "description": "Returns the minimum number in an array." },
+        { "signature": "$round(number, [precision])", "description": "Rounds a number." }
+      ],
+      "array_functions": [
+        { "signature": "$count(array)", "description": "Returns the number of items in an array." },
+        { "signature": "$append(array1, array2)", "description": "Appends array2 to array1." },
+        { "signature": "$reverse(array)", "description": "Reverses the order of items in an array." },
+        { "signature": "$distinct(array)", "description": "Returns an array containing the unique values from the input array." }
+      ],
+      "object_functions": [
+        { "signature": "$keys(object)", "description": "Returns an array of the keys in an object." },
+        { "signature": "$lookup(object, key)", "description": "Returns the value associated with the key in the object." },
+        { "signature": "$merge(array_of_objects)", "description": "Merges an array of objects into a single object." }
+      ],
+      "datetime_functions": [
+        { "signature": "$now()", "description": "Returns the current UTC timestamp in ISO 8601 string format." },
+        { "signature": "$millis()", "description": "Returns the current UTC timestamp as milliseconds since the Unix epoch." },
+        { "signature": "$fromMillis(number, [picture], [timezone])", "description": "Formats a millisecond timestamp into a string based on an optional picture string and timezone." },
+        { "signature": "$toMillis(string, [picture])", "description": "Parses a timestamp string into milliseconds since the Unix epoch." }
+      ],
+      "regex_functions": [
+        { "signature": "$match(str, pattern, [limit])", "description": "Applies a regex pattern to a string and returns an array of objects representing the matches." },
+        { "signature": "$replace(str, pattern, replacement, [limit])", "description": "Finds pattern matches in a string and replaces them with the replacement string or function." }
+      ],
+      "higher_order_functions": [
+        { "signature": "$map(array, function)", "description": "Applies a function to each item in an array and returns an array of the results." },
+        { "signature": "$filter(array, function)", "description": "Returns an array containing only the items in the input array for which the function returns true." },
+        { "signature": "$reduce(array, function, [init])", "description": "Applies a reducer function to each element of the array, resulting in a single output value." },
+        { "signature": "$sift(object, function)", "description": "Returns an object containing only the key/value pairs from the input object for which the function returns true." }
+      ]
+    }
+  }
+}

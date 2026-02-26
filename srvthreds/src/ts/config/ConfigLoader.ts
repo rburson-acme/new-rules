@@ -6,7 +6,8 @@ import { Storage } from '../storage/Storage.js';
 import { Logger, Series } from '../thredlib/index.js';
 
 /*
- This class loads but does not cache configuration files.  See ConfigManager for caching configs.
+ This class loads but does not cache configuration files. This class can be also be used as a utlity to load non config json files.
+ See ConfigManager for caching configs.
   */
 
 export class ConfigLoader {
