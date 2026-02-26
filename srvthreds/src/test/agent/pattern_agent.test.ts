@@ -9,9 +9,8 @@ import { ConfigLoader } from '../../ts/config/ConfigLoader.js';
 const patternAgentConfigDef = await ConfigLoader.loadConfigFileFromPath('./src/test/config/pattern_agent.json');
 (patternAgentConfigDef as any).agentImpl = PatternAgent;
 const patternAgentConfig = new AgentConfig('pattern-agent1', patternAgentConfigDef);
-    
-Logger.setLevel(LoggerLevel.DEBUG);
 
+Logger.setLevel(LoggerLevel.DEBUG);
 
 describe('pattern agent test', function () {
   beforeAll(async () => {
@@ -34,9 +33,66 @@ describe('pattern agent test', function () {
             expect(result.name).toBeTruthy();
             expect(Array.isArray(result.reactions)).toBe(true);
             expect(result.reactions.length).toBeGreaterThan(0);
-            // The prompt requests a display-only UAV detection notification to Freddie (no response needed),
-            // so at least one reaction must have advice with a text element (no eventType required)
-            expect(reactionHasAdviceWithText(result.reactions)).toBe(true);
+
+            // --- Reaction: UAV sensor detection ---
+            // Filters on sensor detection event, notifies Freddie with map + text + deploy input
+            const sensorReaction = findReactionFilteringOn(result.reactions, 'org.cmi2.sensor.detectionEvent');
+            expect(sensorReaction, 'sensor detection reaction exists').toBeTruthy();
+            expect(
+              conditionAdviceHasEventType(sensorReaction!.condition, 'org.wt.client.tell'),
+              'sensor reaction collects deploy decision (advice.eventType = org.wt.client.tell)',
+            ).toBe(true);
+            expect(
+              conditionAdviceHasElementType(sensorReaction!.condition, 'text'),
+              'sensor reaction advice has text element (sensor ID + confidence)',
+            ).toBe(true);
+            expect(
+              conditionAdviceHasElementType(sensorReaction!.condition, 'map'),
+              'sensor reaction advice has map element (detection location)',
+            ).toBe(true);
+            expect(
+              conditionAdviceHasElementType(sensorReaction!.condition, 'input'),
+              'sensor reaction advice has input element (deploy decision)',
+            ).toBe(true);
+            expect(
+              conditionPublishesTo(sensorReaction!.condition, 'participant0'),
+              'sensor reaction publishes to participant0 (Freddie)',
+            ).toBe(true);
+
+            // --- Reaction: deploy robot ---
+            // After Freddie says yes, a reaction sends a deployment task to the robot service
+            expect(
+              reactionPublishesTo(result.reactions, 'org.wt.robot'),
+              'a reaction sends deployment task to robot service (org.wt.robot)',
+            ).toBe(true);
+
+            // --- Reaction: robot deployment response ---
+            // Handles the robot response event, sends Freddie a location update + asks about video feed
+            const robotResponseReaction = findReactionFilteringOn(result.reactions, 'org.wt.robot');
+            expect(robotResponseReaction, 'robot response reaction exists').toBeTruthy();
+            expect(
+              conditionAdviceHasEventType(robotResponseReaction!.condition, 'org.wt.client.tell'),
+              'robot response reaction collects video decision (advice.eventType = org.wt.client.tell)',
+            ).toBe(true);
+            expect(
+              conditionAdviceHasElementType(robotResponseReaction!.condition, 'text'),
+              'robot response reaction has text element (robot location update)',
+            ).toBe(true);
+            expect(
+              conditionAdviceHasElementType(robotResponseReaction!.condition, 'input'),
+              'robot response reaction has input element (video feed decision)',
+            ).toBe(true);
+            expect(
+              conditionPublishesTo(robotResponseReaction!.condition, 'participant0'),
+              'robot response reaction publishes to participant0 (Freddie)',
+            ).toBe(true);
+
+            // --- Reaction: send video feed ---
+            // After Freddie says yes to video, a reaction sends the video feed
+            expect(
+              adviceHasElementType(result.reactions, 'video'),
+              'a reaction sends video feed to Freddie',
+            ).toBe(true);
           },
           resolve,
           reject,
@@ -56,15 +112,49 @@ describe('pattern agent test', function () {
   });
 });
 
-function reactionHasAdviceWithText(reactions: any[]): boolean {
-  return reactions.some((r) => conditionHasAdviceWithText(r.condition));
+// --- Test helpers ---
+
+/** Find the first reaction whose condition (or any nested operand) filters on the given event type */
+function findReactionFilteringOn(reactions: any[], eventType: string): any {
+  return reactions.find((r) => conditionFiltersOnEventType(r.condition, eventType));
 }
 
-function conditionHasAdviceWithText(condition: any): boolean {
+function conditionFiltersOnEventType(condition: any, eventType: string): boolean {
+  if (!condition) return false;
+  if (condition.xpr?.includes(eventType)) return true;
+  return condition.operands?.some((op: any) => conditionFiltersOnEventType(op, eventType)) ?? false;
+}
+
+/** Check if any reaction (or any nested operand condition) publishes to the given target */
+function reactionPublishesTo(reactions: any[], target: string): boolean {
+  return reactions.some((r) => conditionPublishesTo(r.condition, target));
+}
+
+function conditionPublishesTo(condition: any, target: string): boolean {
+  if (!condition) return false;
+  const to = condition.publish?.to;
+  if (to === target || (Array.isArray(to) && to.includes(target))) return true;
+  return condition.operands?.some((op: any) => conditionPublishesTo(op, target)) ?? false;
+}
+
+/** Check if any reaction has advice containing the given element type (text, map, input, video, image, group) */
+function adviceHasElementType(reactions: any[], elementType: string): boolean {
+  return reactions.some((r) => conditionAdviceHasElementType(r.condition, elementType));
+}
+
+function conditionAdviceHasElementType(condition: any, elementType: string): boolean {
   if (!condition) return false;
   const advice = condition.transform?.eventDataTemplate?.advice;
-  if (advice?.template?.interactions?.some((i: any) => i.interaction?.content?.some((el: any) => el.text))) return true;
-  return condition.operands?.some((op: any) => conditionHasAdviceWithText(op)) ?? false;
+  if (advice?.template?.interactions?.some((i: any) => i.interaction?.content?.some((el: any) => el[elementType])))
+    return true;
+  return condition.operands?.some((op: any) => conditionAdviceHasElementType(op, elementType)) ?? false;
+}
+
+/** Check if advice on a condition has a specific eventType */
+function conditionAdviceHasEventType(condition: any, eventType: string): boolean {
+  if (!condition) return false;
+  if (condition.transform?.eventDataTemplate?.advice?.eventType === eventType) return true;
+  return condition.operands?.some((op: any) => conditionAdviceHasEventType(op, eventType)) ?? false;
 }
 
 let connMan: AgentQueueConnectionManager;
