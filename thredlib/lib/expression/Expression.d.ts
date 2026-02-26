@@ -12,7 +12,7 @@ export declare class Expression {
         event: Event;
         thredId: string | undefined;
         advice: {
-            eventType: string;
+            eventType?: string;
             title?: string;
             template?: import("../index.js").TemplateModel;
         } | undefined;

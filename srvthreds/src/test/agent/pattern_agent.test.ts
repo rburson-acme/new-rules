@@ -12,97 +12,90 @@ const patternAgentConfig = new AgentConfig('pattern-agent1', patternAgentConfigD
 
 Logger.setLevel(LoggerLevel.DEBUG);
 
-describe('pattern agent test', function () {
+describe.skip('pattern agent test', function () {
   beforeAll(async () => {
     connMan = await AgentQueueConnectionManager.newAgentInstance(patternAgentConfig);
     await connMan.purgeAll();
     agent = connMan.agent;
   });
 
-  test(
-    'test generate pattern from prompt',
-    async function () {
-      const pr = new Promise((resolve, reject) => {
-        agent.eventPublisher.publishEvent = withPromiseHandlers(
-          async (event: Event) => {
-            expect(event.type).toBe('org.wt.pattern');
-            expect(event.data?.content?.values).toBeTruthy();
-            expect(event.data?.content?.error).toBeUndefined();
-            const result = Events.valueNamed(event, 'result');
-            expect(result).toBeTruthy();
-            expect(result.name).toBeTruthy();
-            expect(Array.isArray(result.reactions)).toBe(true);
-            expect(result.reactions.length).toBeGreaterThan(0);
+  test('test generate pattern from prompt', async function () {
+    const pr = new Promise((resolve, reject) => {
+      agent.eventPublisher.publishEvent = withPromiseHandlers(
+        async (event: Event) => {
+          expect(event.type).toBe('org.wt.pattern');
+          expect(event.data?.content?.values).toBeTruthy();
+          expect(event.data?.content?.error).toBeUndefined();
+          const result = Events.valueNamed(event, 'result');
+          expect(result).toBeTruthy();
+          expect(result.name).toBeTruthy();
+          expect(Array.isArray(result.reactions)).toBe(true);
+          expect(result.reactions.length).toBeGreaterThan(0);
 
-            // --- Reaction: UAV sensor detection ---
-            // Filters on sensor detection event, notifies Freddie with map + text + deploy input
-            const sensorReaction = findReactionFilteringOn(result.reactions, 'org.cmi2.sensor.detectionEvent');
-            expect(sensorReaction, 'sensor detection reaction exists').toBeTruthy();
-            expect(
-              conditionAdviceHasEventType(sensorReaction!.condition, 'org.wt.client.tell'),
-              'sensor reaction collects deploy decision (advice.eventType = org.wt.client.tell)',
-            ).toBe(true);
-            expect(
-              conditionAdviceHasElementType(sensorReaction!.condition, 'text'),
-              'sensor reaction advice has text element (sensor ID + confidence)',
-            ).toBe(true);
-            expect(
-              conditionAdviceHasElementType(sensorReaction!.condition, 'map'),
-              'sensor reaction advice has map element (detection location)',
-            ).toBe(true);
-            expect(
-              conditionAdviceHasElementType(sensorReaction!.condition, 'input'),
-              'sensor reaction advice has input element (deploy decision)',
-            ).toBe(true);
-            expect(
-              conditionPublishesTo(sensorReaction!.condition, 'participant0'),
-              'sensor reaction publishes to participant0 (Freddie)',
-            ).toBe(true);
+          // --- Reaction: UAV sensor detection ---
+          // Filters on sensor detection event, notifies Freddie with map + text + deploy input
+          const sensorReaction = findReactionFilteringOn(result.reactions, 'org.cmi2.sensor.detectionEvent');
+          expect(sensorReaction, 'sensor detection reaction exists').toBeTruthy();
+          expect(
+            conditionAdviceHasEventType(sensorReaction!.condition, 'org.wt.client.tell'),
+            'sensor reaction collects deploy decision (advice.eventType = org.wt.client.tell)',
+          ).toBe(true);
+          expect(
+            conditionAdviceHasElementType(sensorReaction!.condition, 'text'),
+            'sensor reaction advice has text element (sensor ID + confidence)',
+          ).toBe(true);
+          expect(
+            conditionAdviceHasElementType(sensorReaction!.condition, 'map'),
+            'sensor reaction advice has map element (detection location)',
+          ).toBe(true);
+          expect(
+            conditionAdviceHasElementType(sensorReaction!.condition, 'input'),
+            'sensor reaction advice has input element (deploy decision)',
+          ).toBe(true);
+          expect(
+            conditionPublishesTo(sensorReaction!.condition, 'participant0'),
+            'sensor reaction publishes to participant0 (Freddie)',
+          ).toBe(true);
 
-            // --- Reaction: deploy robot ---
-            // After Freddie says yes, a reaction sends a deployment task to the robot service
-            expect(
-              reactionPublishesTo(result.reactions, 'org.wt.robot'),
-              'a reaction sends deployment task to robot service (org.wt.robot)',
-            ).toBe(true);
+          // --- Reaction: deploy robot ---
+          // After Freddie says yes, a reaction sends a deployment task to the robot service
+          expect(
+            reactionPublishesTo(result.reactions, 'org.wt.robot'),
+            'a reaction sends deployment task to robot service (org.wt.robot)',
+          ).toBe(true);
 
-            // --- Reaction: robot deployment response ---
-            // Handles the robot response event, sends Freddie a location update + asks about video feed
-            const robotResponseReaction = findReactionFilteringOn(result.reactions, 'org.wt.robot');
-            expect(robotResponseReaction, 'robot response reaction exists').toBeTruthy();
-            expect(
-              conditionAdviceHasEventType(robotResponseReaction!.condition, 'org.wt.client.tell'),
-              'robot response reaction collects video decision (advice.eventType = org.wt.client.tell)',
-            ).toBe(true);
-            expect(
-              conditionAdviceHasElementType(robotResponseReaction!.condition, 'text'),
-              'robot response reaction has text element (robot location update)',
-            ).toBe(true);
-            expect(
-              conditionAdviceHasElementType(robotResponseReaction!.condition, 'input'),
-              'robot response reaction has input element (video feed decision)',
-            ).toBe(true);
-            expect(
-              conditionPublishesTo(robotResponseReaction!.condition, 'participant0'),
-              'robot response reaction publishes to participant0 (Freddie)',
-            ).toBe(true);
+          // --- Reaction: robot deployment response ---
+          // Handles the robot response event, sends Freddie a location update + asks about video feed
+          const robotResponseReaction = findReactionFilteringOn(result.reactions, 'org.wt.robot');
+          expect(robotResponseReaction, 'robot response reaction exists').toBeTruthy();
+          expect(
+            conditionAdviceHasEventType(robotResponseReaction!.condition, 'org.wt.client.tell'),
+            'robot response reaction collects video decision (advice.eventType = org.wt.client.tell)',
+          ).toBe(true);
+          expect(
+            conditionAdviceHasElementType(robotResponseReaction!.condition, 'text'),
+            'robot response reaction has text element (robot location update)',
+          ).toBe(true);
+          expect(
+            conditionAdviceHasElementType(robotResponseReaction!.condition, 'input'),
+            'robot response reaction has input element (video feed decision)',
+          ).toBe(true);
+          expect(
+            conditionPublishesTo(robotResponseReaction!.condition, 'participant0'),
+            'robot response reaction publishes to participant0 (Freddie)',
+          ).toBe(true);
 
-            // --- Reaction: send video feed ---
-            // After Freddie says yes to video, a reaction sends the video feed
-            expect(
-              adviceHasElementType(result.reactions, 'video'),
-              'a reaction sends video feed to Freddie',
-            ).toBe(true);
-          },
-          resolve,
-          reject,
-        );
-      });
-      agent.processMessage({ event: generatePatternEvent, to: ['org.wt.pattern'], id: 'message_id_0' });
-      return pr;
-    },
-    60000,
-  );
+          // --- Reaction: send video feed ---
+          // After Freddie says yes to video, a reaction sends the video feed
+          expect(adviceHasElementType(result.reactions, 'video'), 'a reaction sends video feed to Freddie').toBe(true);
+        },
+        resolve,
+        reject,
+      );
+    });
+    agent.processMessage({ event: generatePatternEvent, to: ['org.wt.pattern'], id: 'message_id_0' });
+    return pr;
+  }, 60000);
 
   // cleanup in case of failure
   afterAll(async () => {

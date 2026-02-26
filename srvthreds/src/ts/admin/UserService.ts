@@ -147,11 +147,12 @@ export class UserService {
     });
 
     const users = await UserController.get().getUsers();
-    const participants: ParticipantSpec[] = users?.map((user: User) => { 
-      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.id;
-      return { id: user.id, name: `${name}` }
-     }) || [];
-    
+    const participants: ParticipantSpec[] =
+      users?.map((user: User) => {
+        const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.id;
+        return { id: user.id, name: `${name}` };
+      }) || [];
+
     const groups: GroupSpec[] = Object.values(sessionModel.groups).map((group) => ({
       name: group.name,
       // select the items we want to expose for participant

@@ -1,50 +1,50 @@
 {
-    "name": "McQ Unattended Ground Sensor",
-    "description": "Ground sensor for detecting presence and movement of entities",
-    "entitySpecs": [
+  "name": "McQ Unattended Ground Sensor",
+  "description": "Ground sensor for detecting presence and movement of entities",
+  "entitySpecs": [
+    {
+      "type": "DetectedEntity",
+      "description": "Data describing an entity detected by the sensor.",
+      "propertySpecs": [
         {
-            "type": "DetectedEntity",
-            "description": "Data describing an entity detected by the sensor.",
-            "propertySpecs": [
-                {
-                    "name": "sensorId",
-                    "description": "Unique identifier for the sensor",
-                    "type": "string"
-                },
-                {
-                    "name": "timestamp",
-                    "description": "Date and time when the detection occurred.",
-                    "type": "Date"
-                },
-                {
-                    "name": "latitude",
-                    "description": "Latitude of the detected entity's current location.",
-                    "type": "number"
-                },
-                {
-                    "name": "longitude",
-                    "description": "Longitude of the detected entity's current location.",
-                    "type": "number"
-                },
-                {
-                    "name": "confidence",
-                    "description": "Confidence level of the detection (e.g., a value between 0 and 1).",
-                    "type": "number"
-                }
-            ]
-        }
-    ],
-    "inputSpecs": [],
-    "outputSpecs": [
+          "name": "sensorId",
+          "description": "Unique identifier for the sensor",
+          "type": "string"
+        },
         {
-            "eventType": "org.cmi2.sensor.detectionEvent",
-            "description": "Notifications sent by the sensor.",
-            "eventContentType": "values",
-            "eventContentSpecs": [
-                {
-                    "entityTypeName": "DetectedEntity"
-                }
-            ]
+          "name": "timestamp",
+          "description": "Date and time when the detection occurred.",
+          "type": "Date"
+        },
+        {
+          "name": "latitude",
+          "description": "Latitude of the detected entity's current location.",
+          "type": "number"
+        },
+        {
+          "name": "longitude",
+          "description": "Longitude of the detected entity's current location.",
+          "type": "number"
+        },
+        {
+          "name": "confidence",
+          "description": "Confidence level of the detection (e.g., a value between 0 and 1).",
+          "type": "number"
         }
-    ]
+      ]
+    }
+  ],
+  "inputSpecs": [],
+  "outputSpecs": [
+    {
+      "eventType": "org.cmi2.sensor.detectionEvent",
+      "description": "Notifications sent by the sensor.",
+      "eventContentType": "values",
+      "eventContentSpecs": [
+        {
+          "entityTypeName": "DetectedEntity"
+        }
+      ]
+    }
+  ]
 }

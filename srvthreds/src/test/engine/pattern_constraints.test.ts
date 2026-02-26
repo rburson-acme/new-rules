@@ -66,6 +66,7 @@ describe('pattern constraints', function () {
       expect(message.event.data?.title).toBe('maxInstances.response');
       expect(message.to).toContain('test.recipient');
     });
+    await delay(100); // Small delay to ensure thredId1 is terminated
     connMan.eventQ.queue(events.event0);
     return pr;
   });

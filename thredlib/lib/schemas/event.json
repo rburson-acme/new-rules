@@ -222,9 +222,6 @@
                             "type": "string"
                         }
                     },
-                    "required": [
-                        "eventType"
-                    ],
                     "type": "object"
                 },
                 "content": {

@@ -42,7 +42,7 @@ export interface EventData {
     /** optionally define what is expected in return */
     advice?: {
         /** the type of event that is expected */
-        eventType: string;
+        eventType?: string;
         /** the suggested title of the expected event */
         title?: string;
         /** an interaction template that describes what data to collect */

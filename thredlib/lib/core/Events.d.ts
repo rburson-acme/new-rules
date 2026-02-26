@@ -53,7 +53,7 @@ export declare class EventHelper {
     constructor(event: Event);
     getData(): EventData | undefined;
     getAdvice(): {
-        eventType: string;
+        eventType?: string;
         title?: string;
         template?: import("../index.js").TemplateModel;
     } | undefined;

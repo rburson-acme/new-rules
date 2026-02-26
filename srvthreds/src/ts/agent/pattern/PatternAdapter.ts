@@ -46,7 +46,9 @@ export class PatternAdapter implements Adapter {
     const systemPrompt = PatternPrompt.buildSystemPrompt(this.context);
     const model = this.getModel();
 
-    Logger.debug(`PatternAdapter: Generating pattern with provider=${this.config.provider}, model=${this.config.model}`);
+    Logger.debug(
+      `PatternAdapter: Generating pattern with provider=${this.config.provider}, model=${this.config.model}`,
+    );
     Logger.debug(`PatternAdapter: System prompt:\n${systemPrompt}`);
     Logger.debug(`PatternAdapter: User prompt:\n${values.prompt}`);
 
