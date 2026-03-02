@@ -17,6 +17,9 @@ export interface Thred {
         description?: string;
         displayUri?: string;
     };
+    parentThredId?: string;
+    spawnType?: 'child' | 'sibling';
+    childThredIds?: string[];
 }
 export declare enum ThredStatus {
     ACTIVE = "a",

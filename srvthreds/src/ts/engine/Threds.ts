@@ -57,6 +57,55 @@ export class Threds {
     return this.thredsStore.addThredToParticipantsStore(thredId, participants);
   }
 
+  /**
+   * Spawn a new child or sibling thred from a parent thred.
+   * Called from within the parent thred's lock. The child thred gets its own lock (different thredId).
+   * Lock ordering: Parent thred lock (held) → Pattern lock → Child thred lock.
+   */
+  async spawnThred(
+    patternName: string,
+    inputEvent: Event | undefined,
+    parentThredStore: ThredStore,
+    spawnType: 'child' | 'sibling',
+  ): Promise<void> {
+    // resolve pattern by name — try as-is first (already an id), then derive id from name
+    let pattern = this.thredsStore.patternsStore.getPattern(patternName);
+    if (!pattern) {
+      pattern = this.thredsStore.patternsStore.getPattern(Pattern.idFromName(patternName));
+    }
+    if (!pattern) {
+      L.error({
+        message: L.crit(`Spawn: Pattern '${patternName}' not found. Skipping spawn.`),
+        thredId: parentThredStore.id,
+      });
+      return;
+    }
+
+    L.info({
+      message: L.h2(`Spawning ${spawnType} thred from pattern ${pattern.id} (parent: ${parentThredStore.id})`),
+      thredId: parentThredStore.id,
+    });
+
+    const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(pattern.id, async () => {
+      return this.thredsStore.withNewThredStore(pattern, async (childThredStore: ThredStore) => {
+        // set parent-child relationship
+        childThredStore.setParent(parentThredStore.id, spawnType);
+        parentThredStore.addChildThredId(childThredStore.id);
+
+        if (inputEvent) {
+          const boundEvent = { ...inputEvent, thredId: childThredStore.id };
+          await this.persistEvent(boundEvent);
+          await Thred.consider(boundEvent, childThredStore, this);
+        }
+        // if no inputEvent (default), the thred is created in ACTIVE state waiting for its first event
+
+        return childThredStore.status;
+      });
+    });
+
+    await this.decrementIfTerminated(thredStatus, pattern.id);
+  }
+
   /*
       Process a 'bound' event (meaning the event has a thredId)
   */

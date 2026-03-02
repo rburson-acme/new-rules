@@ -1,4 +1,4 @@
-import { Event, Logger as L, ThredLogRecordType, addressToArray } from '../thredlib/index.js';
+import { Event, Logger as L, SpawnModel, ThredLogRecordType, addressToArray } from '../thredlib/index.js';
 
 import { ThredStore } from './store/ThredStore.js';
 import { ReactionResult } from './Reaction.js';
@@ -48,6 +48,11 @@ export class Thred {
 
       // resolve and store the participant addresses, then dispatch the message
       await this.dispatchMessage(reactionResult.messageTemplate, event.source.id, thredStore, threds);
+
+      // spawn child/sibling threds if the reaction produced a spawn directive
+      if (reactionResult.spawn) {
+        await Thred.executeSpawn(reactionResult.spawn, event, thredStore, threds);
+      }
     } while (inputEvent);
   }
 
@@ -128,6 +133,30 @@ export class Thred {
     // update the store w/ participant to thred mappings
     await threds.addThredToParticipants(thredStore.id, [...to, sourceId]);
     return to;
+  }
+
+  // spawn child or sibling threds based on a spawn directive from a matched condition
+  private static async executeSpawn(
+    spawn: SpawnModel,
+    event: Event,
+    parentThredStore: ThredStore,
+    threds: Threds,
+  ): Promise<void> {
+    const { names, input, type, localName } = spawn;
+
+    // determine the input event for the spawned threds based on the input type
+    let spawnInputEvent: Event | undefined;
+    if (input === 'forward') {
+      spawnInputEvent = event;
+    } else if (input === 'local') {
+      if (!localName) throw Error('Pattern Error: No localName defined for spawn input = local');
+      spawnInputEvent = parentThredStore.thredContext.getLocal(localName);
+    }
+    // 'default' → undefined: spawned thred waits for its first event
+
+    for (const patternName of names) {
+      await threds.spawnThred(patternName, spawnInputEvent, parentThredStore, type);
+    }
   }
 
   // state transition + apply next input

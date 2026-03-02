@@ -1,4 +1,4 @@
-import { ConditionModel, Logger } from '../thredlib/index.js';
+import { ConditionModel, Logger, SpawnModel } from '../thredlib/index.js';
 import { ThredContext } from './ThredContext.js';
 import { Event } from '../thredlib/index.js';
 import { Publish } from './Publish.js';
@@ -14,6 +14,7 @@ export type ConditionResult = {
   transform?: Transform | undefined;
   publish?: Publish | undefined;
   transition?: Transition | undefined;
+  spawn?: SpawnModel | undefined;
 };
 /*
     @IMPORTANT any mutations here must be made in the Store
@@ -25,21 +26,25 @@ export abstract class Condition {
   onTrue?: Consequent;
   publish?: Publish;
   transition?: Transition;
+  spawn?: SpawnModel;
 
   //conditionId is only unique with a Reaction
   constructor(conditionModel: ConditionModel, conditionFactory: ConditionFactory, id: string) {
     this.conditionId = id;
-    const { transform, onTrue, publish, transition } = conditionModel;
+    const { transform, onTrue, publish, transition, spawn } = conditionModel;
     this.transform = transform && new Transform(transform);
     this.onTrue = onTrue && new Consequent(onTrue);
     this.publish = publish && new Publish(publish);
     this.transition = transition && new Transition(transition);
+    this.spawn = spawn;
   }
 
   // returns a result if the condition is satisfied, otherwise returns undefined
   async apply(event: Event, thredStore: ThredStore): Promise<ConditionResult | undefined> {
     const result = await this.applyCondition(event, thredStore);
-    result && this.onTrue && (await this.onTrue.apply(event, thredStore));
+    if (result && this.onTrue) {
+      await this.onTrue.apply(event, thredStore);
+    }
     result
       ? debug(h2(`${this.constructor.name} for thredId: ${thredStore.id} MATCHED event: ${event.id}`))
       : debug(h2(`${this.constructor.name} for thredId: ${thredStore.id} DID NOT match event: ${event.id}`));
@@ -57,6 +62,7 @@ export abstract class Condition {
     this.transform && (result.transform = this.transform);
     this.publish && (result.publish = this.publish);
     this.transition && (result.transition = this.transition);
+    this.spawn && (result.spawn = this.spawn);
     return result;
   }
 }

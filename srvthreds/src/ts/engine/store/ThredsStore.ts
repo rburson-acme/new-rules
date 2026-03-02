@@ -189,6 +189,12 @@ export class ThredsStore {
   private async deleteAndTerminateThred(thredId: string): Promise<void> {
     Logger.debug({ message: Logger.h2(`deleteAndTerminateThred::terminating Thred ${thredId}`), thredId });
     const thredStore = this.thredStores[thredId];
+
+    // cascade terminate child threds (children only, not siblings)
+    if (thredStore?.childThredIds?.length) {
+      await this.cascadeTerminateChildren(thredStore.childThredIds, thredId);
+    }
+
     try {
       //If locked, the lock will simply expire
       await this.storage.delete({ type: Types.Thred, id: thredId });
@@ -237,6 +243,36 @@ export class ThredsStore {
         thredId,
       });
       //throw ThredThrowable.get( { cause: e, message: 'Failed to save Thred to archive' }, 'sender', thredStore.thredContext,);
+    }
+  }
+
+  // cascade terminate child threds when a parent is terminated
+  // each child gets its own lock (different thredId from parent). Recursive for nested children.
+  private async cascadeTerminateChildren(childThredIds: string[], parentThredId: string): Promise<void> {
+    for (const childThredId of childThredIds) {
+      try {
+        await LockManager.withLock(this.storage, Types.Thred, childThredId, async () => {
+          const childThredStore = await this.getThreadStore(childThredId);
+          if (childThredStore && childThredStore.isChild && !childThredStore.isTerminated) {
+            Logger.info({
+              message: Logger.h2(`Cascade terminating child thred ${childThredId} (parent: ${parentThredId})`),
+              thredId: childThredId,
+            });
+            const patternId = childThredStore.pattern.id;
+            childThredStore.terminate();
+            this.thredStores[childThredId] = childThredStore;
+            await this.deleteAndTerminateThred(childThredId);
+            await this.patternsStore.decrementPatternInstanceCount(patternId);
+          }
+        });
+      } catch (e) {
+        Logger.warn({
+          message: Logger.crit(
+            `cascadeTerminateChildren::Failed to cascade terminate child thred ${childThredId} of parent ${parentThredId}`,
+          ),
+          thredId: childThredId,
+        });
+      }
     }
   }
 }

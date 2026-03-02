@@ -1,4 +1,4 @@
-import { Address, Logger, OUTPUT_EVENT_ID_PREFIX, ReactionModel } from '../thredlib/index.js';
+import { Address, Logger, OUTPUT_EVENT_ID_PREFIX, ReactionModel, SpawnModel } from '../thredlib/index.js';
 import { Condition } from './Condition.js';
 import { ConditionFactory } from './ConditionFactory.js';
 import { ThredContext } from './ThredContext.js';
@@ -9,7 +9,7 @@ import { Permissions } from './Permissions.js';
 import { MessageTemplate } from './MessageTemplate.js';
 import { System } from './System.js';
 
-export type ReactionResult = { messageTemplate?: MessageTemplate; transition?: Transition };
+export type ReactionResult = { messageTemplate?: MessageTemplate; transition?: Transition; spawn?: SpawnModel };
 
 /*
     @IMPORTANT any mutations here must be made in the Store
@@ -44,13 +44,13 @@ export class Reaction {
     const { condition } = this;
     const result = await condition.apply(event, thredStore);
     if (result) {
-      const { transform, publish, transition } = result;
+      const { transform, publish, transition, spawn } = result;
       const newEvent = await transform?.apply(event, thredStore);
       const to = await publish?.apply(event, thredStore, newEvent);
       // if the publish object has a name, store the new event id in the thred context locals
       publish?.name && thredStore.thredContext.setLocal(`${OUTPUT_EVENT_ID_PREFIX}${publish.name}`, newEvent?.id);
       const messageTemplate = to && newEvent ? { event: newEvent, to } : undefined;
-      return { messageTemplate, transition };
+      return { messageTemplate, transition, spawn };
     }
   }
 

@@ -96,6 +96,10 @@
           "$ref": "#/definitions/TransitionModel",
           "description": "The state (Reaction) transition that should occur if the condition is true. The default (if not specified) is to transition to the next Reaction (or terminate if none)."
         },
+        "spawn": {
+          "$ref": "#/definitions/SpawnModel",
+          "description": "An optional SpawnModel that specifies child or sibling Threds to spawn when the condition is true. Spawn is a peer directive to transform, publish, and transition."
+        },
         "type": {
           "description": "The type of the condition. May be 'and', 'or', or 'filter'.",
           "enum": [
@@ -115,13 +119,10 @@
       "additionalProperties": false,
       "properties": {
         "xpr": {
-          "description": "A jsonata expression to be run when a condition is true. This is a 'side effect' of the condition. Generally used to store values in scope for later use  {@link  https://jsonata.org/ }",
+          "description": "An optional jsonata expression to be run when a condition is true. This is a 'side effect' of the condition. Generally used to store values in scope for later use  {@link  https://jsonata.org/ }",
           "type": "string"
         }
       },
-      "required": [
-        "xpr"
-      ],
       "type": "object"
     },
     "ElementModel": {
@@ -422,6 +423,10 @@
         "transition": {
           "$ref": "#/definitions/TransitionModel",
           "description": "The state (Reaction) transition that should occur if the condition is true. The default (if not specified) is to transition to the next Reaction (or terminate if none)."
+        },
+        "spawn": {
+          "$ref": "#/definitions/SpawnModel",
+          "description": "An optional SpawnModel that specifies child or sibling Threds to spawn when the condition is true. Spawn is a peer directive to transform, publish, and transition."
         },
         "type": {
           "description": "The type of the condition. May be 'and', 'or', or 'filter'.",
@@ -849,6 +854,40 @@
       "required": [
         "contentType",
         "uri"
+      ],
+      "type": "object"
+    },
+    "SpawnModel": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "$ref": "#/definitions/TransitionInput",
+          "description": "TransitionInput used to specify what input the spawned Thred(s) should receive. For example, 'default' will simply have the thred wait for the next event, 'forward' would pass the current event as input to the spawned Thred(s), while $local('someKey') would pass the value of someKey from local state as input to the spawned Thred(s)."
+        },
+        "names": {
+          "description": "The name(s) of the Thred(s) to spawn when a condition is true.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "description": "The type of thred to spawn. Can be 'child' or 'sibling'. Child threds are spawned as children of the current thred, and will be automatically terminated when the parent thred terminates. Sibling threds are spawned at the same level as the current thred, and will not be automatically terminated when the parent thred terminates.",
+          "enum": [
+            "child",
+            "sibling"
+          ],
+          "type": "string"
+        },
+        "localName": {
+          "description": "The name of the locally stored value to be used as input to the spawned Thred(s) if input is 'local'.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "names",
+        "input",
+        "type"
       ],
       "type": "object"
     },

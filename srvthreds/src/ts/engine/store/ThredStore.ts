@@ -22,6 +22,9 @@ export class ThredStore {
     description?: string;
     displayUri?: string;
   } = {};
+  private _parentThredId?: string;
+  private _spawnType?: 'child' | 'sibling';
+  private _childThredIds: string[] = [];
 
   private constructor(
     readonly id: string,
@@ -98,6 +101,31 @@ export class ThredStore {
     return this.thredContext.hasParticipant(participantId);
   }
 
+  setParent(parentThredId: string, spawnType: 'child' | 'sibling'): void {
+    this._parentThredId = parentThredId;
+    this._spawnType = spawnType;
+  }
+
+  addChildThredId(childThredId: string): void {
+    this._childThredIds.push(childThredId);
+  }
+
+  get parentThredId(): string | undefined {
+    return this._parentThredId;
+  }
+
+  get spawnType(): 'child' | 'sibling' | undefined {
+    return this._spawnType;
+  }
+
+  get childThredIds(): string[] {
+    return this._childThredIds;
+  }
+
+  get isChild(): boolean {
+    return this._spawnType === 'child';
+  }
+
   get status(): ThredStatus {
     return this._status;
   }
@@ -131,6 +159,9 @@ export class ThredStore {
       status: this._status,
       lastUpdateTime: this.lastUpdateTime,
       meta: this.meta,
+      parentThredId: this._parentThredId,
+      spawnType: this._spawnType,
+      childThredIds: this._childThredIds.length ? this._childThredIds : undefined,
     };
   }
 
@@ -150,6 +181,9 @@ export class ThredStore {
       status: this._status,
       lastUpdateTime: this.lastUpdateTime,
       meta: this.meta,
+      parentThredId: this._parentThredId,
+      spawnType: this._spawnType,
+      childThredIds: this._childThredIds.length ? this._childThredIds : undefined,
     };
   }
 
@@ -171,6 +205,12 @@ export class ThredStore {
     );
     thredStore.lastUpdateTime = state.lastUpdateTime;
     thredStore.updateMeta(state.meta || {});
+    if (state.parentThredId && state.spawnType) {
+      thredStore.setParent(state.parentThredId, state.spawnType);
+    }
+    if (state.childThredIds) {
+      state.childThredIds.forEach((id) => thredStore.addChildThredId(id));
+    }
     return thredStore;
   }
 
@@ -194,4 +234,7 @@ export interface ThredStoreState {
     description?: string;
     displayUri?: string;
   };
+  parentThredId?: string;
+  spawnType?: 'child' | 'sibling';
+  childThredIds?: string[];
 }

@@ -18,6 +18,9 @@ export interface Thred {
     description?: string;
     displayUri?: string;
   };
+  parentThredId?: string;
+  spawnType?: 'child' | 'sibling';
+  childThredIds?: string[];
 }
 
 export enum ThredStatus {
