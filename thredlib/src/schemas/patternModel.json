@@ -882,6 +882,10 @@
         "localName": {
           "description": "The name of the locally stored value to be used as input to the spawned Thred(s) if input is 'local'.",
           "type": "string"
+        },
+        "context": {
+          "description": "When true, the parent Thred's ThredContext (scope and participants) is deep copied to the spawned Thred(s).",
+          "type": "boolean"
         }
       },
       "required": [

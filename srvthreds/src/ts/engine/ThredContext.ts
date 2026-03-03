@@ -32,6 +32,11 @@ export class ThredContext implements ExpressionContext {
     return [...this.uniqueParticipants];
   }
 
+  copyFrom(parentContext: ThredContext): void {
+    Object.assign(this.scope, structuredClone(parentContext.getState().scope));
+    this.addParticipantIds(parentContext.getParticipantAddresses());
+  }
+
   addParticipantIds(participantIds: string | string[]) {
     if (!participantIds) return;
     if (Array.isArray(participantIds)) {

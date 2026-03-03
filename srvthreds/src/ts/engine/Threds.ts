@@ -67,6 +67,7 @@ export class Threds {
     inputEvent: Event | undefined,
     parentThredStore: ThredStore,
     spawnType: 'child' | 'sibling',
+    copyContext?: boolean,
   ): Promise<void> {
     // resolve pattern by name — try as-is first (already an id), then derive id from name
     let pattern = this.thredsStore.patternsStore.getPattern(patternName);
@@ -91,6 +92,11 @@ export class Threds {
         // set parent-child relationship
         childThredStore.setParent(parentThredStore.id, spawnType);
         parentThredStore.addChildThredId(childThredStore.id);
+
+        // deep copy parent's scope and participants to child if requested
+        if (copyContext) {
+          childThredStore.thredContext.copyFrom(parentThredStore.thredContext);
+        }
 
         if (inputEvent) {
           const boundEvent = { ...inputEvent, thredId: childThredStore.id };

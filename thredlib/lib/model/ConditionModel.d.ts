@@ -74,4 +74,9 @@ export interface SpawnModel {
      * @property {string} localName
      */
     localName?: string;
+    /**
+     * When true, the parent Thred's ThredContext (scope and participants) is deep copied to the spawned Thred(s).
+     * @property {boolean} context
+     */
+    context?: boolean;
 }

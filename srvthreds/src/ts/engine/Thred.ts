@@ -142,7 +142,7 @@ export class Thred {
     parentThredStore: ThredStore,
     threds: Threds,
   ): Promise<void> {
-    const { names, input, type, localName } = spawn;
+    const { names, input, type, localName, context } = spawn;
 
     // determine the input event for the spawned threds based on the input type
     let spawnInputEvent: Event | undefined;
@@ -155,7 +155,7 @@ export class Thred {
     // 'default' → undefined: spawned thred waits for its first event
 
     for (const patternName of names) {
-      await threds.spawnThred(patternName, spawnInputEvent, parentThredStore, type);
+      await threds.spawnThred(patternName, spawnInputEvent, parentThredStore, type, context);
     }
   }
 
