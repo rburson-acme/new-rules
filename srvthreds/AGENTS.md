@@ -196,6 +196,9 @@ Microservices architecture:
 - When making changes affecting thredlib, rebuild it before testing
 - Tests must pass sequentially - never run with parallelism
 - Use Logger from thredlib for all logging (Logger.info, Logger.debug, Logger.error)
+- **Deployment** When deploying, starting, or running any service, you MUST consult agents/DEPLOY_AGENT.md for instructions.
+- **Patterns** When working with Patterns in any way (creating, modifying, reading, or testing), you MUST consult agents/PATTERNS_AGENT.md for instructions.
+- **JSONata** When writing or modifying any JSONata expressions, you MUST consult agents/jsonata_reference.json for reference.
 - 
 - **Test with Connection Managers**: All integration tests MUST use the sophisticated connection managers in `src/test/testUtils.ts` (e.g., `EngineConnectionManager`, `ServerConnectionManager`). These handle the complex setup and teardown of the engine, agents, and message queues.
 - **Stateful Testing**: Tests are not isolated. They are written as a sequence, where state from one test (e.g., a created `thredId`) is passed to the next. Use the async helpers in `testUtils.ts` to manage async flows.

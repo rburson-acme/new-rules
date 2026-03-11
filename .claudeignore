@@ -1,0 +1,33 @@
+# Dependencies
+**/node_modules/
+
+# Build output
+**/dist/
+**/dist-server/
+**/lib/
+**/build/
+**/.expo/
+
+# TypeScript cache
+**/*.tsbuildinfo
+
+# History (VSCode Local History extension)
+**/.history/
+
+# Logs
+**/*.log
+**/logs/
+
+# Test artifacts
+**/coverage/
+
+# Infrastructure state
+devops/terraform/**/.terraform/
+devops/terraform/**/terraform.tfstate*
+
+# OS / editor artifacts
+**/.DS_Store
+**/*.swp
+
+# Docker
+**/docker-compose.override.yml

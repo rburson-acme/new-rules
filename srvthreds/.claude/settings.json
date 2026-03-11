@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build-lib)",
+      "Read(//home/rburson/dev/new-rules/thredlib/src/**)",
+      "Bash(npm run check)",
+      "Bash(npm test)",
+      "Bash(git add src/ts/engine/Condition.ts src/ts/engine/Consequent.ts src/ts/engine/Reaction.ts src/ts/engine/Thred.ts src/ts/engine/Threds.ts src/ts/engine/store/ThredStore.ts src/ts/engine/store/ThredsStore.ts src/test/config/patterns/_ef_robot_collect_data.pattern.json src/test/config/patterns/ef_detection_subthred.pattern.json ../thredlib/lib/core/Thred.d.ts ../thredlib/lib/model/ConditionModel.d.ts ../thredlib/lib/model/ConsequentModel.d.ts ../thredlib/src/core/Thred.ts ../thredlib/src/model/ConditionModel.ts ../thredlib/src/model/ConsequentModel.ts ../thredlib/src/schemas/patternModel.json)"
+    ],
+    "additionalDirectories": [
+      "/home/rburson/dev/new-rules/thredlib/src/model",
+      "/home/rburson/dev/new-rules/thredlib/src/schemas"
+    ]
+  }
+}

@@ -892,8 +892,11 @@ Send Request → Wait for Response → [Positive → Continue | Negative → bac
         "type": "and",
         "operands": [
           {"type": "filter", "xpr": "$event.source.id = 'manager' and $valueNamed('approved') = true"},
-          {"type": "filter", "xpr": "$event.source.id = 'director' and $valueNamed('approved') = true", "transform": {"eventDataTemplate": {"title": "Both Approved"}}, "publish": {"to": "processor"}, "transition": {"name": "$terminate"}}
-        ]
+          {"type": "filter", "xpr": "$event.source.id = 'director' and $valueNamed('approved') = true"}
+        ],
+        "transform": {"eventDataTemplate": {"title": "Both Approved"}},
+        "publish": {"to": "processor"},
+        "transition": {"name": "$terminate"}
       }
     }
   ]
