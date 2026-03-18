@@ -109,7 +109,7 @@ export class Threds {
       });
     });
 
-    await this.decrementIfTerminated(thredStatus, pattern.id);
+    thredStatus && await this.decrementIfTerminated(thredStatus, pattern.id);
   }
 
   /*
@@ -134,7 +134,7 @@ export class Threds {
   private async handleUnbound(event: Event): Promise<void> {
     let matches = 0;
     matches += await this.matchPatterns(event);
-    // try matching running thres that allow unbound events
+    // try matching running threds that allow unbound events
     matches += await this.matchRunningThreds(event);
     if (matches === 0) {
       await this.handleOrphanEvent(event);
@@ -202,7 +202,7 @@ export class Threds {
     const thredStatus = await this.thredsStore.patternsStore.withLockForNewThread(pattern.id, async () =>
       this.lock_startThred(pattern, event),
     );
-    await this.decrementIfTerminated(thredStatus, pattern.id);
+    thredStatus && await this.decrementIfTerminated(thredStatus, pattern.id);
     return true;
   }
 

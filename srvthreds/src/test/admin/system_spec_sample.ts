@@ -122,8 +122,8 @@ const spec: SystemSpec = {
     },
     {
       name: 'McQ Unattended Ground Sensor',
-      nodeType: 'org.cmi2.sensor',
-      address: 'org.cmi2.sensor',
+      nodeType: 'org.wt.sensor',
+      address: 'org.wt.sensor',
       description: 'Ground sensor for detecting presence and movement of entities',
       entitySpecs: [
         {
@@ -151,7 +151,7 @@ const spec: SystemSpec = {
       inputSpecs: [],
       outputSpecs: [
         {
-          eventType: 'org.cmi2.sensor.detectionEvent',
+          eventType: 'org.wt.sensor.detectionEvent',
           description: 'Notifications sent by the sensor.',
           eventContentType: 'values',
           eventContentSpecs: [

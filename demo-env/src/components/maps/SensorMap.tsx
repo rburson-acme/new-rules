@@ -106,7 +106,7 @@ export function SensorMap() {
 
   function sendEnemy(enemy: google.maps.LatLng, sensorId: number) {
     const event = EventBuilder.create({
-      type: 'org.cmi2.sensor.detectionEvent',
+      type: 'org.wt.sensor.detectionEvent',
       source: { id: nanoid(), name: 'Enemy Detected' },
       time: Date.now(),
     })

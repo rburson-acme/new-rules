@@ -101,6 +101,7 @@ class ServiceManager {
   sessionAgent?: AgentService;
   persistenceAgent?: AgentService;
   patternAgent?: AgentService;
+  sensorAgent?: AgentService;
   robotAgent?: RemoteAgentService;
   engineEventService?: RemoteQService<Event>;
   engineMessageService?: RemoteQService<Message>;
@@ -241,6 +242,27 @@ class ServiceManager {
     await this.patternAgent.start();
     */
 
+    // ----------------------------------- Sensor Agent Setup -----------------------------------
+    const sensorEventService = await RemoteQService.newInstance<Event>({ qBroker: qBroker, pubName: 'pub_event' });
+    const sensorEventQ: EventQ = new EventQ(sensorEventService);
+    const sensorMessageService = await RemoteQService.newInstance<Message>({
+      qBroker: qBroker,
+      subNames: ['sub_sensor_message'],
+    });
+    const sensorMessageQ: MessageQ = new MessageQ(sensorMessageService);
+    const sensorAgentConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
+      type: 'agent-config',
+      configName: 'sensor_agent',
+      config: new AgentConfig('org.wt.sensor1'),
+    });
+    if (!sensorAgentConfig) throw new Error(`Agent: failed to load config for 'sensor_agent'`);
+    this.sensorAgent = new AgentService({
+      agentConfig: sensorAgentConfig,
+      eventQ: sensorEventQ,
+      messageQ: sensorMessageQ,
+    });
+    await this.sensorAgent.start();
+
     // ----------------------------------- Robot Agent Setup -----------------------------------
     // Note: this is running in process for convenience but will be a remote service
     const robotConfig = await ConfigManager.get().loadConfig<AgentConfigDef, AgentConfig>({
@@ -317,6 +339,9 @@ class ServiceManager {
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down persistence agent...`);
     await this.persistenceAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
+    Logger.info(`Agent shutdown successfully.`);
+    Logger.info(`Shutting down sensor agent...`);
+    await this.sensorAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);
     Logger.info(`Agent shutdown successfully.`);
     Logger.info(`Shutting down pattern agent...`);
     await this.patternAgent?.shutdown(agentConfig?.eventShutdownTimeout ?? 0);

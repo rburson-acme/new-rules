@@ -23,7 +23,7 @@ export class StorageFactory {
 
   static async purgeAll(): Promise<void> {
     try {
-      await StorageFactory.storage?.purgeAll();
+      await StorageFactory.getStorage().purgeAll();
     } catch (e) {
       Logger.error(`clearAll: `, e);
     }

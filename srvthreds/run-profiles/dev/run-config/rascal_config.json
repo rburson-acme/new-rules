@@ -3,7 +3,7 @@
   "vhosts": {
     "/": {
       "connection": {
-        "url": "amqp://guest:guest@${RABBITMQ_HOST||localhost}"
+        "url": "amqp://guest:guest@localhost"
       },
       "exchanges": {
         "event-exchange": {
@@ -51,6 +51,9 @@
         "pattern-message-queue": {
           "assert": true
         },
+        "sensor-message-queue": {
+          "assert": true
+        },
         "x-dead-letter-event-queue": {
           "assert": true
         },
@@ -65,6 +68,7 @@
         "message-exchange[org.wt.persistence] -> persistence-message-queue",
         "message-exchange[org.wt.robot] -> robot-message-queue",
         "message-exchange[org.wt.pattern] -> pattern-message-queue",
+        "message-exchange[org.wt.sensor] -> sensor-message-queue",
         "x-event-dead-letter[#] -> x-dead-letter-event-queue",
         "x-message-dead-letter[#] -> x-dead-letter-message-queue"
       ],
@@ -101,6 +105,10 @@
         },
         "sub_pattern_message": {
           "queue": "pattern-message-queue",
+          "prefetch": 10
+        },
+        "sub_sensor_message": {
+          "queue": "sensor-message-queue",
           "prefetch": 10
         }
       }

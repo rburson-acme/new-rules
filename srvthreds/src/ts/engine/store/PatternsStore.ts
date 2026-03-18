@@ -110,13 +110,20 @@ export class PatternsStore {
       acquire a lock for creating a new thread from the given pattern
       checks pattern constraints (max instances, min interval) and updates usage stats
   */
-  async withLockForNewThread<T>(patternId: string, op: () => Promise<T>, ttl?: number): Promise<T> {
+  async withLockForNewThread<T>(patternId: string, op: () => Promise<T>, ttl?: number): Promise<T | undefined> {
     return this.withLock(
       patternId,
       async () => {
         const patternStore = this.patternStore(patternId);
         if (!patternStore) throw new Error(`PatternStore not found for patternId ${patternId}`);
-        const { instanceCount, lastInstanceTs } = await this.lock_checkPatternInstanceCountAndTimestamp(patternId);
+        let instanceCount: number;
+        // if the pattern has reached its max instances or is within the min interval, skip the operation
+        try {
+          ({ instanceCount } = await this.lock_checkPatternInstanceCountAndTimestamp(patternId));
+        } catch (e: any) {
+          Logger.info(e.message);
+          return undefined;
+        }
         const result = await op();
         const transaction = this.storage.newTransaction();
         this.storage.setMetaValue({

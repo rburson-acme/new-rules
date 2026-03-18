@@ -58,7 +58,10 @@ export interface ServiceConfigDef {
   /** If true, this service runs remotely and communicates via websockets with the session service. */
   remote?: boolean;
 
-  /** If true, this service is hidden from participant address resolution (internal services). */
+  /**
+   *  If true, this service is hidden from participant address resolution and cannot be used in patterns by participants.
+   *  This is useful for internal services that should not be exposed to participants.
+   */
   hidden?: boolean;
 }
 

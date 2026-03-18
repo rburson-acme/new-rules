@@ -1,0 +1,53 @@
+{
+  "name": "Sensor Monitor",
+  "id": "sensor_monitor",
+  "meta": { "active": true },
+  "maxInstances": 1,
+  "reactions": [
+    {
+      "name": "detect_sensor",
+      "allowUnboundEvents": true,
+      "condition": {
+        "type": "filter",
+        "xpr": "$event.type = 'org.wt.sensor.detectionEvent'",
+        "transform": {
+          "eventDataTemplate": {
+            "title": "Sensor Detection",
+            "advice": {
+              "template": {
+                "name": "sensor_detection",
+                "interactions": [
+                  {
+                    "interaction": {
+                      "content": [
+                        {
+                          "text": {
+                            "value": "$xpr('Sensor ' & $valueNamed('sensorId') & ' detected at confidence: ' & $string($valueNamed('confidence')))"
+                          }
+                        },
+                        {
+                          "map": {
+                            "locations": [
+                              {
+                                "name": "Detection",
+                                "latitude": "$xpr($valueNamed('latitude'))",
+                                "longitude": "$xpr($valueNamed('longitude'))",
+                                "display": "detection-marker"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "publish": { "to": "$group0" },
+        "transition": { "name": "detect_sensor" }
+      }
+    }
+  ]
+}

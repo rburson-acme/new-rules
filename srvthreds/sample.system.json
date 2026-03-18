@@ -251,7 +251,7 @@ EventManager::Received event: org.wt.tell (evtGhIOe0h5so5_PLfLhovSk)
       "inputSpecs": [],
       "outputSpecs": [
         {
-          "eventType": "org.cmi2.sensor.detectionEvent",
+          "eventType": "org.wt.sensor.detectionEvent",
           "description": "Notifications sent by the sensor.",
           "eventContentType": "values",
           "eventContentSpecs": [

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm view:*)",
+      "Bash(lsof -ti:8081)",
+      "Bash(xargs kill:*)",
+      "Bash(npx expo:*)",
+      "Bash(lsof -ti:3000 -ti:3001)",
+      "Bash(claude --version)",
+      "Bash(ls -la /home/rburson/dev/new-rules/thredclient/src/app/\\\\\\(app\\\\\\)/)",
+      "Bash(grep -A3 '\"\"peerDependencies\"\"' /home/rburson/dev/new-rules/thredclient/node_modules/@react-google-maps/api/package.json)"
+    ]
+  }
+}

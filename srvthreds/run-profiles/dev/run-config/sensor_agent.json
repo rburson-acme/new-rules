@@ -1,0 +1,12 @@
+{
+  "name": "Sensor Agent",
+  "nodeType": "org.wt.sensor",
+  "agentImpl": "./sensor/SensorAgent.js",
+  "subscriptionNames": ["sub_sensor_message"],
+  "customConfig": {
+    "sensorId": "sensor_001",
+    "intervalMs": 5000,
+    "baseLatitude": 30.089052,
+    "baseLongitude": -81.725556
+  }
+}

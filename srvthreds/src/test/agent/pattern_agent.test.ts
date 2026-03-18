@@ -34,7 +34,7 @@ describe.skip('pattern agent test', function () {
 
           // --- Reaction: UAV sensor detection ---
           // Filters on sensor detection event, notifies Freddie with map + text + deploy input
-          const sensorReaction = findReactionFilteringOn(result.reactions, 'org.cmi2.sensor.detectionEvent');
+          const sensorReaction = findReactionFilteringOn(result.reactions, 'org.wt.sensor.detectionEvent');
           expect(sensorReaction, 'sensor detection reaction exists').toBeTruthy();
           expect(
             conditionAdviceHasEventType(sensorReaction!.condition, 'org.wt.client.tell'),

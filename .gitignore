@@ -14,5 +14,5 @@ yarn-error.log
 .#*
 
 # misc
-.vscode
-.history
+.vscode/
+.history/
